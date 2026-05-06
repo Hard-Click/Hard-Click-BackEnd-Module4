@@ -1,8 +1,8 @@
 ---
-name: Refactor
+name: 🦄Refactor
 about: 코드 구조 개선이나 책임 분리를 할 때 사용하는 템플릿입니다
 title: "[Refactor] "
-labels: refactor
+labels: 🦄refactor
 assignees: ""
 ---
 
