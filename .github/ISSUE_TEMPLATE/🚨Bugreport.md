@@ -1,8 +1,8 @@
 ---
-name: Bug report
+name:🚨 Bug report
 about: 버그를 제보하거나 수정할 때 사용하는 템플릿입니다
 title: "[Bug] "
-labels: bug
+labels:🚨 bug
 assignees: ""
 ---
 
