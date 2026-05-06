@@ -1,8 +1,8 @@
 ---
-name: Feature
+name: ✨Feature
 about: 새로운 기능을 구현할 때 사용하는 템플릿입니다
 title: "[Feature] "
-labels: feature
+labels: ✨feature
 assignees: ""
 ---
 
