@@ -1,8 +1,8 @@
 ---
-name: Daily
+name: ✅Daily
 about: 데일리 스탠드업 또는 일일 작업 공유용 템플릿입니다
 title: "[Daily] "
-labels: daily
+labels: ✅daily
 assignees: ""
 ---
 
