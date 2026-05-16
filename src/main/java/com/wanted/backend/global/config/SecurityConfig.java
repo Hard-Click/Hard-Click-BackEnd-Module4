@@ -35,6 +35,8 @@ public class SecurityConfig {
                         .anyRequest().permitAll()
                 )
 
+                .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()))
+
                 // 4. 기본 로그인 폼 및 HTTP Basic 인증 비활성화 (Postman 팝업 방지)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable);
