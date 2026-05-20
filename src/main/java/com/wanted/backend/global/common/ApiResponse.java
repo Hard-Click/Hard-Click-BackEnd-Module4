@@ -32,4 +32,10 @@ public class ApiResponse<T> {
     public static ResponseEntity<ApiResponse<Void>> successNoContent() {
         return ResponseEntity.ok(new ApiResponse<>(200, "SUCCESS", null));
     }
+
+    //리뷰 생성 커스텀 response
+    public static <T> ResponseEntity<ApiResponse<T>> created(String message, T data) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(201, message, data));
+    }
 }
