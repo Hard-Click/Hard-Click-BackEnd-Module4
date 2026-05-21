@@ -1,4 +1,4 @@
-package com.wanted.backend.domain.identity.type;
+package com.wanted.backend.domain.identity.domain.model;
 
 public enum EmailPurpose {
     SIGNUP,          // 회원가입 인증

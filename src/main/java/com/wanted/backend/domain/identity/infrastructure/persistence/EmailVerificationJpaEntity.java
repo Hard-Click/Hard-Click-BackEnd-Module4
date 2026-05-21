@@ -1,6 +1,6 @@
-package com.wanted.backend.domain.identity.entity;
+package com.wanted.backend.domain.identity.infrastructure.persistence;
 
-import com.wanted.backend.domain.identity.type.EmailPurpose;
+import com.wanted.backend.domain.identity.domain.model.EmailPurpose;
 import lombok.*;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class EmailVerification {
+public class EmailVerificationJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -49,7 +49,7 @@ public class EmailVerification {
     }
 
     @Builder
-    public EmailVerification(String email, String code, EmailPurpose purpose, LocalDateTime expiresAt) {
+    public EmailVerificationJpaEntity(String email, String code, EmailPurpose purpose, LocalDateTime expiresAt) {
         this.email = email;
         this.code = code;
         this.purpose = purpose;
