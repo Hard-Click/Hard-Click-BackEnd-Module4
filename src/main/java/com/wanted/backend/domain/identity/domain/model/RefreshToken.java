@@ -1,4 +1,4 @@
-package com.wanted.backend.domain.identity.entity;
+package com.wanted.backend.domain.identity.domain.model;
 
 import lombok.*;
 import jakarta.persistence.*;
