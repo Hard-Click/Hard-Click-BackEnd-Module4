@@ -17,6 +17,7 @@ public class UploadLessonVideoService implements UploadLessonVideoUseCase {
 
     private final LessonRepository lessonRepository;
     private final VideoStoragePort videoStoragePort;
+    private final FileProcessingService fileProcessingService;
 
     @Transactional
     @Override
@@ -32,8 +33,12 @@ public class UploadLessonVideoService implements UploadLessonVideoUseCase {
                 command.videoData()
         );
 
+        // 영상 URL 저장 + 상태를 PENDING으로 전이
         lesson.attachVideo(videoUrl);
         lessonRepository.save(lesson);
+
+        // 트랜잭션 커밋 후 비동기 처리 시작 (클라이언트는 기다리지 않고 즉시 응답 받음)
+        fileProcessingService.process(command.lessonId());
 
         return videoUrl;
     }

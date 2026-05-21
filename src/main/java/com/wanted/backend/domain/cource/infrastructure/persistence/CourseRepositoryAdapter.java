@@ -70,6 +70,7 @@ public class CourseRepositoryAdapter implements CourseRepository {
                                     l.getOrderIndex(),
                                     l.getVideoUrl(),
                                     l.getDurationSeconds(),
+                                    l.getFileProcessingStatus(),
                                     l.getCreatedAt()))
                             .toList();
                     return CourseSection.restore(

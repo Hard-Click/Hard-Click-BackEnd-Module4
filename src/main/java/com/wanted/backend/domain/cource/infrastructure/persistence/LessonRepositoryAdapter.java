@@ -6,6 +6,7 @@ import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -15,11 +16,12 @@ public class LessonRepositoryAdapter implements LessonRepository {
 
     private final SpringDataLessonRepository jpaRepository;
 
+    @Transactional
     @Override
     public Lesson save(Lesson lesson) {
         LessonJpaEntity entity = jpaRepository.findById(lesson.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
-        entity.attachVideo(lesson.getVideoUrl());
+        entity.update(lesson.getVideoUrl(), lesson.getFileProcessingStatus());
         return toDomain(jpaRepository.save(entity));
     }
 
@@ -37,6 +39,7 @@ public class LessonRepositoryAdapter implements LessonRepository {
                 entity.getOrderIndex(),
                 entity.getVideoUrl(),
                 entity.getDurationSeconds(),
+                entity.getFileProcessingStatus(),
                 entity.getCreatedAt()
         );
     }

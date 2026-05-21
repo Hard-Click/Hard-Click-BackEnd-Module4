@@ -11,6 +11,7 @@ public class Lesson {
     private int orderIndex;
     private String videoUrl;
     private Integer durationSeconds;
+    private FileProcessingStatus fileProcessingStatus;
     private Instant createdAt;
 
     private Lesson() {}
@@ -28,7 +29,7 @@ public class Lesson {
 
     public static Lesson restore(Long id, Long sectionId, String title, String description,
                                  int orderIndex, String videoUrl, Integer durationSeconds,
-                                 Instant createdAt) {
+                                 FileProcessingStatus fileProcessingStatus, Instant createdAt) {
         Lesson lesson = new Lesson();
         lesson.id = id;
         lesson.sectionId = sectionId;
@@ -37,12 +38,30 @@ public class Lesson {
         lesson.orderIndex = orderIndex;
         lesson.videoUrl = videoUrl;
         lesson.durationSeconds = durationSeconds;
+        lesson.fileProcessingStatus = fileProcessingStatus;
         lesson.createdAt = createdAt;
         return lesson;
     }
 
+    // 영상 파일 첨부 + PENDING 상태로 전이
     public void attachVideo(String videoUrl) {
         this.videoUrl = videoUrl;
+        this.fileProcessingStatus = FileProcessingStatus.PENDING;
+    }
+
+    // PROCESSING 상태로 전이
+    public void startProcessing() {
+        this.fileProcessingStatus = FileProcessingStatus.PROCESSING;
+    }
+
+    // COMPLETED 상태로 전이
+    public void completeProcessing() {
+        this.fileProcessingStatus = FileProcessingStatus.COMPLETED;
+    }
+
+    // FAILED 상태로 전이
+    public void failProcessing() {
+        this.fileProcessingStatus = FileProcessingStatus.FAILED;
     }
 
     public Long getId() { return id; }
@@ -52,5 +71,6 @@ public class Lesson {
     public int getOrderIndex() { return orderIndex; }
     public String getVideoUrl() { return videoUrl; }
     public Integer getDurationSeconds() { return durationSeconds; }
+    public FileProcessingStatus getFileProcessingStatus() { return fileProcessingStatus; }
     public Instant getCreatedAt() { return createdAt; }
 }

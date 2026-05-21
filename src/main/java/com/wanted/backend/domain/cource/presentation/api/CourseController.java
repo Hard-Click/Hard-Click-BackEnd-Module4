@@ -3,6 +3,7 @@ package com.wanted.backend.domain.cource.presentation.api;
 import com.wanted.backend.domain.cource.application.command.UploadLessonVideoCommand;
 import com.wanted.backend.domain.cource.application.usecase.CreateCourseUseCase;
 import com.wanted.backend.domain.cource.application.usecase.UploadLessonVideoUseCase;
+import com.wanted.backend.domain.cource.domain.model.FileProcessingStatus;
 import com.wanted.backend.domain.cource.presentation.api.request.CreateCourseRequest;
 import com.wanted.backend.domain.cource.presentation.api.response.CreateCourseResponse;
 import com.wanted.backend.domain.cource.presentation.api.response.UploadLessonVideoResponse;
@@ -51,6 +52,7 @@ public class CourseController {
         String videoUrl = uploadLessonVideoUseCase.handle(
                 new UploadLessonVideoCommand(lessonId, file.getOriginalFilename(), file.getBytes())
         );
-        return ApiResponse.success("영상이 업로드되었습니다.", new UploadLessonVideoResponse(lessonId, videoUrl));
+        return ApiResponse.success("영상이 업로드되었습니다.",
+                new UploadLessonVideoResponse(lessonId, videoUrl, FileProcessingStatus.PENDING));
     }
 }

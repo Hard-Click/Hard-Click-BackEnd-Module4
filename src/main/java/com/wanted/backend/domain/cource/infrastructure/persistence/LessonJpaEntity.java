@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.cource.infrastructure.persistence;
 
+import com.wanted.backend.domain.cource.domain.model.FileProcessingStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -36,6 +37,10 @@ public class LessonJpaEntity {
     @Column(name = "duration_seconds")
     private Integer durationSeconds;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "file_processing_status")
+    private FileProcessingStatus fileProcessingStatus;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -50,7 +55,8 @@ public class LessonJpaEntity {
         return entity;
     }
 
-    void attachVideo(String videoUrl) {
-        this.videoUrl = videoUrl;
+    void update(String videoUrl, FileProcessingStatus status) {
+        if (videoUrl != null) this.videoUrl = videoUrl;
+        if (status != null) this.fileProcessingStatus = status;
     }
 }
