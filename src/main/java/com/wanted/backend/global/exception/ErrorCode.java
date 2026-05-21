@@ -27,7 +27,11 @@ import org.springframework.http.HttpStatus;
         VERIFICATION_CODE_INVALID(HttpStatus.BAD_REQUEST, "U009", "유효하지 않은 인증코드입니다. 다시 입력해주세요."),
         EMAIL_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "U010", "이메일 전송에 실패했습니다. 다시 시도해주세요."),
         PASSWORD_RESET_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "U011", "비밀번호 재발급은 하루 최대 3회까지만 가능합니다."),
-        MULTIPLE_LOGIN_DETECTED(HttpStatus.UNAUTHORIZED, "U012", "동일 계정의 동시 로그인이 감지되어 재로그인이 필요합니다.");
+        MULTIPLE_LOGIN_DETECTED(HttpStatus.UNAUTHORIZED, "U012", "동일 계정의 동시 로그인이 감지되어 재로그인이 필요합니다."),
+
+        //리뷰 예외
+        REVIEW_ALREADY_EXISTS(HttpStatus.CONFLICT, "R002", "이미 리뷰를 작성한 강의입니다.");
+
         private final HttpStatus status;
         private final String code;
         private final String message;

@@ -7,9 +7,6 @@ import jakarta.validation.constraints.Size;
 
 public record CreateReviewRequest(
 
-        @NotNull(message = "리뷰를 작성할 강의 ID는 필수입니다.")
-        Long courseId,
-
         @NotNull(message = "별점은 필수입니다.")
         @DecimalMin(value = "0.5", message = "별점은 최소 0.5점 이상이어야 합니다.")
         @DecimalMax(value = "5.0", message = "별점은 최대 5.0점 이하이어야 합니다.")

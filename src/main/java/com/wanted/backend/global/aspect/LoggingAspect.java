@@ -24,13 +24,13 @@ public class LoggingAspect {
     /**
      * 서비스 계층의 모든 메서드에 대한 포인트컷을 정의한다.
      */
-    @Pointcut("execution(* com.wanted.backend..service..*(..))")
+    @Pointcut("execution(* com.wanted.backend..application.service..*(..))")
     public void serviceLayer() {}
 
     /**
      * 컨트롤러 계층의 모든 메서드에 대한 포인트컷을 정의한다.
      */
-    @Pointcut("execution(* com.wanted.backend..controller..*(..))")
+    @Pointcut("execution(* com.wanted.backend..presentation..*(..))")
     public void controllerLayer() {}
 
     /**

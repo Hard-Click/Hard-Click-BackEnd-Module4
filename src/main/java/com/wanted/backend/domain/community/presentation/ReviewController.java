@@ -1,31 +1,32 @@
 package com.wanted.backend.domain.community.presentation;
 
-import com.wanted.backend.domain.community.application.commend.CreateReviewCommend;
-import com.wanted.backend.domain.community.application.usecase.ReviewCommendUseCase;
+
+import com.wanted.backend.domain.community.application.command.CreateReviewCommand;
+import com.wanted.backend.domain.community.application.usecase.ReviewCommandUseCase;
 import com.wanted.backend.domain.community.presentation.request.CreateReviewRequest;
 import com.wanted.backend.domain.community.presentation.response.CreateReviewResponse;
 import com.wanted.backend.global.common.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/reviews")
+@RequestMapping("/api/courses/{courseId}/reviews")
 @RequiredArgsConstructor
 public class ReviewController {
 
-    private final ReviewCommendUseCase reviewCommendUseCase;
+    private final ReviewCommandUseCase reviewCommandUseCase;
 
     @PostMapping
     public ResponseEntity<ApiResponse<CreateReviewResponse>> createReview(
+            @PathVariable Long courseId,
             @RequestHeader(value = "X-Member-Id", required = false, defaultValue = "1") Long memberId,
             @Valid @RequestBody CreateReviewRequest request) {
 
-        Long reviewId = reviewCommendUseCase.handle(new CreateReviewCommend(
+        Long reviewId = reviewCommandUseCase.handle(new CreateReviewCommand(
                 memberId,
-                request.courseId(),
+                courseId,
                 request.rating(),
                 request.content()
         ));
