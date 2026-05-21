@@ -13,10 +13,6 @@ spring:
   application:
     name: chap01-spring-test-env
 
-  # 테스트용 프로파일 활성화
-  profiles:
-    active: test
-
   datasource:
     url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driver-class-name: org.h2.Driver
