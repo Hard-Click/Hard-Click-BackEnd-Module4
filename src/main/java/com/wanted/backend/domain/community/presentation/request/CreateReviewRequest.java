@@ -12,8 +12,7 @@ public record CreateReviewRequest(
         @DecimalMax(value = "5.0", message = "별점은 최대 5.0점 이하이어야 합니다.")
         Double rating,
 
-        @NotNull(message = "리뷰 내역은 필수입니다.")
+        @NotNull(message = "리뷰 내용은 필수입니다.")
         @Size(min = 10, max = 300, message = "리뷰 내용은 10자 이상 300자 이하여야 합니다.")
         String content
-) {
-}
+) {}

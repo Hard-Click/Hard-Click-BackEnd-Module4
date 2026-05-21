@@ -2,25 +2,45 @@ package com.wanted.backend.domain.community.infrastructure.persistence;
 
 import com.wanted.backend.domain.community.domain.model.Review;
 import com.wanted.backend.domain.community.domain.repository.ReviewRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
-
 @Repository
-@RequiredArgsConstructor
 public class ReviewRepositoryAdapter implements ReviewRepository {
 
-    private final ReviewJpaRepository reviewJpaRepository;
+    private final ReviewJpaRepository repository;
 
-    @Override
-    public Review save(Review review) {
-        return reviewJpaRepository.save(ReviewJpaEntity.from(review)).toDomain();
+    public ReviewRepositoryAdapter(ReviewJpaRepository repository) {
+        this.repository = repository;
     }
 
     @Override
-    public Optional<Review> findByCourseIdAndMemberId(Long courseId, Long memberId) {
-        return reviewJpaRepository.findByCourseIdAndMemberId(courseId, memberId)
-                .map(ReviewJpaEntity::toDomain);
+    public Review save(Review review) {
+        ReviewJpaEntity entity = new ReviewJpaEntity(
+                review.getMemberId(),
+                review.getCourseId(),
+                review.getRating(),
+                review.getContent(),
+                review.getCreatedAt(),
+                review.getUpdatedAt()
+        );
+
+        return toDomain(repository.save(entity));
+    }
+
+    @Override
+    public boolean existsByCourseIdAndMemberId(Long courseId, Long memberId) {
+        return repository.existsByCourseIdAndMemberId(courseId, memberId);
+    }
+
+    private Review toDomain(ReviewJpaEntity entity) {
+        return Review.restore(
+                entity.getId(),
+                entity.getMemberId(),
+                entity.getCourseId(),
+                entity.getRating(),
+                entity.getContent(),
+                entity.getCreatedAt(),
+                entity.getUpdatedAt()
+        );
     }
 }

@@ -29,8 +29,11 @@ import org.springframework.http.HttpStatus;
         PASSWORD_RESET_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "U011", "비밀번호 재발급은 하루 최대 3회까지만 가능합니다."),
         MULTIPLE_LOGIN_DETECTED(HttpStatus.UNAUTHORIZED, "U012", "동일 계정의 동시 로그인이 감지되어 재로그인이 필요합니다."),
 
-        //리뷰 예외
-        REVIEW_ALREADY_EXISTS(HttpStatus.CONFLICT, "R002", "이미 리뷰를 작성한 강의입니다.");
+        // 리뷰 도메인
+        REVIEW_ALREADY_EXISTS(HttpStatus.CONFLICT, "R001", "이미 리뷰를 작성한 강의입니다."),
+        REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "R002", "존재하지 않는 리뷰입니다."),
+        REVIEW_NOT_AUTHORIZED(HttpStatus.FORBIDDEN, "R003", "본인의 리뷰만 수정/삭제할 수 있습니다."),
+        NOT_ENROLLED(HttpStatus.FORBIDDEN, "R004", "수강 중인 강의만 리뷰를 작성할 수 있습니다.");
 
         private final HttpStatus status;
         private final String code;

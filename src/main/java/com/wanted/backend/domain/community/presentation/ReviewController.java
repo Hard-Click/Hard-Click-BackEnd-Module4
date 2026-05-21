@@ -7,16 +7,18 @@ import com.wanted.backend.domain.community.presentation.request.CreateReviewRequ
 import com.wanted.backend.domain.community.presentation.response.CreateReviewResponse;
 import com.wanted.backend.global.common.ApiResponse;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/courses/{courseId}/reviews")
-@RequiredArgsConstructor
 public class ReviewController {
 
     private final ReviewCommandUseCase reviewCommandUseCase;
+
+    public ReviewController(ReviewCommandUseCase reviewCommandUseCase) {
+        this.reviewCommandUseCase = reviewCommandUseCase;
+    }
 
     @PostMapping
     public ResponseEntity<ApiResponse<CreateReviewResponse>> createReview(

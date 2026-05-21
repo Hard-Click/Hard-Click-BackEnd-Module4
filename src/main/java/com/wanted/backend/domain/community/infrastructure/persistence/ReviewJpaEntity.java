@@ -1,22 +1,24 @@
 package com.wanted.backend.domain.community.infrastructure.persistence;
 
-import com.wanted.backend.domain.community.domain.model.Review;
 import jakarta.persistence.*;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "reviews")
+@Getter
 public class ReviewJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long reviewId;
+    @Column(name = "review_id")
+    private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "member_id", nullable = false)
     private Long memberId;
 
-    @Column(nullable = false)
+    @Column(name = "course_id", nullable = false)
     private Long courseId;
 
     @Column(nullable = false)
@@ -25,26 +27,21 @@ public class ReviewJpaEntity {
     @Column(columnDefinition = "TEXT")
     private String content;
 
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     protected ReviewJpaEntity() {}
 
-    public static ReviewJpaEntity from(Review review) {
-        ReviewJpaEntity entity = new ReviewJpaEntity();
-        entity.memberId = review.getMemberId();
-        entity.courseId = review.getCourseId();
-        entity.rating = review.getRating();
-        entity.content = review.getContent();
-        entity.createdAt = LocalDateTime.now();
-        entity.updatedAt = LocalDateTime.now();
-        return entity;
-    }
-
-    public Review toDomain() {
-        return Review.restore(
-                reviewId, memberId, courseId, rating, content, createdAt, updatedAt
-        );
+    public ReviewJpaEntity(Long memberId, Long courseId, Double rating, String content,
+                           LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.memberId = memberId;
+        this.courseId = courseId;
+        this.rating = rating;
+        this.content = content;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 }
