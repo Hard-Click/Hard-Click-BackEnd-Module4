@@ -8,8 +8,6 @@ public record ApiResponse<T>(
         String message,
         T data
 ) {
-
-
     // 200 OK - 조회/수정
     public static <T> ResponseEntity<ApiResponse<T>> success(String message, T data) {
         return ResponseEntity.ok(new ApiResponse<>(200, message, data));
@@ -25,6 +23,4 @@ public record ApiResponse<T>(
     public static ResponseEntity<ApiResponse<Void>> successNoContent(String message) {
         return ResponseEntity.ok(new ApiResponse<>(200, message, null));
     }
-
-
 }
