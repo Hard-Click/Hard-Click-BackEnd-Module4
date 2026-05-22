@@ -27,7 +27,7 @@ public class GlobalExceptionHandler {
         // 에러가 난 필드와 원인을 Map에 담습니다
         Map<String, Object> details = new HashMap<>();
         e.getBindingResult().getFieldErrors().forEach(error ->
-                details.put(error.getField(), error.getDefaultMessage())
+                details.putIfAbsent(error.getField(), error.getDefaultMessage())
         );
 
         log.warn("[Validation Error] Path: {}, Message: 클라이언트 입력값 오류", request.getRequestURI());
