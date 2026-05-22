@@ -36,6 +36,9 @@ public class VideoPlaybackController {
             @Positive
             @PathVariable Long videoId
     ) {
-        return ApiResponse.success(videoPlayUseCase.handle(new VideoPlayCommand(videoId)));
+        return ApiResponse.success(
+                "영상 재생 정보가 조회되었습니다.",
+                videoPlayUseCase.handle(new VideoPlayCommand(videoId))
+        );
     }
 }

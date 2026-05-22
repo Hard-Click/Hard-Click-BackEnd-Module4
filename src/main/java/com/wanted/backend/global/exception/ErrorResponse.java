@@ -20,6 +20,7 @@ public class ErrorResponse {
         this.traceId = MDC.get("traceId");
     }
 
+
     public static ErrorResponse create() {
         return new ErrorResponse();
     }

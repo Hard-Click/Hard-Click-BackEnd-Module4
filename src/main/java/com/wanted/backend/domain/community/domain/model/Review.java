@@ -10,12 +10,12 @@ public class Review {
     private final Long id;
     private final Long memberId;
     private final Long courseId;
-    private Double rating;
+    private Integer rating;
     private String content;
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    private Review(Long id, Long memberId, Long courseId, Double rating, String content,
+    private Review(Long id, Long memberId, Long courseId, Integer rating, String content,
                    LocalDateTime createdAt, LocalDateTime updatedAt) {
         if (memberId == null || courseId == null) {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
@@ -29,20 +29,30 @@ public class Review {
         this.updatedAt = updatedAt;
     }
 
-    public static Review create(Long memberId, Long courseId, Double rating, String content) {
+    public static Review create(Long memberId, Long courseId, Integer rating, String content) {
         return new Review(null, memberId, courseId, rating, content,
                 LocalDateTime.now(), LocalDateTime.now());
     }
 
-    public static Review restore(Long id, Long memberId, Long courseId, Double rating, String content,
+    public static Review restore(Long id, Long memberId, Long courseId, Integer rating, String content,
                                  LocalDateTime createdAt, LocalDateTime updatedAt) {
         return new Review(id, memberId, courseId, rating, content, createdAt, updatedAt);
+    }
+
+    public boolean isOwner(Long memberId) {
+        return this.memberId.equals(memberId);
+    }
+
+    public static String maskName(String name) {
+        if (name.length() == 1) return name;
+        if (name.length() == 2) return name.charAt(0) + "*";
+        return name.charAt(0) + "*" + name.charAt(name.length() - 1);
     }
 
     public Long getId() { return id; }
     public Long getMemberId() { return memberId; }
     public Long getCourseId() { return courseId; }
-    public Double getRating() { return rating; }
+    public Integer getRating() { return rating; }
     public String getContent() { return content; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
