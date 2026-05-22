@@ -1,0 +1,6 @@
+@host = http://localhost:8080
+@videoId = 10
+
+### 영상 재생 API - 권한 검증 및 스트리밍 URL 반환
+GET {{host}}/api/learning/videos/{{videoId}}/play
+Accept: application/json

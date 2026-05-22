@@ -1,10 +1,12 @@
 package com.wanted.backend.domain.cource.presentation.api;
 
+import com.wanted.backend.domain.cource.application.command.ChangeCourseStatusCommand;
 import com.wanted.backend.domain.cource.application.command.UploadLessonVideoCommand;
-import com.wanted.backend.domain.cource.application.usecase.CreateCourseUseCase;
-import com.wanted.backend.domain.cource.application.usecase.UploadLessonVideoUseCase;
+import com.wanted.backend.domain.cource.application.usecase.*;
+import com.wanted.backend.domain.cource.domain.model.CourseStatus;
 import com.wanted.backend.domain.cource.domain.model.FileProcessingStatus;
 import com.wanted.backend.domain.cource.presentation.api.request.CreateCourseRequest;
+import com.wanted.backend.domain.cource.presentation.api.request.UpdateCourseRequest;
 import com.wanted.backend.domain.cource.presentation.api.response.CreateCourseResponse;
 import com.wanted.backend.domain.cource.presentation.api.response.UploadLessonVideoResponse;
 import com.wanted.backend.global.common.ApiResponse;
@@ -23,10 +25,14 @@ import java.io.IOException;
 public class CourseController {
 
     private final CreateCourseUseCase createCourseUseCase;
+    private final UpdateCourseUseCase updateCourseUseCase;
+    private final DeleteCourseUseCase deleteCourseUseCase;
+    private final ChangeCourseStatusUseCase changeCourseStatusUseCase;
     private final UploadLessonVideoUseCase uploadLessonVideoUseCase;
 
     /**
      * 강의 등록
+     * POST /api/v1/courses
      */
     @PostMapping
     public ResponseEntity<ApiResponse<CreateCourseResponse>> createCourse(
@@ -38,6 +44,50 @@ public class CourseController {
     }
 
     /**
+     * 강의 수정
+     * PUT /api/v1/courses/{courseId}
+     */
+    @PutMapping("/{courseId}")
+    public ResponseEntity<ApiResponse<Void>> updateCourse(
+            @RequestHeader("X-Member-Id") Long memberId,
+            @PathVariable Long courseId,
+            @Valid @RequestBody UpdateCourseRequest request
+    ) {
+        updateCourseUseCase.handle(request.toCommand(courseId, memberId));
+        return ApiResponse.successNoContent("강의가 수정되었습니다.");
+    }
+
+    /**
+     * 강의 삭제
+     * DELETE /api/v1/courses/{courseId}
+     */
+    @DeleteMapping("/{courseId}")
+    public ResponseEntity<ApiResponse<Void>> deleteCourse(
+            @RequestHeader("X-Member-Id") Long memberId,
+            @PathVariable Long courseId
+    ) {
+        deleteCourseUseCase.handle(courseId, memberId);
+        return ApiResponse.successNoContent("강의가 삭제되었습니다.");
+    }
+
+    /**
+     * 강의 공개/비공개 처리
+     * PATCH /api/v1/courses/{courseId}/status
+     * body: { "published": true | false }
+     */
+    @PatchMapping("/{courseId}/status")
+    public ResponseEntity<ApiResponse<Void>> changeCourseStatus(
+            @RequestHeader("X-Member-Id") Long memberId,
+            @PathVariable Long courseId,
+            @RequestParam boolean published
+    ) {
+        CourseStatus targetStatus = published ? CourseStatus.PUBLISHED : CourseStatus.DRAFT;
+        changeCourseStatusUseCase.handle(new ChangeCourseStatusCommand(courseId, memberId, targetStatus));
+        String message = published ? "강의가 공개되었습니다." : "강의가 비공개 처리되었습니다.";
+        return ApiResponse.successNoContent(message);
+    }
+
+    /**
      * 회차 영상 업로드
      * POST /api/v1/courses/lessons/{lessonId}/video
      */
@@ -45,10 +95,7 @@ public class CourseController {
     public ResponseEntity<ApiResponse<UploadLessonVideoResponse>> uploadLessonVideo(
             @PathVariable Long lessonId,
             @RequestPart("file") MultipartFile file
-
     ) throws IOException {
-        // IOException 자바 문법상 파일 읽기 에러(IOException)가 터질 수 있으니
-        // 내가 직접 처리 안 하고 스프링 글로벌 핸들러한테 에러를 넘겨버리겠다(토스)는 선언
         String videoUrl = uploadLessonVideoUseCase.handle(
                 new UploadLessonVideoCommand(lessonId, file.getOriginalFilename(), file.getBytes())
         );

@@ -47,4 +47,3 @@ logging:
     org.hibernate.SQL: DEBUG          # SQL 쿼리 로그 (Section 03용)
     org.junit: INFO                    # JUnit 프레임워크 로그
 
-

@@ -59,4 +59,11 @@ public class LessonJpaEntity {
         if (videoUrl != null) this.videoUrl = videoUrl;
         if (status != null) this.fileProcessingStatus = status;
     }
+
+    // 수정 시 videoUrl/durationSeconds/fileProcessingStatus 는 보존
+    void updateMeta(String title, String description, int orderIndex) {
+        this.title = title;
+        this.description = description;
+        this.orderIndex = orderIndex;
+    }
 }
