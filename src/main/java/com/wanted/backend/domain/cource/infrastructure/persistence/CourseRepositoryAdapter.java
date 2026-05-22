@@ -81,7 +81,8 @@ public class CourseRepositoryAdapter implements CourseRepository {
             case POPULAR, RATING -> Sort.by(Sort.Direction.DESC, "createdAt");
         };
 
-        Page<CourseJpaEntity> result = jpaRepository.findAll(spec, PageRequest.of(page, size, sortOrder));
+        // 클라이언트는 1-based, Spring PageRequest는 0-based
+        Page<CourseJpaEntity> result = jpaRepository.findAll(spec, PageRequest.of(page - 1, size, sortOrder));
 
         List<CourseListItem> items = result.getContent().stream()
                 .map(e -> new CourseListItem(
@@ -89,7 +90,8 @@ public class CourseRepositoryAdapter implements CourseRepository {
                         e.getThumbnailUrl(), e.getPriceType(), e.getPrice(), e.getCreatedAt()))
                 .toList();
 
-        return new PageResult<>(items, result.getNumber(), result.getTotalPages(), result.getTotalElements());
+        // currentPage 응답도 1-based로 반환
+        return new PageResult<>(items, result.getNumber() + 1, result.getTotalPages(), result.getTotalElements());
     }
 
     // ── 섹션 동기화 ──────────────────────────────────────────────────────────────
