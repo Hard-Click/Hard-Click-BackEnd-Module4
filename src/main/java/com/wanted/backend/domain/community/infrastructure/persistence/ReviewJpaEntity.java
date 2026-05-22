@@ -44,4 +44,10 @@ public class ReviewJpaEntity {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
+
+    public void update(Integer rating, String content, LocalDateTime updatedAt) {
+        this.rating = rating;
+        this.content = content;
+        this.updatedAt = updatedAt;
+    }
 }

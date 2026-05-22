@@ -1,12 +1,15 @@
 package com.wanted.backend.domain.community.presentation;
 
 import com.wanted.backend.domain.community.application.command.CreateReviewCommand;
+import com.wanted.backend.domain.community.application.command.UpdateReviewCommand;
 import com.wanted.backend.domain.community.application.usecase.ReviewCommandUseCase;
 import com.wanted.backend.domain.community.application.usecase.ReviewQueryUseCase;
 import com.wanted.backend.domain.community.domain.model.ReviewSortType;
 import com.wanted.backend.domain.community.presentation.request.CreateReviewRequest;
+import com.wanted.backend.domain.community.presentation.request.UpdateReviewRequest;
 import com.wanted.backend.domain.community.presentation.response.CreateReviewResponse;
 import com.wanted.backend.domain.community.presentation.response.ReviewListResponse;
+import com.wanted.backend.domain.community.presentation.response.UpdateReviewResponse;
 import com.wanted.backend.global.common.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -54,5 +57,22 @@ public class ReviewController {
                 courseId, currentMemberId, sort, page);
 
         return ApiResponse.success("리뷰 목록 조회 성공", response);
+    }
+
+    @PatchMapping("/{reviewId}")
+    public ResponseEntity<ApiResponse<UpdateReviewResponse>> updateReview(
+            @PathVariable Long courseId,
+            @PathVariable Long reviewId,
+            @RequestHeader(value = "X-Member-Id", required = false, defaultValue = "1") Long memberId,
+            @Valid @RequestBody UpdateReviewRequest request) {
+
+        Long updatedReviewId = reviewCommandUseCase.update(new UpdateReviewCommand(
+                memberId,
+                reviewId,
+                request.rating(),
+                request.content()
+        ));
+
+        return ApiResponse.success("리뷰가 수정되었습니다.", new UpdateReviewResponse(updatedReviewId));
     }
 }

@@ -49,6 +49,12 @@ public class Review {
         return name.charAt(0) + "*" + name.charAt(name.length() - 1);
     }
 
+    public void update(Integer rating, String content) {
+        this.rating = rating;
+        this.content = content;
+        this.updatedAt = LocalDateTime.now();
+    }
+
     public Long getId() { return id; }
     public Long getMemberId() { return memberId; }
     public Long getCourseId() { return courseId; }
