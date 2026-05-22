@@ -24,7 +24,7 @@ public class ReviewJpaEntity {
     @Column(nullable = false)
     private Double rating;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
     @Column(name = "created_at", nullable = false)

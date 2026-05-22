@@ -39,6 +39,16 @@ public class Review {
         return new Review(id, memberId, courseId, rating, content, createdAt, updatedAt);
     }
 
+    public boolean isOwner(Long memberId) {
+        return this.memberId.equals(memberId);
+    }
+
+    public static String maskName(String name) {
+        if (name.length() == 1) return name;
+        if (name.length() == 2) return name.charAt(0) + "*";
+        return name.charAt(0) + "*" + name.charAt(name.length() - 1);
+    }
+
     public Long getId() { return id; }
     public Long getMemberId() { return memberId; }
     public Long getCourseId() { return courseId; }

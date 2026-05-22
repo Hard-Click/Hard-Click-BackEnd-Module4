@@ -17,6 +17,7 @@ public class ReviewPolicy {
     public void validateDuplicate(Long courseId, Long memberId) {
         if (reviewRepository.existsByCourseIdAndMemberId(courseId, memberId)) {
             throw new BusinessException(ErrorCode.REVIEW_ALREADY_EXISTS);
+
         }
     }
 }
