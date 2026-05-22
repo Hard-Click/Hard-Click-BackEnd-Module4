@@ -32,7 +32,8 @@ import org.springframework.http.HttpStatus;
         // 3. 강의(Course) 예외
         COURSE_NOT_FOUND(HttpStatus.NOT_FOUND, "CR001", "존재하지 않는 강의입니다."),
         INVALID_COURSE_PRICE(HttpStatus.BAD_REQUEST, "CR002", "강의 가격 설정이 올바르지 않습니다."),
-        LESSON_NOT_FOUND(HttpStatus.NOT_FOUND, "CR003", "존재하지 않는 회차입니다.");
+        LESSON_NOT_FOUND(HttpStatus.NOT_FOUND, "CR003", "존재하지 않는 회차입니다."),
+        COURSE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "CR004", "해당 강의에 대한 권한이 없습니다.");
         private final HttpStatus status;
         private final String code;
         private final String message;

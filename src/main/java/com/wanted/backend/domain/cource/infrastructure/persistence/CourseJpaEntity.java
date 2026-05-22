@@ -70,6 +70,17 @@ public class CourseJpaEntity {
         return entity;
     }
 
+    void update(String title, String subject, String description,
+                String thumbnailUrl, PriceType priceType, int price, CourseStatus status) {
+        this.title = title;
+        this.subject = subject;
+        this.description = description;
+        this.thumbnailUrl = thumbnailUrl;
+        this.priceType = priceType;
+        this.price = price;
+        this.status = status;
+    }
+
     CourseSectionJpaEntity addSection(String title, int orderIndex) {
         CourseSectionJpaEntity section = CourseSectionJpaEntity.of(this, title, orderIndex);
         sections.add(section);

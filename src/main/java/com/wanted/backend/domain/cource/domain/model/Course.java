@@ -61,6 +61,30 @@ public class Course {
         return course;
     }
 
+    // 강의 기본 정보 + 커리큘럼 수정
+    public void update(String title, String subject, String description,
+                       String thumbnailUrl, PriceType priceType, int price,
+                       List<CourseSection> sections) {
+        validatePrice(priceType, price);
+        this.title = title;
+        this.subject = subject;
+        this.description = description;
+        this.thumbnailUrl = thumbnailUrl;
+        this.priceType = priceType;
+        this.price = price;
+        this.sections = new ArrayList<>(sections);
+    }
+
+    // 강의 공개
+    public void publish() {
+        this.status = CourseStatus.PUBLISHED;
+    }
+
+    // 강의 비공개
+    public void unpublish() {
+        this.status = CourseStatus.DRAFT;
+    }
+
     private static void validatePrice(PriceType priceType, int price) {
         if (priceType == PriceType.FREE && price != 0) {
             throw new IllegalArgumentException("무료 강의의 가격은 0이어야 합니다.");
