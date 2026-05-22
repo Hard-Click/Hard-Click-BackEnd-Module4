@@ -41,7 +41,7 @@ out/
 *.yml
 !application-test.yml
 !application-test.yaml
-
+!application.yml
 ### Logs ###
 logs/
 *.log
