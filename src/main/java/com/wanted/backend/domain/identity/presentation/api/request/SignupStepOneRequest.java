@@ -1,4 +1,4 @@
-package com.wanted.backend.domain.identity.dto.req;
+package com.wanted.backend.domain.identity.presentation.api.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

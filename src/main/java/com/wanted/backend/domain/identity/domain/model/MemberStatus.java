@@ -1,4 +1,4 @@
-package com.wanted.backend.domain.identity.type;
+package com.wanted.backend.domain.identity.domain.model;
 
 public enum MemberStatus {
     ACTIVE,                 // 정상 활성 상태
