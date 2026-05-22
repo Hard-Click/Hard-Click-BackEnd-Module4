@@ -25,18 +25,6 @@ public class ReviewRepositoryAdapter implements ReviewRepository {
         this.repository = repository;
     }
 
-    @Override
-    public Review save(Review review) {
-        ReviewJpaEntity entity = new ReviewJpaEntity(
-                review.getMemberId(),
-                review.getCourseId(),
-                review.getRating(),
-                review.getContent(),
-                review.getCreatedAt(),
-                review.getUpdatedAt()
-        );
-        return toDomain(repository.save(entity));
-    }
 
     @Override
     public boolean existsByCourseIdAndMemberId(Long courseId, Long memberId) {
@@ -112,6 +100,33 @@ public class ReviewRepositoryAdapter implements ReviewRepository {
             case rating -> Sort.by(Sort.Direction.DESC, "rating");
             case latest -> Sort.by(Sort.Direction.DESC, "createdAt");
         };
+    }
+
+    @Override
+    public Optional<Review> findById(Long reviewId) {
+        return repository.findById(reviewId)
+                .map(this::toDomain);
+    }
+
+    @Override
+    public Review save(Review review) {
+
+        if (review.getId() != null) {
+            ReviewJpaEntity entity = repository.findById(review.getId())
+                    .orElseThrow();
+            entity.update(review.getRating(), review.getContent(), review.getUpdatedAt());
+            return toDomain(repository.save(entity));
+        }
+
+        ReviewJpaEntity entity = new ReviewJpaEntity(
+                review.getMemberId(),
+                review.getCourseId(),
+                review.getRating(),
+                review.getContent(),
+                review.getCreatedAt(),
+                review.getUpdatedAt()
+        );
+        return toDomain(repository.save(entity));
     }
 
     private Review toDomain(ReviewJpaEntity entity) {

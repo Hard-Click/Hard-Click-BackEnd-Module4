@@ -33,5 +33,8 @@ public interface ReviewRepository {
     // 평균 별점
     Double avgRatingByCourseId(Long courseId);
 
+    // 수정/삭제용 단건 조회 추가
+    Optional<Review> findById(Long reviewId);
+
     record RatingCount(Double rating, Long count) {}
 }
