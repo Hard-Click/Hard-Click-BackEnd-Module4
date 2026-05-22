@@ -10,12 +10,12 @@ public class SignupService {
 
     public void signup(SignupStepOneRequest request) {
 
-        // TODO: 아이디 중복 검사
+
         // if (memberRepository.existsByUsername(request.getUsername())) {
         //     throw new BusinessException(ErrorCode.DUPLICATE_USERNAME);
         // }
 
-        // TODO: 이메일 중복 검사
+
         // if (memberRepository.existsByEmail(request.getEmail())) {
         //     throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
         // }
