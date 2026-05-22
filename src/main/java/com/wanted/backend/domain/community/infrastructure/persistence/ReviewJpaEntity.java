@@ -22,7 +22,7 @@ public class ReviewJpaEntity {
     private Long courseId;
 
     @Column(nullable = false)
-    private Double rating;
+    private Integer rating;
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
@@ -35,7 +35,7 @@ public class ReviewJpaEntity {
 
     protected ReviewJpaEntity() {}
 
-    public ReviewJpaEntity(Long memberId, Long courseId, Double rating, String content,
+    public ReviewJpaEntity(Long memberId, Long courseId, Integer rating, String content,
                            LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.memberId = memberId;
         this.courseId = courseId;

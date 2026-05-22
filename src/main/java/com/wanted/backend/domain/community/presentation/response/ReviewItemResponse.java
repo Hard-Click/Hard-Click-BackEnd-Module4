@@ -6,7 +6,7 @@ public record ReviewItemResponse(
         Long reviewId,
         String authorName,
         String authorInitial,
-        Double rating,
+        Integer rating,
         String content,
         LocalDate createdDate,
         boolean isMyReview
