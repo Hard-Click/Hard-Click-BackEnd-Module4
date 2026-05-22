@@ -40,6 +40,11 @@ public class CourseSectionJpaEntity {
         return entity;
     }
 
+    void update(String title, int orderIndex) {
+        this.title = title;
+        this.orderIndex = orderIndex;
+    }
+
     void addLesson(String title, String description, int orderIndex, Instant createdAt) {
         lessons.add(LessonJpaEntity.of(this, title, description, orderIndex, createdAt));
     }
