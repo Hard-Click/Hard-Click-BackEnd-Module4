@@ -24,7 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 
 @RestController
-@RequestMapping("/api/v1/courses")
+@RequestMapping("/api/courses")
 @RequiredArgsConstructor
 public class CourseController {
 
@@ -37,7 +37,7 @@ public class CourseController {
 
     /**
      * 강의 목록 페이징 조회
-     * GET /api/v1/courses?keyword=&subject=&instructorName=&sort=LATEST&page=0&size=12
+     * GET /api/courses?keyword=&subject=&instructorName=&sort=LATEST&page=0&size=12
      */
     @GetMapping
     public ResponseEntity<ApiResponse<CourseListResponse>> getCourses(
@@ -55,7 +55,7 @@ public class CourseController {
 
     /**
      * 강의 등록
-     * POST /api/v1/courses
+     * POST /api/courses
      */
     @PostMapping
     public ResponseEntity<ApiResponse<CreateCourseResponse>> createCourse(
@@ -68,9 +68,9 @@ public class CourseController {
 
     /**
      * 강의 수정
-     * PUT /api/v1/courses/{courseId}
+     * PATCH /api/courses/{courseId}
      */
-    @PutMapping("/{courseId}")
+    @PatchMapping("/{courseId}")
     public ResponseEntity<ApiResponse<Void>> updateCourse(
             @RequestHeader("X-Member-Id") Long memberId,
             @PathVariable Long courseId,
@@ -82,7 +82,7 @@ public class CourseController {
 
     /**
      * 강의 삭제
-     * DELETE /api/v1/courses/{courseId}
+     * DELETE /api/courses/{courseId}
      */
     @DeleteMapping("/{courseId}")
     public ResponseEntity<ApiResponse<Void>> deleteCourse(
@@ -95,7 +95,7 @@ public class CourseController {
 
     /**
      * 강의 공개/비공개 처리
-     * PATCH /api/v1/courses/{courseId}/status
+     * PATCH /api/courses/{courseId}/status
      * body: { "published": true | false }
      */
     @PatchMapping("/{courseId}/status")
@@ -112,7 +112,7 @@ public class CourseController {
 
     /**
      * 회차 영상 업로드
-     * POST /api/v1/courses/lessons/{lessonId}/video
+     * POST /api/courses/lessons/{lessonId}/video
      */
     @PostMapping(value = "/lessons/{lessonId}/video", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<UploadLessonVideoResponse>> uploadLessonVideo(
