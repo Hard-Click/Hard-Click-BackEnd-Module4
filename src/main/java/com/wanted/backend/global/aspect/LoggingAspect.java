@@ -30,8 +30,7 @@ public class LoggingAspect {
     /**
      * 컨트롤러 계층의 모든 메서드에 대한 포인트컷을 정의한다.
      */
-    @Pointcut("execution(* com.wanted.backend..controller..*(..)) || execution(* com.wanted.backend..presentation.api..*(..))")
-    @Pointcut("execution(* com.wanted.backend..presentation..*(..))")
+    @Pointcut("execution(* com.wanted.backend..controller..*(..)) || execution(* com.wanted.backend..presentation..*(..))")
     public void controllerLayer() {}
 
     /**
