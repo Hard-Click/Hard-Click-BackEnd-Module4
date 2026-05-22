@@ -43,7 +43,10 @@ import org.springframework.http.HttpStatus;
         REVIEW_NOT_AUTHORIZED(HttpStatus.FORBIDDEN, "R003", "본인의 리뷰만 수정/삭제할 수 있습니다."),
         NOT_ENROLLED(HttpStatus.FORBIDDEN, "R004", "수강 중인 강의만 리뷰를 작성할 수 있습니다."),
 
-        // 5. 학습 활동(Learning activity) 예외
+        // 5. 수강신청(Enrollment) 예외
+        ENROLLMENT_ALREADY_EXISTS(HttpStatus.CONFLICT, "EN001", "이미 수강 중인 강의입니다."),
+
+        // 6. 학습 활동(Learning activity) 예외
         VIDEO_NOT_FOUND(HttpStatus.NOT_FOUND, "L001", "존재하지 않는 영상입니다."),
         COURSE_NOT_PUBLISHED(HttpStatus.FORBIDDEN, "L002", "공개되지 않은 강의입니다."),
         ENROLLMENT_REQUIRED(HttpStatus.FORBIDDEN, "L003", "수강권 또는 구독권이 필요합니다.");
