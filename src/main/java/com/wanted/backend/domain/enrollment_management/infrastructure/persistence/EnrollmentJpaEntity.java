@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.enrollment_management.infrastructure.persistence;
 
 import com.wanted.backend.domain.enrollment_management.domain.model.Enrollment;
+import com.wanted.backend.domain.enrollment_management.domain.model.EnrollmentStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -35,8 +36,9 @@ public class EnrollmentJpaEntity {
     @Column(name = "enrolled_at", nullable = false)
     private Instant enrolledAt;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private String status = "IN_PROGRESS";
+    private EnrollmentStatus status = EnrollmentStatus.IN_PROGRESS;
 
     @Column(name = "expired_at")
     private LocalDateTime expiredAt;
@@ -46,11 +48,11 @@ public class EnrollmentJpaEntity {
         entity.memberId = enrollment.getUserId();
         entity.courseId = enrollment.getCourseId();
         entity.enrolledAt = enrollment.getEnrolledAt();
-        entity.status = "IN_PROGRESS";
+        entity.status = EnrollmentStatus.IN_PROGRESS;
         return entity;
     }
 
     Enrollment toDomain() {
-        return Enrollment.restore(id, memberId, courseId, enrolledAt);
+        return Enrollment.restore(id, memberId, courseId, enrolledAt, status, expiredAt);
     }
 }
