@@ -5,6 +5,8 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 @RequiredArgsConstructor
 public class CourseInfoQueryAdapter implements CourseInfoQueryPort {
@@ -13,8 +15,9 @@ public class CourseInfoQueryAdapter implements CourseInfoQueryPort {
 
     @Override
     public String getCourseTitle(Long courseId) {
-        return (String) em.createNativeQuery("SELECT title FROM courses WHERE id = :courseId")
+        List<?> results = em.createNativeQuery("SELECT title FROM courses WHERE id = :courseId")
                 .setParameter("courseId", courseId)
-                .getSingleResult();
+                .getResultList();
+        return results.isEmpty() ? "(삭제된 강의)" : (String) results.get(0);
     }
 }
