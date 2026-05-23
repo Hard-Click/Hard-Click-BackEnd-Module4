@@ -12,8 +12,10 @@ import com.wanted.backend.domain.community.presentation.response.CreateReviewRes
 import com.wanted.backend.domain.community.presentation.response.ReviewListResponse;
 import com.wanted.backend.domain.community.presentation.response.UpdateReviewResponse;
 import com.wanted.backend.global.common.ApiResponse;
+import com.wanted.backend.global.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -29,14 +31,15 @@ public class ReviewController {
         this.reviewQueryUseCase = reviewQueryUseCase;
     }
 
+    // ReviewController
     @PostMapping
     public ResponseEntity<ApiResponse<CreateReviewResponse>> createReview(
+            @AuthenticationPrincipal CustomUserDetails userDetails,  // JWT로 교체
             @PathVariable Long courseId,
-            @RequestHeader(value = "X-Member-Id", required = false, defaultValue = "1") Long memberId,
             @Valid @RequestBody CreateReviewRequest request) {
 
         Long reviewId = reviewCommandUseCase.handle(new CreateReviewCommand(
-                memberId,
+                userDetails.getMemberId(),
                 courseId,
                 request.rating(),
                 request.content()
@@ -47,12 +50,13 @@ public class ReviewController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<ReviewListResponse>> getReviews(
+            @AuthenticationPrincipal CustomUserDetails userDetails,  // JWT로 교체
             @PathVariable Long courseId,
-            @RequestHeader(value = "X-Member-Id", required = false) Long memberId,
             @RequestParam(defaultValue = "latest") ReviewSortType sort,
             @RequestParam(defaultValue = "1") int page) {
 
-        Long currentMemberId = memberId != null ? memberId : -1L;
+        // 비로그인: userDetails = null → -1L 처리
+        Long currentMemberId = userDetails != null ? userDetails.getMemberId() : -1L;
 
         ReviewListResponse response = reviewQueryUseCase.handle(
                 courseId, currentMemberId, sort, page);
@@ -62,12 +66,12 @@ public class ReviewController {
 
     @PatchMapping("/{reviewId}")
     public ResponseEntity<ApiResponse<UpdateReviewResponse>> updateReview(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long reviewId,
-            @RequestHeader(value = "X-Member-Id", required = false, defaultValue = "1") Long memberId,
             @Valid @RequestBody UpdateReviewRequest request) {
 
         Long updatedReviewId = reviewCommandUseCase.update(new UpdateReviewCommand(
-                memberId,
+                userDetails.getMemberId(),
                 reviewId,
                 request.rating(),
                 request.content()
@@ -78,10 +82,11 @@ public class ReviewController {
 
     @DeleteMapping("/{reviewId}")
     public ResponseEntity<ApiResponse<Void>> deleteReview(
-            @PathVariable Long reviewId,
-            @RequestHeader(value = "X-Member-Id", required = false, defaultValue = "1") Long memberId) {
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long reviewId) {
 
-        reviewCommandUseCase.delete(new DeleteReviewCommand(memberId, reviewId));
+        reviewCommandUseCase.delete(new DeleteReviewCommand(
+                userDetails.getMemberId(), reviewId));
 
         return ApiResponse.successNoContent("리뷰가 삭제되었습니다.");
     }
