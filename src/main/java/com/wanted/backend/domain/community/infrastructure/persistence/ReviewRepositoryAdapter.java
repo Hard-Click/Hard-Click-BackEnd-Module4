@@ -140,4 +140,10 @@ public class ReviewRepositoryAdapter implements ReviewRepository {
                 entity.getUpdatedAt()
         );
     }
+
+    @Override
+    public void deleteById(Long reviewId) {
+        repository.deleteById(reviewId);
+    }
+
 }

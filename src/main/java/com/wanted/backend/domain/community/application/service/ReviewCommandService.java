@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.community.application.service;
 
 import com.wanted.backend.domain.community.application.command.CreateReviewCommand;
+import com.wanted.backend.domain.community.application.command.DeleteReviewCommand;
 import com.wanted.backend.domain.community.application.command.UpdateReviewCommand;
 import com.wanted.backend.domain.community.application.policy.ReviewPolicy;
 import com.wanted.backend.domain.community.application.usecase.ReviewCommandUseCase;
@@ -50,5 +51,23 @@ public class ReviewCommandService implements ReviewCommandUseCase {
         Review saved = reviewRepository.save(review);
 
         return saved.getId();
+    }
+
+    @Override
+    public void delete(DeleteReviewCommand command) {
+
+        // [1단계] 리뷰 존재 여부 확인
+        // 없으면 BusinessException → 404 Not Found
+        Review review = reviewRepository.findById(command.reviewId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
+
+        // [2단계] 본인 리뷰 여부 확인 → Review 도메인이 판단
+        // 실패 시 BusinessException → 403 Forbidden
+        if (!review.isOwner(command.memberId())) {
+            throw new BusinessException(ErrorCode.REVIEW_NOT_AUTHORIZED);
+        }
+
+        // [3단계] Hard Delete
+        reviewRepository.deleteById(command.reviewId());
     }
 }

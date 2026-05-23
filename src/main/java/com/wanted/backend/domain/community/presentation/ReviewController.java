@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.community.presentation;
 
 import com.wanted.backend.domain.community.application.command.CreateReviewCommand;
+import com.wanted.backend.domain.community.application.command.DeleteReviewCommand;
 import com.wanted.backend.domain.community.application.command.UpdateReviewCommand;
 import com.wanted.backend.domain.community.application.usecase.ReviewCommandUseCase;
 import com.wanted.backend.domain.community.application.usecase.ReviewQueryUseCase;
@@ -61,7 +62,6 @@ public class ReviewController {
 
     @PatchMapping("/{reviewId}")
     public ResponseEntity<ApiResponse<UpdateReviewResponse>> updateReview(
-            @PathVariable Long courseId,
             @PathVariable Long reviewId,
             @RequestHeader(value = "X-Member-Id", required = false, defaultValue = "1") Long memberId,
             @Valid @RequestBody UpdateReviewRequest request) {
@@ -74,5 +74,15 @@ public class ReviewController {
         ));
 
         return ApiResponse.success("리뷰가 수정되었습니다.", new UpdateReviewResponse(updatedReviewId));
+    }
+
+    @DeleteMapping("/{reviewId}")
+    public ResponseEntity<ApiResponse<Void>> deleteReview(
+            @PathVariable Long reviewId,
+            @RequestHeader(value = "X-Member-Id", required = false, defaultValue = "1") Long memberId) {
+
+        reviewCommandUseCase.delete(new DeleteReviewCommand(memberId, reviewId));
+
+        return ApiResponse.successNoContent("리뷰가 삭제되었습니다.");
     }
 }
