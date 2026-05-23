@@ -71,4 +71,18 @@ public class VideoProgressJpaEntity {
         this.lastPositionSec = lastPositionSec;
         this.updatedAt = updatedAt;
     }
+
+    public void updateProgress(
+            Integer lastPositionSec,
+            Integer watchTimeSec,
+            Boolean completed,
+            LocalDateTime completedAt,
+            LocalDateTime updatedAt
+    ) {
+        this.lastPositionSec = lastPositionSec;
+        this.watchTimeSec = watchTimeSec;
+        this.completed = completed;
+        this.completedAt = completedAt;
+        this.updatedAt = updatedAt;
+    }
 }

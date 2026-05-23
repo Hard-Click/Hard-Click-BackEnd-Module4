@@ -2,9 +2,12 @@ package com.wanted.backend.domain.learning_activity.presentation.api;
 
 import com.wanted.backend.domain.learning_activity.application.command.GetVideoPositionCommand;
 import com.wanted.backend.domain.learning_activity.application.command.SaveVideoPositionCommand;
+import com.wanted.backend.domain.learning_activity.application.command.SaveWatchTimeCommand;
 import com.wanted.backend.domain.learning_activity.application.usecase.GetVideoPositionUseCase;
 import com.wanted.backend.domain.learning_activity.application.usecase.SaveVideoPositionUseCase;
+import com.wanted.backend.domain.learning_activity.application.usecase.SaveWatchTimeUseCase;
 import com.wanted.backend.domain.learning_activity.presentation.api.request.SaveVideoPositionRequest;
+import com.wanted.backend.domain.learning_activity.presentation.api.request.SaveWatchTimeRequest;
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,6 +35,7 @@ public class VideoProgressController {
 
     private final GetVideoPositionUseCase getVideoPositionUseCase;
     private final SaveVideoPositionUseCase saveVideoPositionUseCase;
+    private final SaveWatchTimeUseCase saveWatchTimeUseCase;
 
     @GetMapping("/{videoId}/progress/position")
     @Operation(
@@ -68,5 +72,25 @@ public class VideoProgressController {
                 request.positionSeconds()
         ));
         return ApiResponse.successNoContent("마지막 재생 위치가 저장되었습니다.");
+    }
+
+    @PatchMapping("/{videoId}/progress/watch-time")
+    @Operation(
+            summary = "영상 시청 시간 누적 저장",
+            description = "영상 시청 중 추가로 시청한 시간을 초 단위로 누적 저장합니다."
+    )
+    public ResponseEntity<ApiResponse<Void>> saveWatchTime(
+            @Parameter(description = "시청 시간을 누적 저장할 영상 ID", example = "10")
+            @Positive
+            @PathVariable Long videoId,
+            @Valid @RequestBody SaveWatchTimeRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        saveWatchTimeUseCase.handle(new SaveWatchTimeCommand(
+                userDetails.getMemberId(),
+                videoId,
+                request.watchTimeSeconds()
+        ));
+        return ApiResponse.successNoContent("영상 시청 시간이 누적 저장되었습니다.");
     }
 }
