@@ -2,6 +2,7 @@ package com.wanted.backend.domain.cource.presentation.api;
 
 import com.wanted.backend.domain.cource.application.command.ChangeCourseStatusCommand;
 import com.wanted.backend.domain.cource.application.command.UploadLessonVideoCommand;
+import com.wanted.backend.domain.cource.application.dto.CourseDetailResult;
 import com.wanted.backend.domain.cource.application.dto.CourseListResult;
 import com.wanted.backend.domain.cource.application.query.CourseListQuery;
 import com.wanted.backend.domain.cource.application.usecase.*;
@@ -10,6 +11,7 @@ import com.wanted.backend.domain.cource.domain.model.CourseStatus;
 import com.wanted.backend.domain.cource.domain.model.FileProcessingStatus;
 import com.wanted.backend.domain.cource.presentation.api.request.CreateCourseRequest;
 import com.wanted.backend.domain.cource.presentation.api.request.UpdateCourseRequest;
+import com.wanted.backend.domain.cource.presentation.api.response.CourseDetailResponse;
 import com.wanted.backend.domain.cource.presentation.api.response.CourseListResponse;
 import com.wanted.backend.domain.cource.presentation.api.response.CreateCourseResponse;
 import com.wanted.backend.domain.cource.presentation.api.response.UploadLessonVideoResponse;
@@ -29,6 +31,7 @@ import java.io.IOException;
 public class CourseController {
 
     private final GetCourseListUseCase getCourseListUseCase;
+    private final GetCourseDetailUseCase getCourseDetailUseCase;
     private final CreateCourseUseCase createCourseUseCase;
     private final UpdateCourseUseCase updateCourseUseCase;
     private final DeleteCourseUseCase deleteCourseUseCase;
@@ -51,6 +54,18 @@ public class CourseController {
         CourseListResult result = getCourseListUseCase.handle(
                 new CourseListQuery(keyword, subject, instructorName, sort, page, size));
         return ApiResponse.success("강의 목록 조회 성공", CourseListResponse.from(result));
+    }
+
+    /**
+     * 강의 상세 조회
+     * GET /api/courses/{courseId}
+     */
+    @GetMapping("/{courseId}")
+    public ResponseEntity<ApiResponse<CourseDetailResponse>> getCourseDetail(
+            @PathVariable Long courseId
+    ) {
+        CourseDetailResult result = getCourseDetailUseCase.handle(courseId);
+        return ApiResponse.success("강의 상세 조회 성공", CourseDetailResponse.from(result));
     }
 
     /**
