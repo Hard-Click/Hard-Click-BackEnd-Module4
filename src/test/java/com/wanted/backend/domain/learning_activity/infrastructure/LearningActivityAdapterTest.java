@@ -21,6 +21,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.test.context.jdbc.Sql;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -122,6 +123,19 @@ class LearningActivityAdapterTest {
         assertThat(saved.lastPositionSec()).isEqualTo(42);
         assertThat(saved.watchTimeSec()).isEqualTo(150);
         assertThat(saved.completed()).isTrue();
+    }
+
+    @Test
+    void videoProgressRepositoryAdapterSavesCompletedStatus() {
+        VideoProgress progress = videoProgressRepositoryAdapter.findByMemberIdAndVideoId(1L, 10L)
+                .orElseThrow()
+                .complete(LocalDateTime.now());
+
+        VideoProgress saved = videoProgressRepositoryAdapter.save(progress);
+
+        assertThat(saved.id()).isEqualTo(100L);
+        assertThat(saved.completed()).isTrue();
+        assertThat(saved.completedAt()).isNotNull();
     }
 
     @Test
