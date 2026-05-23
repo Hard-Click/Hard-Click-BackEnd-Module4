@@ -13,7 +13,7 @@ public class EnrollmentRepositoryAdapter implements EnrollmentRepository {
 
     @Override
     public boolean existsByUserIdAndCourseId(Long userId, Long courseId) {
-        return jpaRepository.existsByUserIdAndCourseId(userId, courseId);
+        return jpaRepository.existsByMemberIdAndCourseId(userId, courseId);
     }
 
     @Override

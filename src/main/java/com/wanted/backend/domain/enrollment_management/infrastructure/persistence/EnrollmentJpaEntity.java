@@ -7,13 +7,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(
         name = "enrollments",
         uniqueConstraints = @UniqueConstraint(
-                name = "uk_enrollment_user_course",
-                columnNames = {"user_id", "course_id"}
+                name = "uk_enrollment_member_course",
+                columnNames = {"member_id", "course_id"}
         )
 )
 @Getter
@@ -22,10 +23,11 @@ public class EnrollmentJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "enrollment_id")
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @Column(name = "member_id", nullable = false)
+    private Long memberId;
 
     @Column(name = "course_id", nullable = false)
     private Long courseId;
@@ -33,15 +35,22 @@ public class EnrollmentJpaEntity {
     @Column(name = "enrolled_at", nullable = false)
     private Instant enrolledAt;
 
+    @Column(nullable = false, length = 20)
+    private String status = "IN_PROGRESS";
+
+    @Column(name = "expired_at")
+    private LocalDateTime expiredAt;
+
     static EnrollmentJpaEntity from(Enrollment enrollment) {
         EnrollmentJpaEntity entity = new EnrollmentJpaEntity();
-        entity.userId = enrollment.getUserId();
+        entity.memberId = enrollment.getUserId();
         entity.courseId = enrollment.getCourseId();
         entity.enrolledAt = enrollment.getEnrolledAt();
+        entity.status = "IN_PROGRESS";
         return entity;
     }
 
     Enrollment toDomain() {
-        return Enrollment.restore(id, userId, courseId, enrolledAt);
+        return Enrollment.restore(id, memberId, courseId, enrolledAt);
     }
 }
