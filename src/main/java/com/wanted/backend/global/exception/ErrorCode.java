@@ -49,7 +49,8 @@ import org.springframework.http.HttpStatus;
         // 6. 학습 활동(Learning activity) 예외
         VIDEO_NOT_FOUND(HttpStatus.NOT_FOUND, "L001", "존재하지 않는 영상입니다."),
         COURSE_NOT_PUBLISHED(HttpStatus.FORBIDDEN, "L002", "공개되지 않은 강의입니다."),
-        ENROLLMENT_REQUIRED(HttpStatus.FORBIDDEN, "L003", "수강권 또는 구독권이 필요합니다.");
+        ENROLLMENT_REQUIRED(HttpStatus.FORBIDDEN, "L003", "수강권 또는 구독권이 필요합니다."),
+        VIDEO_COMPLETION_CONDITION_NOT_MET(HttpStatus.BAD_REQUEST, "L004", "영상 시청 비율이 완료 기준을 충족하지 않습니다.");
 
     private final HttpStatus status;
     private final String code;

@@ -1,8 +1,10 @@
 package com.wanted.backend.domain.learning_activity.presentation.api;
 
+import com.wanted.backend.domain.learning_activity.application.command.CompleteVideoCommand;
 import com.wanted.backend.domain.learning_activity.application.command.GetVideoPositionCommand;
 import com.wanted.backend.domain.learning_activity.application.command.SaveVideoPositionCommand;
 import com.wanted.backend.domain.learning_activity.application.command.SaveWatchTimeCommand;
+import com.wanted.backend.domain.learning_activity.application.usecase.CompleteVideoUseCase;
 import com.wanted.backend.domain.learning_activity.application.usecase.GetVideoPositionUseCase;
 import com.wanted.backend.domain.learning_activity.application.usecase.SaveVideoPositionUseCase;
 import com.wanted.backend.domain.learning_activity.application.usecase.SaveWatchTimeUseCase;
@@ -36,6 +38,7 @@ public class VideoProgressController {
     private final GetVideoPositionUseCase getVideoPositionUseCase;
     private final SaveVideoPositionUseCase saveVideoPositionUseCase;
     private final SaveWatchTimeUseCase saveWatchTimeUseCase;
+    private final CompleteVideoUseCase completeVideoUseCase;
 
     @GetMapping("/{videoId}/progress/position")
     @Operation(
@@ -92,5 +95,20 @@ public class VideoProgressController {
                 request.watchTimeSeconds()
         ));
         return ApiResponse.successNoContent("영상 시청 시간이 누적 저장되었습니다.");
+    }
+
+    @PatchMapping("/{videoId}/progress/complete")
+    @Operation(
+            summary = "영상 완료 처리",
+            description = "영상 시청 비율이 90% 이상이면 완료 상태로 반영합니다."
+    )
+    public ResponseEntity<ApiResponse<Void>> complete(
+            @Parameter(description = "완료 처리할 영상 ID", example = "10")
+            @Positive
+            @PathVariable Long videoId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        completeVideoUseCase.handle(new CompleteVideoCommand(userDetails.getMemberId(), videoId));
+        return ApiResponse.successNoContent("영상 완료 처리되었습니다.");
     }
 }

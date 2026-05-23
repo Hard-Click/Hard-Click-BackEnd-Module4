@@ -63,6 +63,19 @@ public class VideoProgress {
         );
     }
 
+    public VideoProgress complete(LocalDateTime completedAt) {
+        return new VideoProgress(
+                id,
+                memberId,
+                courseId,
+                videoId,
+                lastPositionSec,
+                watchTimeSec,
+                true,
+                this.completedAt == null ? completedAt : this.completedAt
+        );
+    }
+
     public Long id() {
         return id;
     }
