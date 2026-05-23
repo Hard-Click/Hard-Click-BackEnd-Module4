@@ -17,6 +17,19 @@ public record VideoProgress(
         return new VideoProgress(null, memberId, courseId, videoId, 0, 0, false, null);
     }
 
+    public VideoProgress updateLastPosition(Integer lastPositionSec) {
+        return new VideoProgress(
+                id,
+                memberId,
+                courseId,
+                videoId,
+                lastPositionSec,
+                watchTimeSec,
+                completed,
+                completedAt
+        );
+    }
+
     public boolean isCompleted() {
         return Boolean.TRUE.equals(completed);
     }

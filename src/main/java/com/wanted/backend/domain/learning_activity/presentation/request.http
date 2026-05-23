@@ -4,3 +4,12 @@
 ### 영상 재생 API - 권한 검증 및 스트리밍 URL 반환
 GET {{host}}/api/learning/videos/{{videoId}}/play
 Accept: application/json
+
+### 마지막 재생 위치 저장 API
+PATCH {{host}}/api/learning/videos/{{videoId}}/progress/position
+Content-Type: application/json
+Accept: application/json
+
+{
+  "positionSeconds": 142
+}

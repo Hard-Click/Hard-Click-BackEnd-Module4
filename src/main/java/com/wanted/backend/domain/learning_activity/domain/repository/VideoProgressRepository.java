@@ -7,4 +7,6 @@ import java.util.Optional;
 public interface VideoProgressRepository {
 
     Optional<VideoProgress> findByMemberIdAndVideoId(Long memberId, Long videoId);
+
+    VideoProgress save(VideoProgress progress);
 }
