@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
@@ -19,6 +20,28 @@ public class VideoProgressRepositoryAdapter implements VideoProgressRepository {
     public Optional<VideoProgress> findByMemberIdAndVideoId(Long memberId, Long videoId) {
         return repository.findByMemberIdAndVideoId(memberId, videoId)
                 .map(this::toDomain);
+    }
+
+    @Override
+    @Transactional
+    public VideoProgress save(VideoProgress progress) {
+        LocalDateTime now = LocalDateTime.now();
+        VideoProgressJpaEntity entity = progress.id() == null
+                ? new VideoProgressJpaEntity(
+                progress.memberId(),
+                progress.courseId(),
+                progress.videoId(),
+                progress.lastPositionSec(),
+                progress.watchTimeSec(),
+                progress.completed(),
+                progress.completedAt(),
+                now
+        )
+                : repository.findById(progress.id()).orElseThrow();
+
+        entity.updateLastPosition(progress.lastPositionSec(), now);
+
+        return toDomain(repository.save(entity));
     }
 
     private VideoProgress toDomain(VideoProgressJpaEntity entity) {

@@ -10,6 +10,7 @@ public class RefreshTokenJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "token_id")
     private Long id;
 
     @Column(nullable = false, unique = true)
@@ -18,7 +19,7 @@ public class RefreshTokenJpaEntity {
     @Column(nullable = false)
     private Long memberId;
 
-    @Column(nullable = false)
+    @Column(name = "expired_at", nullable = false)
     private LocalDateTime expiryDate;
 
     @Column(nullable = false, updatable = false)

@@ -46,4 +46,29 @@ public class VideoProgressJpaEntity {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    public VideoProgressJpaEntity(
+            Long memberId,
+            Long courseId,
+            Long videoId,
+            Integer lastPositionSec,
+            Integer watchTimeSec,
+            Boolean completed,
+            LocalDateTime completedAt,
+            LocalDateTime updatedAt
+    ) {
+        this.memberId = memberId;
+        this.courseId = courseId;
+        this.videoId = videoId;
+        this.lastPositionSec = lastPositionSec;
+        this.watchTimeSec = watchTimeSec;
+        this.completed = completed;
+        this.completedAt = completedAt;
+        this.updatedAt = updatedAt;
+    }
+
+    public void updateLastPosition(Integer lastPositionSec, LocalDateTime updatedAt) {
+        this.lastPositionSec = lastPositionSec;
+        this.updatedAt = updatedAt;
+    }
 }

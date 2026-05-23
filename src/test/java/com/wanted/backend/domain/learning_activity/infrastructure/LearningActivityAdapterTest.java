@@ -95,6 +95,22 @@ class LearningActivityAdapterTest {
     }
 
     @Test
+    void videoProgressRepositoryAdapterSavesLastPosition() {
+        VideoProgress progress = VideoProgress.empty(1L, 20L, 10L)
+                .updateLastPosition(142);
+
+        VideoProgress saved = videoProgressRepositoryAdapter.save(progress);
+
+        assertThat(saved.id()).isNotNull();
+        assertThat(saved.memberId()).isEqualTo(1L);
+        assertThat(saved.courseId()).isEqualTo(20L);
+        assertThat(saved.videoId()).isEqualTo(10L);
+        assertThat(saved.lastPositionSec()).isEqualTo(142);
+        assertThat(saved.watchTimeSec()).isZero();
+        assertThat(saved.completed()).isFalse();
+    }
+
+    @Test
     void enrollmentAccessAdapterChecksActiveEnrollment() {
         boolean result = enrollmentAccessAdapter.hasActiveEnrollment(1L, 20L);
 
