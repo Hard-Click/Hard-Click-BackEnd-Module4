@@ -10,6 +10,8 @@ import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 @RequiredArgsConstructor
@@ -37,8 +39,15 @@ public class UploadLessonVideoService implements UploadLessonVideoUseCase {
         lesson.attachVideo(videoUrl);
         lessonRepository.save(lesson);
 
-        // 트랜잭션 커밋 후 비동기 처리 시작 (클라이언트는 기다리지 않고 즉시 응답 받음)
-        fileProcessingService.process(command.lessonId());
+        // 트랜잭션 커밋 후에 비동기 처리 시작 — 커밋 전에 시작하면 async 스레드가
+        // 아직 커밋되지 않은 행을 읽어 videoUrl이 null인 채로 처리될 수 있음
+        Long lessonId = command.lessonId();
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                fileProcessingService.process(lessonId);
+            }
+        });
 
         return videoUrl;
     }

@@ -1,17 +1,21 @@
 package com.wanted.backend.domain.cource.infrastructure.persistence;
 
-import com.wanted.backend.domain.cource.domain.model.Course;
-import com.wanted.backend.domain.cource.domain.model.CourseSection;
-import com.wanted.backend.domain.cource.domain.model.Lesson;
+import com.wanted.backend.domain.cource.domain.model.*;
 import com.wanted.backend.domain.cource.domain.repository.CourseRepository;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.Hibernate;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -50,6 +54,44 @@ public class CourseRepositoryAdapter implements CourseRepository {
     @Override
     public void delete(Long courseId) {
         jpaRepository.deleteById(courseId);
+    }
+
+    @Override
+    public PageResult<CourseListItem> findList(String keyword, String subject, List<Long> authorIds,
+                                               CourseSortType sort, int page, int size) {
+        Specification<CourseJpaEntity> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            // 공개 강의만 노출
+            predicates.add(cb.equal(root.get("status"), CourseStatus.PUBLISHED));
+            if (keyword != null && !keyword.isBlank()) {
+                predicates.add(cb.like(cb.lower(root.get("title")), "%" + keyword.toLowerCase() + "%"));
+            }
+            if (subject != null && !subject.isBlank()) {
+                predicates.add(cb.equal(root.get("subject"), subject));
+            }
+            if (authorIds != null && !authorIds.isEmpty()) {
+                predicates.add(root.get("authorId").in(authorIds));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Sort sortOrder = switch (sort) {
+            case LATEST -> Sort.by(Sort.Direction.DESC, "createdAt");
+            // POPULAR/RATING은 추후 연동 전까지 최신순으로 대체
+            case POPULAR, RATING -> Sort.by(Sort.Direction.DESC, "createdAt");
+        };
+
+        // 클라이언트는 1-based, Spring PageRequest는 0-based
+        Page<CourseJpaEntity> result = jpaRepository.findAll(spec, PageRequest.of(page - 1, size, sortOrder));
+
+        List<CourseListItem> items = result.getContent().stream()
+                .map(e -> new CourseListItem(
+                        e.getId(), e.getAuthorId(), e.getTitle(), e.getSubject(),
+                        e.getThumbnailUrl(), e.getPriceType(), e.getPrice(), e.getCreatedAt()))
+                .toList();
+
+        // currentPage 응답도 1-based로 반환
+        return new PageResult<>(items, result.getNumber() + 1, result.getTotalPages(), result.getTotalElements());
     }
 
     // ── 섹션 동기화 ──────────────────────────────────────────────────────────────
