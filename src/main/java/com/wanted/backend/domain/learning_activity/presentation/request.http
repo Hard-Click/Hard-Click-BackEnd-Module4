@@ -13,3 +13,7 @@ Accept: application/json
 {
   "positionSeconds": 142
 }
+
+### 이어보기 위치 조회 API
+GET {{host}}/api/learning/videos/{{videoId}}/progress/position
+Accept: application/json
