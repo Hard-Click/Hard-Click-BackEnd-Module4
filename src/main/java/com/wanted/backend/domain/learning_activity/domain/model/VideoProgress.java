@@ -50,6 +50,19 @@ public class VideoProgress {
         );
     }
 
+    public VideoProgress addWatchTime(Integer watchTimeSeconds) {
+        return new VideoProgress(
+                id,
+                memberId,
+                courseId,
+                videoId,
+                lastPositionSec,
+                watchTimeSec + watchTimeSeconds,
+                completed,
+                completedAt
+        );
+    }
+
     public Long id() {
         return id;
     }

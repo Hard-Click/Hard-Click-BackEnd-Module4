@@ -17,3 +17,12 @@ Accept: application/json
 ### 이어보기 위치 조회 API
 GET {{host}}/api/learning/videos/{{videoId}}/progress/position
 Accept: application/json
+
+### 영상 시청 시간 누적 저장 API
+PATCH {{host}}/api/learning/videos/{{videoId}}/progress/watch-time
+Content-Type: application/json
+Accept: application/json
+
+{
+  "watchTimeSeconds": 30
+}

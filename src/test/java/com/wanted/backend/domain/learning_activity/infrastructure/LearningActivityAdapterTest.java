@@ -111,6 +111,20 @@ class LearningActivityAdapterTest {
     }
 
     @Test
+    void videoProgressRepositoryAdapterSavesWatchTime() {
+        VideoProgress progress = videoProgressRepositoryAdapter.findByMemberIdAndVideoId(1L, 10L)
+                .orElseThrow()
+                .addWatchTime(30);
+
+        VideoProgress saved = videoProgressRepositoryAdapter.save(progress);
+
+        assertThat(saved.id()).isEqualTo(100L);
+        assertThat(saved.lastPositionSec()).isEqualTo(42);
+        assertThat(saved.watchTimeSec()).isEqualTo(150);
+        assertThat(saved.completed()).isTrue();
+    }
+
+    @Test
     void enrollmentAccessAdapterChecksActiveEnrollment() {
         boolean result = enrollmentAccessAdapter.hasActiveEnrollment(1L, 20L);
 

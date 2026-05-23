@@ -39,7 +39,13 @@ public class VideoProgressRepositoryAdapter implements VideoProgressRepository {
         )
                 : repository.findById(progress.id()).orElseThrow();
 
-        entity.updateLastPosition(progress.lastPositionSec(), now);
+        entity.updateProgress(
+                progress.lastPositionSec(),
+                progress.watchTimeSec(),
+                progress.completed(),
+                progress.completedAt(),
+                now
+        );
 
         return toDomain(repository.save(entity));
     }
