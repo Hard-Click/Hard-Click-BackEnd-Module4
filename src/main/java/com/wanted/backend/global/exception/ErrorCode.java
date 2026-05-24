@@ -55,7 +55,11 @@ import org.springframework.http.HttpStatus;
         //이미지 파일 업로드 예외
         INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "F001", "jpg, jpeg, png 형식의 파일만 업로드 가능합니다."),
         FILE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST, "F002", "파일 크기는 5MB 이하여야 합니다."),
-        FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "F003", "파일 업로드에 실패했습니다.");
+        FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "F003", "파일 업로드에 실패했습니다."),
+
+        //게시글 예외
+        SUBJECT_REQUIRED(HttpStatus.BAD_REQUEST, "P001", "질문게시판은 과목 선택이 필수입니다."),
+        FILE_COUNT_EXCEEDED(HttpStatus.BAD_REQUEST, "P002", "파일은 최대 2개까지 첨부 가능합니다.");
 
     private final HttpStatus status;
     private final String code;
