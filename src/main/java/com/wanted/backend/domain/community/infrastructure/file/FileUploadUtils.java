@@ -55,7 +55,6 @@ public class FileUploadUtils {
             Path filePath = Paths.get(uploadDir).resolve(fileName);
             Files.deleteIfExists(filePath);
         } catch (IOException e) {
-            // 삭제 실패해도 주요 로직에 영향 주지 않음
         }
     }
 

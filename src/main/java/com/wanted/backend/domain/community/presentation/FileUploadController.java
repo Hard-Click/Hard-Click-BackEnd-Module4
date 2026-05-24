@@ -11,12 +11,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-/*
- * [Presentation Layer - Controller]
- *
- * POST /api/files/post    게시글용 이미지 업로드
- * POST /api/files/comment 댓글용 이미지 업로드
- */
 @RestController
 @RequestMapping("/api/files")
 public class FileUploadController {
