@@ -26,19 +26,22 @@ public class IdentityController {
     }
 
     @PostMapping("/refresh")
-    public AuthToken refresh(@RequestBody Map<String, String> body) {
+    public ResponseEntity<ApiResponse<Map<String, String>>> refresh(@RequestBody Map<String, String> body) {
         String refreshToken = body.get("refreshToken");
-        return loginService.refresh(refreshToken);
+        AuthToken token = loginService.refresh(refreshToken);
+        return ApiResponse.success("Access Token이 재발급되었습니다", Map.of("accessToken", token.accessToken()));
     }
     @GetMapping("/check-username")
-    public ResponseEntity<ApiResponse<Boolean>> checkUsername(@RequestParam String username) {
+    public ResponseEntity<ApiResponse<Map<String, Boolean>>> checkUsername(@RequestParam String username) {
         boolean isDuplicated = checkDuplicateUseCase.isUsernameDuplicated(username);
-        return ApiResponse.success("아이디 중복 확인 결과입니다.", isDuplicated);
+        String message = isDuplicated ? "사용이 불가능한 아이디입니다" : "사용 가능한 아이디입니다";
+        return ApiResponse.success(message, Map.of("exists", isDuplicated));
     }
 
     @GetMapping("/check-email")
-    public ResponseEntity<ApiResponse<Boolean>> checkEmail(@RequestParam String email) {
+    public ResponseEntity<ApiResponse<Map<String, Boolean>>> checkEmail(@RequestParam String email) {
         boolean isDuplicated = checkDuplicateUseCase.isEmailDuplicated(email);
-        return ApiResponse.success("이메일 중복 확인 결과입니다.", isDuplicated);
+        String message = isDuplicated ? "사용이 불가능한 이메일입니다" : "사용 가능한 이메일입니다";
+        return ApiResponse.success(message, Map.of("exists", isDuplicated));
     }
 }
