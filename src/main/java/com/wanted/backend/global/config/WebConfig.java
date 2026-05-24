@@ -17,5 +17,9 @@ public class WebConfig implements WebMvcConfigurer {
         // 댓글 이미지
         registry.addResourceHandler("/community/comment/**")
                 .addResourceLocations("file:src/main/resources/static/community/comment/");
+
+        // 프로필 이미지
+        registry.addResourceHandler("/identity/profile/**")
+                .addResourceLocations("file:src/main/resources/static/identity/profile/");
     }
 }

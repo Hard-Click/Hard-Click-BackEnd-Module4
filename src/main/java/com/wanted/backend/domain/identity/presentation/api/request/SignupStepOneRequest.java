@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.identity.presentation.api.request;
 
+import com.wanted.backend.domain.identity.domain.policy.PasswordPolicy;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -20,8 +21,7 @@ public class SignupStepOneRequest {
 
     @NotBlank(message = "비밀번호를 입력해주세요")
 
-    @Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[@$!%#?&]).{8,16}$",
-            message = "비밀번호는 8자 이상 16자 이하이며 영문, 숫자, 특수문자(@$!%#?&)를 포함해야 합니다")
+    @Pattern(regexp = PasswordPolicy.PASSWORD_REGEX, message = PasswordPolicy.PASSWORD_MESSAGE)
     private String password;
 
     @NotBlank(message = "비밀번호 확인을 입력해주세요")

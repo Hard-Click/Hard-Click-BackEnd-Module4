@@ -13,7 +13,7 @@ public class Member {
     private final Long id;
     private final String username;
     private final String email;
-    private final String password;
+    private String password;
     private final String name;
     private String gender;
     private LocalDate birthDate;
@@ -85,6 +85,18 @@ public class Member {
 
         // [Record Event] 도메인 내부에서 이벤트를 생성하여 기록합니다.
         registerEvent(new MemberLoggedInEvent(this.id, now));
+    }
+
+    // UI에서 수정 가능한 프로필 이미지와 비밀번호만 변경합니다.
+    public void updateProfile(String profileImageUrl, String encodedPassword, LocalDateTime now) {
+        if (profileImageUrl != null) {
+            this.profileImageUrl = profileImageUrl;
+        }
+        if (encodedPassword != null) {
+            this.password = encodedPassword;
+            this.isPasswordChangeRequired = false;
+        }
+        this.updatedAt = now;
     }
 
     private void registerEvent(DomainEvent event) {
