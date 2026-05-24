@@ -31,19 +31,16 @@ public class LoginService {
         Member member = memberRepository.findByUsername(username)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_LOGIN_INFO));
 
-        if (!passwordEncoder.matches(rawPassword, member.getPassword())) {
+        boolean passwordMatched =
+                passwordEncoder.matches(rawPassword, member.getPassword());
+
+        if (!passwordMatched) {
             throw new BusinessException(ErrorCode.INVALID_LOGIN_INFO);
         }
 
-
         member.loginSuccess(LocalDateTime.now());
-
-
         memberRepository.save(member);
-
-
         member.pullDomainEvents().forEach(eventPublisher::publishEvent);
-
 
         String role = "ROLE_" + member.getRole().name();
         String accessToken = jwtProvider.createAccessToken(member.getId(), member.getUsername(), role);
@@ -74,7 +71,6 @@ public class LoginService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-
         String role = "ROLE_" + member.getRole().name();
         String newAccessToken = jwtProvider.createAccessToken(memberId, member.getUsername(), role);
         String newRefreshToken = jwtProvider.createRefreshToken(memberId);
@@ -84,6 +80,7 @@ public class LoginService {
 
         return new AuthToken(newAccessToken, newRefreshToken);
     }
+
     private void saveRefreshToken(Long memberId, String token) {
         RefreshToken refreshTokenModel = new RefreshToken(
                 null,
