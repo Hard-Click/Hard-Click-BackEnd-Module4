@@ -24,7 +24,6 @@ public class LoginService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
-    // Spring의 이벤트 발행자 주입
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
@@ -32,22 +31,19 @@ public class LoginService {
         Member member = memberRepository.findByUsername(username)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_LOGIN_INFO));
 
-        if (!passwordEncoder.matches(rawPassword, member.getPassword())) {
+        boolean passwordMatched =
+                passwordEncoder.matches(rawPassword, member.getPassword());
+
+        if (!passwordMatched) {
             throw new BusinessException(ErrorCode.INVALID_LOGIN_INFO);
         }
 
-        // [Step 1] 도메인 행위 수행 (내부에서 이벤트가 Record됨)
         member.loginSuccess(LocalDateTime.now());
-
-        // [Step 2] 변경된 도메인 상태 저장
         memberRepository.save(member);
-
-        // [Step 3] 도메인에서 이벤트를 꺼내어(Pull) 스프링 이벤트로 발행(Publish)
         member.pullDomainEvents().forEach(eventPublisher::publishEvent);
 
-        // 토큰 발급 로직...
         String role = "ROLE_" + member.getRole().name();
-        String accessToken = jwtProvider.createAccessToken(member.getId(), role);
+        String accessToken = jwtProvider.createAccessToken(member.getId(), member.getUsername(), role);
         String refreshToken = jwtProvider.createRefreshToken(member.getId());
 
         refreshTokenRepository.deleteByMemberId(member.getId());
@@ -76,7 +72,7 @@ public class LoginService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         String role = "ROLE_" + member.getRole().name();
-        String newAccessToken = jwtProvider.createAccessToken(memberId, role);
+        String newAccessToken = jwtProvider.createAccessToken(memberId, member.getUsername(), role);
         String newRefreshToken = jwtProvider.createRefreshToken(memberId);
 
         refreshTokenRepository.deleteByMemberId(memberId);
