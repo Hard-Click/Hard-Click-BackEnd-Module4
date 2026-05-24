@@ -1,12 +1,18 @@
 package com.wanted.backend.domain.learning_activity.infrastructure;
 
+import com.wanted.backend.domain.learning_activity.application.port.CourseProgressQueryPort;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoAccessInfo;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoProgress;
+import com.wanted.backend.domain.learning_activity.infrastructure.curriculum.CourseCurriculumReferenceEntity;
+import com.wanted.backend.domain.learning_activity.infrastructure.curriculum.CourseCurriculumReferenceRepository;
 import com.wanted.backend.domain.learning_activity.infrastructure.catalog.VideoCatalogAdapter;
+import com.wanted.backend.domain.learning_activity.infrastructure.video.VideoReferenceEntity;
+import com.wanted.backend.domain.learning_activity.infrastructure.video.VideoReferenceRepository;
 import com.wanted.backend.domain.learning_activity.infrastructure.catalog.SpringDataVideoCatalogRepository;
 import com.wanted.backend.domain.learning_activity.infrastructure.enrollment.EnrollmentAccessAdapter;
 import com.wanted.backend.domain.learning_activity.infrastructure.enrollment.EnrollmentReferenceJpaEntity;
 import com.wanted.backend.domain.learning_activity.infrastructure.enrollment.SpringDataEnrollmentAccessRepository;
+import com.wanted.backend.domain.learning_activity.infrastructure.persistence.CourseProgressQueryAdapter;
 import com.wanted.backend.domain.learning_activity.infrastructure.persistence.VideoProgressRepositoryAdapter;
 import com.wanted.backend.domain.learning_activity.infrastructure.persistence.VideoProgressJpaEntity;
 import com.wanted.backend.domain.learning_activity.infrastructure.persistence.SpringDataVideoProgressRepository;
@@ -33,10 +39,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 @EntityScan(basePackageClasses = {
         VideoProgressJpaEntity.class,
         EnrollmentReferenceJpaEntity.class,
-        SubscriptionReferenceJpaEntity.class
+        SubscriptionReferenceJpaEntity.class,
+        CourseCurriculumReferenceEntity.class,
+        VideoReferenceEntity.class
 })
 @EnableJpaRepositories(basePackageClasses = {
         SpringDataVideoProgressRepository.class,
+        CourseCurriculumReferenceRepository.class,
+        VideoReferenceRepository.class,
         SpringDataVideoCatalogRepository.class,
         SpringDataEnrollmentAccessRepository.class,
         SpringDataSubscriptionAccessRepository.class
@@ -45,6 +55,7 @@ import static org.assertj.core.api.Assertions.assertThat;
         VideoCatalogAdapter.class,
         EnrollmentAccessAdapter.class,
         SubscriptionAccessAdapter.class,
+        CourseProgressQueryAdapter.class,
         VideoProgressRepositoryAdapter.class
 })
 @Sql(scripts = {
@@ -58,6 +69,9 @@ class LearningActivityAdapterTest {
 
     @Autowired
     private VideoProgressRepositoryAdapter videoProgressRepositoryAdapter;
+
+    @Autowired
+    private CourseProgressQueryAdapter courseProgressQueryAdapter;
 
     @Autowired
     private EnrollmentAccessAdapter enrollmentAccessAdapter;
@@ -93,6 +107,18 @@ class LearningActivityAdapterTest {
         assertThat(progress.lastPositionSec()).isEqualTo(42);
         assertThat(progress.watchTimeSec()).isEqualTo(120);
         assertThat(progress.completed()).isTrue();
+    }
+
+    @Test
+    void courseProgressQueryAdapterLoadsCourseProgress() {
+        CourseProgressQueryPort.CourseProgressData progress =
+                courseProgressQueryAdapter.findByMemberIdAndCourseId(1L, 20L);
+
+        assertThat(progress.courseId()).isEqualTo(20L);
+        assertThat(progress.lessons()).hasSize(1);
+        assertThat(progress.lessons().get(0).videoId()).isEqualTo(10L);
+        assertThat(progress.lessons().get(0).completed()).isTrue();
+        assertThat(progress.lessons().get(0).lastPositionSeconds()).isEqualTo(42);
     }
 
     @Test
