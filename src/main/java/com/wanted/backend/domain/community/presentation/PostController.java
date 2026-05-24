@@ -2,8 +2,12 @@ package com.wanted.backend.domain.community.presentation;
 
 import com.wanted.backend.domain.community.application.command.CreatePostCommand;
 import com.wanted.backend.domain.community.application.usecase.PostCommandUseCase;
+import com.wanted.backend.domain.community.application.usecase.PostQueryUseCase;
+import com.wanted.backend.domain.community.domain.model.BoardType;
+import com.wanted.backend.domain.community.domain.model.PostSortType;
 import com.wanted.backend.domain.community.presentation.request.CreatePostRequest;
 import com.wanted.backend.domain.community.presentation.response.CreatePostResponse;
+import com.wanted.backend.domain.community.presentation.response.PostListResponse;
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import jakarta.validation.Valid;
@@ -20,9 +24,11 @@ import java.util.List;
 public class PostController {
 
     private final PostCommandUseCase postCommandUseCase;
+    private final PostQueryUseCase postQueryUseCase;
 
-    public PostController(PostCommandUseCase postCommandUseCase) {
+    public PostController(PostCommandUseCase postCommandUseCase, PostQueryUseCase postQueryUseCase) {
         this.postCommandUseCase = postCommandUseCase;
+        this.postQueryUseCase = postQueryUseCase;
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -41,5 +47,17 @@ public class PostController {
         ));
 
         return ApiResponse.created("게시글이 등록되었습니다.", new CreatePostResponse(postId));
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<PostListResponse>> getPostList(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(required = false) BoardType boardType,
+            @RequestParam(defaultValue = "latest") PostSortType sort,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "1") int page) {
+
+        PostListResponse response = postQueryUseCase.getList(boardType, sort, keyword, page);
+        return ApiResponse.success("게시글 목록 조회 성공", response);
     }
 }

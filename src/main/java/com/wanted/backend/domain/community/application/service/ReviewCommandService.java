@@ -56,13 +56,9 @@ public class ReviewCommandService implements ReviewCommandUseCase {
     @Override
     public void delete(DeleteReviewCommand command) {
 
-        // [1단계] 리뷰 존재 여부 확인
-        // 없으면 BusinessException → 404 Not Found
         Review review = reviewRepository.findById(command.reviewId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
 
-        // [2단계] 본인 리뷰 여부 확인 → Review 도메인이 판단
-        // 실패 시 BusinessException → 403 Forbidden
         if (!review.isOwner(command.memberId())) {
             throw new BusinessException(ErrorCode.REVIEW_NOT_AUTHORIZED);
         }

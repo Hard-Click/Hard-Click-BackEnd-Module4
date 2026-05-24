@@ -31,7 +31,6 @@ public class ReviewController {
         this.reviewQueryUseCase = reviewQueryUseCase;
     }
 
-    // ReviewController
     @PostMapping
     public ResponseEntity<ApiResponse<CreateReviewResponse>> createReview(
             @AuthenticationPrincipal CustomUserDetails userDetails,  // JWT로 교체
@@ -50,12 +49,11 @@ public class ReviewController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<ReviewListResponse>> getReviews(
-            @AuthenticationPrincipal CustomUserDetails userDetails,  // JWT로 교체
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long courseId,
             @RequestParam(defaultValue = "latest") ReviewSortType sort,
             @RequestParam(defaultValue = "1") int page) {
 
-        // 비로그인: userDetails = null → -1L 처리
         Long currentMemberId = userDetails != null ? userDetails.getMemberId() : -1L;
 
         ReviewListResponse response = reviewQueryUseCase.handle(
