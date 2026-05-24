@@ -11,7 +11,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-import static com.wanted.backend.domain.community.domain.model.ReviewSortType.latest;
 
 @Repository
 public class PostRepositoryAdapter implements PostRepository {
