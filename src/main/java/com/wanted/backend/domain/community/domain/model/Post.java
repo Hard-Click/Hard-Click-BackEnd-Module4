@@ -66,6 +66,28 @@ public class Post {
         }
     }
 
+    public void validateUpdatable(Long memberId) {
+        if (!this.authorId.equals(memberId)) {
+            throw new BusinessException(ErrorCode.POST_NOT_AUTHORIZED);
+        }
+        if (this.isAccepted) {
+            throw new BusinessException(ErrorCode.POST_ACCEPTED_CANNOT_MODIFY);
+        }
+    }
+
+    public void update(Long subjectId, String title, String content) {
+        this.subjectId = subjectId;
+        this.title = title;
+        this.content = content;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void validateFileCount(int fileCount) {
+        if (fileCount > 2) {
+            throw new BusinessException(ErrorCode.FILE_COUNT_EXCEEDED);
+        }
+    }
+
     public Long getId() { return id; }
     public Long getAuthorId() { return authorId; }
     public BoardType getBoardType() { return boardType; }

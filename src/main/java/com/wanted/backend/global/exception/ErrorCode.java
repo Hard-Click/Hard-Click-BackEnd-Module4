@@ -67,6 +67,7 @@ public enum ErrorCode {
     FILE_COUNT_EXCEEDED(HttpStatus.BAD_REQUEST, "P002", "파일은 최대 2개까지 첨부 가능합니다."),
     POST_NOT_AUTHORIZED(HttpStatus.FORBIDDEN, "P004", "본인의 게시글만 수정/삭제할 수 있습니다."),
     POST_ACCEPTED_CANNOT_DELETE(HttpStatus.FORBIDDEN, "P005", "채택 완료된 게시글은 삭제할 수 없습니다."),
+    POST_ACCEPTED_CANNOT_MODIFY(HttpStatus.FORBIDDEN, "P006", "채택 완료된 게시글은 수정할 수 없습니다."),
 
     // 이미지 파일 업로드 예외
     INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "F001", "jpg, jpeg, png 형식의 파일만 업로드 가능합니다."),
