@@ -2,11 +2,11 @@ package com.wanted.backend.domain.identity.infrastructure.persistence;
 
 import com.wanted.backend.domain.identity.domain.model.EmailPurpose;
 import com.wanted.backend.domain.identity.domain.model.EmailVerification;
-import com.wanted.backend.domain.identity.domain.repository.EmailVerificationJpaRepository;
 import com.wanted.backend.domain.identity.domain.repository.EmailVerificationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Component
@@ -20,7 +20,6 @@ public class EmailVerificationPersistenceAdapter implements EmailVerificationRep
         EmailVerificationJpaEntity entity;
 
         if (domain.getId() == null) {
-            // 1. 신규 생성: ID가 없으면 빌더를 통해 새로운 엔티티 생성
             entity = EmailVerificationJpaEntity.builder()
                     .email(domain.getEmail())
                     .code(domain.getCode())
@@ -28,7 +27,6 @@ public class EmailVerificationPersistenceAdapter implements EmailVerificationRep
                     .expiresAt(domain.getExpiresAt())
                     .build();
         } else {
-            // 2. 업데이트: ID가 있으면 DB에서 찾아서 상태 동기화
             entity = jpaRepository.findById(domain.getId())
                     .orElseThrow(() -> new IllegalStateException("EmailVerification entity not found for update: " + domain.getId()));
 
@@ -37,6 +35,7 @@ public class EmailVerificationPersistenceAdapter implements EmailVerificationRep
 
         jpaRepository.save(entity);
     }
+
     @Override
     public Optional<EmailVerification> findLatestByEmailAndPurpose(String email, EmailPurpose purpose) {
         return jpaRepository.findFirstByEmailAndPurposeOrderByCreatedAtDesc(email, purpose)
@@ -45,5 +44,11 @@ public class EmailVerificationPersistenceAdapter implements EmailVerificationRep
                         entity.isVerified(), entity.getVerificationToken(),
                         entity.getExpiresAt(), entity.getVerifiedAt()
                 ));
+    }
+
+
+    @Override
+    public long countByEmailAndPurposeAndCreatedAtAfter(String email, EmailPurpose purpose, LocalDateTime after) {
+        return jpaRepository.countByEmailAndPurposeAndCreatedAtAfter(email, purpose, after);
     }
 }
