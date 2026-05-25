@@ -8,4 +8,6 @@ public interface SpringDataPostFileRepository
         extends JpaRepository<PostFileJpaEntity, Long> {
 
     List<PostFileJpaEntity> findByPostIdOrderBySortOrderAsc(Long postId);
+
+    void deleteByPostId(Long postId);
 }

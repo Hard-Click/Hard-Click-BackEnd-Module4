@@ -95,4 +95,9 @@ public class PostRepositoryAdapter implements PostRepository {
             repository.save(entity);
         });
     }
+
+    @Override
+    public void deleteById(Long postId) {
+        repository.deleteById(postId);
+    }
 }

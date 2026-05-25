@@ -31,4 +31,7 @@ public interface PostRepository {
 
     // 조회수 업데이트
     void updateViewCount(Long postId, int viewCount);
+
+    //게시글 삭제
+    void deleteById(Long postId);
 }

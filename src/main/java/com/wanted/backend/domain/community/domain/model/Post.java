@@ -57,6 +57,15 @@ public class Post {
         this.updatedAt = LocalDateTime.now();
     }
 
+    public void validateDeletable(Long memberId) {
+        if (!this.authorId.equals(memberId)) {
+            throw new BusinessException(ErrorCode.POST_NOT_AUTHORIZED);
+        }
+        if (this.isAccepted) {
+            throw new BusinessException(ErrorCode.POST_ACCEPTED_CANNOT_DELETE);
+        }
+    }
+
     public Long getId() { return id; }
     public Long getAuthorId() { return authorId; }
     public BoardType getBoardType() { return boardType; }

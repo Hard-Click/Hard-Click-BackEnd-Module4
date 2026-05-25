@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.community.presentation;
 
 import com.wanted.backend.domain.community.application.command.CreatePostCommand;
+import com.wanted.backend.domain.community.application.command.DeletePostCommand;
 import com.wanted.backend.domain.community.application.usecase.PostCommandUseCase;
 import com.wanted.backend.domain.community.application.usecase.PostQueryUseCase;
 import com.wanted.backend.domain.community.domain.model.BoardType;
@@ -72,4 +73,17 @@ public class PostController {
 
         return ApiResponse.success("게시글 상세 조회 성공", response);
     }
+
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<ApiResponse<Void>> deletePost(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long postId) {
+
+        postCommandUseCase.delete(new DeletePostCommand(
+                userDetails.getMemberId(), postId));
+
+        return ApiResponse.successNoContent("게시글이 삭제되었습니다.");
+    }
+
+
 }

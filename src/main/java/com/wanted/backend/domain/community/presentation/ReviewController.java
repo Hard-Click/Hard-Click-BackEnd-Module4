@@ -33,7 +33,7 @@ public class ReviewController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<CreateReviewResponse>> createReview(
-            @AuthenticationPrincipal CustomUserDetails userDetails,  // JWT로 교체
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long courseId,
             @Valid @RequestBody CreateReviewRequest request) {
 

@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.community.application.service;
 
 import com.wanted.backend.domain.community.application.command.CreatePostCommand;
+import com.wanted.backend.domain.community.application.command.DeletePostCommand;
 import com.wanted.backend.domain.community.application.usecase.PostCommandUseCase;
 import com.wanted.backend.domain.community.domain.model.Post;
 import com.wanted.backend.domain.community.domain.model.PostFile;
@@ -30,6 +31,7 @@ public class PostCommandService implements PostCommandUseCase {
 
     @Value("${community.image.max-size}")
     private long maxFileSize;
+
 
     private final PostRepository postRepository;
     private final PostFileRepository postFileRepository;
@@ -73,5 +75,27 @@ public class PostCommandService implements PostCommandUseCase {
         }
 
         return saved.getId();
+    }
+
+    public void delete(DeletePostCommand command) {
+
+        Post post = postRepository.findById(command.postId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
+
+        post.validateDeletable(command.memberId());
+
+        postFileRepository.findByPostId(command.postId())
+                .forEach(file -> {
+
+                    String fileName = file.getFileUrl()
+                            .substring(file.getFileUrl().lastIndexOf("/") + 1);
+                    FileUploadUtils.deleteFile(postDir, fileName);
+                });
+
+
+        postFileRepository.deleteByPostId(command.postId());
+
+
+        postRepository.deleteById(command.postId());
     }
 }
