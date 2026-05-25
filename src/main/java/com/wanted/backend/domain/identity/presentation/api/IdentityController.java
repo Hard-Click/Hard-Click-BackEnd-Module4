@@ -4,13 +4,17 @@ import com.wanted.backend.domain.identity.application.service.LoginService;
 import com.wanted.backend.domain.identity.application.usecase.CheckDuplicateUseCase;
 import com.wanted.backend.domain.identity.application.usecase.LogoutUseCase;
 import com.wanted.backend.domain.identity.application.usecase.SignupUseCase;
+import com.wanted.backend.domain.identity.application.usecase.UpdatePasswordUseCase;
 import com.wanted.backend.domain.identity.domain.model.AuthToken;
 import com.wanted.backend.domain.identity.presentation.api.request.LoginRequest;
 import com.wanted.backend.domain.identity.presentation.api.request.SignupRequest;
+import com.wanted.backend.domain.identity.presentation.api.request.UpdatePasswordRequest;
 import com.wanted.backend.global.common.ApiResponse;
+import com.wanted.backend.global.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -24,6 +28,7 @@ public class IdentityController {
     private final CheckDuplicateUseCase checkDuplicateUseCase;
     private final SignupUseCase signupUseCase;
     private final LogoutUseCase logoutUseCase;
+    private final UpdatePasswordUseCase updatePasswordUseCase;
 
     @PostMapping("/login")
     public AuthToken login(@Valid @RequestBody LoginRequest request) {
@@ -60,5 +65,14 @@ public class IdentityController {
         logoutUseCase.logout(refreshToken);
 
         return ApiResponse.success("로그아웃되었습니다", Map.of());
+    }
+
+    @PatchMapping("/password")
+    public ResponseEntity<ApiResponse<Void>> updatePassword(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody UpdatePasswordRequest request
+    ) {
+        updatePasswordUseCase.updatePassword(userDetails.getMemberId(), request);
+        return ApiResponse.success("비밀번호가 변경되었습니다", null);
     }
 }
