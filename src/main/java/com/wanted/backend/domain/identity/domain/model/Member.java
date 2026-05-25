@@ -86,6 +86,12 @@ public class Member {
         // [Record Event] 도메인 내부에서 이벤트를 생성하여 기록합니다.
         registerEvent(new MemberLoggedInEvent(this.id, now));
     }
+    // 비밀번호 변경
+    public void changePassword(String encodedPassword) {
+        this.password = encodedPassword;
+        this.isPasswordChangeRequired = false; // (임시 비번일 경우 해제)
+        this.updatedAt = LocalDateTime.now();
+    }
 
     // UI에서 수정 가능한 프로필 이미지와 비밀번호만 변경합니다.
     public void updateProfile(String profileImageUrl, String encodedPassword, LocalDateTime now) {
