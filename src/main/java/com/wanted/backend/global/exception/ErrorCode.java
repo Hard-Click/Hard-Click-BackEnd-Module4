@@ -65,7 +65,6 @@ import org.springframework.http.HttpStatus;
         FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "F003", "파일 업로드에 실패했습니다."),
         PROFILE_IMAGE_COUNT_EXCEEDED(HttpStatus.BAD_REQUEST, "F004", "프로필 이미지는 1개만 업로드 가능합니다."),
 
-
         //게시글 예외
         SUBJECT_REQUIRED(HttpStatus.BAD_REQUEST, "P001", "질문게시판은 과목 선택이 필수입니다."),
         POST_NOT_FOUND(HttpStatus.NOT_FOUND, "P003", "존재하지 않는 게시글입니다."),
