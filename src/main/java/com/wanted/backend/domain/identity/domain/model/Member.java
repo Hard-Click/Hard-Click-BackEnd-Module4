@@ -56,14 +56,22 @@ public class Member {
         this.updatedAt = updatedAt;
     }
 
-    public static Member create(String username, String email, String password, String name, Role role) {
+    public static Member create(String username, String email, String password, String name,
+                                String gender, LocalDate birthDate, String phoneNumber,
+                                String profileImageUrl, Role role) {
         LocalDateTime now = LocalDateTime.now();
         return new Member(
-                null, username, email, password, name, null, null, null, null,
-                role, MemberStatus.ACTIVE, false, 0, false, null, null,
+                null, username, email, password, name, gender, birthDate, phoneNumber,
+                profileImageUrl, role, MemberStatus.ACTIVE, false, 0, false, null, null,
                 now, now
         );
     }
+    public void changePassword(String encodedPassword) {
+        this.password = encodedPassword;
+        this.isPasswordChangeRequired = false; // 임시비번 상태 해제
+        this.updatedAt = LocalDateTime.now();
+    }
+
 
     public static Member restore(Long id, String username, String email, String password, String name, String gender,
                                  LocalDate birthDate, String phoneNumber, String profileImageUrl, Role role,
