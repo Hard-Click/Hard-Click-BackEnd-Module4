@@ -5,10 +5,13 @@ import com.wanted.backend.domain.learning_activity.domain.model.VideoAccessInfo;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoProgress;
 import com.wanted.backend.domain.learning_activity.infrastructure.curriculum.CourseCurriculumReferenceEntity;
 import com.wanted.backend.domain.learning_activity.infrastructure.curriculum.CourseCurriculumReferenceRepository;
+import com.wanted.backend.domain.learning_activity.infrastructure.catalog.CatalogCourseReferenceEntity;
+import com.wanted.backend.domain.learning_activity.infrastructure.catalog.CatalogCourseReferenceRepository;
+import com.wanted.backend.domain.learning_activity.infrastructure.catalog.CatalogVideoReferenceEntity;
+import com.wanted.backend.domain.learning_activity.infrastructure.catalog.CatalogVideoReferenceRepository;
 import com.wanted.backend.domain.learning_activity.infrastructure.catalog.VideoCatalogAdapter;
 import com.wanted.backend.domain.learning_activity.infrastructure.video.VideoReferenceEntity;
 import com.wanted.backend.domain.learning_activity.infrastructure.video.VideoReferenceRepository;
-import com.wanted.backend.domain.learning_activity.infrastructure.catalog.SpringDataVideoCatalogRepository;
 import com.wanted.backend.domain.learning_activity.infrastructure.enrollment.EnrollmentAccessAdapter;
 import com.wanted.backend.domain.learning_activity.infrastructure.enrollment.EnrollmentReferenceJpaEntity;
 import com.wanted.backend.domain.learning_activity.infrastructure.enrollment.SpringDataEnrollmentAccessRepository;
@@ -41,13 +44,16 @@ import static org.assertj.core.api.Assertions.assertThat;
         EnrollmentReferenceJpaEntity.class,
         SubscriptionReferenceJpaEntity.class,
         CourseCurriculumReferenceEntity.class,
-        VideoReferenceEntity.class
+        VideoReferenceEntity.class,
+        CatalogVideoReferenceEntity.class,
+        CatalogCourseReferenceEntity.class
 })
 @EnableJpaRepositories(basePackageClasses = {
         SpringDataVideoProgressRepository.class,
         CourseCurriculumReferenceRepository.class,
         VideoReferenceRepository.class,
-        SpringDataVideoCatalogRepository.class,
+        CatalogVideoReferenceRepository.class,
+        CatalogCourseReferenceRepository.class,
         SpringDataEnrollmentAccessRepository.class,
         SpringDataSubscriptionAccessRepository.class
 })
