@@ -2,6 +2,7 @@ package com.wanted.backend.domain.identity.presentation.api;
 
 import com.wanted.backend.domain.identity.application.service.LoginService;
 import com.wanted.backend.domain.identity.application.usecase.CheckDuplicateUseCase;
+import com.wanted.backend.domain.identity.application.usecase.LogoutUseCase;
 import com.wanted.backend.domain.identity.application.usecase.SignupUseCase;
 import com.wanted.backend.domain.identity.domain.model.AuthToken;
 import com.wanted.backend.domain.identity.presentation.api.request.LoginRequest;
@@ -22,6 +23,8 @@ public class IdentityController {
     private final LoginService loginService;
     private final CheckDuplicateUseCase checkDuplicateUseCase;
     private final SignupUseCase signupUseCase;
+    private final LogoutUseCase logoutUseCase;
+
     @PostMapping("/login")
     public AuthToken login(@Valid @RequestBody LoginRequest request) {
         return loginService.login(request.getUsername(), request.getPassword());
@@ -50,5 +53,12 @@ public class IdentityController {
     public ResponseEntity<ApiResponse<Map<String, Long>>> signup(@Valid @RequestBody SignupRequest request) {
         Long memberId = signupUseCase.signup(request);
         return ApiResponse.created("회원가입이 완료되었습니다", Map.of("memberId", memberId));
+    }
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> logout(@RequestBody Map<String, String> body) {
+        String refreshToken = body.get("refreshToken");
+        logoutUseCase.logout(refreshToken);
+
+        return ApiResponse.success("로그아웃되었습니다", Map.of());
     }
 }
