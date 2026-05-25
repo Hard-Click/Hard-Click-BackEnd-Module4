@@ -3,11 +3,11 @@ package com.wanted.backend.global.exception;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
-/**
- * 프로젝트 전역에서 사용할 에러 코드 모음
- */
-@Getter
-public enum ErrorCode {
+    /**
+     * 프로젝트 전역에서 사용할 에러 코드 모음
+     */
+    @Getter
+    public enum ErrorCode {
 
     /* =========================================================================
        1. 공통 예외 (C000)

@@ -1,6 +1,5 @@
 package com.wanted.backend.domain.community.infrastructure.persistence;
 
-import com.wanted.backend.domain.community.domain.model.Post;
 import com.wanted.backend.domain.community.domain.model.BoardType;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -49,6 +48,10 @@ public class PostJpaEntity {
     private LocalDateTime updatedAt;
 
     protected PostJpaEntity() {}
+
+    public void updateViewCount(int viewCount) {
+        this.viewCount = viewCount;
+    }
 
     public PostJpaEntity(Long authorId, BoardType boardType, Long subjectId,
                          String title, String content, int viewCount,
