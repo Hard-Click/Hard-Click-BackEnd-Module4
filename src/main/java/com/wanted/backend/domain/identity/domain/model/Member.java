@@ -110,6 +110,17 @@ public class Member {
         return Collections.unmodifiableList(events);
     }
 
+    public static Member create(String username, String email, String password, String name,
+                                String gender, LocalDate birthDate, String phoneNumber,
+                                String profileImageUrl, Role role) {
+        LocalDateTime now = LocalDateTime.now();
+        return new Member(
+                null, username, email, password, name, gender, birthDate, phoneNumber,
+                profileImageUrl, role, MemberStatus.ACTIVE, false, 0, false, null, null,
+                now, now
+        );
+    }
+
     // Getter들... (기존과 동일)
     public Long getId() { return id; }
     public String getUsername() { return username; }
