@@ -7,6 +7,7 @@ import com.wanted.backend.domain.community.domain.model.BoardType;
 import com.wanted.backend.domain.community.domain.model.PostSortType;
 import com.wanted.backend.domain.community.presentation.request.CreatePostRequest;
 import com.wanted.backend.domain.community.presentation.response.CreatePostResponse;
+import com.wanted.backend.domain.community.presentation.response.PostDetailResponse;
 import com.wanted.backend.domain.community.presentation.response.PostListResponse;
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
@@ -59,5 +60,16 @@ public class PostController {
 
         PostListResponse response = postQueryUseCase.getList(boardType, sort, keyword, page);
         return ApiResponse.success("게시글 목록 조회 성공", response);
+    }
+
+    @GetMapping("/{postId}")
+    public ResponseEntity<ApiResponse<PostDetailResponse>> getPostDetail(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long postId) {
+
+        PostDetailResponse response = postQueryUseCase.getDetail(
+                postId, userDetails.getMemberId());
+
+        return ApiResponse.success("게시글 상세 조회 성공", response);
     }
 }

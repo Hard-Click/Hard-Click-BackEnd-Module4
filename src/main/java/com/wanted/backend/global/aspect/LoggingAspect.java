@@ -122,37 +122,35 @@ public class LoggingAspect {
      * 비즈니스 이벤트 로깅을 위한 포인트컷
      * 대출, 반납 등 중요한 비즈니스 로직에 대해 상세한 로그를 기록한다.
      */
-//    @Pointcut("execution(* com.wanted.backend..LoanService.createLoan(..))" +
-//            "|| execution(* com.wanted.backend..LoanService.returnBook(..))" +
-//            "|| execution(* com.wanted.backend..LoanService.extendLoan(..))")
-//    public void businessEvents() {}
-//
-//    /**
-//     * 중요한 비즈니스 이벤트에 대한 상세 로깅을 수행한다.
-//     *
-//     * @param proceedingJoinPoint 프로시딩 조인포인트
-//     * @return 메서드 실행 결과
-//     * @throws Throwable 메서드 실행 중 발생한 예외
-//     */
-//    @Around("businessEvents()")
-//    public Object logBusinessEvent(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
-//        String methodName = proceedingJoinPoint.getSignature().getName();
-//        Object[] args = proceedingJoinPoint.getArgs();
-//
-//        log.info("비즈니스 이벤트 시작 - 작업: {}, 매개변수: {}", methodName, Arrays.toString(args));
-//
-//        try {
-//            Object result = proceedingJoinPoint.proceed();
-//
-//            log.info("비즈니스 이벤트 성공 - 작업: {}, 결과: {}", methodName, result);
-//
-//            return result;
-//
-//        } catch (Throwable throwable) {
-//            log.error("비즈니스 이벤트 실패 - 작업: {}, 예외: {}, 메시지: {}",
-//                    methodName, throwable.getClass().getSimpleName(), throwable.getMessage());
-//
-//            throw throwable;
-//        }
-//    }
+    @Pointcut("execution(public * com.wanted.backend.domain..application.service.*CommandService.*(..))")
+    public void businessEvents() {}
+
+    /**
+     * 중요한 비즈니스 이벤트에 대한 상세 로깅을 수행한다.
+     *
+     * @param proceedingJoinPoint 프로시딩 조인포인트
+     * @return 메서드 실행 결과
+     * @throws Throwable 메서드 실행 중 발생한 예외
+     */
+    @Around("businessEvents()")
+    public Object logBusinessEvent(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
+        String methodName = proceedingJoinPoint.getSignature().getName();
+        Object[] args = proceedingJoinPoint.getArgs();
+
+        log.info("비즈니스 이벤트 시작 - 작업: {}, 매개변수: {}", methodName, Arrays.toString(args));
+
+        try {
+            Object result = proceedingJoinPoint.proceed();
+
+            log.info("비즈니스 이벤트 성공 - 작업: {}, 결과: {}", methodName, result);
+
+            return result;
+
+        } catch (Throwable throwable) {
+            log.error("비즈니스 이벤트 실패 - 작업: {}, 예외: {}, 메시지: {}",
+                    methodName, throwable.getClass().getSimpleName(), throwable.getMessage());
+
+            throw throwable;
+        }
+    }
 } 

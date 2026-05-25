@@ -10,6 +10,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 
 @Repository
@@ -64,7 +65,6 @@ public class PostRepositoryAdapter implements PostRepository {
                 keyword != null ? keyword : "", "ACTIVE");
     }
 
-    // 정렬 방식 변환
     private Sort toSort(PostSortType sort) {
         return switch (sort) {
             case views -> Sort.by(Sort.Direction.DESC, "viewCount");
@@ -80,5 +80,19 @@ public class PostRepositoryAdapter implements PostRepository {
                 entity.getViewCount(), entity.isAccepted(),
                 entity.getCreatedAt(), entity.getUpdatedAt()
         );
+    }
+
+
+    @Override
+    public Optional<Post> findById(Long postId) {
+        return repository.findById(postId).map(this::toDomain);
+    }
+
+    @Override
+    public void updateViewCount(Long postId, int viewCount) {
+        repository.findById(postId).ifPresent(entity -> {
+            entity.updateViewCount(viewCount);
+            repository.save(entity);
+        });
     }
 }
