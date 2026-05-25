@@ -4,6 +4,8 @@ import com.wanted.backend.domain.community.domain.model.PostFile;
 import com.wanted.backend.domain.community.domain.repository.PostFileRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public class PostFileRepositoryAdapter implements PostFileRepository {
 
@@ -31,4 +33,14 @@ public class PostFileRepositoryAdapter implements PostFileRepository {
                 entity.getSortOrder()
         );
     }
+
+
+    @Override
+    public List<PostFile> findByPostId(Long postId) {
+        return repository.findByPostIdOrderBySortOrderAsc(postId)
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
 }

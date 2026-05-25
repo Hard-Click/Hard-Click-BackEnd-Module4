@@ -52,6 +52,11 @@ public class Post {
                 viewCount, isAccepted, createdAt, updatedAt);
     }
 
+    public void increaseViewCount() {
+        this.viewCount++;
+        this.updatedAt = LocalDateTime.now();
+    }
+
     public Long getId() { return id; }
     public Long getAuthorId() { return authorId; }
     public BoardType getBoardType() { return boardType; }
