@@ -37,6 +37,7 @@ import org.springframework.http.HttpStatus;
         ALREADY_REGISTERED_EMAIL(HttpStatus.CONFLICT, "AUTH_005", "이미 가입된 이메일입니다."),
         INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_006", "유효하지 않은 Refresh Token입니다."),
         REFRESH_TOKEN_EXPIRED(HttpStatus.GONE, "AUTH_007", "Refresh Token이 만료되었습니다."),
+        REFRESH_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND , "AUTH_008", "저장된 Refresh Token이 없습니다."),
         // 3. 강의(Course) 예외
         COURSE_NOT_FOUND(HttpStatus.NOT_FOUND, "CR001", "존재하지 않는 강의입니다."),
         INVALID_COURSE_PRICE(HttpStatus.BAD_REQUEST, "CR002", "강의 가격 설정이 올바르지 않습니다."),
