@@ -3,7 +3,9 @@ package com.wanted.backend.domain.identity.presentation.api;
 import com.wanted.backend.domain.identity.application.command.UpdateMyProfileCommand;
 import com.wanted.backend.domain.identity.application.usecase.GetMyProfileUseCase;
 import com.wanted.backend.domain.identity.application.usecase.UpdateMyProfileUseCase;
+import com.wanted.backend.domain.identity.application.usecase.UpdatePasswordUseCase;
 import com.wanted.backend.domain.identity.presentation.api.request.UpdateMyProfileRequest;
+import com.wanted.backend.domain.identity.presentation.api.request.UpdatePasswordRequest;
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
@@ -16,21 +18,20 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @Validated
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/users")
+@RequestMapping("/api/members")
 @Tag(name = "User Profile", description = "마이페이지 프로필 API")
 public class UserProfileController {
 
     private final GetMyProfileUseCase getMyProfileUseCase;
     private final UpdateMyProfileUseCase updateMyProfileUseCase;
+    private final UpdatePasswordUseCase updatePasswordUseCase;
 
     @GetMapping("/me")
     @Operation(
@@ -44,6 +45,15 @@ public class UserProfileController {
                 "내 프로필이 조회되었습니다.",
                 getMyProfileUseCase.handle(userDetails.getMemberId())
         );
+    }
+    @PatchMapping("/me/password")
+    @Operation(summary = "비밀번호 변경", description = "로그인한 사용자의 비밀번호를 수정합니다.")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> updatePassword(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody UpdatePasswordRequest request // (JSON 데이터)
+    ) {
+        updatePasswordUseCase.updatePassword(userDetails.getMemberId(), request);
+        return ApiResponse.success("비밀번호가 변경되었습니다", Map.of());
     }
 
     @PatchMapping(value = "/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
