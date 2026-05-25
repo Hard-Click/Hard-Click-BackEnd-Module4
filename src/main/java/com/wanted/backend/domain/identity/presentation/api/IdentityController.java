@@ -2,8 +2,10 @@ package com.wanted.backend.domain.identity.presentation.api;
 
 import com.wanted.backend.domain.identity.application.service.LoginService;
 import com.wanted.backend.domain.identity.application.usecase.CheckDuplicateUseCase;
+import com.wanted.backend.domain.identity.application.usecase.SignupUseCase;
 import com.wanted.backend.domain.identity.domain.model.AuthToken;
 import com.wanted.backend.domain.identity.presentation.api.request.LoginRequest;
+import com.wanted.backend.domain.identity.presentation.api.request.SignupRequest;
 import com.wanted.backend.global.common.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +21,7 @@ public class IdentityController {
 
     private final LoginService loginService;
     private final CheckDuplicateUseCase checkDuplicateUseCase;
-
+    private final SignupUseCase signupUseCase;
     @PostMapping("/login")
     public AuthToken login(@Valid @RequestBody LoginRequest request) {
         return loginService.login(request.getUsername(), request.getPassword());
@@ -43,5 +45,10 @@ public class IdentityController {
         boolean isDuplicated = checkDuplicateUseCase.isEmailDuplicated(email);
         String message = isDuplicated ? "사용이 불가능한 이메일입니다" : "사용 가능한 이메일입니다";
         return ApiResponse.success(message, Map.of("exists", isDuplicated));
+    }
+    @PostMapping("/signup")
+    public ResponseEntity<ApiResponse<Map<String, Long>>> signup(@Valid @RequestBody SignupRequest request) {
+        Long memberId = signupUseCase.signup(request);
+        return ApiResponse.created("회원가입이 완료되었습니다", Map.of("memberId", memberId));
     }
 }

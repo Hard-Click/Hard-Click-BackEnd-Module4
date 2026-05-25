@@ -2,7 +2,6 @@ package com.wanted.backend.domain.identity.infrastructure.persistence;
 
 import com.wanted.backend.domain.identity.domain.model.EmailPurpose;
 import com.wanted.backend.domain.identity.domain.model.EmailVerification;
-import com.wanted.backend.domain.identity.domain.repository.EmailVerificationJpaRepository;
 import com.wanted.backend.domain.identity.domain.repository.EmailVerificationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

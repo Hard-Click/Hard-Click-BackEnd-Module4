@@ -1,7 +1,6 @@
-package com.wanted.backend.domain.identity.domain.repository;
+package com.wanted.backend.domain.identity.infrastructure.persistence;
 
 import com.wanted.backend.domain.identity.domain.model.EmailPurpose;
-import com.wanted.backend.domain.identity.infrastructure.persistence.EmailVerificationJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
