@@ -43,4 +43,9 @@ public class PostFileRepositoryAdapter implements PostFileRepository {
                 .toList();
     }
 
+    @Override
+    public void deleteByPostId(Long postId) {
+        repository.deleteByPostId(postId);
+    }
+
 }

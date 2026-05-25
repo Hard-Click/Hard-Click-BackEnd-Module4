@@ -11,4 +11,7 @@ public interface PostFileRepository {
 
     // 게시글 첨부파일 목록 조회 (sortOrder 오름차순)
     List<PostFile> findByPostId(Long postId);
+
+    //게시글 삭제 시 첨부파일 같이 삭제
+    void deleteByPostId(Long postId);
 }

@@ -1,14 +1,18 @@
 package com.wanted.backend.domain.community.presentation;
 
 import com.wanted.backend.domain.community.application.command.CreatePostCommand;
+import com.wanted.backend.domain.community.application.command.DeletePostCommand;
+import com.wanted.backend.domain.community.application.command.UpdatePostCommand;
 import com.wanted.backend.domain.community.application.usecase.PostCommandUseCase;
 import com.wanted.backend.domain.community.application.usecase.PostQueryUseCase;
 import com.wanted.backend.domain.community.domain.model.BoardType;
 import com.wanted.backend.domain.community.domain.model.PostSortType;
 import com.wanted.backend.domain.community.presentation.request.CreatePostRequest;
+import com.wanted.backend.domain.community.presentation.request.UpdatePostRequest;
 import com.wanted.backend.domain.community.presentation.response.CreatePostResponse;
 import com.wanted.backend.domain.community.presentation.response.PostDetailResponse;
 import com.wanted.backend.domain.community.presentation.response.PostListResponse;
+import com.wanted.backend.domain.community.presentation.response.UpdatePostResponse;
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import jakarta.validation.Valid;
@@ -72,4 +76,36 @@ public class PostController {
 
         return ApiResponse.success("게시글 상세 조회 성공", response);
     }
+
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<ApiResponse<Void>> deletePost(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long postId) {
+
+        postCommandUseCase.delete(new DeletePostCommand(
+                userDetails.getMemberId(), postId));
+
+        return ApiResponse.successNoContent("게시글이 삭제되었습니다.");
+    }
+
+    @PatchMapping(value = "/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<UpdatePostResponse>> updatePost(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long postId,
+            @RequestPart("data") @Valid UpdatePostRequest request,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files) {
+
+        Long updatedPostId = postCommandUseCase.update(new UpdatePostCommand(
+                userDetails.getMemberId(),
+                postId,
+                request.subjectId(),
+                request.title(),
+                request.content(),
+                files
+        ));
+
+        return ApiResponse.success("게시글이 수정되었습니다.", new UpdatePostResponse(updatedPostId));
+    }
+
+
 }
