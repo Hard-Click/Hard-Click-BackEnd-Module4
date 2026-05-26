@@ -91,4 +91,9 @@ public class VerifyEmailService implements VerifyEmailUseCase {
 
         return verification.getVerificationToken();
     }
+    @Override
+    @Transactional
+    public void sendAccountLockCode(String email) {
+        sendVerificationCode(email, EmailPurpose.ACCOUNT_LOCK);
+    }
 }

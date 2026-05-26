@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.identity.application.service;
 
+import com.wanted.backend.domain.identity.application.usecase.VerifyEmailUseCase;
 import com.wanted.backend.domain.identity.domain.model.AuthToken;
 import com.wanted.backend.domain.identity.domain.model.Member;
 import com.wanted.backend.domain.identity.domain.model.RefreshToken;
@@ -25,16 +26,29 @@ public class LoginService {
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
     private final ApplicationEventPublisher eventPublisher;
+    private final VerifyEmailUseCase verifyEmailUseCase;
 
-    @Transactional
+    @Transactional(noRollbackFor = BusinessException.class)
     public AuthToken login(String username, String rawPassword) {
         Member member = memberRepository.findByUsername(username)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_LOGIN_INFO));
+
+        if (member.isLocked()) {
+            throw new BusinessException(ErrorCode.ACCOUNT_LOCKED);
+        }
 
         boolean passwordMatched =
                 passwordEncoder.matches(rawPassword, member.getPassword());
 
         if (!passwordMatched) {
+            member.loginFailed(LocalDateTime.now());
+            memberRepository.save(member);
+
+            if (member.isLocked()) {
+                verifyEmailUseCase.sendAccountLockCode(member.getEmail());
+                throw new BusinessException(ErrorCode.ACCOUNT_LOCKED);
+            }
+
             throw new BusinessException(ErrorCode.INVALID_LOGIN_INFO);
         }
 

@@ -9,4 +9,5 @@ public interface VerifyEmailUseCase {
 
     void sendPasswordResetCode(String email);
     String verifyCode(String email, String code, EmailPurpose purpose);
+    void sendAccountLockCode(String email);
 }
