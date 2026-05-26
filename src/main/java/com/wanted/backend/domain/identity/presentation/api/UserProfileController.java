@@ -19,7 +19,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
+import com.wanted.backend.domain.identity.presentation.api.response.ProfileImageResponse;
+import org.springframework.web.multipart.MultipartFile;
 import java.util.Map;
 
 @Validated
@@ -78,6 +79,32 @@ public class UserProfileController {
                         request.getNewPassword(),
                         request.getNewPasswordConfirm()
                 ))
+
+        );
+
+    }
+    @PatchMapping(value = "/me/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "프로필 이미지 수정",
+            description = "로그인한 사용자의 프로필 이미지를 수정합니다."
+    )
+    public ResponseEntity<ApiResponse<ProfileImageResponse>> updateProfileImage(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestPart("profileImage") MultipartFile profileImage
+    ) {
+        UpdateMyProfileUseCase.MyProfileUpdateView result = updateMyProfileUseCase.handle(
+                new UpdateMyProfileCommand(
+                        userDetails.getMemberId(),
+                        profileImage,
+                        null,
+                        null,
+                        null
+                )
+        );
+
+        return ApiResponse.success(
+                "프로필 이미지가 변경되었습니다",
+                new ProfileImageResponse(result.profileImageUrl())
         );
     }
 }
