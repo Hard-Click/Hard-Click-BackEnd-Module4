@@ -42,9 +42,4 @@ public class SignupRequest {
     @NotBlank(message = "이메일 인증이 필요합니다")
     private String emailVerificationToken;
 
-    @NotNull(message = "필수 약관 동의가 필요합니다")
-    @AssertTrue(message = "필수 약관에 동의해야 회원가입이 가능합니다")
-    private Boolean requiredTermsAgreed;
-
-    private Boolean optionalTermsAgreed;
 }
