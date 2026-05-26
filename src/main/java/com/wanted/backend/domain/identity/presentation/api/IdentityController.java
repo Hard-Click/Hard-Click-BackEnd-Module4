@@ -7,17 +7,15 @@ import com.wanted.backend.domain.identity.application.usecase.SignupUseCase;
 import com.wanted.backend.domain.identity.application.usecase.UpdatePasswordUseCase;
 import com.wanted.backend.domain.identity.domain.model.AuthToken;
 import com.wanted.backend.domain.identity.presentation.api.request.LoginRequest;
+import com.wanted.backend.domain.identity.presentation.api.request.LogoutRequest;
+import com.wanted.backend.domain.identity.presentation.api.request.RefreshTokenRequest;
 import com.wanted.backend.domain.identity.presentation.api.request.SignupRequest;
-import com.wanted.backend.domain.identity.presentation.api.request.UpdatePasswordRequest;
+import com.wanted.backend.domain.identity.presentation.api.response.*;
 import com.wanted.backend.global.common.ApiResponse;
-import com.wanted.backend.global.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -31,48 +29,60 @@ public class IdentityController {
     private final UpdatePasswordUseCase updatePasswordUseCase;
 
     @PostMapping("/login")
-    public AuthToken login(@Valid @RequestBody LoginRequest request) {
-        return loginService.login(request.getUsername(), request.getPassword());
+    public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
+        AuthToken token = loginService.login(request.getUsername(), request.getPassword());
+
+        return ApiResponse.success(
+                "로그인에 성공했습니다",
+                new LoginResponse(
+                        token.accessToken(),
+                        token.refreshToken(),
+                        token.memberId(),
+                        token.role()
+                )
+        );
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<Map<String, String>>> refresh(@RequestBody Map<String, String> body) {
-        String refreshToken = body.get("refreshToken");
-        AuthToken token = loginService.refresh(refreshToken);
-        return ApiResponse.success("Access Token이 재발급되었습니다", Map.of("accessToken", token.accessToken()));
+    public ResponseEntity<ApiResponse<RefreshTokenResponse>> refresh(@RequestBody RefreshTokenRequest request) {
+        AuthToken token = loginService.refresh(request.getRefreshToken());
+
+        return ApiResponse.success(
+                "Access Token이 재발급되었습니다",
+                new RefreshTokenResponse(token.accessToken())
+        );
     }
+
     @GetMapping("/check-username")
-    public ResponseEntity<ApiResponse<Map<String, Boolean>>> checkUsername(@RequestParam String username) {
+    public ResponseEntity<ApiResponse<DuplicateCheckResponse>> checkUsername(@RequestParam String username) {
         boolean isDuplicated = checkDuplicateUseCase.isUsernameDuplicated(username);
         String message = isDuplicated ? "사용이 불가능한 아이디입니다" : "사용 가능한 아이디입니다";
-        return ApiResponse.success(message, Map.of("exists", isDuplicated));
+
+        return ApiResponse.success(message, new DuplicateCheckResponse(isDuplicated));
     }
 
     @GetMapping("/check-email")
-    public ResponseEntity<ApiResponse<Map<String, Boolean>>> checkEmail(@RequestParam String email) {
+    public ResponseEntity<ApiResponse<DuplicateCheckResponse>> checkEmail(@RequestParam String email) {
         boolean isDuplicated = checkDuplicateUseCase.isEmailDuplicated(email);
         String message = isDuplicated ? "사용이 불가능한 이메일입니다" : "사용 가능한 이메일입니다";
-        return ApiResponse.success(message, Map.of("exists", isDuplicated));
+
+        return ApiResponse.success(message, new DuplicateCheckResponse(isDuplicated));
     }
+
     @PostMapping("/signup")
-    public ResponseEntity<ApiResponse<Map<String, Long>>> signup(@Valid @RequestBody SignupRequest request) {
+    public ResponseEntity<ApiResponse<SignupResponse>> signup(@Valid @RequestBody SignupRequest request) {
         Long memberId = signupUseCase.signup(request);
-        return ApiResponse.created("회원가입이 완료되었습니다", Map.of("memberId", memberId));
+
+        return ApiResponse.created(
+                "회원가입이 완료되었습니다",
+                new SignupResponse(memberId)
+        );
     }
+
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> logout(@RequestBody Map<String, String> body) {
-        String refreshToken = body.get("refreshToken");
-        logoutUseCase.logout(refreshToken);
+    public ResponseEntity<ApiResponse<EmptyResponse>> logout(@RequestBody LogoutRequest request) {
+        logoutUseCase.logout(request.getRefreshToken());
 
-        return ApiResponse.success("로그아웃되었습니다", Map.of());
-    }
-
-    @PatchMapping("/password")
-    public ResponseEntity<ApiResponse<Void>> updatePassword(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestBody UpdatePasswordRequest request
-    ) {
-        updatePasswordUseCase.updatePassword(userDetails.getMemberId(), request);
-        return ApiResponse.success("비밀번호가 변경되었습니다", null);
+        return ApiResponse.success("로그아웃되었습니다", new EmptyResponse());
     }
 }

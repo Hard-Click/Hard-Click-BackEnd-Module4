@@ -49,7 +49,7 @@ public class LoginService {
         refreshTokenRepository.deleteByMemberId(member.getId());
         saveRefreshToken(member.getId(), refreshToken);
 
-        return new AuthToken(accessToken, refreshToken);
+        return new AuthToken(accessToken, refreshToken, member.getId(), role);
     }
 
     @Transactional
@@ -78,7 +78,7 @@ public class LoginService {
         refreshTokenRepository.deleteByMemberId(memberId);
         saveRefreshToken(memberId, newRefreshToken);
 
-        return new AuthToken(newAccessToken, newRefreshToken);
+        return new AuthToken(newAccessToken, newRefreshToken, memberId, role);
     }
 
     private void saveRefreshToken(Long memberId, String token) {
