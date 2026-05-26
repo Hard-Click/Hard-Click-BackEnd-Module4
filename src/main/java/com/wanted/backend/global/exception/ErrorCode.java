@@ -86,8 +86,15 @@ import org.springframework.http.HttpStatus;
     INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "F001", "jpg, jpeg, png 형식의 파일만 업로드 가능합니다."),
     FILE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST, "F002", "파일 크기는 5MB 이하여야 합니다."),
     FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "F003", "파일 업로드에 실패했습니다."),
-    PROFILE_IMAGE_COUNT_EXCEEDED(HttpStatus.BAD_REQUEST, "F004", "프로필 이미지는 1개만 업로드 가능합니다.");
+    PROFILE_IMAGE_COUNT_EXCEEDED(HttpStatus.BAD_REQUEST, "F004", "프로필 이미지는 1개만 업로드 가능합니다."),
 
+    //댓글 예외
+    COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "C001", "존재하지 않는 댓글입니다."),
+    REPLY_DEPTH_EXCEEDED(HttpStatus.BAD_REQUEST, "C002", "대댓글에는 답글을 달 수 없습니다."),
+    ACCEPT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "C003", "자유게시판에서는 채택할 수 없습니다."),
+    ACCEPT_NOT_AUTHORIZED(HttpStatus.FORBIDDEN, "C004", "게시글 작성자만 채택할 수 있습니다."),
+    ALREADY_ACCEPTED(HttpStatus.CONFLICT, "C005", "이미 채택된 댓글이 있습니다."),
+    REPLY_CANNOT_BE_ACCEPTED(HttpStatus.BAD_REQUEST, "C006", "대댓글은 채택할 수 없습니다.");
 
     private final HttpStatus status;
     private final String code;

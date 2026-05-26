@@ -25,18 +25,20 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/posts")
+@RequestMapping("/api")
 public class PostController {
 
     private final PostCommandUseCase postCommandUseCase;
     private final PostQueryUseCase postQueryUseCase;
 
-    public PostController(PostCommandUseCase postCommandUseCase, PostQueryUseCase postQueryUseCase) {
+    public PostController(PostCommandUseCase postCommandUseCase,
+                          PostQueryUseCase postQueryUseCase) {
         this.postCommandUseCase = postCommandUseCase;
         this.postQueryUseCase = postQueryUseCase;
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+
+    @PostMapping(value = "/posts", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<CreatePostResponse>> createPost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestPart("data") @Valid CreatePostRequest request,
@@ -54,10 +56,11 @@ public class PostController {
         return ApiResponse.created("게시글이 등록되었습니다.", new CreatePostResponse(postId));
     }
 
-    @GetMapping
+
+    @GetMapping("/boards/{boardType}/posts")
     public ResponseEntity<ApiResponse<PostListResponse>> getPostList(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestParam(required = false) BoardType boardType,
+            @PathVariable(required = false) BoardType boardType,
             @RequestParam(defaultValue = "latest") PostSortType sort,
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "1") int page) {
@@ -66,7 +69,20 @@ public class PostController {
         return ApiResponse.success("게시글 목록 조회 성공", response);
     }
 
-    @GetMapping("/{postId}")
+
+    @GetMapping("/boards/posts")
+    public ResponseEntity<ApiResponse<PostListResponse>> getAllPostList(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(defaultValue = "latest") PostSortType sort,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "1") int page) {
+
+        PostListResponse response = postQueryUseCase.getList(null, sort, keyword, page);
+        return ApiResponse.success("게시글 목록 조회 성공", response);
+    }
+
+
+    @GetMapping("/posts/{postId}")
     public ResponseEntity<ApiResponse<PostDetailResponse>> getPostDetail(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long postId) {
@@ -77,18 +93,8 @@ public class PostController {
         return ApiResponse.success("게시글 상세 조회 성공", response);
     }
 
-    @DeleteMapping("/{postId}")
-    public ResponseEntity<ApiResponse<Void>> deletePost(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long postId) {
 
-        postCommandUseCase.delete(new DeletePostCommand(
-                userDetails.getMemberId(), postId));
-
-        return ApiResponse.successNoContent("게시글이 삭제되었습니다.");
-    }
-
-    @PatchMapping(value = "/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PatchMapping(value = "/posts/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<UpdatePostResponse>> updatePost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long postId,
@@ -108,4 +114,14 @@ public class PostController {
     }
 
 
+    @DeleteMapping("/posts/{postId}")
+    public ResponseEntity<ApiResponse<Void>> deletePost(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long postId) {
+
+        postCommandUseCase.delete(new DeletePostCommand(
+                userDetails.getMemberId(), postId));
+
+        return ApiResponse.successNoContent("게시글이 삭제되었습니다.");
+    }
 }

@@ -15,11 +15,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/auth/password-reset")
-@RequiredArgsConstructor
-public class PasswordResetController {
+    @RequestMapping("/api/auth/password-reset")
+    @RequiredArgsConstructor
+    public class PasswordResetController {
 
-    private final VerifyEmailUseCase verifyEmailUseCase;
+        private final VerifyEmailUseCase verifyEmailUseCase;
     private final ResetPasswordUseCase resetPasswordUseCase;
 
     @PostMapping("/email")
