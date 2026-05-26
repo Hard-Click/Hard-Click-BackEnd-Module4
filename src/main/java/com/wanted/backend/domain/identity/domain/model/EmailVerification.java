@@ -52,6 +52,13 @@ public class EmailVerification {
         this.verificationToken = UUID.randomUUID().toString();
     }
 
+    public boolean isExpired(LocalDateTime now) {
+        return now.isAfter(this.expiresAt);
+    }
+
+    public void useToken() {
+        this.verificationToken = null;
+    }
 
     public Long getId() { return id; }
     public String getEmail() { return email; }
