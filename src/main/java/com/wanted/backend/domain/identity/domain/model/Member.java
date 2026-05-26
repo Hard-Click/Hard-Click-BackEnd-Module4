@@ -10,6 +10,8 @@ import java.util.Collections;
 import java.util.List;
 
 public class Member {
+    private static final int MAX_LOGIN_FAIL_COUNT = 5;
+
     private final Long id;
     private final String username;
     private final String email;
@@ -93,6 +95,19 @@ public class Member {
 
         // [Record Event] 도메인 내부에서 이벤트를 생성하여 기록합니다.
         registerEvent(new MemberLoggedInEvent(this.id, now));
+    }
+    public void loginFailed(LocalDateTime now) {
+        if (this.isLocked) {
+            return;
+        }
+
+        this.loginFailCount++;
+        this.updatedAt = now;
+
+        if (this.loginFailCount >= MAX_LOGIN_FAIL_COUNT) {
+            this.isLocked = true;
+            this.lockedAt = now;
+        }
     }
 
 
