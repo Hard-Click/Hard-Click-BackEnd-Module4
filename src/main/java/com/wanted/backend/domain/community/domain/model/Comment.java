@@ -48,6 +48,12 @@ public class Comment {
                 isAccepted, isDeleted, imageUrl, createdAt, updatedAt);
     }
 
+    //채택
+    public void accept() {
+        this.isAccepted = true;
+        this.updatedAt = LocalDateTime.now();
+    }
+
     public Long getId() { return id; }
     public Long getPostId() { return postId; }
     public Long getAuthorId() { return authorId; }

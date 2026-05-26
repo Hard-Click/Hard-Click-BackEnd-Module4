@@ -88,6 +88,11 @@ public class Post {
         }
     }
 
+    public void markAsAccepted() {
+        this.isAccepted = true;
+        this.updatedAt = LocalDateTime.now();
+    }
+
     public Long getId() { return id; }
     public Long getAuthorId() { return authorId; }
     public BoardType getBoardType() { return boardType; }

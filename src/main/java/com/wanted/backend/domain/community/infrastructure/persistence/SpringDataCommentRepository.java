@@ -5,4 +5,7 @@ import java.util.Optional;
 
 
 public interface SpringDataCommentRepository
-        extends JpaRepository<CommentJpaEntity, Long> {}
+        extends JpaRepository<CommentJpaEntity, Long> {
+
+    boolean existsByPostIdAndIsAcceptedTrue(Long postId);
+}

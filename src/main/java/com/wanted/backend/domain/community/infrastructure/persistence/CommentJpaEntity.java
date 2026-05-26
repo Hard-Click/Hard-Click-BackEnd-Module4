@@ -61,4 +61,9 @@ public class CommentJpaEntity {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
+
+    public void accept(LocalDateTime updatedAt) {
+        this.isAccepted = true;
+        this.updatedAt = updatedAt;
+    }
 }
