@@ -19,16 +19,16 @@ import java.util.Map;
     @RequiredArgsConstructor
     public class PasswordResetController {
 
-        private final VerifyEmailUseCase verifyEmailUseCase;
+    private final VerifyEmailUseCase verifyEmailUseCase;
     private final ResetPasswordUseCase resetPasswordUseCase;
 
-        @PostMapping("/email")
-        public ResponseEntity<ApiResponse<Map<String, Object>>> sendResetCode(
-                @Valid @RequestBody PasswordResetEmailRequest request
-        ) {
-            verifyEmailUseCase.sendPasswordResetCode(request.getEmail());
-            return ApiResponse.success("비밀번호 재설정 인증번호가 발송되었습니다", Map.of());
-        }
+    @PostMapping("/email")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> sendResetCode(
+            @Valid @RequestBody PasswordResetEmailRequest request
+    ) {
+        verifyEmailUseCase.sendPasswordResetCode(request.getEmail());
+        return ApiResponse.success("비밀번호 재설정 인증번호가 발송되었습니다", Map.of());
+    }
 
     @PostMapping("/verify")
     public ResponseEntity<ApiResponse<Map<String, String>>> verifyResetCode(
