@@ -1,8 +1,11 @@
 package com.wanted.backend.domain.community.application.service;
 
+import com.wanted.backend.domain.community.application.command.AcceptCommentCommand;
 import com.wanted.backend.domain.community.application.command.CreateCommentCommand;
+import com.wanted.backend.domain.community.application.policy.CommentAcceptPolicy;
 import com.wanted.backend.domain.community.application.usecase.CommentCommandUseCase;
 import com.wanted.backend.domain.community.domain.model.Comment;
+import com.wanted.backend.domain.community.domain.model.Post;
 import com.wanted.backend.domain.community.domain.repository.CommentRepository;
 import com.wanted.backend.domain.community.domain.repository.PostRepository;
 import com.wanted.backend.domain.community.infrastructure.file.FileUploadUtils;
@@ -30,11 +33,13 @@ public class CommentCommandService implements CommentCommandUseCase {
 
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
+    private final CommentAcceptPolicy commentAcceptPolicy;
 
     public CommentCommandService(CommentRepository commentRepository,
-                                 PostRepository postRepository) {
+                                 PostRepository postRepository, CommentAcceptPolicy commentAcceptPolicy) {
         this.commentRepository = commentRepository;
         this.postRepository = postRepository;
+        this.commentAcceptPolicy = commentAcceptPolicy;
     }
 
     @Override
@@ -77,5 +82,24 @@ public class CommentCommandService implements CommentCommandUseCase {
         );
 
         return commentRepository.save(comment).getId();
+    }
+
+    @Override
+    public void accept(AcceptCommentCommand command) {
+
+        // [1단계] 채택할 댓글 조회 → Comment 객체를 Policy에 전달
+        Comment comment = commentRepository.findById(command.commentId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
+
+        // [2단계] 채택 가능 여부 검증 → Policy에 위임 (Comment 객체 전달)
+        Post post = commentAcceptPolicy.validate(command.memberId(), comment);
+
+        // [3단계] 채택 처리 → 도메인이 담당
+        comment.accept();
+        commentRepository.save(comment);
+
+        // [4단계] 게시글 채택 완료 처리 → 도메인이 담당
+        post.markAsAccepted();
+        postRepository.save(post);
     }
 }

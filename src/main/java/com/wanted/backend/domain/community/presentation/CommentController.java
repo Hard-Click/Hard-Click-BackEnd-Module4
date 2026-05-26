@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.community.presentation;
 
+import com.wanted.backend.domain.community.application.command.AcceptCommentCommand;
 import com.wanted.backend.domain.community.application.command.CreateCommentCommand;
 import com.wanted.backend.domain.community.application.usecase.CommentCommandUseCase;
 import com.wanted.backend.domain.community.presentation.request.CreateCommentRequest;
@@ -48,5 +49,18 @@ public class CommentController {
         ));
 
         return ApiResponse.created("댓글이 등록되었습니다.", new CreateCommentResponse(commentId));
+    }
+
+    @PostMapping("/comments/{commentId}/accept")
+    public ResponseEntity<ApiResponse<Void>> acceptComment(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long commentId) {
+
+        commentCommandUseCase.accept(new AcceptCommentCommand(
+                userDetails.getMemberId(),
+                commentId
+        ));
+
+        return ApiResponse.successNoContent("댓글이 채택되었습니다.");
     }
 }

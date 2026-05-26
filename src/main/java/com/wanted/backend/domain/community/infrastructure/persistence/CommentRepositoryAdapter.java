@@ -16,6 +16,14 @@ public class CommentRepositoryAdapter implements CommentRepository {
 
     @Override
     public Comment save(Comment comment) {
+        if (comment.getId() != null) {
+            CommentJpaEntity entity = repository.findById(comment.getId()).orElseThrow();
+            if (comment.isAccepted()) {
+                entity.accept(comment.getUpdatedAt());
+            }
+            return toDomain(repository.save(entity));
+        }
+
         CommentJpaEntity entity = new CommentJpaEntity(
                 comment.getPostId(),
                 comment.getAuthorId(),
@@ -48,5 +56,10 @@ public class CommentRepositoryAdapter implements CommentRepository {
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );
+    }
+
+    @Override
+    public boolean existsByPostIdAndIsAcceptedTrue(Long postId) {
+        return repository.existsByPostIdAndIsAcceptedTrue(postId);
     }
 }
