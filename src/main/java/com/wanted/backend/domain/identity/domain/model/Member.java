@@ -127,15 +127,22 @@ public class Member {
         this.domainEvents.add(event);
     }
 
-    // [Pull Events] 서비스 계층에서 발행하기 위해 이벤트를 꺼내오고 리스트를 비웁니다.
+
     public List<DomainEvent> pullDomainEvents() {
         List<DomainEvent> events = new ArrayList<>(this.domainEvents);
         this.domainEvents.clear();
         return Collections.unmodifiableList(events);
     }
 
+    public void changePasswordAndUnlock(String encodedPassword, LocalDateTime now) {
+        this.password = encodedPassword;
+        this.isPasswordChangeRequired = false;
+        this.loginFailCount = 0;
+        this.isLocked = false;
+        this.lockedAt = null;
+        this.updatedAt = now;
+    }
 
-    // Getter들... (기존과 동일)
     public Long getId() { return id; }
     public String getUsername() { return username; }
     public String getEmail() { return email; }

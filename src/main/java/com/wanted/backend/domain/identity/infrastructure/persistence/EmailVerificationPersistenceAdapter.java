@@ -51,4 +51,13 @@ public class EmailVerificationPersistenceAdapter implements EmailVerificationRep
     public long countByEmailAndPurposeAndCreatedAtAfter(String email, EmailPurpose purpose, LocalDateTime after) {
         return jpaRepository.countByEmailAndPurposeAndCreatedAtAfter(email, purpose, after);
     }
+    @Override
+    public Optional<EmailVerification> findByVerificationTokenAndPurpose(String token, EmailPurpose purpose) {
+        return jpaRepository.findByVerificationTokenAndPurpose(token, purpose)
+                .map(entity -> EmailVerification.restore(
+                        entity.getId(), entity.getEmail(), entity.getCode(), entity.getPurpose(),
+                        entity.isVerified(), entity.getVerificationToken(),
+                        entity.getExpiresAt(), entity.getVerifiedAt()
+                ));
+    }
 }
