@@ -54,7 +54,10 @@ public class SecurityConfig {
                                 "/api/auth/check-email",
                                 "/api/auth/email/send",
                                 "/api/auth/email/verify",
-                                "/api/auth/password-reset"
+                                "/api/auth/password-reset/**",
+                                "/api/auth/account-locks/verify",
+                                "/api/auth/account-locks/password",
+                                "/api/courses/*/reviews"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/courses", "/api/courses/*", "/api/courses/*/reviews").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
