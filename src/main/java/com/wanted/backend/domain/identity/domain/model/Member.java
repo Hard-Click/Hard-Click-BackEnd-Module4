@@ -143,6 +143,11 @@ public class Member {
         this.updatedAt = now;
     }
 
+    public void withdraw(LocalDateTime now) {
+        this.status = MemberStatus.WITHDRAWN;
+        this.updatedAt = now;
+    }
+
     public Long getId() { return id; }
     public String getUsername() { return username; }
     public String getEmail() { return email; }
