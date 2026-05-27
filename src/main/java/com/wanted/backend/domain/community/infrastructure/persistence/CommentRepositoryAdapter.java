@@ -3,6 +3,8 @@ package com.wanted.backend.domain.community.infrastructure.persistence;
 import com.wanted.backend.domain.community.domain.model.Comment;
 import com.wanted.backend.domain.community.domain.repository.CommentRepository;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -61,5 +63,21 @@ public class CommentRepositoryAdapter implements CommentRepository {
     @Override
     public boolean existsByPostIdAndIsAcceptedTrue(Long postId) {
         return repository.existsByPostIdAndIsAcceptedTrue(postId);
+    }
+
+    @Override
+    public List<Comment> findByPostIdAndParentIdIsNull(Long postId) {
+        return repository.findByPostIdAndParentIdIsNullOrderByCreatedAtDesc(postId)
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Comment> findByParentId(Long parentId) {
+        return repository.findByParentIdOrderByCreatedAtAsc(parentId)
+                .stream()
+                .map(this::toDomain)
+                .toList();
     }
 }

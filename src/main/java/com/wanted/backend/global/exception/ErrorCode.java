@@ -75,7 +75,7 @@ import org.springframework.http.HttpStatus;
     VIDEO_COMPLETION_CONDITION_NOT_MET(HttpStatus.BAD_REQUEST, "L004", "영상 시청 비율이 완료 기준을 충족하지 않습니다."),
 
     //게시글 예외
-    SUBJECT_REQUIRED(HttpStatus.BAD_REQUEST, "P001", "질문게시판은 과목 선택이 필수입니다."),
+    SUBJECT_REQUIRED(HttpStatus.BAD_REQUEST, "P001", "과목을 선택하세요"),
     POST_NOT_FOUND(HttpStatus.NOT_FOUND, "P003", "존재하지 않는 게시글입니다."),
     FILE_COUNT_EXCEEDED(HttpStatus.BAD_REQUEST, "P002", "파일은 최대 2개까지 첨부 가능합니다."),
     POST_NOT_AUTHORIZED(HttpStatus.FORBIDDEN, "P004", "본인의 게시글만 수정/삭제할 수 있습니다."),
@@ -94,7 +94,8 @@ import org.springframework.http.HttpStatus;
     ACCEPT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "C003", "자유게시판에서는 채택할 수 없습니다."),
     ACCEPT_NOT_AUTHORIZED(HttpStatus.FORBIDDEN, "C004", "게시글 작성자만 채택할 수 있습니다."),
     ALREADY_ACCEPTED(HttpStatus.CONFLICT, "C005", "이미 채택된 댓글이 있습니다."),
-    REPLY_CANNOT_BE_ACCEPTED(HttpStatus.BAD_REQUEST, "C006", "대댓글은 채택할 수 없습니다.");
+    REPLY_CANNOT_BE_ACCEPTED(HttpStatus.BAD_REQUEST, "C006", "대댓글은 채택할 수 없습니다."),
+    INVALID_PARENT_COMMENT(HttpStatus.BAD_REQUEST, "C009", "다른 게시글의 댓글에는 답글을 달 수 없습니다.");
 
     private final HttpStatus status;
     private final String code;

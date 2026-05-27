@@ -13,6 +13,7 @@ import com.wanted.backend.domain.community.presentation.response.ReviewListRespo
 import com.wanted.backend.domain.community.presentation.response.UpdateReviewResponse;
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -32,6 +33,10 @@ public class ReviewController {
     }
 
     @PostMapping
+    @Operation(
+            summary = "리뷰 등록",
+            description = "자기가 시청한 강의 리뷰 1개 등록 가능"
+    )
     public ResponseEntity<ApiResponse<CreateReviewResponse>> createReview(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long courseId,
@@ -48,12 +53,17 @@ public class ReviewController {
     }
 
     @GetMapping
+    @Operation(
+            summary = "리뷰 목록 조회",
+            description = "리뷰 목록 조회 작성자 리뷰 최신 정렬, 비회원 리뷰 조회 및 조회 시 별점 최신화 계산/별점 분포 조회"
+    )
     public ResponseEntity<ApiResponse<ReviewListResponse>> getReviews(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long courseId,
             @RequestParam(defaultValue = "latest") ReviewSortType sort,
             @RequestParam(defaultValue = "1") int page) {
 
+        //비회원도 조회가 가능하도록
         Long currentMemberId = userDetails != null ? userDetails.getMemberId() : -1L;
 
         ReviewListResponse response = reviewQueryUseCase.handle(
@@ -62,7 +72,12 @@ public class ReviewController {
         return ApiResponse.success("리뷰 목록 조회 성공", response);
     }
 
+
     @PatchMapping("/{reviewId}")
+    @Operation(
+            summary = "리뷰 수정",
+            description = "본인이 작성한 리뷰인지 검증 후 리뷰를 수정하는 것 "
+    )
     public ResponseEntity<ApiResponse<UpdateReviewResponse>> updateReview(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long reviewId,
@@ -79,6 +94,10 @@ public class ReviewController {
     }
 
     @DeleteMapping("/{reviewId}")
+    @Operation(
+            summary = "리뷰 삭제",
+            description = "본인이 작성한 리뷰인지 검증 후 리뷰를 수정하는 것"
+    )
     public ResponseEntity<ApiResponse<Void>> deleteReview(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long reviewId) {

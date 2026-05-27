@@ -1,6 +1,8 @@
 package com.wanted.backend.domain.community.domain.repository;
 
 import com.wanted.backend.domain.community.domain.model.Comment;
+
+import java.util.List;
 import java.util.Optional;
 
 
@@ -14,5 +16,11 @@ public interface CommentRepository {
 
     // 게시글에 이미 채택된 댓글 존재 여부 (중복 채택 방지)
     boolean existsByPostIdAndIsAcceptedTrue(Long postId);
+
+    //게시글 원댓글 목록 조회
+    List<Comment> findByPostIdAndParentIdIsNull(Long postId);
+
+    //게시글 대댓글 목록 조회
+    List<Comment> findByParentId(Long parentId);
 
 }

@@ -54,9 +54,14 @@ public class CommentCommandService implements CommentCommandUseCase {
             Comment parent = commentRepository.findById(command.parentId())
                     .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
 
-            // 부모가 이미 대댓글이면 재대댓글 불가
+            // 재대댓글 방지: 부모가 이미 대댓글이면 거부
             if (parent.getParentId() != null) {
                 throw new BusinessException(ErrorCode.REPLY_DEPTH_EXCEEDED);
+            }
+
+            // 다른 게시글의 댓글을 부모로 참조하는 경우 방지
+            if (!parent.getPostId().equals(command.postId())) {
+                throw new BusinessException(ErrorCode.INVALID_PARENT_COMMENT);
             }
         }
 

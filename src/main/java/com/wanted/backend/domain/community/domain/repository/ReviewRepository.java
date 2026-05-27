@@ -39,5 +39,5 @@ public interface ReviewRepository {
     //삭제용
     void deleteById(Long reviewId);
 
-    record RatingCount(Double rating, Long count) {}
+    record RatingCount(Integer rating, Long count) {}
 }
