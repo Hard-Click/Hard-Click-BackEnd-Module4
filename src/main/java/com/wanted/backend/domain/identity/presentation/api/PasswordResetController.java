@@ -31,7 +31,7 @@ public class PasswordResetController {
     public ResponseEntity<ApiResponse<EmptyResponse>> sendResetCode(
             @Valid @RequestBody PasswordResetEmailRequest request
     ) {
-        verifyEmailUseCase.sendPasswordResetCode(request.getEmail());
+        verifyEmailUseCase.sendPasswordResetCode(request.email());
 
         return ApiResponse.success(
                 "비밀번호 재설정 인증번호가 발송되었습니다",
@@ -44,8 +44,8 @@ public class PasswordResetController {
             @Valid @RequestBody PasswordResetVerifyRequest request
     ) {
         String token = verifyEmailUseCase.verifyCode(
-                request.getEmail(),
-                request.getCode(),
+                request.email(),
+                request.code(),
                 EmailPurpose.PASSWORD_RESET
         );
 
@@ -60,10 +60,10 @@ public class PasswordResetController {
             @Valid @RequestBody ResetPasswordRequest request
     ) {
         resetPasswordUseCase.resetPassword(new ResetPasswordCommand(
-                request.getEmail(),
-                request.getPasswordChangeToken(),
-                request.getNewPassword(),
-                request.getNewPasswordConfirm()
+                request.email(),
+                request.passwordChangeToken(),
+                request.newPassword(),
+                request.newPasswordConfirm()
         ));
 
         return ApiResponse.success(

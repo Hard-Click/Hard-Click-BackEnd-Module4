@@ -8,6 +8,8 @@ import com.wanted.backend.domain.identity.presentation.api.request.AccountLockVe
 import com.wanted.backend.domain.identity.presentation.api.response.EmptyResponse;
 import com.wanted.backend.domain.identity.presentation.api.response.PasswordChangeTokenResponse;
 import com.wanted.backend.global.common.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "Account Lock", description = "계정 잠금 해제 API")
 @RestController
 @RequestMapping("/api/auth/account-locks")
 @RequiredArgsConstructor
@@ -24,13 +27,18 @@ public class AccountLockController {
 
     private final AccountLockUseCase accountLockUseCase;
 
+
+    @Operation(
+            summary = "계정 잠금 인증",
+            description = "계정 잠금 상태의 사용자가 이메일 인증번호를 검증하고 비밀번호 변경 토큰을 발급받습니다."
+    )
     @PostMapping("/verify")
     public ResponseEntity<ApiResponse<PasswordChangeTokenResponse>> verify(
             @Valid @RequestBody AccountLockVerifyRequest request
     ) {
         String token = accountLockUseCase.verify(new AccountLockVerifyCommand(
-                request.getEmail(),
-                request.getCode()
+                request.email(),
+                request.code()
         ));
 
         return ApiResponse.success(
@@ -39,14 +47,18 @@ public class AccountLockController {
         );
     }
 
+    @Operation(
+            summary = "잠금 계정 비밀번호 변경",
+            description = "계정 잠금 인증 후 발급받은 비밀번호 변경 토큰으로 새 비밀번호를 설정하고 계정 잠금을 해제합니다."
+    )
     @PatchMapping("/password")
     public ResponseEntity<ApiResponse<EmptyResponse>> changePassword(
             @Valid @RequestBody AccountLockPasswordChangeRequest request
     ) {
         accountLockUseCase.changePassword(new AccountLockPasswordChangeCommand(
-                request.getPasswordChangeToken(),
-                request.getNewPassword(),
-                request.getNewPasswordConfirm()
+                request.passwordChangeToken(),
+                request.newPassword(),
+                request.newPasswordConfirm()
         ));
 
         return ApiResponse.success(
