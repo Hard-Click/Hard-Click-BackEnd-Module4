@@ -2,6 +2,7 @@ package com.wanted.backend.domain.enrollment_management.presentation.api;
 
 
 import com.wanted.backend.domain.enrollment_management.application.usecase.GetMyEnrolledCourseUseCase;
+import com.wanted.backend.domain.enrollment_management.presentation.api.response.MyEnrolledCourseResponse;
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,16 +26,16 @@ public class MyEnrolledCourseController {
 
     @GetMapping
     @Operation(
-            summary = "내 수강 목록 조회" ,
+            summary = "내 수강 강의 목록 조회" ,
             description = "로그인한 사용자가 수강 중인 강의 목록을 진도율과 이어보기 정보와 함께 조회합니다"
     )
     public ResponseEntity<ApiResponse<List<GetMyEnrolledCourseUseCase.MyEnrolledCourseView>>> getMyEnrolledCourses(
             @AuthenticationPrincipal CustomUserDetails userDetails
             ) {
-       return ApiResponse.success(
-               "내 수강 목록이 조회되었습니다",
-               getMyEnrolledCourseUseCase.handle(userDetails.getMemberId())
-       );
+        List<GetMyEnrolledCourseUseCase.MyEnrolledCourseView> view = getMyEnrolledCourseUseCase.handle(userDetails.getMemberId());
+
+        List<MyEnrolledCourseResponse> myEnrolledCourseResponses =
+                MyEnrolledCourseResponse.change(getMyEnrolledCourseUseCase.handle(userDetails.getMemberId()));
     }
 
 }
