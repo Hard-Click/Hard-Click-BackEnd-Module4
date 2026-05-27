@@ -29,13 +29,14 @@ public class MyEnrolledCourseController {
             summary = "내 수강 강의 목록 조회" ,
             description = "로그인한 사용자가 수강 중인 강의 목록을 진도율과 이어보기 정보와 함께 조회합니다"
     )
-    public ResponseEntity<ApiResponse<List<GetMyEnrolledCourseUseCase.MyEnrolledCourseView>>> getMyEnrolledCourses(
+    public ResponseEntity<ApiResponse<List<MyEnrolledCourseResponse>>> getMyEnrolledCourses(
             @AuthenticationPrincipal CustomUserDetails userDetails
             ) {
-        List<GetMyEnrolledCourseUseCase.MyEnrolledCourseView> view = getMyEnrolledCourseUseCase.handle(userDetails.getMemberId());
+        List<GetMyEnrolledCourseUseCase.MyEnrolledCourseView> views = getMyEnrolledCourseUseCase.handle(userDetails.getMemberId());
 
-        List<MyEnrolledCourseResponse> myEnrolledCourseResponses =
-                MyEnrolledCourseResponse.change(getMyEnrolledCourseUseCase.handle(userDetails.getMemberId()));
+        List<MyEnrolledCourseResponse> myEnrolledCourseResponses = MyEnrolledCourseResponse.from(views);
+
+        return ApiResponse.success("내 수강 강의 목록을 조회했습니다.", myEnrolledCourseResponses);
     }
 
 }

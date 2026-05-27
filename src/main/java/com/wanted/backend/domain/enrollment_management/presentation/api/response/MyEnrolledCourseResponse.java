@@ -2,21 +2,34 @@ package com.wanted.backend.domain.enrollment_management.presentation.api.respons
 
 import com.wanted.backend.domain.enrollment_management.application.usecase.GetMyEnrolledCourseUseCase;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public record MyEnrolledCourseResponse(
         Long courseId,
         String courseTitle,
         String thumbnailUrl,
-        String instructorName,
-        Long progressRate,
+        Integer progressRate,
         Long lastVideoId,
-        Long lastPositionSeconds,
-        String lastStudiedAt
+        Integer lastPositionSeconds,
+        LocalDateTime lastStudiedAt
 ) {
-    public static List<MyEnrolledCourseResponse> change(List<GetMyEnrolledCourseUseCase.MyEnrolledCourseView> handle) {
 
-       return null;
+    public static MyEnrolledCourseResponse from(GetMyEnrolledCourseUseCase.MyEnrolledCourseView view) {
+        return new MyEnrolledCourseResponse(
+                view.courseId(),
+                view.courseTitle(),
+                view.thumbnailUrl(),
+                view.progressRate(),
+                view.lastVideoId(),
+                view.lastPositionSeconds(),
+                view.lastStudiedAt()
+        );
+    }
+
+    public static List<MyEnrolledCourseResponse> from(List<GetMyEnrolledCourseUseCase.MyEnrolledCourseView> views) {
+        return views.stream()
+                .map(MyEnrolledCourseResponse::from)
+                .toList();
     }
 }
-

@@ -9,17 +9,12 @@ public interface GetMyEnrolledCourseUseCase {
 
     record MyEnrolledCourseView(
             Long courseId,
-            Long courseTitle,
+            String courseTitle,
             String thumbnailUrl,
             Integer progressRate,
             LocalDateTime lastStudiedAt,
-            ContinueLessonView continueLesson
-    ){
-    }
-
-    record ContinueLessonView(
-            Long videoId,
+            Long lastVideoId,
             Integer lastPositionSeconds
-    ) {
+    ){
     }
 }
