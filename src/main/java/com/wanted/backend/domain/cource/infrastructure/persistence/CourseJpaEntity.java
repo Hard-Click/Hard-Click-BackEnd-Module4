@@ -19,6 +19,7 @@ public class CourseJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "course_id")
     private Long id;
 
     @Column(name = "author_id", nullable = false)
