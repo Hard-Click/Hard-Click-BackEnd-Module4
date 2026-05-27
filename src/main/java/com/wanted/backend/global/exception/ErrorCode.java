@@ -94,7 +94,8 @@ import org.springframework.http.HttpStatus;
     ACCEPT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "C003", "자유게시판에서는 채택할 수 없습니다."),
     ACCEPT_NOT_AUTHORIZED(HttpStatus.FORBIDDEN, "C004", "게시글 작성자만 채택할 수 있습니다."),
     ALREADY_ACCEPTED(HttpStatus.CONFLICT, "C005", "이미 채택된 댓글이 있습니다."),
-    REPLY_CANNOT_BE_ACCEPTED(HttpStatus.BAD_REQUEST, "C006", "대댓글은 채택할 수 없습니다.");
+    REPLY_CANNOT_BE_ACCEPTED(HttpStatus.BAD_REQUEST, "C006", "대댓글은 채택할 수 없습니다."),
+    INVALID_PARENT_COMMENT(HttpStatus.BAD_REQUEST, "C009", "다른 게시글의 댓글에는 답글을 달 수 없습니다.");
 
     private final HttpStatus status;
     private final String code;

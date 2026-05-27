@@ -3,7 +3,9 @@ package com.wanted.backend.domain.community.presentation;
 import com.wanted.backend.domain.community.application.command.AcceptCommentCommand;
 import com.wanted.backend.domain.community.application.command.CreateCommentCommand;
 import com.wanted.backend.domain.community.application.usecase.CommentCommandUseCase;
+import com.wanted.backend.domain.community.application.usecase.CommentQueryUseCase;
 import com.wanted.backend.domain.community.presentation.request.CreateCommentRequest;
+import com.wanted.backend.domain.community.presentation.response.CommentListResponse;
 import com.wanted.backend.domain.community.presentation.response.CreateCommentResponse;
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
@@ -28,9 +30,11 @@ import org.springframework.web.multipart.MultipartFile;
 public class CommentController {
 
     private final CommentCommandUseCase commentCommandUseCase;
+    private final CommentQueryUseCase commentQueryUseCase;
 
-    public CommentController(CommentCommandUseCase commentCommandUseCase) {
+    public CommentController(CommentCommandUseCase commentCommandUseCase, CommentQueryUseCase commentQueryUseCase) {
         this.commentCommandUseCase = commentCommandUseCase;
+        this.commentQueryUseCase = commentQueryUseCase;
     }
 
 
@@ -62,5 +66,16 @@ public class CommentController {
         ));
 
         return ApiResponse.successNoContent("댓글이 채택되었습니다.");
+    }
+
+    @GetMapping("/posts/{postId}/comments")
+    public ResponseEntity<ApiResponse<CommentListResponse>> getComments(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long postId) {
+
+        CommentListResponse response = commentQueryUseCase.getComments(
+                postId, userDetails.getMemberId());
+
+        return ApiResponse.success("댓글 목록 조회 성공", response);
     }
 }
