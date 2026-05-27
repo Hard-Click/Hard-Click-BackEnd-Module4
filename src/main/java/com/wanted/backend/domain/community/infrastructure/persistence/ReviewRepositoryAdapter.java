@@ -55,7 +55,7 @@ public class ReviewRepositoryAdapter implements ReviewRepository {
                 .map(this::toDomain)
                 .toList();
     }
-    //집계 쿼리 직접 사용
+    //집계 쿼리 직접 사용 -> 별점 집계 계산
     @Override
     public List<ReviewRepository.RatingCount> countGroupByRating(Long courseId) {
 
@@ -77,12 +77,13 @@ public class ReviewRepositoryAdapter implements ReviewRepository {
                 .toList();
     }
 
+    //리뷰 수
     @Override
     public int countByCourseId(Long courseId) {
         return repository.countByCourseId(courseId);
     }
 
-    //집계 쿼리 직접 사용
+    //집계 쿼리 직접 사용 -> 평균 별점 계산
     @Override
     public Double avgRatingByCourseId(Long courseId) {
         Double avg = em.createQuery("""

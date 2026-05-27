@@ -5,6 +5,8 @@ import com.wanted.backend.domain.community.application.command.CreateCommentComm
 
 
 public interface CommentCommandUseCase {
+
     Long create(CreateCommentCommand command);
     void accept(AcceptCommentCommand command);
+
 }

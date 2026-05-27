@@ -30,19 +30,21 @@ public class ReviewQueryService implements ReviewQueryUseCase {
     @Override
     public ReviewListResponse handle(Long courseId, Long memberId, ReviewSortType sort, int page) {
 
-        // 1. 본인 리뷰 최상단 고정
+
         List<ReviewItemResponse> items = new ArrayList<>();
 
+        //memberId 하드코딩 아니면 자기가 쓴거 List 최상위 노출
         if (!memberId.equals(-1L)) {
             reviewRepository.findByCourseIdAndMemberId(courseId, memberId)
                     .ifPresent(r -> items.add(toItemResponse(r, memberId)));
         }
 
-        // 2. 나머지 리뷰 페이징
+        //나머지 리뷰 페이징
         List<Review> others = !memberId.equals(-1L)
                 ? reviewRepository.findByCourseIdExcludeMember(courseId, memberId, sort, page, PAGE_SIZE)
                 : reviewRepository.findByCourseId(courseId, sort, page, PAGE_SIZE);
 
+        //이미 있는 리스트에 add 하는 값들
         others.forEach(r -> items.add(toItemResponse(r, memberId)));
 
         // 3. 통계 조립
@@ -51,6 +53,7 @@ public class ReviewQueryService implements ReviewQueryUseCase {
         return new ReviewListResponse(
                 reviewRepository.avgRatingByCourseId(courseId),
                 totalCount,
+                //list로 형변환 해서 받아온 값을 응답 객체인 RatingStatItem로 변환하는 작업
                 reviewRepository.countGroupByRating(courseId).stream()
                         .map(rc -> new RatingStatItem(rc.rating(), rc.count()))
                         .toList(),
@@ -61,6 +64,7 @@ public class ReviewQueryService implements ReviewQueryUseCase {
     }
 
     private ReviewItemResponse toItemResponse(Review review, Long currentMemberId) {
+        //바로 port를 호출하는 이유는 단순 다른 BC에서의 조회이기때문에 정책 클래스인 Policy 클래스 존재 필요 없음
         String name = memberNamePort.getNameByMemberId(review.getMemberId());
         return new ReviewItemResponse(
                 review.getId(),
