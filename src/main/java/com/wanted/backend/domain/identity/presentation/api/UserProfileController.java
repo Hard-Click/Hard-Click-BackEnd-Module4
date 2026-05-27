@@ -1,12 +1,15 @@
 package com.wanted.backend.domain.identity.presentation.api;
 
 import com.wanted.backend.domain.identity.application.command.UpdateMyProfileCommand;
-import com.wanted.backend.domain.identity.application.command.UpdatePasswordCommand;
 import com.wanted.backend.domain.identity.application.usecase.GetMyProfileUseCase;
 import com.wanted.backend.domain.identity.application.usecase.UpdateMyProfileUseCase;
 import com.wanted.backend.domain.identity.application.usecase.UpdatePasswordUseCase;
+import com.wanted.backend.domain.identity.application.usecase.WithdrawMemberUseCase;
 import com.wanted.backend.domain.identity.presentation.api.request.UpdateMyProfileRequest;
 import com.wanted.backend.domain.identity.presentation.api.request.UpdatePasswordRequest;
+import com.wanted.backend.domain.identity.presentation.api.request.WithdrawMemberRequest;
+import com.wanted.backend.domain.identity.presentation.api.response.EmptyResponse;
+import com.wanted.backend.domain.identity.presentation.api.response.ProfileImageResponse;
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
@@ -20,9 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import com.wanted.backend.domain.identity.presentation.api.response.ProfileImageResponse;
 import org.springframework.web.multipart.MultipartFile;
-import java.util.Map;
 
 @Validated
 @RestController
@@ -34,6 +35,7 @@ public class UserProfileController {
     private final GetMyProfileUseCase getMyProfileUseCase;
     private final UpdateMyProfileUseCase updateMyProfileUseCase;
     private final UpdatePasswordUseCase updatePasswordUseCase;
+    private final WithdrawMemberUseCase withdrawMemberUseCase;
 
     @GetMapping("/me")
     @Operation(
@@ -92,7 +94,7 @@ public class UserProfileController {
             summary = "프로필 이미지 수정",
             description = "로그인한 사용자의 프로필 이미지를 수정합니다."
     )
-    public ResponseEntity<ApiResponse<ProfileImageResponse>> updateProfileImage(
+    public ResponseEntity<ApiResponse<EmptyResponse>> updateProfileImage(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestPart("profileImage") MultipartFile profileImage
     ) {
@@ -106,9 +108,20 @@ public class UserProfileController {
                 )
         );
 
-        return ApiResponse.success(
-                "프로필 이미지가 변경되었습니다",
-                new ProfileImageResponse(result.profileImageUrl())
-        );
+        return ApiResponse.success("비밀번호가 변경되었습니다.", new EmptyResponse());
+
+    }
+    @DeleteMapping("/me")
+    @Operation(
+            summary = "회원 탈퇴",
+            description = "로그인한 사용자의 현재 비밀번호를 확인한 뒤 회원 상태를 탈퇴로 변경하고 Refresh Token을 삭제합니다."
+    )
+    public ResponseEntity<ApiResponse<EmptyResponse>> withdraw(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody WithdrawMemberRequest request
+    ) {
+        withdrawMemberUseCase.withdraw(userDetails.getMemberId(), request.toCommand());
+
+        return ApiResponse.success("회원 탈퇴가 완료되었습니다", new EmptyResponse());
     }
 }
