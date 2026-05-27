@@ -71,7 +71,7 @@ public class ReviewRepositoryAdapter implements ReviewRepository {
 
         return rows.stream()
                 .map(row -> new ReviewRepository.RatingCount(
-                        (Double) row[0],
+                        ((Number) row[0]).intValue(),
                         (Long) row[1]
                 ))
                 .toList();

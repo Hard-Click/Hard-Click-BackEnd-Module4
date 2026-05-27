@@ -75,7 +75,7 @@ import org.springframework.http.HttpStatus;
     VIDEO_COMPLETION_CONDITION_NOT_MET(HttpStatus.BAD_REQUEST, "L004", "영상 시청 비율이 완료 기준을 충족하지 않습니다."),
 
     //게시글 예외
-    SUBJECT_REQUIRED(HttpStatus.BAD_REQUEST, "P001", "질문게시판은 과목 선택이 필수입니다."),
+    SUBJECT_REQUIRED(HttpStatus.BAD_REQUEST, "P001", "과목을 선택하세요"),
     POST_NOT_FOUND(HttpStatus.NOT_FOUND, "P003", "존재하지 않는 게시글입니다."),
     FILE_COUNT_EXCEEDED(HttpStatus.BAD_REQUEST, "P002", "파일은 최대 2개까지 첨부 가능합니다."),
     POST_NOT_AUTHORIZED(HttpStatus.FORBIDDEN, "P004", "본인의 게시글만 수정/삭제할 수 있습니다."),

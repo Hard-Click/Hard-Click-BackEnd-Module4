@@ -59,7 +59,7 @@ public class SecurityConfig {
                                 "/api/auth/account-locks/password",
                                 "/api/courses/*/reviews"
                         ).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/courses", "/api/courses/*", "/api/courses/*/reviews").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/courses", "/api/courses/*","/api/courses/*/reviews").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
