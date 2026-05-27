@@ -57,7 +57,10 @@ public class SecurityConfig {
                                 "/api/auth/password-reset/**",
                                 "/api/auth/account-locks/verify",
                                 "/api/auth/account-locks/password",
-                                "/api/courses/*/reviews"
+                                "/api/courses/*/reviews",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/courses", "/api/courses/*", "/api/courses/*/reviews").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
