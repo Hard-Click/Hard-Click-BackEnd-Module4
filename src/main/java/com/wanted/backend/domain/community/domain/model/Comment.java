@@ -54,6 +54,41 @@ public class Comment {
         this.updatedAt = LocalDateTime.now();
     }
 
+    //수정 가능 여부 검증
+    public void validateUpdatable(Long memberId) {
+        if (!this.authorId.equals(memberId)) {
+            throw new BusinessException(ErrorCode.COMMENT_NOT_AUTHORIZED);
+        }
+        if (this.isAccepted) {
+            throw new BusinessException(ErrorCode.COMMENT_ACCEPTED_CANNOT_MODIFY);
+        }
+    }
+
+    //삭제 가능 여부 검증
+    public void validateDeletable(Long memberId) {
+        if (!this.authorId.equals(memberId)) {
+            throw new BusinessException(ErrorCode.COMMENT_NOT_AUTHORIZED);
+        }
+        if (this.isAccepted) {
+            throw new BusinessException(ErrorCode.COMMENT_ACCEPTED_CANNOT_DELETE);
+        }
+    }
+
+    //댓글 수정
+    public void update(String content, String imageUrl) {
+        this.content = content;
+        this.imageUrl = imageUrl;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    //댓글 삭제
+    public void softDelete() {
+        this.content = "삭제된 댓글입니다.";
+        this.isDeleted = true;
+        this.imageUrl = null;
+        this.updatedAt = LocalDateTime.now();
+    }
+
     public Long getId() { return id; }
     public Long getPostId() { return postId; }
     public Long getAuthorId() { return authorId; }

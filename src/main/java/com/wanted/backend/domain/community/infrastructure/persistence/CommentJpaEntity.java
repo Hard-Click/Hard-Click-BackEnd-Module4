@@ -66,4 +66,17 @@ public class CommentJpaEntity {
         this.isAccepted = true;
         this.updatedAt = updatedAt;
     }
+
+    public void update(String content, String imageUrl, LocalDateTime updatedAt) {
+        this.content = content;
+        this.imageUrl = imageUrl;
+        this.updatedAt = updatedAt;
+    }
+
+    public void softDelete(LocalDateTime updatedAt) {
+        this.content = "삭제된 댓글입니다.";
+        this.isDeleted = true;
+        this.imageUrl = null;
+        this.updatedAt = updatedAt;
+    }
 }
