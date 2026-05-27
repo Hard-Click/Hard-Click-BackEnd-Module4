@@ -1,12 +1,12 @@
 package com.wanted.backend.domain.identity.application.service;
 
+import com.wanted.backend.domain.identity.application.command.ResetPasswordCommand;
 import com.wanted.backend.domain.identity.application.usecase.ResetPasswordUseCase;
 import com.wanted.backend.domain.identity.domain.model.EmailPurpose;
 import com.wanted.backend.domain.identity.domain.model.EmailVerification;
 import com.wanted.backend.domain.identity.domain.model.Member;
 import com.wanted.backend.domain.identity.domain.repository.EmailVerificationRepository;
 import com.wanted.backend.domain.identity.domain.repository.MemberRepository;
-import com.wanted.backend.domain.identity.presentation.api.request.ResetPasswordRequest;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -24,25 +24,24 @@ public class ResetPasswordService implements ResetPasswordUseCase {
 
     @Override
     @Transactional
-    public void resetPassword(ResetPasswordRequest request) {
-        // 1. 비밀번호 확인 일치 여부 체크
-        if (!request.getNewPassword().equals(request.getNewPasswordConfirm())) {
+    public void resetPassword(ResetPasswordCommand command) {
+        if (!command.newPassword().equals(command.newPasswordConfirm())) {
             throw new BusinessException(ErrorCode.PASSWORD_CONFIRM_MISMATCH);
         }
 
-        // 2. [중요] 이메일 인증 토큰 검증
-        EmailVerification verification = verificationRepository.findLatestByEmailAndPurpose(request.getEmail(), EmailPurpose.PASSWORD_RESET)
+        EmailVerification verification = verificationRepository
+                .findLatestByEmailAndPurpose(command.email(), EmailPurpose.PASSWORD_RESET)
                 .orElseThrow(() -> new BusinessException(ErrorCode.VERIFICATION_NOT_FOUND));
 
-        if (!verification.isVerified() || !verification.getVerificationToken().equals(request.getPasswordChangeToken())) {
-            throw new BusinessException(ErrorCode.UNAUTHORIZED); // (인증 안 됐거나 토큰 다름)
+        if (!verification.isVerified()
+                || !verification.getVerificationToken().equals(command.passwordChangeToken())) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
 
-        // 3. 회원 찾기 및 비밀번호 교체
-        Member member = memberRepository.findByEmail(request.getEmail())
+        Member member = memberRepository.findByEmail(command.email())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        member.changePassword(passwordEncoder.encode(request.getNewPassword()));
+        member.changePassword(passwordEncoder.encode(command.newPassword()));
         memberRepository.save(member);
     }
 }

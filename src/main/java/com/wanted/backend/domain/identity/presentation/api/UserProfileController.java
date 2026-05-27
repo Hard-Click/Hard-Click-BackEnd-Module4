@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.identity.presentation.api;
 
 import com.wanted.backend.domain.identity.application.command.UpdateMyProfileCommand;
+import com.wanted.backend.domain.identity.application.command.UpdatePasswordCommand;
 import com.wanted.backend.domain.identity.application.usecase.GetMyProfileUseCase;
 import com.wanted.backend.domain.identity.application.usecase.UpdateMyProfileUseCase;
 import com.wanted.backend.domain.identity.application.usecase.UpdatePasswordUseCase;
@@ -49,13 +50,16 @@ public class UserProfileController {
     }
     @PatchMapping("/me/password")
     @Operation(summary = "비밀번호 변경", description = "로그인한 사용자의 비밀번호를 수정합니다.")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> updatePassword(
+    public ResponseEntity<ApiResponse<Void>> updatePassword(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestBody UpdatePasswordRequest request // (JSON 데이터)
+            @Valid @RequestBody UpdatePasswordRequest request
     ) {
-        updatePasswordUseCase.updatePassword(userDetails.getMemberId(), request);
-        return ApiResponse.success("비밀번호가 변경되었습니다", Map.of());
+        updatePasswordUseCase.updatePassword(userDetails.getMemberId(), request.toCommand());
+
+        return ApiResponse.success("비밀번호가 변경되었습니다.", null);
     }
+
+
 
     @PatchMapping(value = "/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(

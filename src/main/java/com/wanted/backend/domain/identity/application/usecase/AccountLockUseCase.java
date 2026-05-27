@@ -1,9 +1,9 @@
 package com.wanted.backend.domain.identity.application.usecase;
 
-import com.wanted.backend.domain.identity.presentation.api.request.AccountLockPasswordChangeRequest;
-import com.wanted.backend.domain.identity.presentation.api.request.AccountLockVerifyRequest;
+import com.wanted.backend.domain.identity.application.command.AccountLockPasswordChangeCommand;
+import com.wanted.backend.domain.identity.application.command.AccountLockVerifyCommand;
 
 public interface AccountLockUseCase {
-    String verify(AccountLockVerifyRequest request);
-    void changePassword(AccountLockPasswordChangeRequest request);
+    String verify(AccountLockVerifyCommand command);
+    void changePassword(AccountLockPasswordChangeCommand command);
 }

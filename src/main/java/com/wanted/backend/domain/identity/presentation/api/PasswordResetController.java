@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.identity.presentation.api;
 
+import com.wanted.backend.domain.identity.application.command.ResetPasswordCommand;
 import com.wanted.backend.domain.identity.application.usecase.ResetPasswordUseCase;
 import com.wanted.backend.domain.identity.application.usecase.VerifyEmailUseCase;
 import com.wanted.backend.domain.identity.domain.model.EmailPurpose;
@@ -12,21 +13,25 @@ import com.wanted.backend.global.common.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-    @RequestMapping("/api/auth/password-reset")
-    @RequiredArgsConstructor
-    public class PasswordResetController {
+@RequestMapping("/api/auth/password-reset")
+@RequiredArgsConstructor
+public class PasswordResetController {
 
-        private final VerifyEmailUseCase verifyEmailUseCase;
+    private final VerifyEmailUseCase verifyEmailUseCase;
     private final ResetPasswordUseCase resetPasswordUseCase;
 
     @PostMapping("/email")
     public ResponseEntity<ApiResponse<EmptyResponse>> sendResetCode(
             @Valid @RequestBody PasswordResetEmailRequest request
     ) {
-        verifyEmailUseCase.sendPasswordResetCode(request.getEmail());
+        verifyEmailUseCase.sendPasswordResetCode(request.email());
 
         return ApiResponse.success(
                 "비밀번호 재설정 인증번호가 발송되었습니다",
@@ -39,8 +44,8 @@ import org.springframework.web.bind.annotation.*;
             @Valid @RequestBody PasswordResetVerifyRequest request
     ) {
         String token = verifyEmailUseCase.verifyCode(
-                request.getEmail(),
-                request.getCode(),
+                request.email(),
+                request.code(),
                 EmailPurpose.PASSWORD_RESET
         );
 
@@ -54,7 +59,12 @@ import org.springframework.web.bind.annotation.*;
     public ResponseEntity<ApiResponse<EmptyResponse>> resetPassword(
             @Valid @RequestBody ResetPasswordRequest request
     ) {
-        resetPasswordUseCase.resetPassword(request);
+        resetPasswordUseCase.resetPassword(new ResetPasswordCommand(
+                request.email(),
+                request.passwordChangeToken(),
+                request.newPassword(),
+                request.newPasswordConfirm()
+        ));
 
         return ApiResponse.success(
                 "비밀번호가 성공적으로 재설정되었습니다",

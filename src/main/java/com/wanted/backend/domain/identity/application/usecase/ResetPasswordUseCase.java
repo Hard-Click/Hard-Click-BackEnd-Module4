@@ -1,7 +1,7 @@
 package com.wanted.backend.domain.identity.application.usecase;
 
-import com.wanted.backend.domain.identity.presentation.api.request.ResetPasswordRequest;
+import com.wanted.backend.domain.identity.application.command.ResetPasswordCommand;
 
 public interface ResetPasswordUseCase {
-    void resetPassword(ResetPasswordRequest request);
+    void resetPassword(ResetPasswordCommand command);
 }
