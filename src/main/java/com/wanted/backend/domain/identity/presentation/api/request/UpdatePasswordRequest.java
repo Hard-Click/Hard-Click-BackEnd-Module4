@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.identity.presentation.api.request;
 
+import com.wanted.backend.domain.identity.application.command.UpdatePasswordCommand;
 import com.wanted.backend.domain.identity.domain.policy.PasswordPolicy;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -19,4 +20,12 @@ public class UpdatePasswordRequest {
 
     @NotBlank(message = "비밀번호 확인을 입력해주세요")
     private String newPasswordConfirm;
+
+    public UpdatePasswordCommand toCommand() {
+        return new UpdatePasswordCommand(
+                currentPassword,
+                newPassword,
+                newPasswordConfirm
+        );
+    }
 }

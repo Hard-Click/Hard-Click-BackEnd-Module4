@@ -1,9 +1,9 @@
 package com.wanted.backend.domain.identity.application.service;
 
+import com.wanted.backend.domain.identity.application.command.UpdatePasswordCommand;
 import com.wanted.backend.domain.identity.application.usecase.UpdatePasswordUseCase;
 import com.wanted.backend.domain.identity.domain.model.Member;
 import com.wanted.backend.domain.identity.domain.repository.MemberRepository;
-import com.wanted.backend.domain.identity.presentation.api.request.UpdatePasswordRequest;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -20,23 +20,19 @@ public class UpdatePasswordService implements UpdatePasswordUseCase {
 
     @Override
     @Transactional
-    public void updatePassword(Long memberId, UpdatePasswordRequest request) {
-        // 1. 회원 조회
+    public void updatePassword(Long memberId, UpdatePasswordCommand command) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        // 2. 현재 비밀번호 일치 여부 확인
-        if (!passwordEncoder.matches(request.getCurrentPassword(), member.getPassword())) {
-            throw new BusinessException(ErrorCode.INVALID_PASSWORD); // (현재 비번 틀림)
+        if (!passwordEncoder.matches(command.currentPassword(), member.getPassword())) {
+            throw new BusinessException(ErrorCode.INVALID_PASSWORD);
         }
 
-        // 3. 새 비밀번호와 확인 값 일치 여부 확인
-        if (!request.getNewPassword().equals(request.getNewPasswordConfirm())) {
+        if (!command.newPassword().equals(command.newPasswordConfirm())) {
             throw new BusinessException(ErrorCode.PASSWORD_CONFIRM_MISMATCH);
         }
 
-        // 4. 비밀번호 변경 및 저장
-        member.changePassword(passwordEncoder.encode(request.getNewPassword()));
+        member.changePassword(passwordEncoder.encode(command.newPassword()));
         memberRepository.save(member);
     }
 }

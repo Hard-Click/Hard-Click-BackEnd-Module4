@@ -1,21 +1,30 @@
 package com.wanted.backend.domain.identity.presentation.api;
 
+import com.wanted.backend.domain.identity.application.command.SignupCommand;
 import com.wanted.backend.domain.identity.application.service.LoginService;
 import com.wanted.backend.domain.identity.application.usecase.CheckDuplicateUseCase;
 import com.wanted.backend.domain.identity.application.usecase.LogoutUseCase;
 import com.wanted.backend.domain.identity.application.usecase.SignupUseCase;
-import com.wanted.backend.domain.identity.application.usecase.UpdatePasswordUseCase;
 import com.wanted.backend.domain.identity.domain.model.AuthToken;
 import com.wanted.backend.domain.identity.presentation.api.request.LoginRequest;
 import com.wanted.backend.domain.identity.presentation.api.request.LogoutRequest;
 import com.wanted.backend.domain.identity.presentation.api.request.RefreshTokenRequest;
 import com.wanted.backend.domain.identity.presentation.api.request.SignupRequest;
-import com.wanted.backend.domain.identity.presentation.api.response.*;
+import com.wanted.backend.domain.identity.presentation.api.response.DuplicateCheckResponse;
+import com.wanted.backend.domain.identity.presentation.api.response.EmptyResponse;
+import com.wanted.backend.domain.identity.presentation.api.response.LoginResponse;
+import com.wanted.backend.domain.identity.presentation.api.response.RefreshTokenResponse;
+import com.wanted.backend.domain.identity.presentation.api.response.SignupResponse;
 import com.wanted.backend.global.common.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -26,7 +35,6 @@ public class IdentityController {
     private final CheckDuplicateUseCase checkDuplicateUseCase;
     private final SignupUseCase signupUseCase;
     private final LogoutUseCase logoutUseCase;
-    private final UpdatePasswordUseCase updatePasswordUseCase;
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
@@ -71,7 +79,18 @@ public class IdentityController {
 
     @PostMapping("/signup")
     public ResponseEntity<ApiResponse<SignupResponse>> signup(@Valid @RequestBody SignupRequest request) {
-        Long memberId = signupUseCase.signup(request);
+        Long memberId = signupUseCase.signup(new SignupCommand(
+                request.getUsername(),
+                request.getEmail(),
+                request.getPassword(),
+                request.getPasswordConfirm(),
+                request.getName(),
+                request.getGender(),
+                request.getBirthDate(),
+                request.getPhoneNumber(),
+                request.getProfileImageUrl(),
+                request.getEmailVerificationToken()
+        ));
 
         return ApiResponse.created(
                 "회원가입이 완료되었습니다",
