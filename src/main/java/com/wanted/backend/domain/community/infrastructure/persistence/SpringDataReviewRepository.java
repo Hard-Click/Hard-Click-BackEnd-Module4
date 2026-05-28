@@ -17,4 +17,6 @@ public interface SpringDataReviewRepository extends JpaRepository<ReviewJpaEntit
     List<ReviewJpaEntity> findByCourseId(Long courseId, Pageable pageable);
 
     int countByCourseId(Long courseId);
+
+    List<ReviewJpaEntity> findByMemberIdOrderByCreatedAtDesc(Long memberId);
 }

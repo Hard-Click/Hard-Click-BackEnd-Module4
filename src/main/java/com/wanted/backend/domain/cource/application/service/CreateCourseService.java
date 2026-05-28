@@ -47,7 +47,11 @@ public class CreateCourseService implements CreateCourseUseCase {
                 command.priceType(),
                 command.price(),
                 sections,
-                now
+                now,
+                command.learningObjectives(),
+                command.targetAudience(),
+                command.techTags(),
+                command.level()
         );
 
         Course saved = courseRepository.save(course);

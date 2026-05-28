@@ -24,4 +24,6 @@ public interface CourseRepository {
      */
     PageResult<CourseListItem> findList(String keyword, String subject, List<Long> authorIds,
                                        CourseSortType sort, int page, int size);
+
+    PageResult<CourseListItem> findByAuthor(Long authorId, int page, int size);
 }

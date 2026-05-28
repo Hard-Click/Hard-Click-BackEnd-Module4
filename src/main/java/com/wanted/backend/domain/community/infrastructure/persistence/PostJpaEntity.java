@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.community.infrastructure.persistence;
 
 import com.wanted.backend.domain.community.domain.model.BoardType;
+import com.wanted.backend.domain.community.domain.model.PostStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 
@@ -35,8 +36,9 @@ public class PostJpaEntity {
     @Column(name = "view_count", nullable = false)
     private int viewCount;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private String status;
+    private PostStatus status;
 
     @Column(name = "is_accepted", nullable = false)
     private boolean isAccepted;
@@ -62,7 +64,7 @@ public class PostJpaEntity {
         this.title = title;
         this.content = content;
         this.viewCount = viewCount;
-        this.status = "ACTIVE";
+        this.status = PostStatus.ACTIVE;
         this.isAccepted = isAccepted;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;

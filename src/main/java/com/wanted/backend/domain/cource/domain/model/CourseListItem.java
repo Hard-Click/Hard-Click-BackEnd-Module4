@@ -13,5 +13,6 @@ public record CourseListItem(
         String thumbnailUrl,
         PriceType priceType,
         int price,
+        CourseStatus status,
         Instant createdAt
 ) {}

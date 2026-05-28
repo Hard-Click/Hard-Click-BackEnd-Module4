@@ -3,6 +3,8 @@ package com.wanted.backend.domain.community.infrastructure.persistence;
 import com.wanted.backend.domain.community.domain.model.Comment;
 import com.wanted.backend.domain.community.domain.repository.CommentRepository;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -18,9 +20,20 @@ public class CommentRepositoryAdapter implements CommentRepository {
     public Comment save(Comment comment) {
         if (comment.getId() != null) {
             CommentJpaEntity entity = repository.findById(comment.getId()).orElseThrow();
+
+            // 수정
+            entity.update(comment.getContent(), comment.getImageUrl(), comment.getUpdatedAt());
+
+            // Soft Delete
+            if (comment.isDeleted()) {
+                entity.softDelete(comment.getUpdatedAt());
+            }
+
+            // 채택
             if (comment.isAccepted()) {
                 entity.accept(comment.getUpdatedAt());
             }
+
             return toDomain(repository.save(entity));
         }
 
@@ -62,4 +75,32 @@ public class CommentRepositoryAdapter implements CommentRepository {
     public boolean existsByPostIdAndIsAcceptedTrue(Long postId) {
         return repository.existsByPostIdAndIsAcceptedTrue(postId);
     }
+
+    @Override
+    public List<Comment> findByPostIdAndParentIdIsNull(Long postId) {
+        return repository.findByPostIdAndParentIdIsNullOrderByCreatedAtDesc(postId)
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Comment> findByParentId(Long parentId) {
+        return repository.findByParentIdOrderByCreatedAtAsc(parentId)
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    public boolean existsByParentId(Long commentId) {
+        return repository.existsByParentId(commentId);
+    }
+
+    @Override
+    public void deleteById(Long commentId) {
+        repository.deleteById(commentId);
+    }
+
+
 }
