@@ -31,7 +31,7 @@ class GetCourseProgressServiceTest {
     }
 
     @Test
-    void returnsCourseProgress() {
+    void 강의_전체_진도를_반환한다() {
         when(enrollmentAccessPort.hasActiveEnrollment(1L, 20L)).thenReturn(true);
         when(courseProgressQueryPort.findByMemberIdAndCourseId(1L, 20L))
                 .thenReturn(new CourseProgressQueryPort.CourseProgressData(
@@ -55,7 +55,7 @@ class GetCourseProgressServiceTest {
     }
 
     @Test
-    void returnsZeroProgressWhenCourseHasNoLessons() {
+    void 강의에_레슨이_없으면_진도율은_0이다() {
         when(enrollmentAccessPort.hasActiveEnrollment(1L, 20L)).thenReturn(true);
         when(courseProgressQueryPort.findByMemberIdAndCourseId(1L, 20L))
                 .thenReturn(new CourseProgressQueryPort.CourseProgressData(20L, List.of()));
@@ -69,7 +69,7 @@ class GetCourseProgressServiceTest {
     }
 
     @Test
-    void throwsEnrollmentRequiredWhenEnrollmentDoesNotExist() {
+    void 수강권이_없으면_예외가_발생한다() {
         when(enrollmentAccessPort.hasActiveEnrollment(1L, 20L)).thenReturn(false);
 
         assertThatThrownBy(() -> service.handle(new GetCourseProgressCommand(1L, 20L)))

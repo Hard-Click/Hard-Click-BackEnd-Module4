@@ -41,7 +41,7 @@ class UpdateMyProfileServiceTest {
     }
 
     @Test
-    void updatesProfileImage() {
+    void 프로필_이미지를_수정한다() {
         MockMultipartFile profileImage = new MockMultipartFile(
                 "profileImage", "profile.png", "image/png", "image".getBytes()
         );
@@ -64,7 +64,7 @@ class UpdateMyProfileServiceTest {
     }
 
     @Test
-    void updatesPasswordWhenCurrentPasswordMatches() {
+    void 현재_비밀번호가_일치하면_비밀번호를_수정한다() {
         Member member = member();
         when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
         when(passwordEncoder.matches("currentPassword1!", "encoded-password")).thenReturn(true);
@@ -83,7 +83,7 @@ class UpdateMyProfileServiceTest {
     }
 
     @Test
-    void throwsPasswordMismatchWhenCurrentPasswordDoesNotMatch() {
+    void 현재_비밀번호가_일치하지_않으면_예외가_발생한다() {
         Member member = member();
         when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
         when(passwordEncoder.matches("wrongPassword1!", "encoded-password")).thenReturn(false);
@@ -101,7 +101,7 @@ class UpdateMyProfileServiceTest {
     }
 
     @Test
-    void throwsInvalidInputWhenPasswordChangeRequestIsPartial() {
+    void 비밀번호_변경_요청이_일부만_있으면_예외가_발생한다() {
         Member member = member();
         when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
 
@@ -118,7 +118,7 @@ class UpdateMyProfileServiceTest {
     }
 
     @Test
-    void throwsInvalidInputWhenNewPasswordConfirmDoesNotMatch() {
+    void 새_비밀번호와_확인이_일치하지_않으면_예외가_발생한다() {
         Member member = member();
         when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
 
@@ -135,7 +135,7 @@ class UpdateMyProfileServiceTest {
     }
 
     @Test
-    void throwsInvalidInputWhenNoUpdatableValueExists() {
+    void 수정할_값이_없으면_예외가_발생한다() {
         Member member = member();
         when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
 
@@ -152,7 +152,7 @@ class UpdateMyProfileServiceTest {
     }
 
     @Test
-    void throwsUserNotFoundWhenMemberDoesNotExist() {
+    void 회원이_존재하지_않으면_예외가_발생한다() {
         when(memberRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.handle(new UpdateMyProfileCommand(

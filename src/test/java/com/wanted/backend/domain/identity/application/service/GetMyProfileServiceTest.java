@@ -31,7 +31,7 @@ class GetMyProfileServiceTest {
     }
 
     @Test
-    void returnsMyProfile() {
+    void 내_프로필을_반환한다() {
         when(memberRepository.findById(1L)).thenReturn(Optional.of(member("/profile.png")));
 
         MyProfileView result = service.handle(1L);
@@ -44,7 +44,7 @@ class GetMyProfileServiceTest {
     }
 
     @Test
-    void returnsDefaultProfileImageWhenProfileImageDoesNotExist() {
+    void 프로필_이미지가_없으면_기본_이미지를_반환한다() {
         when(memberRepository.findById(1L)).thenReturn(Optional.of(member(null)));
 
         MyProfileView result = service.handle(1L);
@@ -53,7 +53,7 @@ class GetMyProfileServiceTest {
     }
 
     @Test
-    void throwsUserNotFoundWhenMemberDoesNotExist() {
+    void 회원이_존재하지_않으면_예외가_발생한다() {
         when(memberRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.handle(1L))
@@ -65,14 +65,25 @@ class GetMyProfileServiceTest {
     private Member member(String profileImageUrl) {
         LocalDateTime now = LocalDateTime.now();
         return Member.restore(
-                1L, "testuser", "test@test.com", "password",
-                "박지영", "FEMALE", LocalDate.of(1995, 1, 1),
-                "010-1234-5678", null,
-                Role.STUDENT, MemberStatus.ACTIVE,
-                false, 0, false,
-                null, null,
-                LocalDateTime.now(), LocalDateTime.now(),
-                false  // ← 추가된 파라미터
+                1L,
+                "testuser",
+                "test@example.com",
+                "password",
+                "테스트유저",
+                "MALE",
+                LocalDate.of(2000, 1, 1),
+                "010-1234-5678",
+                profileImageUrl,
+                Role.STUDENT,
+                MemberStatus.ACTIVE,
+                false,
+                0,
+                false,
+                null,
+                null,
+                now,
+                now,
+                false
         );
     }
 }

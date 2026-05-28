@@ -9,7 +9,7 @@ import org.springframework.test.context.ActiveProfiles;
 class HardClickBackEndApplicationTests {
 
     @Test
-    void contextLoads() {
+    void 스프링_컨텍스트가_정상적으로_로딩된다() {
     }
 
 }
