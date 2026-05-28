@@ -45,6 +45,13 @@ public class Notice {
                 isPinned, type, status, createdAt, updatedAt);
     }
 
+    public static Notice createGlobal(Long authorId, String title,
+                                      String content, boolean isPinned) {
+        return new Notice(null, authorId, null, title, content,
+                isPinned, "GLOBAL", NoticeStatus.PUBLISHED,
+                LocalDateTime.now(), LocalDateTime.now());
+    }
+
     public Long getId() { return id; }
     public Long getAuthorId() { return authorId; }
     public Long getCourseId() { return courseId; }
