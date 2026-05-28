@@ -22,4 +22,7 @@ public interface NoticeRepository {
 
     // 이전 공지 조회
     Optional<Notice> findPreviousNotice(Long noticeId, String type, Long courseId);
+
+    // Hard Delete 추가
+    void deleteById(Long noticeId);
 }

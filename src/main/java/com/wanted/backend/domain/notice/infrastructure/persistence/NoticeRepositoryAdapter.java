@@ -25,6 +25,15 @@ public class NoticeRepositoryAdapter implements NoticeRepository {
 
     @Override
     public Notice save(Notice notice) {
+        if (notice.getId() != null) {
+            // 수정
+            NoticeJpaEntity entity = repository.findById(notice.getId()).orElseThrow();
+            entity.update(notice.getTitle(), notice.getContent(),
+                    notice.isPinned(), notice.getUpdatedAt());
+            return toDomain(repository.save(entity));
+        }
+
+        // 신규 저장
         NoticeJpaEntity entity = new NoticeJpaEntity(
                 notice.getAuthorId(),
                 notice.getCourseId(),
@@ -37,6 +46,11 @@ public class NoticeRepositoryAdapter implements NoticeRepository {
                 notice.getUpdatedAt()
         );
         return toDomain(repository.save(entity));
+    }
+
+    @Override
+    public void deleteById(Long noticeId) {
+        repository.deleteById(noticeId);
     }
 
     @Override
