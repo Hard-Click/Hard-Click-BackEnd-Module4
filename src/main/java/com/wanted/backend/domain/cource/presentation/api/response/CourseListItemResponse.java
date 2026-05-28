@@ -6,13 +6,13 @@ import com.wanted.backend.domain.cource.domain.model.PriceType;
 public record CourseListItemResponse(
         Long courseId,
         String title,
-        String subject,
+        String subjectName,
         String thumbnailUrl,
         String priceLabel,   // "무료" or "99,000원"
         PriceType priceType,
         int price,
         String instructorName,
-        double rating,
+        double averageRating,
         int reviewCount,
         int studentCount
 ) {

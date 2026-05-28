@@ -40,7 +40,9 @@ public class CourseRepositoryAdapter implements CourseRepository {
         entity.getSections().forEach(s -> Hibernate.initialize(s.getLessons()));
 
         entity.update(course.getTitle(), course.getSubject(), course.getDescription(),
-                course.getThumbnailUrl(), course.getPriceType(), course.getPrice(), course.getStatus());
+                course.getThumbnailUrl(), course.getPriceType(), course.getPrice(), course.getStatus(),
+                course.getLearningObjectives(), course.getTargetAudience(),
+                course.getTechTags(), course.getLevel());
 
         syncSections(entity, course.getSections());
         return toDomain(jpaRepository.save(entity));
@@ -87,10 +89,29 @@ public class CourseRepositoryAdapter implements CourseRepository {
         List<CourseListItem> items = result.getContent().stream()
                 .map(e -> new CourseListItem(
                         e.getId(), e.getAuthorId(), e.getTitle(), e.getSubject(),
-                        e.getThumbnailUrl(), e.getPriceType(), e.getPrice(), e.getCreatedAt()))
+                        e.getThumbnailUrl(), e.getPriceType(), e.getPrice(),
+                        e.getStatus(), e.getCreatedAt()))
                 .toList();
 
         // currentPage 응답도 1-based로 반환
+        return new PageResult<>(items, result.getNumber() + 1, result.getTotalPages(), result.getTotalElements());
+    }
+
+    @Override
+    public PageResult<CourseListItem> findByAuthor(Long authorId, int page, int size) {
+        Specification<CourseJpaEntity> spec = (root, query, cb) ->
+                cb.equal(root.get("authorId"), authorId);
+
+        Page<CourseJpaEntity> result = jpaRepository.findAll(
+                spec, PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt")));
+
+        List<CourseListItem> items = result.getContent().stream()
+                .map(e -> new CourseListItem(
+                        e.getId(), e.getAuthorId(), e.getTitle(), e.getSubject(),
+                        e.getThumbnailUrl(), e.getPriceType(), e.getPrice(),
+                        e.getStatus(), e.getCreatedAt()))
+                .toList();
+
         return new PageResult<>(items, result.getNumber() + 1, result.getTotalPages(), result.getTotalElements());
     }
 
@@ -153,7 +174,9 @@ public class CourseRepositoryAdapter implements CourseRepository {
         CourseJpaEntity entity = CourseJpaEntity.from(
                 course.getAuthorId(), course.getTitle(), course.getSubject(),
                 course.getDescription(), course.getThumbnailUrl(),
-                course.getPriceType(), course.getPrice(), course.getStatus(), course.getCreatedAt());
+                course.getPriceType(), course.getPrice(), course.getStatus(), course.getCreatedAt(),
+                course.getLearningObjectives(), course.getTargetAudience(),
+                course.getTechTags(), course.getLevel());
         course.getSections().forEach(section -> {
             CourseSectionJpaEntity sectionEntity = entity.addSection(
                     section.getTitle(), section.getOrderIndex());
@@ -187,6 +210,8 @@ public class CourseRepositoryAdapter implements CourseRepository {
         return Course.restore(
                 entity.getId(), entity.getAuthorId(), entity.getTitle(), entity.getSubject(),
                 entity.getDescription(), entity.getThumbnailUrl(), entity.getPriceType(),
-                entity.getPrice(), entity.getStatus(), sections, entity.getCreatedAt());
+                entity.getPrice(), entity.getStatus(), sections, entity.getCreatedAt(),
+                entity.getLearningObjectivesList(), entity.getTargetAudienceList(),
+                entity.getTechTagsList(), entity.getLevel());
     }
 }

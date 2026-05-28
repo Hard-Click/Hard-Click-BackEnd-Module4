@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 
 @Entity
-@Table(name = "lessons")
+@Table(name = "lesson")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class LessonJpaEntity {

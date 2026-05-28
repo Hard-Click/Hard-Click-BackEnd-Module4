@@ -12,7 +12,11 @@ public record CreateCourseCommand(
         String thumbnailUrl,
         PriceType priceType,
         int price,
-        List<SectionCommand> sections
+        List<SectionCommand> sections,
+        List<String> learningObjectives,
+        List<String> targetAudience,
+        List<String> techTags,
+        String level
 ) {
     public record SectionCommand(
             String title,
