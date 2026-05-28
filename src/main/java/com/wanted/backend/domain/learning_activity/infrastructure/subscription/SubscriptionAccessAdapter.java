@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @Component
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -14,6 +16,10 @@ public class SubscriptionAccessAdapter implements SubscriptionAccessPort {
 
     @Override
     public boolean hasActiveSubscription(Long memberId) {
-        return repository.existsActiveSubscription(memberId);
+        return repository.existsByMemberIdAndStatusAndExpiredAtGreaterThanEqual(
+                memberId,
+                SubscriptionStatus.ACTIVE,
+                LocalDateTime.now()
+        );
     }
 }

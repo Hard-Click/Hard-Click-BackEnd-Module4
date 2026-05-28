@@ -15,7 +15,6 @@ public class CourseReferenceEntity {
 
     @Id
     @Column(name = "course_id")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
