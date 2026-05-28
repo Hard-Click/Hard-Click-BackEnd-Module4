@@ -23,4 +23,10 @@ public interface CommentRepository {
     //게시글 대댓글 목록 조회
     List<Comment> findByParentId(Long parentId);
 
+    // 대댓글 존재 여부 (삭제 방식 결정용)
+    boolean existsByParentId(Long commentId);
+
+    // Hard Delete
+    void deleteById(Long commentId);
+
 }

@@ -17,4 +17,7 @@ public interface SpringDataCommentRepository
     //대댓글 목록(오래된 순)
     List<CommentJpaEntity> findByPostIdAndParentIdIsNullOrderByCreatedAtDesc(Long postId);
 
+    // 대댓글 존재 여부
+    boolean existsByParentId(Long commentId);
+
 }
