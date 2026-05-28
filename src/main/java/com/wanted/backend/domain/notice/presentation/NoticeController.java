@@ -2,10 +2,14 @@ package com.wanted.backend.domain.notice.presentation;
 
 import com.wanted.backend.domain.notice.application.command.CreateGlobalNoticeCommand;
 import com.wanted.backend.domain.notice.application.command.CreateNoticeCommand;
+import com.wanted.backend.domain.notice.application.command.GetNoticeListCommand;
 import com.wanted.backend.domain.notice.application.usecase.NoticeCommandUseCase;
+import com.wanted.backend.domain.notice.application.usecase.NoticeQueryUseCase;
 import com.wanted.backend.domain.notice.presentation.request.CreateGlobalNoticeRequest;
 import com.wanted.backend.domain.notice.presentation.request.CreateNoticeRequest;
 import com.wanted.backend.domain.notice.presentation.response.CreateNoticeResponse;
+import com.wanted.backend.domain.notice.presentation.response.NoticeDetailResponse;
+import com.wanted.backend.domain.notice.presentation.response.NoticeListResponse;
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import jakarta.validation.Valid;
@@ -19,9 +23,11 @@ import org.springframework.web.bind.annotation.*;
 public class NoticeController {
 
     private final NoticeCommandUseCase noticeCommandUseCase;
+    private final NoticeQueryUseCase noticeQueryUseCase;
 
-    public NoticeController(NoticeCommandUseCase noticeCommandUseCase) {
+    public NoticeController(NoticeCommandUseCase noticeCommandUseCase, NoticeQueryUseCase noticeQueryUseCase) {
         this.noticeCommandUseCase = noticeCommandUseCase;
+        this.noticeQueryUseCase = noticeQueryUseCase;
     }
 
 
@@ -56,5 +62,28 @@ public class NoticeController {
         ));
 
         return ApiResponse.created("전체 공지사항 작성 완료", new CreateNoticeResponse(noticeId));
+    }
+
+    @GetMapping("/notices")
+    public ResponseEntity<ApiResponse<NoticeListResponse>> getNotices(
+            @RequestParam String type,
+            @RequestParam(required = false) Long courseId,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        NoticeListResponse response = noticeQueryUseCase.getList(
+                new GetNoticeListCommand(type, courseId, keyword, page, size));
+
+        return ApiResponse.success("공지사항 목록 조회 성공", response);
+    }
+
+    @GetMapping("/notices/{noticeId}")
+    public ResponseEntity<ApiResponse<NoticeDetailResponse>> getNotice(
+            @PathVariable Long noticeId) {
+
+        NoticeDetailResponse response = noticeQueryUseCase.getDetail(noticeId);
+
+        return ApiResponse.success("공지사항 상세 조회 성공", response);
     }
 }
