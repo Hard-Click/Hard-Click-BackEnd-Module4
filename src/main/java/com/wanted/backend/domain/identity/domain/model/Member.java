@@ -30,14 +30,14 @@ public class Member {
     private LocalDateTime lastLoginAt;
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
+    private final boolean optionalTermsAgreed;
     // 아키텍처 가이드라인에 따른 도메인 이벤트 리스트 (순수 자바)
     private final List<DomainEvent> domainEvents = new ArrayList<>();
 
     private Member(Long id, String username, String email, String password, String name, String gender,
                    LocalDate birthDate, String phoneNumber, String profileImageUrl, Role role, MemberStatus status,
                    boolean isPasswordChangeRequired, int loginFailCount, boolean isLocked,
-                   LocalDateTime lockedAt, LocalDateTime lastLoginAt, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                   LocalDateTime lockedAt, LocalDateTime lastLoginAt, LocalDateTime createdAt, LocalDateTime updatedAt,boolean optionalTermsAgreed) {
         this.id = id;
         this.username = username;
         this.email = email;
@@ -56,16 +56,17 @@ public class Member {
         this.lastLoginAt = lastLoginAt;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.optionalTermsAgreed = optionalTermsAgreed;
     }
 
     public static Member create(String username, String email, String password, String name,
                                 String gender, LocalDate birthDate, String phoneNumber,
-                                String profileImageUrl, Role role) {
+                                String profileImageUrl, Role role,boolean optionalTermsAgreed) {
         LocalDateTime now = LocalDateTime.now();
         return new Member(
                 null, username, email, password, name, gender, birthDate, phoneNumber,
                 profileImageUrl, role, MemberStatus.ACTIVE, false, 0, false, null, null,
-                now, now
+                now, now,optionalTermsAgreed
         );
     }
     public void changePassword(String encodedPassword) {
@@ -79,10 +80,13 @@ public class Member {
                                  LocalDate birthDate, String phoneNumber, String profileImageUrl, Role role,
                                  MemberStatus status, boolean isPasswordChangeRequired, int loginFailCount,
                                  boolean isLocked, LocalDateTime lockedAt, LocalDateTime lastLoginAt,
-                                 LocalDateTime createdAt, LocalDateTime updatedAt) {
+                                 LocalDateTime createdAt, LocalDateTime updatedAt, boolean optionalTermsAgreed) {
         return new Member(id, username, email, password, name, gender, birthDate, phoneNumber,
                 profileImageUrl, role, status, isPasswordChangeRequired, loginFailCount,
-                isLocked, lockedAt, lastLoginAt, createdAt, updatedAt);
+                isLocked, lockedAt, lastLoginAt, createdAt, updatedAt, optionalTermsAgreed);
+    }
+    public boolean isOptionalTermsAgreed() {
+        return optionalTermsAgreed;
     }
 
     // 도메인 행위: 로그인 성공 처리

@@ -26,9 +26,6 @@ public class SignupService implements SignupUseCase {
     @Override
     @Transactional
     public Long signup(SignupCommand command) {
-        if (!command.password().equals(command.passwordConfirm())) {
-            throw new BusinessException(ErrorCode.PASSWORD_MISMATCH);
-        }
 
         EmailVerification verification = verificationRepository
                 .findLatestByEmailAndPurpose(command.email(), EmailPurpose.SIGNUP)
@@ -56,7 +53,8 @@ public class SignupService implements SignupUseCase {
                 command.birthDate(),
                 command.phoneNumber(),
                 command.profileImageUrl(),
-                Role.STUDENT
+                Role.STUDENT,
+                Boolean.TRUE.equals(command.optionalTermsAgreed())
         );
 
         Member savedMember = memberRepository.save(member);
