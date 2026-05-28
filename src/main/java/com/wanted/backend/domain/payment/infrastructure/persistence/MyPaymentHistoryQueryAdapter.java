@@ -6,6 +6,9 @@ import com.wanted.backend.domain.payment.domain.model.PaymentType;
 import com.wanted.backend.domain.payment.infrastructure.subscription.PaymentSubscriptionReferenceEntity;
 import com.wanted.backend.domain.payment.infrastructure.subscription.PaymentSubscriptionReferenceRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,13 +29,13 @@ public class MyPaymentHistoryQueryAdapter implements MyPaymentHistoryQueryPort {
     private final PaymentSubscriptionReferenceRepository subscriptionRepository;
 
     @Override
-    public List<MyPaymentHistoryData> findByMemberId(Long memberId) {
-        List<PaymentJpaEntity> payments = paymentRepository.findByMemberId(memberId);
+    public Page<MyPaymentHistoryData> findByMemberId(Long memberId, Pageable pageable) {
+        Page<PaymentJpaEntity> payments = paymentRepository.findByMemberId(memberId, pageable);
         if (payments.isEmpty()) {
-            return List.of();
+            return Page.empty(pageable);
         }
 
-        List<Long> orderIds = payments.stream()
+        List<Long> orderIds = payments.getContent().stream()
                 .map(PaymentJpaEntity::getOrderId)
                 .distinct()
                 .toList();
@@ -42,7 +45,7 @@ public class MyPaymentHistoryQueryAdapter implements MyPaymentHistoryQueryPort {
         Map<Long, List<Long>> courseIdsByOrderId = findCourseIdsByOrderId(orderIds);
         Map<Long, Long> planIdByOrderId = findSubscriptionPlanIdByOrderId(orderIds);
 
-        return payments.stream()
+        List<MyPaymentHistoryData> content = payments.getContent().stream()
                 .map(payment -> toData(
                         payment,
                         orderById.get(payment.getOrderId()),
@@ -50,6 +53,8 @@ public class MyPaymentHistoryQueryAdapter implements MyPaymentHistoryQueryPort {
                         planIdByOrderId.get(payment.getOrderId())
                 ))
                 .toList();
+
+        return new PageImpl<>(content, pageable, payments.getTotalElements());
     }
 
     private Map<Long, List<Long>> findCourseIdsByOrderId(Collection<Long> orderIds) {

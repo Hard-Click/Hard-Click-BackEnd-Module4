@@ -6,11 +6,12 @@ import com.wanted.backend.domain.payment.application.port.PaymentSubscriptionPla
 import com.wanted.backend.domain.payment.application.usecase.GetMyPaymentHistoryUseCase;
 import com.wanted.backend.domain.payment.domain.model.PaymentType;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Comparator;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -19,37 +20,44 @@ import java.util.Objects;
 @Transactional(readOnly = true)
 public class MyPaymentHistoryService implements GetMyPaymentHistoryUseCase {
 
+    private static final int MAX_PAGE_SIZE = 50;
+
     private final MyPaymentHistoryQueryPort myPaymentHistoryQueryPort;
     private final PaymentCourseDisplayNamePort paymentCourseDisplayNamePort;
     private final PaymentSubscriptionPlanDisplayNamePort paymentSubscriptionPlanDisplayNamePort;
 
     @Override
-    public List<MyPaymentHistoryView> handle(Long memberId) {
-        List<MyPaymentHistoryQueryPort.MyPaymentHistoryData> histories =
-                myPaymentHistoryQueryPort.findByMemberId(memberId);
+    public Page<MyPaymentHistoryView> handle(Long memberId, int page, int size) {
+        PageRequest pageRequest = PageRequest.of(
+                Math.max(page, 0),
+                normalizeSize(size),
+                Sort.by(Sort.Direction.DESC, "paidAt")
+        );
+        Page<MyPaymentHistoryQueryPort.MyPaymentHistoryData> histories =
+                myPaymentHistoryQueryPort.findByMemberId(memberId, pageRequest);
 
         Map<Long, String> courseNameById = paymentCourseDisplayNamePort.findNamesByCourseIds(
-                histories.stream()
+                histories.getContent().stream()
                         .flatMap(history -> history.courseIds().stream())
                         .distinct()
                         .toList()
         );
         Map<Long, String> planNameById = paymentSubscriptionPlanDisplayNamePort.findNamesByPlanIds(
-                histories.stream()
+                histories.getContent().stream()
                         .map(MyPaymentHistoryQueryPort.MyPaymentHistoryData::subscriptionPlanId)
                         .filter(Objects::nonNull)
                         .distinct()
                         .toList()
         );
 
-        return histories.stream()
-                .map(history -> toView(history, courseNameById, planNameById))
-                // 결제 내역 화면은 최신 결제일시가 위에 오도록 보여준다.
-                .sorted(Comparator.comparing(
-                        MyPaymentHistoryView::paidAt,
-                        Comparator.nullsLast(Comparator.reverseOrder())
-                ))
-                .toList();
+        return histories.map(history -> toView(history, courseNameById, planNameById));
+    }
+
+    private int normalizeSize(int size) {
+        if (size <= 0) {
+            return 10;
+        }
+        return Math.min(size, MAX_PAGE_SIZE);
     }
 
     // 결제/주문 조회 데이터와 별도 포트로 조회한 표시명을 합쳐 응답용 View로 변환한다.
