@@ -36,8 +36,12 @@ public class WithdrawMemberService implements WithdrawMemberUseCase {
         if (!passwordEncoder.matches(command.currentPassword(), member.getPassword())) {
             throw new BusinessException(ErrorCode.INVALID_PASSWORD);
         }
-
+        System.out.println("탈퇴 전 status = " + member.getStatus());
+        System.out.println("탈퇴 전 email = " + member.getEmail());
         member.withdraw(LocalDateTime.now());
+        System.out.println("탈퇴 후 status = " + member.getStatus());
+        System.out.println("탈퇴 후 email = " + member.getEmail());
+
         memberRepository.save(member);
 
         refreshTokenRepository.deleteByMemberId(memberId);

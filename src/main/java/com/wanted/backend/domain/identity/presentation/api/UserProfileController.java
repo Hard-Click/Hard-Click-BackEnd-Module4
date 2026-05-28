@@ -120,8 +120,10 @@ public class UserProfileController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody WithdrawMemberRequest request
     ) {
-        withdrawMemberUseCase.withdraw(userDetails.getMemberId(), request.toCommand());
 
+        System.out.println("탈퇴 시작");
+        withdrawMemberUseCase.withdraw(userDetails.getMemberId(), request.toCommand());
+        System.out.println("탈퇴 끝");
         return ApiResponse.success("회원 탈퇴가 완료되었습니다", new EmptyResponse());
     }
 }
