@@ -35,7 +35,7 @@ class SaveWatchTimeServiceTest {
     }
 
     @Test
-    void addsWatchTimeWhenProgressExists() {
+    void 진도_정보가_있으면_시청_시간을_누적한다() {
         VideoAccessInfo accessInfo = accessInfo();
         VideoProgress progress = new VideoProgress(100L, 1L, 20L, 10L, 42, 120, false, null);
         when(videoCatalogPort.findByVideoId(10L)).thenReturn(Optional.of(accessInfo));
@@ -52,7 +52,7 @@ class SaveWatchTimeServiceTest {
     }
 
     @Test
-    void createsProgressWhenProgressDoesNotExist() {
+    void 진도_정보가_없으면_새로_생성한다() {
         VideoAccessInfo accessInfo = accessInfo();
         when(videoCatalogPort.findByVideoId(10L)).thenReturn(Optional.of(accessInfo));
         when(videoProgressRepository.findByMemberIdAndVideoId(1L, 10L)).thenReturn(Optional.empty());
@@ -71,7 +71,7 @@ class SaveWatchTimeServiceTest {
     }
 
     @Test
-    void throwsVideoNotFoundWhenVideoAccessInfoDoesNotExist() {
+    void 영상_접근_정보가_없으면_예외가_발생한다() {
         when(videoCatalogPort.findByVideoId(10L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.handle(new SaveWatchTimeCommand(1L, 10L, 30)))

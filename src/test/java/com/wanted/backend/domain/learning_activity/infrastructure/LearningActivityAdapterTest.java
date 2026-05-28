@@ -86,7 +86,7 @@ class LearningActivityAdapterTest {
     private SubscriptionAccessAdapter subscriptionAccessAdapter;
 
     @Test
-    void videoCatalogAdapterLoadsVideoAccessInfo() {
+    void 영상_카탈로그_어댑터가_영상_접근_정보를_조회한다() {
         Optional<VideoAccessInfo> result = videoCatalogAdapter.findByVideoId(10L);
 
         assertThat(result).isPresent();
@@ -101,7 +101,7 @@ class LearningActivityAdapterTest {
     }
 
     @Test
-    void videoProgressRepositoryAdapterLoadsProgress() {
+    void 영상_진도_저장소_어댑터가_진도_정보를_조회한다() {
         Optional<VideoProgress> result = videoProgressRepositoryAdapter.findByMemberIdAndVideoId(1L, 10L);
 
         assertThat(result).isPresent();
@@ -116,7 +116,7 @@ class LearningActivityAdapterTest {
     }
 
     @Test
-    void courseProgressQueryAdapterLoadsCourseProgress() {
+    void 강의_진도_조회_어댑터가_강의_진도_정보를_조회한다() {
         CourseProgressQueryPort.CourseProgressData progress =
                 courseProgressQueryAdapter.findByMemberIdAndCourseId(1L, 20L);
 
@@ -128,7 +128,7 @@ class LearningActivityAdapterTest {
     }
 
     @Test
-    void videoProgressRepositoryAdapterSavesLastPosition() {
+    void 영상_진도_저장소_어댑터가_마지막_재생_위치를_저장한다() {
         VideoProgress progress = VideoProgress.empty(1L, 20L, 10L)
                 .updateLastPosition(142);
 
@@ -144,7 +144,7 @@ class LearningActivityAdapterTest {
     }
 
     @Test
-    void videoProgressRepositoryAdapterSavesWatchTime() {
+    void 영상_진도_저장소_어댑터가_시청_시간을_저장한다() {
         VideoProgress progress = videoProgressRepositoryAdapter.findByMemberIdAndVideoId(1L, 10L)
                 .orElseThrow()
                 .addWatchTime(30);
@@ -158,7 +158,7 @@ class LearningActivityAdapterTest {
     }
 
     @Test
-    void videoProgressRepositoryAdapterSavesCompletedStatus() {
+    void 영상_진도_저장소_어댑터가_완료_상태를_저장한다() {
         VideoProgress progress = videoProgressRepositoryAdapter.findByMemberIdAndVideoId(1L, 10L)
                 .orElseThrow()
                 .complete(LocalDateTime.now());
@@ -171,14 +171,14 @@ class LearningActivityAdapterTest {
     }
 
     @Test
-    void enrollmentAccessAdapterChecksActiveEnrollment() {
+    void 수강권_접근_어댑터가_활성_수강권을_확인한다() {
         boolean result = enrollmentAccessAdapter.hasActiveEnrollment(1L, 20L);
 
         assertThat(result).isTrue();
     }
 
     @Test
-    void subscriptionAccessAdapterChecksActiveSubscription() {
+    void 구독권_접근_어댑터가_활성_구독권을_확인한다() {
         boolean result = subscriptionAccessAdapter.hasActiveSubscription(1L);
 
         assertThat(result).isTrue();

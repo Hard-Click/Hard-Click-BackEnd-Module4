@@ -24,7 +24,7 @@ class MyEnrolledCourseServiceTest {
     }
 
     @Test
-    void returnsMyEnrolledCoursesWithProgressRate() {
+    void 내_수강_강의_목록과_진도율을_반환한다() {
         LocalDateTime lastStudiedAt = LocalDateTime.of(2026, 5, 27, 10, 30);
         when(queryPort.findByMemberId(1L)).thenReturn(List.of(
                 new MyEnrolledCourseQueryPort.MyEnrolledCourseData(
@@ -51,7 +51,7 @@ class MyEnrolledCourseServiceTest {
     }
 
     @Test
-    void sortsByLastStudiedAtDescAndPutsNeverStudiedCourseLast() {
+    void 최근_학습일시_내림차순으로_정렬하고_미학습_강의는_마지막에_둔다() {
         LocalDateTime older = LocalDateTime.of(2026, 5, 26, 10, 0);
         LocalDateTime newer = LocalDateTime.of(2026, 5, 27, 10, 0);
         when(queryPort.findByMemberId(1L)).thenReturn(List.of(
@@ -67,7 +67,7 @@ class MyEnrolledCourseServiceTest {
     }
 
     @Test
-    void returnsZeroProgressWhenCourseHasNoVideos() {
+    void 강의에_영상이_없으면_진도율은_0이다() {
         when(queryPort.findByMemberId(1L)).thenReturn(List.of(
                 new MyEnrolledCourseQueryPort.MyEnrolledCourseData(
                         20L,

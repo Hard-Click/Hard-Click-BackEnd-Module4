@@ -36,7 +36,7 @@ class VideoPlayServiceTest {
     }
 
     @Test
-    void returnsVideoPlayViewWithExistingProgress() {
+    void 기존_진도_정보가_있으면_영상_재생_정보와_함께_반환한다() {
         VideoAccessInfo accessInfo = accessInfo();
         VideoProgress progress = new VideoProgress(
                 100L,
@@ -64,7 +64,7 @@ class VideoPlayServiceTest {
     }
 
     @Test
-    void returnsDefaultProgressWhenProgressDoesNotExist() {
+    void 진도_정보가_없으면_기본_재생_위치를_반환한다() {
         VideoAccessInfo accessInfo = accessInfo();
         when(videoCatalogPort.findByVideoId(10L)).thenReturn(Optional.of(accessInfo));
         when(videoProgressRepository.findByMemberIdAndVideoId(2L, 10L)).thenReturn(Optional.empty());
@@ -77,7 +77,7 @@ class VideoPlayServiceTest {
     }
 
     @Test
-    void throwsVideoNotFoundWhenVideoAccessInfoDoesNotExist() {
+    void 영상_접근_정보가_없으면_예외가_발생한다() {
         when(videoCatalogPort.findByVideoId(10L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.handle(new VideoPlayCommand(2L, 10L)))

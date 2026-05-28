@@ -33,7 +33,7 @@ class VideoAccessServiceTest {
     }
 
     @Test
-    void throwsCourseNotPublishedWhenCourseIsNotPublished() {
+    void 강의가_공개_상태가_아니면_예외가_발생한다() {
         VideoAccessInfo accessInfo = accessInfo("DRAFT", 0, true);
 
         assertThatThrownBy(() -> service.validatePlayable(1L, accessInfo))
@@ -46,7 +46,7 @@ class VideoAccessServiceTest {
     }
 
     @Test
-    void passesWhenMemberHasActiveEnrollment() {
+    void 회원이_활성_수강권을_가지면_검증을_통과한다() {
         VideoAccessInfo accessInfo = accessInfo("PUBLISHED", 10000, false);
         when(enrollmentAccessPort.hasActiveEnrollment(1L, 20L)).thenReturn(true);
 
@@ -57,7 +57,7 @@ class VideoAccessServiceTest {
     }
 
     @Test
-    void throwsEnrollmentRequiredWhenMemberHasNoAccess() {
+    void 회원에게_접근권한이_없으면_예외가_발생한다() {
         VideoAccessInfo accessInfo = accessInfo("PUBLISHED", 10000, false);
         when(enrollmentAccessPort.hasActiveEnrollment(1L, 20L)).thenReturn(false);
         when(subscriptionAccessPort.hasActiveSubscription(1L)).thenReturn(false);
