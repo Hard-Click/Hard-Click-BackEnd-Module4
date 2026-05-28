@@ -187,7 +187,8 @@ class UpdateMyProfileServiceTest {
                 null,
                 null,
                 now,
-                now
+                now,
+                false
         );
     }
 }
