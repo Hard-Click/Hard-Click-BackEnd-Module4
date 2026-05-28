@@ -1,9 +1,6 @@
 package com.wanted.backend.domain.enrollment_management.infrastructure.course;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,6 +14,7 @@ import org.hibernate.annotations.Immutable;
 public class CourseReferenceEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "course_id")
     private Long id;
 

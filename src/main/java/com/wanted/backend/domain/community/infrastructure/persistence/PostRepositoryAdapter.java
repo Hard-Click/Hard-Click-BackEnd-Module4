@@ -3,6 +3,7 @@ package com.wanted.backend.domain.community.infrastructure.persistence;
 import com.wanted.backend.domain.community.domain.model.BoardType;
 import com.wanted.backend.domain.community.domain.model.Post;
 import com.wanted.backend.domain.community.domain.model.PostSortType;
+import com.wanted.backend.domain.community.domain.model.PostStatus;
 import com.wanted.backend.domain.community.domain.repository.PostRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -37,7 +38,7 @@ public class PostRepositoryAdapter implements PostRepository {
                                       String keyword, int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size, toSort(sort));
         return repository.findByBoardTypeAndTitleContainingAndStatus(
-                        boardType, keyword != null ? keyword : "", "ACTIVE", pageable)
+                        boardType, keyword != null ? keyword : "", PostStatus.ACTIVE, pageable)
                 .stream()
                 .map(this::toDomain)
                 .toList();
@@ -47,7 +48,7 @@ public class PostRepositoryAdapter implements PostRepository {
     public List<Post> findAll(PostSortType sort, String keyword, int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size, toSort(sort));
         return repository.findByTitleContainingAndStatus(
-                        keyword != null ? keyword : "", "ACTIVE", pageable)
+                        keyword != null ? keyword : "", PostStatus.ACTIVE, pageable)
                 .stream()
                 .map(this::toDomain)
                 .toList();
@@ -56,13 +57,13 @@ public class PostRepositoryAdapter implements PostRepository {
     @Override
     public int countByBoardType(BoardType boardType, String keyword) {
         return repository.countByBoardTypeAndTitleContainingAndStatus(
-                boardType, keyword != null ? keyword : "", "ACTIVE");
+                boardType, keyword != null ? keyword : "", PostStatus.ACTIVE);
     }
 
     @Override
     public int countAll(String keyword) {
         return repository.countByTitleContainingAndStatus(
-                keyword != null ? keyword : "", "ACTIVE");
+                keyword != null ? keyword : "", PostStatus.ACTIVE);
     }
 
     private Sort toSort(PostSortType sort) {

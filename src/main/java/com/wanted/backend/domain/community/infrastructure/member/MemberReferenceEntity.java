@@ -12,6 +12,7 @@ public class MemberReferenceEntity {
 
     @Id
     @Column(name = "member_id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "name", nullable = false)

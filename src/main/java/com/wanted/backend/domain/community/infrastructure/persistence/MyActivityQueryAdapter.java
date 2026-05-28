@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.community.infrastructure.persistence;
 
 import com.wanted.backend.domain.community.application.port.MyActivityQueryPort;
+import com.wanted.backend.domain.community.domain.model.PostStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,8 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class MyActivityQueryAdapter implements MyActivityQueryPort {
 
-    private static final String ACTIVE_STATUS = "ACTIVE";
-
     private final SpringDataPostRepository postRepository;
     private final SpringDataCommentRepository commentRepository;
     private final SpringDataReviewRepository reviewRepository;
@@ -19,7 +18,7 @@ public class MyActivityQueryAdapter implements MyActivityQueryPort {
     @Override
     public MyActivityData findByMemberId(Long memberId) {
         return new MyActivityData(
-                postRepository.findByAuthorIdAndStatusOrderByCreatedAtDesc(memberId, ACTIVE_STATUS).stream()
+                postRepository.findByAuthorIdAndStatusOrderByCreatedAtDesc(memberId, PostStatus.ACTIVE).stream()
                         .map(this::toPostActivity)
                         .toList(),
                 commentRepository.findByAuthorIdAndIsDeletedFalseOrderByCreatedAtDesc(memberId).stream()
