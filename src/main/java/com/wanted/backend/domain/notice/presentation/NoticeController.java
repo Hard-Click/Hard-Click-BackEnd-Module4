@@ -1,12 +1,11 @@
 package com.wanted.backend.domain.notice.presentation;
 
-import com.wanted.backend.domain.notice.application.command.CreateGlobalNoticeCommand;
-import com.wanted.backend.domain.notice.application.command.CreateNoticeCommand;
-import com.wanted.backend.domain.notice.application.command.GetNoticeListCommand;
+import com.wanted.backend.domain.notice.application.command.*;
 import com.wanted.backend.domain.notice.application.usecase.NoticeCommandUseCase;
 import com.wanted.backend.domain.notice.application.usecase.NoticeQueryUseCase;
 import com.wanted.backend.domain.notice.presentation.request.CreateGlobalNoticeRequest;
 import com.wanted.backend.domain.notice.presentation.request.CreateNoticeRequest;
+import com.wanted.backend.domain.notice.presentation.request.UpdateNoticeRequest;
 import com.wanted.backend.domain.notice.presentation.response.CreateNoticeResponse;
 import com.wanted.backend.domain.notice.presentation.response.NoticeDetailResponse;
 import com.wanted.backend.domain.notice.presentation.response.NoticeListResponse;
@@ -85,5 +84,35 @@ public class NoticeController {
         NoticeDetailResponse response = noticeQueryUseCase.getDetail(noticeId);
 
         return ApiResponse.success("공지사항 상세 조회 성공", response);
+    }
+
+    @PatchMapping("/notices/{noticeId}")
+    public ResponseEntity<ApiResponse<Void>> updateNotice(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long noticeId,
+            @Valid @RequestBody UpdateNoticeRequest request) {
+
+        noticeCommandUseCase.update(new UpdateNoticeCommand(
+                userDetails.getMemberId(),
+                noticeId,
+                request.title(),
+                request.content(),
+                request.isPinned()
+        ));
+
+        return ApiResponse.successNoContent("공지사항이 수정되었습니다.");
+    }
+
+    @DeleteMapping("/notices/{noticeId}")
+    public ResponseEntity<ApiResponse<Void>> deleteNotice(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long noticeId) {
+
+        noticeCommandUseCase.delete(new DeleteNoticeCommand(
+                userDetails.getMemberId(),
+                noticeId
+        ));
+
+        return ApiResponse.successNoContent("공지사항이 삭제되었습니다.");
     }
 }
