@@ -5,16 +5,16 @@ import com.wanted.backend.domain.cource.application.dto.CourseListResult;
 import java.util.List;
 
 public record CourseListResponse(
-        List<CourseListItemResponse> courses,
+        List<CourseListItemResponse> content,
         int currentPage,
         int totalPages,
         long totalCount
 ) {
     public static CourseListResponse from(CourseListResult result) {
-        List<CourseListItemResponse> courses = result.items().stream()
+        List<CourseListItemResponse> content = result.items().stream()
                 .map(CourseListItemResponse::from)
                 .toList();
-        return new CourseListResponse(courses, result.currentPage(),
+        return new CourseListResponse(content, result.currentPage(),
                 result.totalPages(), result.totalCount());
     }
 }

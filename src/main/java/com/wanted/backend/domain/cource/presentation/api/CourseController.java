@@ -31,7 +31,7 @@ import java.io.IOException;
 public class CourseController {
 
     private final GetCourseListUseCase getCourseListUseCase;
-    private final GetCourseDetailUseCase getCourseDetailUseCase;
+    private final CourseQueryUseCase courseQueryUseCase;
     private final CreateCourseUseCase createCourseUseCase;
     private final UpdateCourseUseCase updateCourseUseCase;
     private final DeleteCourseUseCase deleteCourseUseCase;
@@ -62,9 +62,10 @@ public class CourseController {
      */
     @GetMapping("/{courseId}")
     public ResponseEntity<ApiResponse<CourseDetailResponse>> getCourseDetail(
-            @PathVariable Long courseId
+            @PathVariable Long courseId,
+            @RequestHeader(value = "X-Member-Id", required = false) Long memberId
     ) {
-        CourseDetailResult result = getCourseDetailUseCase.handle(courseId);
+        CourseDetailResult result = courseQueryUseCase.getDetail(courseId, memberId);
         return ApiResponse.success("강의 상세 조회 성공", CourseDetailResponse.from(result));
     }
 

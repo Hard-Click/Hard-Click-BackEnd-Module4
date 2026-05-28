@@ -9,7 +9,7 @@ import java.util.List;
 public record CourseDetailResponse(
         Long courseId,
         String title,
-        String subject,
+        String subjectName,
         String description,
         String thumbnailUrl,
         PriceType priceType,
@@ -17,10 +17,14 @@ public record CourseDetailResponse(
         String priceLabel,
         CourseStatus status,
         String instructorName,
-        double rating,
+        double averageRating,
         int reviewCount,
         int studentCount,
-        List<SectionResponse> sections
+        List<SectionResponse> sections,
+        List<String> learningObjectives,
+        List<String> targetAudience,
+        List<String> techTags,
+        String level
 ) {
     public record SectionResponse(
             Long sectionId,
@@ -73,7 +77,11 @@ public record CourseDetailResponse(
                 result.rating(),
                 result.reviewCount(),
                 result.studentCount(),
-                sections
+                sections,
+                result.learningObjectives(),
+                result.targetAudience(),
+                result.techTags(),
+                result.level()
         );
     }
 }

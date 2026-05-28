@@ -19,6 +19,10 @@ public class Course {
     private CourseStatus status;
     private List<CourseSection> sections;
     private Instant createdAt;
+    private List<String> learningObjectives;
+    private List<String> targetAudience;
+    private List<String> techTags;
+    private String level;
     private final List<DomainEvent> domainEvents = new ArrayList<>();
 
     private Course() {}
@@ -26,7 +30,9 @@ public class Course {
     public static Course create(Long authorId, String title, String subject,
                                 String description, String thumbnailUrl,
                                 PriceType priceType, int price,
-                                List<CourseSection> sections, Instant now) {
+                                List<CourseSection> sections, Instant now,
+                                List<String> learningObjectives, List<String> targetAudience,
+                                List<String> techTags, String level) {
         validatePrice(priceType, price);
         Course course = new Course();
         course.authorId = authorId;
@@ -39,13 +45,19 @@ public class Course {
         course.status = CourseStatus.DRAFT;
         course.sections = new ArrayList<>(sections);
         course.createdAt = now;
+        course.learningObjectives = learningObjectives;
+        course.targetAudience = targetAudience;
+        course.techTags = techTags;
+        course.level = level;
         return course;
     }
 
     public static Course restore(Long id, Long authorId, String title, String subject,
                                  String description, String thumbnailUrl,
                                  PriceType priceType, int price, CourseStatus status,
-                                 List<CourseSection> sections, Instant createdAt) {
+                                 List<CourseSection> sections, Instant createdAt,
+                                 List<String> learningObjectives, List<String> targetAudience,
+                                 List<String> techTags, String level) {
         Course course = new Course();
         course.id = id;
         course.authorId = authorId;
@@ -58,13 +70,19 @@ public class Course {
         course.status = status;
         course.sections = new ArrayList<>(sections);
         course.createdAt = createdAt;
+        course.learningObjectives = learningObjectives;
+        course.targetAudience = targetAudience;
+        course.techTags = techTags;
+        course.level = level;
         return course;
     }
 
     // 강의 기본 정보 + 커리큘럼 수정
     public void update(String title, String subject, String description,
                        String thumbnailUrl, PriceType priceType, int price,
-                       List<CourseSection> sections) {
+                       List<CourseSection> sections,
+                       List<String> learningObjectives, List<String> targetAudience,
+                       List<String> techTags, String level) {
         validatePrice(priceType, price);
         this.title = title;
         this.subject = subject;
@@ -73,6 +91,14 @@ public class Course {
         this.priceType = priceType;
         this.price = price;
         this.sections = new ArrayList<>(sections);
+        this.learningObjectives = learningObjectives;
+        this.targetAudience = targetAudience;
+        this.techTags = techTags;
+        this.level = level;
+    }
+
+    public void softDelete() {
+        this.status = CourseStatus.DELETED;
     }
 
     // 강의 공개
@@ -111,4 +137,8 @@ public class Course {
     public CourseStatus getStatus() { return status; }
     public List<CourseSection> getSections() { return List.copyOf(sections); }
     public Instant getCreatedAt() { return createdAt; }
+    public List<String> getLearningObjectives() { return learningObjectives != null ? List.copyOf(learningObjectives) : List.of(); }
+    public List<String> getTargetAudience() { return targetAudience != null ? List.copyOf(targetAudience) : List.of(); }
+    public List<String> getTechTags() { return techTags != null ? List.copyOf(techTags) : List.of(); }
+    public String getLevel() { return level; }
 }

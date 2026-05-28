@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "course_sections")
+@Table(name = "course_section")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CourseSectionJpaEntity {

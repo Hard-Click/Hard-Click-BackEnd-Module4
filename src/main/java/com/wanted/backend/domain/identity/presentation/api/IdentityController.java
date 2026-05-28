@@ -107,13 +107,13 @@ public class IdentityController {
                 request.username(),
                 request.email(),
                 request.password(),
-                request.passwordConfirm(),
                 request.name(),
                 request.gender(),
                 request.birthDate(),
                 request.phoneNumber(),
                 request.profileImageUrl(),
-                request.emailVerificationToken()
+                request.emailVerificationToken(),
+                request.optionalTermsAgreed()
         ));
 
         return ApiResponse.created(

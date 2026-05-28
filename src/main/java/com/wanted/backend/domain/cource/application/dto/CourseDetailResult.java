@@ -18,7 +18,11 @@ public record CourseDetailResult(
         double rating,
         int reviewCount,
         int studentCount,
-        List<SectionResult> sections
+        List<SectionResult> sections,
+        List<String> learningObjectives,
+        List<String> targetAudience,
+        List<String> techTags,
+        String level
 ) {
     public record SectionResult(
             Long sectionId,

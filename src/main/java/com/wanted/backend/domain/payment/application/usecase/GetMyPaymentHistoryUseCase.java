@@ -2,13 +2,13 @@ package com.wanted.backend.domain.payment.application.usecase;
 
 import com.wanted.backend.domain.payment.domain.model.PaymentStatus;
 import com.wanted.backend.domain.payment.domain.model.PaymentType;
+import org.springframework.data.domain.Page;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 public interface GetMyPaymentHistoryUseCase {
 
-    List<MyPaymentHistoryView> handle(Long memberId);
+    Page<MyPaymentHistoryView> handle(Long memberId, int page, int size);
 
     record MyPaymentHistoryView(
             Long paymentId,

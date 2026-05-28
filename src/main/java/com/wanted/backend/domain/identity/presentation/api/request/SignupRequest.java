@@ -17,9 +17,6 @@ public record SignupRequest(
         @Pattern(regexp = PasswordPolicy.PASSWORD_REGEX, message = PasswordPolicy.PASSWORD_MESSAGE)
         String password,
 
-        @NotBlank(message = "비밀번호 확인을 입력해주세요")
-        String passwordConfirm,
-
         @NotBlank(message = "이름을 입력해주세요")
         String name,
 
@@ -35,6 +32,7 @@ public record SignupRequest(
         String profileImageUrl,
 
         @NotBlank(message = "이메일 인증이 필요합니다")
-        String emailVerificationToken
+        String emailVerificationToken,
+        Boolean optionalTermsAgreed
 ) {
 }

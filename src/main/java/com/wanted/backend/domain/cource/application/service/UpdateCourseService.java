@@ -51,7 +51,9 @@ public class UpdateCourseService implements UpdateCourseUseCase {
                 .toList();
 
         course.update(command.title(), command.subject(), command.description(),
-                command.thumbnailUrl(), command.priceType(), command.price(), newSections);
+                command.thumbnailUrl(), command.priceType(), command.price(), newSections,
+                command.learningObjectives(), command.targetAudience(),
+                command.techTags(), command.level());
 
         courseRepository.save(course);
     }

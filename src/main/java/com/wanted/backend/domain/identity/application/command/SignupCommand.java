@@ -6,12 +6,12 @@ public record SignupCommand(
         String username,
         String email,
         String password,
-        String passwordConfirm,
         String name,
         String gender,
         LocalDate birthDate,
         String phoneNumber,
         String profileImageUrl,
-        String emailVerificationToken
+        String emailVerificationToken,
+        Boolean optionalTermsAgreed
 ) {
 }

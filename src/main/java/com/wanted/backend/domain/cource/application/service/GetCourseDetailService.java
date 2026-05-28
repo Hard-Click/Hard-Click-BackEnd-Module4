@@ -61,10 +61,14 @@ public class GetCourseDetailService implements GetCourseDetailUseCase {
                 course.getPrice(),
                 course.getStatus(),
                 instructorName,
-                0.0,   // 추후 리뷰 도메인 연동
-                0,     // 추후 리뷰 도메인 연동
-                0,     // 추후 수강신청 도메인 연동
-                sections
+                0.0,
+                0,
+                0,
+                sections,
+                course.getLearningObjectives(),
+                course.getTargetAudience(),
+                course.getTechTags(),
+                course.getLevel()
         );
     }
 }

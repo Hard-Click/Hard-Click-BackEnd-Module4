@@ -29,7 +29,12 @@ public record UpdateCourseRequest(
         int price,
 
         @Valid
-        List<UpdateSectionRequest> sections
+        List<UpdateSectionRequest> sections,
+
+        List<String> learningObjectives,
+        List<String> targetAudience,
+        List<String> techTags,
+        String level
 ) {
     public UpdateCourseCommand toCommand(Long courseId, Long requesterId) {
         List<UpdateCourseCommand.SectionCommand> sectionCommands = sections == null
@@ -48,6 +53,7 @@ public record UpdateCourseRequest(
                         .toList();
 
         return new UpdateCourseCommand(courseId, requesterId, title, subject, description,
-                thumbnailUrl, priceType, price, sectionCommands);
+                thumbnailUrl, priceType, price, sectionCommands,
+                learningObjectives, targetAudience, techTags, level);
     }
 }

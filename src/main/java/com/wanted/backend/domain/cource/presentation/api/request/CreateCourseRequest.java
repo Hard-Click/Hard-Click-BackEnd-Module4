@@ -29,7 +29,12 @@ public record CreateCourseRequest(
         int price,
 
         @Valid
-        List<SectionRequest> sections
+        List<SectionRequest> sections,
+
+        List<String> learningObjectives,
+        List<String> targetAudience,
+        List<String> techTags,
+        String level
 ) {
     public CreateCourseCommand toCommand(Long authorId) {
         List<CreateCourseCommand.SectionCommand> sectionCommands = sections == null
@@ -46,6 +51,7 @@ public record CreateCourseRequest(
                         .toList();
 
         return new CreateCourseCommand(authorId, title, subject, description,
-                thumbnailUrl, priceType, price, sectionCommands);
+                thumbnailUrl, priceType, price, sectionCommands,
+                learningObjectives, targetAudience, techTags, level);
     }
 }
