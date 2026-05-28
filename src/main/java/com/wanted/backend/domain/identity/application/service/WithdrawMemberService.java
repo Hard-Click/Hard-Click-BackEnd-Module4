@@ -3,6 +3,7 @@ package com.wanted.backend.domain.identity.application.service;
 import com.wanted.backend.domain.identity.application.command.WithdrawMemberCommand;
 import com.wanted.backend.domain.identity.application.usecase.WithdrawMemberUseCase;
 import com.wanted.backend.domain.identity.domain.model.Member;
+import com.wanted.backend.domain.identity.domain.model.MemberStatus;
 import com.wanted.backend.domain.identity.domain.repository.MemberRepository;
 import com.wanted.backend.domain.identity.domain.repository.RefreshTokenRepository;
 import com.wanted.backend.global.exception.BusinessException;
@@ -27,6 +28,10 @@ public class WithdrawMemberService implements WithdrawMemberUseCase {
     public void withdraw(Long memberId, WithdrawMemberCommand command) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        if (member.getStatus() == MemberStatus.WITHDRAWN) {
+            throw new BusinessException(ErrorCode.ALREADY_WITHDRAWN_MEMBER);
+        }
 
         if (!passwordEncoder.matches(command.currentPassword(), member.getPassword())) {
             throw new BusinessException(ErrorCode.INVALID_PASSWORD);

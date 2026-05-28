@@ -91,6 +91,8 @@ public class MemberJpaEntity {
     }
 
     public void updateFromDomain(Member domain) {
+        this.username = domain.getUsername();
+        this.email = domain.getEmail();
         this.password = domain.getPassword();
         this.name = domain.getName();
         this.gender = domain.getGender();
