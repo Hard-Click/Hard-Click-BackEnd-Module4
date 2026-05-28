@@ -65,24 +65,14 @@ class GetMyProfileServiceTest {
     private Member member(String profileImageUrl) {
         LocalDateTime now = LocalDateTime.now();
         return Member.restore(
-                1L,
-                "testuser",
-                "test@example.com",
-                "password",
-                "테스트유저",
-                "MALE",
-                LocalDate.of(2000, 1, 1),
-                "010-1234-5678",
-                profileImageUrl,
-                Role.STUDENT,
-                MemberStatus.ACTIVE,
-                false,
-                0,
-                false,
-                null,
-                null,
-                now,
-                now
+                1L, "testuser", "test@test.com", "password",
+                "박지영", "FEMALE", LocalDate.of(1995, 1, 1),
+                "010-1234-5678", null,
+                Role.STUDENT, MemberStatus.ACTIVE,
+                false, 0, false,
+                null, null,
+                LocalDateTime.now(), LocalDateTime.now(),
+                false  // ← 추가된 파라미터
         );
     }
 }
