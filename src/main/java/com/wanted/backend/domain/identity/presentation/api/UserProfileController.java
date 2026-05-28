@@ -52,15 +52,14 @@ public class UserProfileController {
     }
     @PatchMapping("/me/password")
     @Operation(summary = "비밀번호 변경", description = "로그인한 사용자의 비밀번호를 수정합니다.")
-    public ResponseEntity<ApiResponse<Void>> updatePassword(
+    public ResponseEntity<ApiResponse<EmptyResponse>> updatePassword(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody UpdatePasswordRequest request
     ) {
         updatePasswordUseCase.updatePassword(userDetails.getMemberId(), request.toCommand());
 
-        return ApiResponse.success("비밀번호가 변경되었습니다.", null);
+        return ApiResponse.success("비밀번호가 변경되었습니다", new EmptyResponse());
     }
-
 
 
     @PatchMapping(value = "/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -121,9 +120,9 @@ public class UserProfileController {
             @Valid @RequestBody WithdrawMemberRequest request
     ) {
 
-        System.out.println("탈퇴 시작");
+
         withdrawMemberUseCase.withdraw(userDetails.getMemberId(), request.toCommand());
-        System.out.println("탈퇴 끝");
+
         return ApiResponse.success("회원 탈퇴가 완료되었습니다", new EmptyResponse());
     }
 }
