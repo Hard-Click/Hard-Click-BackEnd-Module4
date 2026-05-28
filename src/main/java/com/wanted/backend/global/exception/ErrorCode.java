@@ -98,7 +98,12 @@ import org.springframework.http.HttpStatus;
     INVALID_PARENT_COMMENT(HttpStatus.BAD_REQUEST, "C009", "다른 게시글의 댓글에는 답글을 달 수 없습니다."),
     COMMENT_NOT_AUTHORIZED(HttpStatus.FORBIDDEN, "C007", "본인의 댓글만 수정/삭제할 수 있습니다."),
     COMMENT_ACCEPTED_CANNOT_MODIFY(HttpStatus.FORBIDDEN, "C008", "채택된 댓글은 수정할 수 없습니다."),
-    COMMENT_ACCEPTED_CANNOT_DELETE(HttpStatus.FORBIDDEN, "C009", "채택된 댓글은 삭제할 수 없습니다.");
+    COMMENT_ACCEPTED_CANNOT_DELETE(HttpStatus.FORBIDDEN, "C009", "채택된 댓글은 삭제할 수 없습니다."),
+
+    //공지 예외
+    NOTICE_NOT_AUTHORIZED(HttpStatus.FORBIDDEN, "N001", "해당 강의의 담당 강사가 아닙니다."),
+    COURSE_NOT_FOUND2(HttpStatus.NOT_FOUND, "CO001", "존재하지 않는 강의입니다.");
+
 
     private final HttpStatus status;
     private final String code;

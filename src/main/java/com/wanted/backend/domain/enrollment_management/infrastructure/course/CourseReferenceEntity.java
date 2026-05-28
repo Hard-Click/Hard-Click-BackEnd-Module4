@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Immutable;
 
-@Entity
+@Entity(name = "EnrollmentCourseReference")
 @Getter
 @Immutable
 @Table(name = "courses")
@@ -16,6 +16,7 @@ public class CourseReferenceEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "course_id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
