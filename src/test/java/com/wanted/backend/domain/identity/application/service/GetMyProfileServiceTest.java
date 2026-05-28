@@ -31,7 +31,7 @@ class GetMyProfileServiceTest {
     }
 
     @Test
-    void returnsMyProfile() {
+    void 내_프로필을_반환한다() {
         when(memberRepository.findById(1L)).thenReturn(Optional.of(member("/profile.png")));
 
         MyProfileView result = service.handle(1L);
@@ -44,7 +44,7 @@ class GetMyProfileServiceTest {
     }
 
     @Test
-    void returnsDefaultProfileImageWhenProfileImageDoesNotExist() {
+    void 프로필_이미지가_없으면_기본_이미지를_반환한다() {
         when(memberRepository.findById(1L)).thenReturn(Optional.of(member(null)));
 
         MyProfileView result = service.handle(1L);
@@ -53,7 +53,7 @@ class GetMyProfileServiceTest {
     }
 
     @Test
-    void throwsUserNotFoundWhenMemberDoesNotExist() {
+    void 회원이_존재하지_않으면_예외가_발생한다() {
         when(memberRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.handle(1L))
@@ -82,7 +82,8 @@ class GetMyProfileServiceTest {
                 null,
                 null,
                 now,
-                now
+                now,
+                false
         );
     }
 }

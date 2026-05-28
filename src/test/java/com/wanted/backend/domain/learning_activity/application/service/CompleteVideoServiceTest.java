@@ -41,7 +41,7 @@ class CompleteVideoServiceTest {
     }
 
     @Test
-    void completesVideoWhenWatchTimeIsEnough() {
+    void 시청_시간이_충분하면_영상을_완료_처리한다() {
         VideoAccessInfo accessInfo = accessInfo();
         VideoProgress progress = new VideoProgress(100L, 1L, 20L, 10L, 42, 270, false, null);
         when(videoCatalogPort.findByVideoId(10L)).thenReturn(Optional.of(accessInfo));
@@ -58,7 +58,7 @@ class CompleteVideoServiceTest {
     }
 
     @Test
-    void throwsWhenWatchTimeIsNotEnough() {
+    void 시청_시간이_부족하면_예외가_발생한다() {
         VideoAccessInfo accessInfo = accessInfo();
         VideoProgress progress = new VideoProgress(100L, 1L, 20L, 10L, 42, 269, false, null);
         when(videoCatalogPort.findByVideoId(10L)).thenReturn(Optional.of(accessInfo));
@@ -71,7 +71,7 @@ class CompleteVideoServiceTest {
     }
 
     @Test
-    void throwsVideoNotFoundWhenVideoAccessInfoDoesNotExist() {
+    void 영상_접근_정보가_없으면_예외가_발생한다() {
         when(videoCatalogPort.findByVideoId(10L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.handle(new CompleteVideoCommand(1L, 10L)))
