@@ -2,6 +2,8 @@ package com.wanted.backend.domain.learning_activity.infrastructure.subscription;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
@@ -25,8 +27,9 @@ public class SubscriptionReferenceJpaEntity {
     @Column(name = "member_id", nullable = false)
     private Long memberId;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private String status;
+    private SubscriptionStatus status;
 
     @Column(name = "expired_at", nullable = false)
     private LocalDateTime expiredAt;
