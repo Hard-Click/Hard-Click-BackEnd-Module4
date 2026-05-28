@@ -20,4 +20,6 @@ public interface SpringDataCommentRepository
     // 대댓글 존재 여부
     boolean existsByParentId(Long commentId);
 
+    List<CommentJpaEntity> findByAuthorIdAndIsDeletedFalseOrderByCreatedAtDesc(Long authorId);
+
 }

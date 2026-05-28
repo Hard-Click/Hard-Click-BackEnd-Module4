@@ -24,4 +24,6 @@ public interface SpringDataPostRepository extends JpaRepository<PostJpaEntity, L
 
     // 전체 + 키워드 검색 전체 수
     int countByTitleContainingAndStatus(String keyword, String status);
+
+    List<PostJpaEntity> findByAuthorIdAndStatusOrderByCreatedAtDesc(Long authorId, String status);
 }
