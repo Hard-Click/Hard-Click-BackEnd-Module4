@@ -1,7 +1,9 @@
 package com.wanted.backend.domain.cource.application.dto;
 
+import com.wanted.backend.domain.cource.domain.model.CourseStatus;
 import com.wanted.backend.domain.cource.domain.model.PriceType;
 
+import java.time.Instant;
 import java.util.List;
 
 public record CourseListResult(
@@ -18,8 +20,10 @@ public record CourseListResult(
             PriceType priceType,
             int price,
             String instructorName,
-            double rating,       // 추후 리뷰 도메인 연동
-            int reviewCount,     // 추후 리뷰 도메인 연동
-            int studentCount     // 추후 수강신청 도메인 연동
+            double rating,
+            int reviewCount,
+            int studentCount,
+            CourseStatus status,
+            Instant createdAt
     ) {}
 }

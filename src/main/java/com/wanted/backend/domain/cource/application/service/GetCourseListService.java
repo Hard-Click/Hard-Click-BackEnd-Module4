@@ -55,9 +55,11 @@ public class GetCourseListService implements GetCourseListUseCase {
                         item.priceType(),
                         item.price(),
                         nameMap.getOrDefault(item.authorId(), "알 수 없음"),
-                        0.0,   // 추후 리뷰 도메인 연동
-                        0,     // 추후 리뷰 도메인 연동
-                        0      // 추후 수강신청 도메인 연동
+                        0.0,
+                        0,
+                        0,
+                        item.status(),
+                        item.createdAt()
                 ))
                 .collect(Collectors.toList());
 

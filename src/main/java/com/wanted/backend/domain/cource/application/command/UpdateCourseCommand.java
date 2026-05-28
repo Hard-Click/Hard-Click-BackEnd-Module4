@@ -13,7 +13,11 @@ public record UpdateCourseCommand(
         String thumbnailUrl,
         PriceType priceType,
         int price,
-        List<SectionCommand> sections
+        List<SectionCommand> sections,
+        List<String> learningObjectives,
+        List<String> targetAudience,
+        List<String> techTags,
+        String level
 ) {
     public record SectionCommand(
             Long id,           // null = 신규 섹션

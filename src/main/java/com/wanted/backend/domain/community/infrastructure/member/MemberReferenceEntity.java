@@ -17,5 +17,7 @@ public class MemberReferenceEntity {
     @Column(name = "name", nullable = false)
     private String name;
 
-    protected MemberReferenceEntity() {}
+    protected MemberReferenceEntity() {
+
+    }
 }

@@ -48,6 +48,12 @@ public class EmailVerificationJpaEntity {
         this.createdAt = LocalDateTime.now();
     }
 
+    public void updateFromDomain(com.wanted.backend.domain.identity.domain.model.EmailVerification domain) {
+        this.isVerified = domain.isVerified();
+        this.verificationToken = domain.getVerificationToken();
+        this.verifiedAt = domain.getVerifiedAt();
+    }
+
     @Builder
     public EmailVerificationJpaEntity(String email, String code, EmailPurpose purpose, LocalDateTime expiresAt) {
         this.email = email;

@@ -49,9 +49,9 @@ class VideoPlayServiceTest {
                 LocalDateTime.now()
         );
         when(videoCatalogPort.findByVideoId(10L)).thenReturn(Optional.of(accessInfo));
-        when(videoProgressRepository.findByMemberIdAndVideoId(1L, 10L)).thenReturn(Optional.of(progress));
+        when(videoProgressRepository.findByMemberIdAndVideoId(2L, 10L)).thenReturn(Optional.of(progress));
 
-        VideoPlayUseCase.VideoPlayView result = service.handle(new VideoPlayCommand(10L));
+        VideoPlayUseCase.VideoPlayView result = service.handle(new VideoPlayCommand(2L, 10L));
 
         assertThat(result.videoId()).isEqualTo(10L);
         assertThat(result.courseId()).isEqualTo(20L);
@@ -60,16 +60,16 @@ class VideoPlayServiceTest {
         assertThat(result.lastPositionSec()).isEqualTo(42);
         assertThat(result.watchTimeSec()).isEqualTo(120);
         assertThat(result.completed()).isTrue();
-        verify(videoAccessService).validatePlayable(1L, accessInfo);
+        verify(videoAccessService).validatePlayable(2L, accessInfo);
     }
 
     @Test
     void returnsDefaultProgressWhenProgressDoesNotExist() {
         VideoAccessInfo accessInfo = accessInfo();
         when(videoCatalogPort.findByVideoId(10L)).thenReturn(Optional.of(accessInfo));
-        when(videoProgressRepository.findByMemberIdAndVideoId(1L, 10L)).thenReturn(Optional.empty());
+        when(videoProgressRepository.findByMemberIdAndVideoId(2L, 10L)).thenReturn(Optional.empty());
 
-        VideoPlayUseCase.VideoPlayView result = service.handle(new VideoPlayCommand(10L));
+        VideoPlayUseCase.VideoPlayView result = service.handle(new VideoPlayCommand(2L, 10L));
 
         assertThat(result.lastPositionSec()).isZero();
         assertThat(result.watchTimeSec()).isZero();
@@ -80,7 +80,7 @@ class VideoPlayServiceTest {
     void throwsVideoNotFoundWhenVideoAccessInfoDoesNotExist() {
         when(videoCatalogPort.findByVideoId(10L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.handle(new VideoPlayCommand(10L)))
+        assertThatThrownBy(() -> service.handle(new VideoPlayCommand(2L, 10L)))
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.VIDEO_NOT_FOUND);

@@ -2,6 +2,8 @@ package com.wanted.backend.domain.learning_activity.infrastructure.catalog;
 
 import com.wanted.backend.domain.learning_activity.application.port.VideoCatalogPort;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoAccessInfo;
+import com.wanted.backend.domain.learning_activity.infrastructure.curriculum.CourseCurriculumReferenceEntity;
+import com.wanted.backend.domain.learning_activity.infrastructure.curriculum.CourseCurriculumReferenceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,23 +15,37 @@ import java.util.Optional;
 @Transactional(readOnly = true)
 public class VideoCatalogAdapter implements VideoCatalogPort {
 
-    private final SpringDataVideoCatalogRepository repository;
+    private final CatalogVideoReferenceRepository videoRepository;
+    private final CourseCurriculumReferenceRepository curriculumRepository;
+    private final CatalogCourseReferenceRepository courseRepository;
 
     @Override
     public Optional<VideoAccessInfo> findByVideoId(Long videoId) {
-        return repository.findByVideoId(videoId)
-                .map(this::toDomain);
+        return videoRepository.findById(videoId)
+                .flatMap(this::toDomain);
     }
 
-    private VideoAccessInfo toDomain(SpringDataVideoCatalogRepository.VideoAccessProjection projection) {
+    private Optional<VideoAccessInfo> toDomain(CatalogVideoReferenceEntity video) {
+        // videos -> course_curriculum -> courses 순서로 필요한 참조 정보를 조합합니다.
+        // 레포지토리는 단순 조회만 담당하고, 조합 로직은 어댑터에 둡니다.
+        return curriculumRepository.findById(video.getCurriculumId())
+                .flatMap(curriculum -> courseRepository.findById(curriculum.getCourseId())
+                        .map(course -> toDomain(video, curriculum, course)));
+    }
+
+    private VideoAccessInfo toDomain(
+            CatalogVideoReferenceEntity video,
+            CourseCurriculumReferenceEntity curriculum,
+            CatalogCourseReferenceEntity course
+    ) {
         return new VideoAccessInfo(
-                projection.getVideoId(),
-                projection.getCourseId(),
-                projection.getCourseStatus(),
-                projection.getCoursePrice(),
-                projection.getPreview() != null && projection.getPreview() == 1,
-                projection.getStreamingUrl(),
-                projection.getDurationSeconds()
+                video.getId(),
+                curriculum.getCourseId(),
+                course.getStatus(),
+                course.getPrice(),
+                video.getPreview(),
+                video.getStreamingUrl(),
+                video.getDurationSeconds()
         );
     }
 }

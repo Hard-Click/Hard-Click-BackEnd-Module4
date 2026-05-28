@@ -1,22 +1,62 @@
 package com.wanted.backend.domain.learning_activity.domain.model;
 
-/* comment.
-*   비즈니스 판단에 필요한 순수 데이터와 메서드를 가짐
-*   Course 를 직접 만들지 않기 위해 만든 조회 모델
-*   Course 도메인을 침범하지 않고, 필요한 값만 읽어온 모델
-* */
-
-public record VideoAccessInfo(
-        Long videoId,
-        Long courseId,
-        String courseStatus,
-        Integer coursePrice,
-        Boolean preview,
-        String streamingUrl,
-        Integer durationSeconds
-) {
+public class VideoAccessInfo {
 
     private static final String PUBLISHED = "PUBLISHED";
+
+    private final Long videoId;
+    private final Long courseId;
+    private final String courseStatus;
+    private final Integer coursePrice;
+    private final Boolean preview;
+    private final String streamingUrl;
+    private final Integer durationSeconds;
+
+    public VideoAccessInfo(
+            Long videoId,
+            Long courseId,
+            String courseStatus,
+            Integer coursePrice,
+            Boolean preview,
+            String streamingUrl,
+            Integer durationSeconds
+    ) {
+        this.videoId = videoId;
+        this.courseId = courseId;
+        this.courseStatus = courseStatus;
+        this.coursePrice = coursePrice;
+        this.preview = preview;
+        this.streamingUrl = streamingUrl;
+        this.durationSeconds = durationSeconds;
+    }
+
+    public Long videoId() {
+        return videoId;
+    }
+
+    public Long courseId() {
+        return courseId;
+    }
+
+    public String courseStatus() {
+        return courseStatus;
+    }
+
+    public Integer coursePrice() {
+        return coursePrice;
+    }
+
+    public Boolean preview() {
+        return preview;
+    }
+
+    public String streamingUrl() {
+        return streamingUrl;
+    }
+
+    public Integer durationSeconds() {
+        return durationSeconds;
+    }
 
     public boolean isPublishedCourse() {
         return PUBLISHED.equals(courseStatus);

@@ -36,5 +36,8 @@ public interface ReviewRepository {
     // 수정/삭제용 단건 조회 추가
     Optional<Review> findById(Long reviewId);
 
-    record RatingCount(Double rating, Long count) {}
+    //삭제용
+    void deleteById(Long reviewId);
+
+    record RatingCount(Integer rating, Long count) {}
 }

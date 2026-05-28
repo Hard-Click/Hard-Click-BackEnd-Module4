@@ -42,7 +42,7 @@ public class MemberPersistenceAdapter implements MemberRepository {
                     member.getPhoneNumber(), member.getProfileImageUrl(), member.getRole(),
                     member.getStatus(), member.isPasswordChangeRequired(), member.getLoginFailCount(),
                     member.isLocked(), member.getLockedAt(), member.getLastLoginAt(),
-                    member.getCreatedAt(), member.getUpdatedAt()
+                    member.getCreatedAt(), member.getUpdatedAt(),member.isOptionalTermsAgreed()
             );
         } else {
             // 2. 업데이트: 영속성 컨텍스트에서 기존 엔티티를 찾아 상태를 동기화
@@ -75,7 +75,7 @@ public class MemberPersistenceAdapter implements MemberRepository {
                 entity.getName(), entity.getGender(), entity.getBirthDate(), entity.getPhoneNumber(),
                 entity.getProfileImageUrl(), entity.getRole(), entity.getStatus(),
                 entity.isPasswordChangeRequired(), entity.getLoginFailCount(), entity.isLocked(),
-                entity.getLockedAt(), entity.getLastLoginAt(), entity.getCreatedAt(), entity.getUpdatedAt()
+                entity.getLockedAt(), entity.getLastLoginAt(), entity.getCreatedAt(), entity.getUpdatedAt(),entity.isOptionalTermsAgreed()
         );
     }
 }

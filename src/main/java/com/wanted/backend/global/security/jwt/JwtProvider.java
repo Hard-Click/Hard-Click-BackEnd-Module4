@@ -29,18 +29,24 @@ public class JwtProvider {
         this.refreshTokenExpirationMs = refreshTokenExpirationMs;
     }
 
-    public String createAccessToken(Long memberId, String role) {
+    public String createAccessToken(Long memberId, String username, String role) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + accessTokenExpirationMs);
 
         return Jwts.builder()
                 .setSubject(String.valueOf(memberId))
+                .claim("username", username) // [추가] username 클레임 추가
                 .claim("role", role)
                 .claim("tokenType", "access")
                 .setIssuedAt(now)
                 .setExpiration(expiry)
                 .signWith(key)
                 .compact();
+    }
+
+
+    public String getUsernameFromToken(String token) {
+        return parseClaims(token).getBody().get("username", String.class);
     }
 
     public String createRefreshToken(Long memberId) {

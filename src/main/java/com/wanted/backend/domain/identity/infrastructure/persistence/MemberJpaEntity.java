@@ -14,8 +14,10 @@ import java.time.LocalDateTime;
 })
 public class MemberJpaEntity {
 
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "member_id")
     private Long id;
 
     @Column(nullable = false, length = 20)
@@ -53,7 +55,7 @@ public class MemberJpaEntity {
     private boolean isLocked;
     private LocalDateTime lockedAt;
     private LocalDateTime lastLoginAt;
-
+    private boolean optionalTermsAgreed;
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -67,7 +69,7 @@ public class MemberJpaEntity {
                            String gender, LocalDate birthDate, String phoneNumber, String profileImageUrl,
                            Role role, MemberStatus status, boolean isPasswordChangeRequired,
                            int loginFailCount, boolean isLocked, LocalDateTime lockedAt,
-                           LocalDateTime lastLoginAt, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                           LocalDateTime lastLoginAt, LocalDateTime createdAt, LocalDateTime updatedAt,boolean optionalTermsAgreed) {
         this.username = username;
         this.email = email;
         this.password = password;
@@ -85,6 +87,7 @@ public class MemberJpaEntity {
         this.lastLoginAt = lastLoginAt;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.optionalTermsAgreed = optionalTermsAgreed;
     }
 
     public void updateFromDomain(Member domain) {
@@ -102,6 +105,7 @@ public class MemberJpaEntity {
         this.lockedAt = domain.getLockedAt();
         this.lastLoginAt = domain.getLastLoginAt();
         this.updatedAt = domain.getUpdatedAt();
+        this.optionalTermsAgreed = domain.isOptionalTermsAgreed();
     }
 
     @PrePersist
@@ -134,4 +138,7 @@ public class MemberJpaEntity {
     public LocalDateTime getLastLoginAt() { return lastLoginAt; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public boolean isOptionalTermsAgreed() {
+        return optionalTermsAgreed;
+    }
 }
