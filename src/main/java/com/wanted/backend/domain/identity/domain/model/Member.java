@@ -8,13 +8,14 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 public class Member {
     private static final int MAX_LOGIN_FAIL_COUNT = 5;
 
     private final Long id;
-    private final String username;
-    private final String email;
+    private String username;
+    private String email;
     private String password;
     private final String name;
     private String gender;
@@ -31,6 +32,7 @@ public class Member {
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private final boolean optionalTermsAgreed;
+
     // 아키텍처 가이드라인에 따른 도메인 이벤트 리스트 (순수 자바)
     private final List<DomainEvent> domainEvents = new ArrayList<>();
 
@@ -148,7 +150,16 @@ public class Member {
     }
 
     public void withdraw(LocalDateTime now) {
+        if (this.status == MemberStatus.WITHDRAWN) {
+            throw new IllegalStateException("이미 탈퇴한 회원입니다.");
+        }
+
+        String suffix = UUID.randomUUID().toString();
+
         this.status = MemberStatus.WITHDRAWN;
+        this.email = "withdrawn_" + this.id + "_" + suffix + "@deleted.local";
+        this.username = "wd_" + this.id;
+        this.phoneNumber = null;
         this.updatedAt = now;
     }
 
