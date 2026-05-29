@@ -17,7 +17,7 @@ import org.hibernate.annotations.Immutable;
 public class PaymentCourseReferenceEntity {
 
     @Id
-    @Column(name = "id")
+    @Column(name = "course_id")
     private Long id;
 
     @Column(nullable = false)

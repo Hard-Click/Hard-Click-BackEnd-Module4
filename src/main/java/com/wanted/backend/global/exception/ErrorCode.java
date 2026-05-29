@@ -31,6 +31,7 @@ import org.springframework.http.HttpStatus;
     PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "U008", "비밀번호가 일치하지 않습니다."),
     VERIFICATION_CODE_INVALID(HttpStatus.BAD_REQUEST, "U009", "유효하지 않은 인증코드입니다. 다시 입력해주세요."),
     EMAIL_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "U010", "이메일 전송에 실패했습니다. 다시 시도해주세요."),
+    INVALID_EMAIL_DOMAIN(HttpStatus.BAD_REQUEST, "U012", "gmail.com 이메일만 사용할 수 있습니다."),
     PASSWORD_RESET_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "U011", "비밀번호 재발급은 하루 최대 3회까지만 가능합니다."),
     EMAIL_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "U013", "이메일 인증이 완료되지 않았습니다."),
     INVALID_ROLE(HttpStatus.BAD_REQUEST, "U014", "유효하지 않은 권한입니다."),
