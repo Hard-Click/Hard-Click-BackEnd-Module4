@@ -30,7 +30,7 @@ public class VerifyEmailService implements VerifyEmailUseCase {
     @Override
     @Transactional
     public void sendVerificationCode(String email, EmailPurpose purpose) {
-        // 도메인 모델 생성 (숫자 6자리, 5분 유효시간)
+        // 도메인 모델 생성 (숫자 6자리, 3분 유효시간)
         EmailVerification verification = EmailVerification.create(email, purpose);
 
         // 저장 (Persistence Adapter 호출)

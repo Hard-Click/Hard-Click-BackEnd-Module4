@@ -47,14 +47,15 @@ public class UserProfileController {
         );
     }
     @PatchMapping("/me/password")
-    @Operation(summary = "비밀번호 변경", description = "로그인한 사용자의 비밀번호를 수정합니다.")
-    public ResponseEntity<ApiResponse<Void>> updatePassword(
+    @Operation(summary = "비밀번호 변경",
+            description = "로그인한 사용자의 비밀번호를 수정합니다.")
+    public ResponseEntity<ApiResponse<EmptyResponse>> updatePassword(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody UpdatePasswordRequest request
     ) {
         updatePasswordUseCase.updatePassword(userDetails.getMemberId(), request.toCommand());
 
-        return ApiResponse.success("비밀번호가 변경되었습니다.", null);
+        return ApiResponse.success("비밀번호가 변경되었습니다", new EmptyResponse());
     }
 
 
@@ -68,7 +69,7 @@ public class UserProfileController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestPart("profileImage") MultipartFile profileImage
     ) {
-        UpdateMyProfileUseCase.MyProfileUpdateView result = updateMyProfileUseCase.handle(
+        updateMyProfileUseCase.handle(
                 new UpdateMyProfileCommand(
                         userDetails.getMemberId(),
                         profileImage,
@@ -78,8 +79,7 @@ public class UserProfileController {
                 )
         );
 
-        return ApiResponse.success("비밀번호가 변경되었습니다.", new EmptyResponse());
-
+        return ApiResponse.success("프로필 이미지가 수정되었습니다.", new EmptyResponse());
     }
     @DeleteMapping("/me")
     @Operation(
@@ -91,9 +91,9 @@ public class UserProfileController {
             @Valid @RequestBody WithdrawMemberRequest request
     ) {
 
-        System.out.println("탈퇴 시작");
+
         withdrawMemberUseCase.withdraw(userDetails.getMemberId(), request.toCommand());
-        System.out.println("탈퇴 끝");
-        return ApiResponse.success("회원 탈퇴가 완료되었습니다", new EmptyResponse());
+
+        return ApiResponse.success("회원 탈퇴가 완료되었습니다.", new EmptyResponse());
     }
 }

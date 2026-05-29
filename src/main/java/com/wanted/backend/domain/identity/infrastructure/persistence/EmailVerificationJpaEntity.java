@@ -22,6 +22,9 @@ public class EmailVerificationJpaEntity {
     @Column(nullable = false, length = 100)
     private String email;
 
+    @Column(nullable = false)
+    private boolean used = false;
+
     @Column(nullable = false, length = 10)
     private String code;
 
@@ -51,6 +54,7 @@ public class EmailVerificationJpaEntity {
     public void updateFromDomain(com.wanted.backend.domain.identity.domain.model.EmailVerification domain) {
         this.isVerified = domain.isVerified();
         this.verificationToken = domain.getVerificationToken();
+        this.used = domain.isUsed();
         this.verifiedAt = domain.getVerifiedAt();
     }
 
