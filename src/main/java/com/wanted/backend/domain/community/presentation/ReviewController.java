@@ -61,7 +61,7 @@ public class ReviewController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long courseId,
             @RequestParam(defaultValue = "latest") ReviewSortType sort,
-            @RequestParam(defaultValue = "1") int page) {
+            @RequestParam(defaultValue = "0") int page) {
 
         //비회원도 조회가 가능하도록
         Long currentMemberId = userDetails != null ? userDetails.getMemberId() : -1L;

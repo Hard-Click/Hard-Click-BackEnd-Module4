@@ -36,7 +36,7 @@ public class PostRepositoryAdapter implements PostRepository {
     @Override
     public List<Post> findByBoardType(BoardType boardType, PostSortType sort,
                                       String keyword, int page, int size) {
-        Pageable pageable = PageRequest.of(page - 1, size, toSort(sort));
+        Pageable pageable = PageRequest.of(page, size, toSort(sort));
         return repository.findByBoardTypeAndTitleContainingAndStatus(
                         boardType, keyword != null ? keyword : "", PostStatus.ACTIVE, pageable)
                 .stream()
@@ -46,7 +46,7 @@ public class PostRepositoryAdapter implements PostRepository {
 
     @Override
     public List<Post> findAll(PostSortType sort, String keyword, int page, int size) {
-        Pageable pageable = PageRequest.of(page - 1, size, toSort(sort));
+        Pageable pageable = PageRequest.of(page, size, toSort(sort));
         return repository.findByTitleContainingAndStatus(
                         keyword != null ? keyword : "", PostStatus.ACTIVE, pageable)
                 .stream()
