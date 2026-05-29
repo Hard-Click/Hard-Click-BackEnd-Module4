@@ -50,7 +50,7 @@ public class CourseController {
             @RequestParam(required = false) String subject,
             @RequestParam(required = false) String instructorName,
             @RequestParam(defaultValue = "LATEST") CourseSortType sort,
-            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size
     ) {
         CourseListResult result = getCourseListUseCase.handle(

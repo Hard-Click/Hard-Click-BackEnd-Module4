@@ -24,7 +24,7 @@ public class InstructorCourseController {
     @GetMapping
     public ResponseEntity<ApiResponse<CourseListResponse>> getMyCourses(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
         CourseListResult result = courseQueryUseCase.getInstructorCourses(userDetails.getMemberId(), page, size);
