@@ -18,6 +18,7 @@ public class CourseCurriculumReferenceEntity {
     private Long id;
 
     @Column(name = "course_id", nullable = false)
+
     private Long courseId;
 
     @Column(name = "order_index")
