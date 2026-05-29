@@ -70,16 +70,17 @@ public class PostQueryService implements PostQueryUseCase {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
 
-        LocalDateTime thirtyMinutesAgo = LocalDateTime.now().minusMinutes(30);
-        boolean alreadyViewed = viewLogRepository
-                .existsByMemberIdAndPostIdAndViewedAtAfter(memberId, postId, thirtyMinutesAgo);
+        // memberId가 null이면 조회수 트래킹 스킵
+        if (memberId != null) {
+            LocalDateTime thirtyMinutesAgo = LocalDateTime.now().minusMinutes(30);
+            boolean alreadyViewed = viewLogRepository
+                    .existsByMemberIdAndPostIdAndViewedAtAfter(memberId, postId, thirtyMinutesAgo);
 
-        if (!alreadyViewed) {
-            post.increaseViewCount();
-
-            postRepository.updateViewCount(postId, post.getViewCount());
-
-            viewLogRepository.save(ViewLog.create(memberId, postId));
+            if (!alreadyViewed) {
+                post.increaseViewCount();
+                postRepository.updateViewCount(postId, post.getViewCount());
+                viewLogRepository.save(ViewLog.create(memberId, postId));
+            }
         }
 
         String name = memberNamePort.getNameByMemberId(post.getAuthorId());
@@ -97,7 +98,7 @@ public class PostQueryService implements PostQueryUseCase {
                 post.getCreatedAt(),
                 post.getViewCount(),
                 post.getContent(),
-                post.getAuthorId().equals(memberId),
+                post.isOwner(memberId),   // Post 도메인 모델에 위임
                 post.isAccepted(),
                 fileUrls
         );
