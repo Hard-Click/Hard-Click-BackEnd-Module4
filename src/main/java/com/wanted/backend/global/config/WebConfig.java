@@ -14,13 +14,13 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations("file:./uploads/");
 
-        // 게시글 이미지
+        //게시글 이미지
         registry.addResourceHandler("/community/post/**")
-                .addResourceLocations("file:src/main/resources/static/community/post/");
+                .addResourceLocations("file:C:/lecture/Hard-Click-B/Hard-Click-BackEnd/src/main/resources/static/community/post/");
 
-        // 댓글 이미지
+        //댓글 이미지
         registry.addResourceHandler("/community/comment/**")
-                .addResourceLocations("file:src/main/resources/static/community/comment/");
+                .addResourceLocations("file:C:/lecture/Hard-Click-B/Hard-Click-BackEnd/src/main/resources/static/community/comment/");
 
         // 프로필 이미지
         registry.addResourceHandler("/identity/profile/**")
