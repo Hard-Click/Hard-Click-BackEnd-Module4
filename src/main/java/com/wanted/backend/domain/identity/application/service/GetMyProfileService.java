@@ -25,7 +25,6 @@ public class GetMyProfileService implements GetMyProfileUseCase {
 
         return new MyProfileView(
                 member.getId(),
-                member.getUsername(),
                 member.getName(),
                 member.getEmail(),
                 resolveProfileImageUrl(member.getProfileImageUrl())
