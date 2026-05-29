@@ -16,10 +16,12 @@ import com.wanted.backend.domain.cource.presentation.api.response.CourseListResp
 import com.wanted.backend.domain.cource.presentation.api.response.CreateCourseResponse;
 import com.wanted.backend.domain.cource.presentation.api.response.UploadLessonVideoResponse;
 import com.wanted.backend.global.common.ApiResponse;
+import com.wanted.backend.global.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -63,8 +65,9 @@ public class CourseController {
     @GetMapping("/{courseId}")
     public ResponseEntity<ApiResponse<CourseDetailResponse>> getCourseDetail(
             @PathVariable Long courseId,
-            @RequestHeader(value = "X-Member-Id", required = false) Long memberId
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
+        Long memberId = userDetails != null ? userDetails.getMemberId() : null;
         CourseDetailResult result = courseQueryUseCase.getDetail(courseId, memberId);
         return ApiResponse.success("강의 상세 조회 성공", CourseDetailResponse.from(result));
     }
@@ -75,10 +78,10 @@ public class CourseController {
      */
     @PostMapping
     public ResponseEntity<ApiResponse<CreateCourseResponse>> createCourse(
-            @RequestHeader("X-Member-Id") Long memberId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody CreateCourseRequest request
     ) {
-        Long courseId = createCourseUseCase.handle(request.toCommand(memberId));
+        Long courseId = createCourseUseCase.handle(request.toCommand(userDetails.getMemberId()));
         return ApiResponse.created("강의가 등록되었습니다.", new CreateCourseResponse(courseId));
     }
 
@@ -88,11 +91,11 @@ public class CourseController {
      */
     @PatchMapping("/{courseId}")
     public ResponseEntity<ApiResponse<Void>> updateCourse(
-            @RequestHeader("X-Member-Id") Long memberId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long courseId,
             @Valid @RequestBody UpdateCourseRequest request
     ) {
-        updateCourseUseCase.handle(request.toCommand(courseId, memberId));
+        updateCourseUseCase.handle(request.toCommand(courseId, userDetails.getMemberId()));
         return ApiResponse.successNoContent("강의가 수정되었습니다.");
     }
 
@@ -102,10 +105,10 @@ public class CourseController {
      */
     @DeleteMapping("/{courseId}")
     public ResponseEntity<ApiResponse<Void>> deleteCourse(
-            @RequestHeader("X-Member-Id") Long memberId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long courseId
     ) {
-        deleteCourseUseCase.handle(courseId, memberId);
+        deleteCourseUseCase.handle(courseId, userDetails.getMemberId());
         return ApiResponse.successNoContent("강의가 삭제되었습니다.");
     }
 
@@ -116,12 +119,12 @@ public class CourseController {
      */
     @PatchMapping("/{courseId}/status")
     public ResponseEntity<ApiResponse<Void>> changeCourseStatus(
-            @RequestHeader("X-Member-Id") Long memberId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long courseId,
             @RequestParam boolean published
     ) {
         CourseStatus targetStatus = published ? CourseStatus.PUBLISHED : CourseStatus.DRAFT;
-        changeCourseStatusUseCase.handle(new ChangeCourseStatusCommand(courseId, memberId, targetStatus));
+        changeCourseStatusUseCase.handle(new ChangeCourseStatusCommand(courseId, userDetails.getMemberId(), targetStatus));
         String message = published ? "강의가 공개되었습니다." : "강의가 비공개 처리되었습니다.";
         return ApiResponse.successNoContent(message);
     }

@@ -15,6 +15,9 @@ public class LocalVideoStorageAdapter implements VideoStoragePort {
     @Value("${app.video.upload-dir:uploads/videos}")
     private String uploadDir;
 
+    @Value("${app.video.base-url:http://localhost:8080/uploads/videos/}")
+    private String baseUrl;
+
     @Override
     public String store(Long lessonId, String originalFilename, byte[] data) {
         try {
@@ -25,7 +28,7 @@ public class LocalVideoStorageAdapter implements VideoStoragePort {
             Path target = dir.resolve(filename);
             Files.write(target, data);
 
-            return "/" + uploadDir + "/" + filename;
+            return baseUrl + filename;
         } catch (IOException e) {
             throw new RuntimeException("영상 저장에 실패했습니다.", e);
         }

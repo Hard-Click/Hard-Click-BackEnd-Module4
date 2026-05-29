@@ -43,7 +43,7 @@ public record CreateCourseRequest(
                         .map(s -> {
                             List<CreateCourseCommand.LessonCommand> lessonCommands = s.lessons().stream()
                                     .map(l -> new CreateCourseCommand.LessonCommand(
-                                            l.title(), l.description(), l.orderIndex()))
+                                            l.title(), l.description(), l.orderIndex(), l.durationSeconds()))
                                     .toList();
                             return new CreateCourseCommand.SectionCommand(
                                     s.title(), s.orderIndex(), lessonCommands);

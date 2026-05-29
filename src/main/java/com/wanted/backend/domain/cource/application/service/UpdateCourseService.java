@@ -42,7 +42,7 @@ public class UpdateCourseService implements UpdateCourseUseCase {
                                                      lc.orderIndex(), null, null, null, null)
                                     // 신규 회차
                                     : Lesson.create(null, lc.title(), lc.description(),
-                                                    lc.orderIndex(), clock.instant()))
+                                                    lc.orderIndex(), lc.durationSeconds(), clock.instant()))
                             .toList();
                     return sc.id() != null
                             ? CourseSection.restore(sc.id(), sc.title(), sc.orderIndex(), lessons)

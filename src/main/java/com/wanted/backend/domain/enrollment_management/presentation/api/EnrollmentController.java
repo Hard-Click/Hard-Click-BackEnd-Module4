@@ -5,9 +5,11 @@ import com.wanted.backend.domain.enrollment_management.application.usecase.GetMy
 import com.wanted.backend.domain.enrollment_management.presentation.api.request.EnrollRequest;
 import com.wanted.backend.domain.enrollment_management.presentation.api.response.MyEnrollmentResponse;
 import com.wanted.backend.global.common.ApiResponse;
+import com.wanted.backend.global.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,10 +29,10 @@ public class EnrollmentController {
      */
     @PostMapping
     public ResponseEntity<ApiResponse<Map<String, Long>>> enroll(
-            @RequestHeader("X-Member-Id") Long userId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody EnrollRequest request
     ) {
-        Long enrollmentId = enrollUseCase.handle(request.toCommand(userId));
+        Long enrollmentId = enrollUseCase.handle(request.toCommand(userDetails.getMemberId()));
         return ApiResponse.created("수강신청이 완료되었습니다.", Map.of("enrollmentId", enrollmentId));
     }
 
@@ -40,11 +42,11 @@ public class EnrollmentController {
      */
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<List<MyEnrollmentResponse>>> getMyEnrollments(
-            @RequestHeader("X-Member-Id") Long userId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(defaultValue = "ALL") String status
     ) {
         List<MyEnrollmentResponse> response =
-                MyEnrollmentResponse.from(getMyEnrollmentsUseCase.handle(userId, status));
+                MyEnrollmentResponse.from(getMyEnrollmentsUseCase.handle(userDetails.getMemberId(), status));
         return ApiResponse.success("내 수강 목록 조회 성공", response);
     }
 }

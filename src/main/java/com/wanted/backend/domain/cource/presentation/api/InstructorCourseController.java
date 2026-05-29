@@ -4,8 +4,10 @@ import com.wanted.backend.domain.cource.application.dto.CourseListResult;
 import com.wanted.backend.domain.cource.application.usecase.CourseQueryUseCase;
 import com.wanted.backend.domain.cource.presentation.api.response.CourseListResponse;
 import com.wanted.backend.global.common.ApiResponse;
+import com.wanted.backend.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,11 +23,11 @@ public class InstructorCourseController {
      */
     @GetMapping
     public ResponseEntity<ApiResponse<CourseListResponse>> getMyCourses(
-            @RequestHeader("X-Member-Id") Long memberId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
-        CourseListResult result = courseQueryUseCase.getInstructorCourses(memberId, page, size);
+        CourseListResult result = courseQueryUseCase.getInstructorCourses(userDetails.getMemberId(), page, size);
         return ApiResponse.success("내 강의 목록 조회 성공", CourseListResponse.from(result));
     }
 }

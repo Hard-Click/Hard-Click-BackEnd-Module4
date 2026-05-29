@@ -17,12 +17,13 @@ public class Lesson {
     private Lesson() {}
 
     public static Lesson create(Long sectionId, String title, String description,
-                                int orderIndex, Instant now) {
+                                int orderIndex, Integer durationSeconds, Instant now) {
         Lesson lesson = new Lesson();
         lesson.sectionId = sectionId;
         lesson.title = title;
         lesson.description = description;
         lesson.orderIndex = orderIndex;
+        lesson.durationSeconds = durationSeconds;
         lesson.createdAt = now;
         return lesson;
     }

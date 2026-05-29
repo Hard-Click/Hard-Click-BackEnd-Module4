@@ -30,6 +30,7 @@ public record UpdateCourseCommand(
             Long id,           // null = 신규 회차
             String title,
             String description,
-            int orderIndex
+            int orderIndex,
+            Integer durationSeconds
     ) {}
 }

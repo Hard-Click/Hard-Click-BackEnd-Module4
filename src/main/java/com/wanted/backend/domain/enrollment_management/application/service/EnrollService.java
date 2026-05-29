@@ -24,11 +24,11 @@ public class EnrollService implements EnrollUseCase {
     @Override
     public Long handle(EnrollCommand command) {
         // 중복 수강신청 검증
-        if (enrollmentRepository.existsByUserIdAndCourseId(command.userId(), command.courseId())) {
+        if (enrollmentRepository.existsByMemberIdAndCourseId(command.memberId(), command.courseId())) {
             throw new BusinessException(ErrorCode.ENROLLMENT_ALREADY_EXISTS);
         }
 
-        Enrollment enrollment = Enrollment.create(command.userId(), command.courseId(), Instant.now(clock));
+        Enrollment enrollment = Enrollment.create(command.memberId(), command.courseId(), Instant.now(clock));
         return enrollmentRepository.save(enrollment).getId();
     }
 }
