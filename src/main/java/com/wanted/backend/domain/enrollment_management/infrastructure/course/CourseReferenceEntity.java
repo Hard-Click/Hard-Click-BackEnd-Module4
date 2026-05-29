@@ -9,13 +9,12 @@ import org.hibernate.annotations.Immutable;
 @Entity(name = "EnrollmentCourseReference")
 @Getter
 @Immutable
-@Table(name = "courses")
+@Table(name = "course")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CourseReferenceEntity {
 
     @Id
     @Column(name = "course_id")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)

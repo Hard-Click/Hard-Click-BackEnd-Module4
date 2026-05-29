@@ -27,6 +27,7 @@ public record CreateCourseCommand(
     public record LessonCommand(
             String title,
             String description,
-            int orderIndex
+            int orderIndex,
+            Integer durationSeconds
     ) {}
 }

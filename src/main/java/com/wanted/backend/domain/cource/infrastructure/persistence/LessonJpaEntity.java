@@ -45,12 +45,14 @@ public class LessonJpaEntity {
     private Instant createdAt;
 
     static LessonJpaEntity of(CourseSectionJpaEntity section, String title,
-                               String description, int orderIndex, Instant createdAt) {
+                               String description, int orderIndex,
+                               Integer durationSeconds, Instant createdAt) {
         LessonJpaEntity entity = new LessonJpaEntity();
         entity.section = section;
         entity.title = title;
         entity.description = description;
         entity.orderIndex = orderIndex;
+        entity.durationSeconds = durationSeconds;
         entity.createdAt = createdAt;
         return entity;
     }

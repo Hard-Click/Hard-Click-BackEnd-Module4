@@ -45,7 +45,7 @@ public record UpdateCourseRequest(
                                     ? new ArrayList<>()
                                     : s.lessons().stream()
                                             .map(l -> new UpdateCourseCommand.LessonCommand(
-                                                    l.id(), l.title(), l.description(), l.orderIndex()))
+                                                    l.id(), l.title(), l.description(), l.orderIndex(), l.durationSeconds()))
                                             .toList();
                             return new UpdateCourseCommand.SectionCommand(
                                     s.id(), s.title(), s.orderIndex(), lessonCommands);

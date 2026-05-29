@@ -10,6 +10,10 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
 
+        // 업로드된 파일 (썸네일, 커뮤니티 이미지, 프로필 등)
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:./uploads/");
+
         // 게시글 이미지
         registry.addResourceHandler("/community/post/**")
                 .addResourceLocations("file:src/main/resources/static/community/post/");

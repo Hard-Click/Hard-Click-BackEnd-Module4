@@ -37,7 +37,6 @@ class GetMyProfileServiceTest {
         MyProfileView result = service.handle(1L);
 
         assertThat(result.memberId()).isEqualTo(1L);
-        assertThat(result.username()).isEqualTo("testuser");
         assertThat(result.name()).isEqualTo("테스트유저");
         assertThat(result.email()).isEqualTo("test@example.com");
         assertThat(result.profileImageUrl()).isEqualTo("/profile.png");

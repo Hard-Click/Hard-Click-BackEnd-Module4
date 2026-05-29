@@ -67,7 +67,7 @@ public class MyEnrolledCourseQueryAdapter implements MyEnrolledCourseQueryPort {
     }
 
     private List<Enrollment> findMyCourseEnrollments(Long memberId) {
-        return enrollmentRepository.findByUserId(memberId).stream()
+        return enrollmentRepository.findByMemberId(memberId).stream()
                 .filter(enrollment -> EnrollmentStatus.myCourseListTargets().contains(enrollment.getEffectiveStatus()))
                 .toList();
     }

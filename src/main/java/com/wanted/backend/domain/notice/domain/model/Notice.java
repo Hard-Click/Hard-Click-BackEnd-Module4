@@ -52,6 +52,13 @@ public class Notice {
                 LocalDateTime.now(), LocalDateTime.now());
     }
 
+    public void update(String title, String content, boolean isPinned) {
+        this.title = title;
+        this.content = content;
+        this.isPinned = isPinned;
+        this.updatedAt = LocalDateTime.now();
+    }
+
     public Long getId() { return id; }
     public Long getAuthorId() { return authorId; }
     public Long getCourseId() { return courseId; }

@@ -3,42 +3,100 @@ package com.wanted.backend.domain.cource.presentation.api.response;
 import com.wanted.backend.domain.cource.application.dto.CourseDetailResult;
 import com.wanted.backend.domain.cource.domain.model.CourseStatus;
 import com.wanted.backend.domain.cource.domain.model.PriceType;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
 
+@Schema(description = "강의 상세 응답")
 public record CourseDetailResponse(
+        @Schema(description = "강의 ID", example = "1")
         Long courseId,
+
+        @Schema(description = "강의명", example = "2027 수능 수학Ⅱ 미적분 실전 킬러 특강")
         String title,
+
+        @Schema(description = "과목명", example = "수학Ⅱ")
         String subjectName,
+
+        @Schema(description = "강의 설명", example = "수능 수학Ⅱ 미적분 단원의 킬러 문제를 완전 정복하는 특강입니다.")
         String description,
+
+        @Schema(description = "썸네일 URL", example = "https://example.com/thumbnail.png")
         String thumbnailUrl,
+
+        @Schema(description = "가격 유형 (FREE / PAID)", example = "PAID")
         PriceType priceType,
+
+        @Schema(description = "가격 (원)", example = "89000")
         int price,
+
+        @Schema(description = "가격 표시 (무료 or N원)", example = "89,000원")
         String priceLabel,
+
+        @Schema(description = "강의 상태 (DRAFT / PUBLISHED)", example = "PUBLISHED")
         CourseStatus status,
+
+        @Schema(description = "강사명", example = "박지훈")
         String instructorName,
+
+        @Schema(description = "평균 평점", example = "4.8")
         double averageRating,
+
+        @Schema(description = "리뷰 수", example = "1234")
         int reviewCount,
+
+        @Schema(description = "수강생 수", example = "12543")
         int studentCount,
+
+        @Schema(description = "커리큘럼 섹션 목록")
         List<SectionResponse> sections,
+
+        @Schema(description = "학습 목표 목록", example = "[\"미적분 킬러 문제 유형을 파악한다\"]")
         List<String> learningObjectives,
+
+        @Schema(description = "추천 대상 목록", example = "[\"수능 수학 3~4등급 수험생\"]")
         List<String> targetAudience,
+
+        @Schema(description = "기술 태그 목록", example = "[\"미분법\", \"적분법\"]")
         List<String> techTags,
+
+        @Schema(description = "난이도", example = "중급~고급")
         String level
 ) {
+    @Schema(description = "섹션(챕터) 응답")
     public record SectionResponse(
+            @Schema(description = "섹션 ID", example = "1")
             Long sectionId,
+
+            @Schema(description = "섹션 제목", example = "섹션 1: 함수의 극한")
             String title,
+
+            @Schema(description = "섹션 순서 (0-based)", example = "0")
             int orderIndex,
+
+            @Schema(description = "레슨 목록")
             List<LessonResponse> lessons
     ) {}
 
+    @Schema(description = "레슨(회차) 응답")
     public record LessonResponse(
+            @Schema(description = "레슨 ID", example = "1")
             Long lessonId,
+
+            @Schema(description = "레슨 제목", example = "OT 및 학습 방향")
             String title,
+
+            @Schema(description = "레슨 설명", example = "강의 전체 구성과 학습 방향을 안내합니다.")
             String description,
+
+            @Schema(description = "레슨 순서 (0-based)", example = "0")
             int orderIndex,
-            Integer durationSeconds
+
+            @Schema(description = "영상 재생시간 (초)", example = "323")
+            Integer durationSeconds,
+
+            @Schema(description = "미리보기 가능 여부 (첫 번째 섹션의 첫 번째 레슨만 true)", example = "true")
+            boolean isPreview
     ) {}
 
     public static CourseDetailResponse from(CourseDetailResult result) {
@@ -57,7 +115,8 @@ public record CourseDetailResponse(
                                         l.title(),
                                         l.description(),
                                         l.orderIndex(),
-                                        l.durationSeconds()
+                                        l.durationSeconds(),
+                                        l.isPreview()
                                 ))
                                 .toList()
                 ))

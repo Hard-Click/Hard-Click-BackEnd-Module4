@@ -40,13 +40,18 @@ public class IdentityController {
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
         AuthToken token = loginUseCase.login(request.username(), request.password());
 
+        // JWT 내부는 "ROLE_INSTRUCTOR" 형식 유지, 프론트에는 "INSTRUCTOR" 형식으로 전달
+        String roleForClient = token.role().startsWith("ROLE_")
+                ? token.role().substring(5)
+                : token.role();
+
         return ApiResponse.success(
                 "로그인에 성공했습니다",
                 new LoginResponse(
                         token.accessToken(),
                         token.refreshToken(),
                         token.memberId(),
-                        token.role()
+                        roleForClient
                 )
         );
     }
