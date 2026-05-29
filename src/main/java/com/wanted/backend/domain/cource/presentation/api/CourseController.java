@@ -5,7 +5,8 @@ import com.wanted.backend.domain.cource.application.command.UploadLessonVideoCom
 import com.wanted.backend.domain.cource.application.dto.CourseDetailResult;
 import com.wanted.backend.domain.cource.application.dto.CourseListResult;
 import com.wanted.backend.domain.cource.application.query.CourseListQuery;
-import com.wanted.backend.domain.cource.application.usecase.*;
+import com.wanted.backend.domain.cource.application.usecase.CourseCommandUseCase;
+import com.wanted.backend.domain.cource.application.usecase.CourseQueryUseCase;
 import com.wanted.backend.domain.cource.domain.model.CourseSortType;
 import com.wanted.backend.domain.cource.domain.model.CourseStatus;
 import com.wanted.backend.domain.cource.domain.model.FileProcessingStatus;
@@ -36,13 +37,8 @@ import java.io.IOException;
 @Tag(name = "Course", description = "강의 목록/상세 조회, 등록/수정/삭제, 영상 업로드 API")
 public class CourseController {
 
-    private final GetCourseListUseCase getCourseListUseCase;
+    private final CourseCommandUseCase courseCommandUseCase;
     private final CourseQueryUseCase courseQueryUseCase;
-    private final CreateCourseUseCase createCourseUseCase;
-    private final UpdateCourseUseCase updateCourseUseCase;
-    private final DeleteCourseUseCase deleteCourseUseCase;
-    private final ChangeCourseStatusUseCase changeCourseStatusUseCase;
-    private final UploadLessonVideoUseCase uploadLessonVideoUseCase;
 
     @GetMapping
     @Operation(summary = "강의 목록 조회", description = "키워드/과목/강사명 필터와 정렬을 적용하여 강의 목록을 페이징 조회합니다.")
@@ -54,7 +50,7 @@ public class CourseController {
             @Parameter(description = "페이지 번호 (0-based)", example = "0") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "페이지당 항목 수", example = "12") @RequestParam(defaultValue = "12") int size
     ) {
-        CourseListResult result = getCourseListUseCase.handle(
+        CourseListResult result = courseQueryUseCase.getList(
                 new CourseListQuery(keyword, subject, instructorName, sort, page, size));
         return ApiResponse.success("강의 목록 조회 성공", CourseListResponse.from(result));
     }
@@ -76,7 +72,7 @@ public class CourseController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody CreateCourseRequest request
     ) {
-        Long courseId = createCourseUseCase.handle(request.toCommand(userDetails.getMemberId()));
+        Long courseId = courseCommandUseCase.create(request.toCommand(userDetails.getMemberId()));
         return ApiResponse.created("강의가 등록되었습니다.", new CreateCourseResponse(courseId));
     }
 
@@ -87,7 +83,7 @@ public class CourseController {
             @Parameter(description = "강의 ID", example = "1") @PathVariable Long courseId,
             @Valid @RequestBody UpdateCourseRequest request
     ) {
-        updateCourseUseCase.handle(request.toCommand(courseId, userDetails.getMemberId()));
+        courseCommandUseCase.update(request.toCommand(courseId, userDetails.getMemberId()));
         return ApiResponse.successNoContent("강의가 수정되었습니다.");
     }
 
@@ -97,7 +93,7 @@ public class CourseController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Parameter(description = "강의 ID", example = "1") @PathVariable Long courseId
     ) {
-        deleteCourseUseCase.handle(courseId, userDetails.getMemberId());
+        courseCommandUseCase.delete(courseId, userDetails.getMemberId());
         return ApiResponse.successNoContent("강의가 삭제되었습니다.");
     }
 
@@ -109,7 +105,7 @@ public class CourseController {
             @Parameter(description = "true = 공개, false = 비공개", example = "true") @RequestParam boolean published
     ) {
         CourseStatus targetStatus = published ? CourseStatus.PUBLISHED : CourseStatus.DRAFT;
-        changeCourseStatusUseCase.handle(new ChangeCourseStatusCommand(courseId, userDetails.getMemberId(), targetStatus));
+        courseCommandUseCase.changeStatus(new ChangeCourseStatusCommand(courseId, userDetails.getMemberId(), targetStatus));
         String message = published ? "강의가 공개되었습니다." : "강의가 비공개 처리되었습니다.";
         return ApiResponse.successNoContent(message);
     }
@@ -120,7 +116,7 @@ public class CourseController {
             @Parameter(description = "레슨 ID", example = "3") @PathVariable Long lessonId,
             @RequestPart("file") MultipartFile file
     ) throws IOException {
-        String videoUrl = uploadLessonVideoUseCase.handle(
+        String videoUrl = courseCommandUseCase.uploadLessonVideo(
                 new UploadLessonVideoCommand(lessonId, file.getOriginalFilename(), file.getBytes())
         );
         return ApiResponse.success("영상이 업로드되었습니다.",
