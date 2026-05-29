@@ -11,6 +11,6 @@ public enum EnrollmentStatus {
     REFUNDED;
 
     public static Set<EnrollmentStatus> myCourseListTargets() {
-        return EnumSet.of(ENROLLED, IN_PROGRESS, COMPLETED);
+        return EnumSet.of(IN_PROGRESS, COMPLETED);
     }
 }
