@@ -32,7 +32,7 @@ public class CreateCourseService implements CreateCourseUseCase {
         List<CourseSection> sections = command.sections().stream()
                 .map(s -> {
                     List<Lesson> lessons = s.lessons().stream()
-                            .map(l -> Lesson.create(null, l.title(), l.description(), l.orderIndex(), now))
+                            .map(l -> Lesson.create(null, l.title(), l.description(), l.orderIndex(), l.durationSeconds(), now))
                             .toList();
                     return CourseSection.create(s.title(), s.orderIndex(), lessons);
                 })

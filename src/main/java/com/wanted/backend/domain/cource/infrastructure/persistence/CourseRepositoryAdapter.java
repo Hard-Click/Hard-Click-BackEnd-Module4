@@ -140,7 +140,7 @@ public class CourseRepositoryAdapter implements CourseRepository {
                         domainSection.getTitle(), domainSection.getOrderIndex());
                 domainSection.getLessons().forEach(l ->
                         newSection.addLesson(l.getTitle(), l.getDescription(),
-                                l.getOrderIndex(), clock.instant()));
+                                l.getOrderIndex(), l.getDurationSeconds(), clock.instant()));
             }
         }
     }
@@ -164,7 +164,7 @@ public class CourseRepositoryAdapter implements CourseRepository {
             } else {
                 // 신규 회차
                 sectionEntity.addLesson(domainLesson.getTitle(), domainLesson.getDescription(),
-                        domainLesson.getOrderIndex(), clock.instant());
+                        domainLesson.getOrderIndex(), domainLesson.getDurationSeconds(), clock.instant());
             }
         }
     }
@@ -182,7 +182,7 @@ public class CourseRepositoryAdapter implements CourseRepository {
                     section.getTitle(), section.getOrderIndex());
             section.getLessons().forEach(lesson ->
                     sectionEntity.addLesson(lesson.getTitle(), lesson.getDescription(),
-                            lesson.getOrderIndex(), course.getCreatedAt()));
+                            lesson.getOrderIndex(), lesson.getDurationSeconds(), course.getCreatedAt()));
         });
         return entity;
     }

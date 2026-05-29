@@ -15,8 +15,8 @@ public class EnrollmentRepositoryAdapter implements EnrollmentRepository {
     private final SpringDataEnrollmentRepository jpaRepository;
 
     @Override
-    public boolean existsByUserIdAndCourseId(Long userId, Long courseId) {
-        return jpaRepository.existsByMemberIdAndCourseId(userId, courseId);
+    public boolean existsByMemberIdAndCourseId(Long memberId, Long courseId) {
+        return jpaRepository.existsByMemberIdAndCourseId(memberId, courseId);
     }
 
     @Override
@@ -25,15 +25,15 @@ public class EnrollmentRepositoryAdapter implements EnrollmentRepository {
     }
 
     @Override
-    public List<Enrollment> findByUserId(Long userId) {
-        return jpaRepository.findByMemberId(userId).stream()
+    public List<Enrollment> findByMemberId(Long memberId) {
+        return jpaRepository.findByMemberId(memberId).stream()
                 .map(EnrollmentJpaEntity::toDomain)
                 .toList();
     }
 
     @Override
-    public List<Enrollment> findByUserIdAndStatus(Long userId, EnrollmentStatus status) {
-        return jpaRepository.findByMemberIdAndStatus(userId, status).stream()
+    public List<Enrollment> findByMemberIdAndStatus(Long memberId, EnrollmentStatus status) {
+        return jpaRepository.findByMemberIdAndStatus(memberId, status).stream()
                 .map(EnrollmentJpaEntity::toDomain)
                 .toList();
     }

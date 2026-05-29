@@ -45,7 +45,8 @@ public class CourseSectionJpaEntity {
         this.orderIndex = orderIndex;
     }
 
-    void addLesson(String title, String description, int orderIndex, Instant createdAt) {
-        lessons.add(LessonJpaEntity.of(this, title, description, orderIndex, createdAt));
+    void addLesson(String title, String description, int orderIndex,
+                   Integer durationSeconds, Instant createdAt) {
+        lessons.add(LessonJpaEntity.of(this, title, description, orderIndex, durationSeconds, createdAt));
     }
 }

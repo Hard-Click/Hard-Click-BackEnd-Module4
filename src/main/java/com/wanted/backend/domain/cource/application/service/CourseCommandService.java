@@ -44,7 +44,7 @@ public class CourseCommandService implements CourseCommandUseCase {
         List<CourseSection> sections = command.sections().stream()
                 .map(s -> {
                     List<Lesson> lessons = s.lessons().stream()
-                            .map(l -> Lesson.create(null, l.title(), l.description(), l.orderIndex(), now))
+                            .map(l -> Lesson.create(null, l.title(), l.description(), l.orderIndex(), l.durationSeconds(), now))
                             .toList();
                     return CourseSection.create(s.title(), s.orderIndex(), lessons);
                 })
@@ -87,7 +87,7 @@ public class CourseCommandService implements CourseCommandUseCase {
                                     ? Lesson.restore(lc.id(), null, lc.title(), lc.description(),
                                                      lc.orderIndex(), null, null, null, null)
                                     : Lesson.create(null, lc.title(), lc.description(),
-                                                    lc.orderIndex(), clock.instant()))
+                                                    lc.orderIndex(), lc.durationSeconds(), clock.instant()))
                             .toList();
                     return sc.id() != null
                             ? CourseSection.restore(sc.id(), sc.title(), sc.orderIndex(), lessons)

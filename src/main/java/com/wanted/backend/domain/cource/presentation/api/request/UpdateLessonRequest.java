@@ -10,5 +10,7 @@ public record UpdateLessonRequest(
 
         String description,
 
-        int orderIndex
+        int orderIndex,
+
+        Integer durationSeconds   // 프론트에서 메타데이터로 추출한 영상 길이 (초)
 ) {}

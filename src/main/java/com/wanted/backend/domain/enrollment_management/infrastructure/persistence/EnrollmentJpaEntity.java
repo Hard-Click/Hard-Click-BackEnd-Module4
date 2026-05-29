@@ -45,7 +45,7 @@ public class EnrollmentJpaEntity {
 
     static EnrollmentJpaEntity from(Enrollment enrollment) {
         EnrollmentJpaEntity entity = new EnrollmentJpaEntity();
-        entity.memberId = enrollment.getUserId();
+        entity.memberId = enrollment.getMemberId();
         entity.courseId = enrollment.getCourseId();
         entity.enrolledAt = enrollment.getEnrolledAt();
         entity.status = EnrollmentStatus.IN_PROGRESS;

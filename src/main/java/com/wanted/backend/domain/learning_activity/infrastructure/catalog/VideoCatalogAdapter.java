@@ -38,12 +38,16 @@ public class VideoCatalogAdapter implements VideoCatalogPort {
             CourseCurriculumReferenceEntity curriculum,
             CatalogCourseReferenceEntity course
     ) {
+        // 첫 번째 섹션(order_index=0)의 첫 번째 강의(order_index=0)를 무료 미리보기로 처리
+        boolean isPreview = Integer.valueOf(0).equals(video.getOrderIndex())
+                && Integer.valueOf(0).equals(curriculum.getOrderIndex());
+
         return new VideoAccessInfo(
                 video.getId(),
                 curriculum.getCourseId(),
                 course.getStatus(),
                 course.getPrice(),
-                video.getPreview(),
+                isPreview,
                 video.getStreamingUrl(),
                 video.getDurationSeconds()
         );

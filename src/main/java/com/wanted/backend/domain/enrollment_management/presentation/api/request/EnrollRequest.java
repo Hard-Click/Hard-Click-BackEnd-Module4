@@ -7,7 +7,7 @@ public record EnrollRequest(
         @NotNull(message = "강의 ID는 필수입니다.")
         Long courseId
 ) {
-    public EnrollCommand toCommand(Long userId) {
-        return new EnrollCommand(userId, courseId);
+    public EnrollCommand toCommand(Long memberId) {
+        return new EnrollCommand(memberId, courseId);
     }
 }

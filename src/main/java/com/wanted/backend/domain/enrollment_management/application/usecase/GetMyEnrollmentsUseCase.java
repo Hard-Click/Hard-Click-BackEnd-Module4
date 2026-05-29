@@ -5,5 +5,5 @@ import com.wanted.backend.domain.enrollment_management.application.dto.MyEnrollm
 import java.util.List;
 
 public interface GetMyEnrollmentsUseCase {
-    List<MyEnrollmentResult> handle(Long userId, String statusFilter);
+    List<MyEnrollmentResult> handle(Long memberId, String statusFilter);
 }
