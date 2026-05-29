@@ -5,14 +5,10 @@ import com.wanted.backend.domain.identity.application.usecase.GetMyProfileUseCas
 import com.wanted.backend.domain.identity.application.usecase.UpdateMyProfileUseCase;
 import com.wanted.backend.domain.identity.application.usecase.UpdatePasswordUseCase;
 import com.wanted.backend.domain.identity.application.usecase.WithdrawMemberUseCase;
-import com.wanted.backend.domain.identity.presentation.api.request.UpdateMyProfileRequest;
 import com.wanted.backend.domain.identity.presentation.api.request.UpdatePasswordRequest;
 import com.wanted.backend.domain.identity.presentation.api.request.WithdrawMemberRequest;
 import com.wanted.backend.domain.identity.presentation.api.response.EmptyResponse;
-import com.wanted.backend.domain.identity.presentation.api.response.ProfileImageResponse;
 import com.wanted.backend.global.common.ApiResponse;
-import com.wanted.backend.global.exception.BusinessException;
-import com.wanted.backend.global.exception.ErrorCode;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -63,32 +59,6 @@ public class UserProfileController {
 
 
 
-    @PatchMapping(value = "/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(
-            summary = "내 프로필 수정",
-            description = "로그인한 사용자의 프로필 이미지와 비밀번호를 수정합니다."
-    )
-    public ResponseEntity<ApiResponse<UpdateMyProfileUseCase.MyProfileUpdateView>> updateMyProfile(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @ModelAttribute UpdateMyProfileRequest request
-    ) {
-        if (request.hasMultipleProfileImages()) {
-            throw new BusinessException(ErrorCode.PROFILE_IMAGE_COUNT_EXCEEDED);
-        }
-
-        return ApiResponse.success(
-                "내 프로필이 수정되었습니다.",
-                updateMyProfileUseCase.handle(new UpdateMyProfileCommand(
-                        userDetails.getMemberId(),
-                        request.getSingleProfileImage(),
-                        request.getCurrentPassword(),
-                        request.getNewPassword(),
-                        request.getNewPasswordConfirm()
-                ))
-
-        );
-
-    }
     @PatchMapping(value = "/me/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "프로필 이미지 수정",
