@@ -2,6 +2,7 @@ package com.wanted.backend.domain.cource.presentation.api.request;
 
 import com.wanted.backend.domain.cource.application.command.CreateCourseCommand;
 import com.wanted.backend.domain.cource.domain.model.PriceType;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -10,30 +11,45 @@ import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
+@Schema(description = "강의 등록 요청")
 public record CreateCourseRequest(
+        @Schema(description = "강의명", example = "2027 수능 수학Ⅱ 미적분 실전 특강")
         @NotBlank(message = "강의명은 필수입니다.")
         String title,
 
+        @Schema(description = "과목명", example = "수학Ⅱ")
         @NotBlank(message = "과목은 필수입니다.")
         String subject,
 
+        @Schema(description = "강의 설명", example = "수능 수학Ⅱ 미적분 단원의 킬러 문제를 완전 정복하는 특강입니다.")
         @NotBlank(message = "강의 설명은 필수입니다.")
         String description,
 
+        @Schema(description = "썸네일 이미지 URL", example = "https://example.com/thumbnail.png")
         String thumbnailUrl,
 
+        @Schema(description = "가격 유형 (FREE / PAID)", example = "PAID")
         @NotNull(message = "가격 유형은 필수입니다.")
         PriceType priceType,
 
+        @Schema(description = "가격 (원, 무료 강의는 0)", example = "89000")
         @Min(value = 0, message = "가격은 0 이상이어야 합니다.")
         int price,
 
+        @Schema(description = "섹션(챕터) 목록")
         @Valid
         List<SectionRequest> sections,
 
+        @Schema(description = "학습 목표 목록", example = "[\"미적분 킬러 문제 유형을 파악한다\", \"수능 1등급 실전 감각을 기른다\"]")
         List<String> learningObjectives,
+
+        @Schema(description = "추천 대상 목록", example = "[\"수능 수학 3~4등급이며 1등급을 목표로 하는 수험생\"]")
         List<String> targetAudience,
+
+        @Schema(description = "기술 태그 목록", example = "[\"미분법\", \"적분법\", \"극한\"]")
         List<String> techTags,
+
+        @Schema(description = "난이도", example = "중급~고급")
         String level
 ) {
     public CreateCourseCommand toCommand(Long authorId) {
