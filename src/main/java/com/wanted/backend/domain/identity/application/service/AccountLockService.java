@@ -76,4 +76,16 @@ public class AccountLockService implements AccountLockUseCase {
         memberRepository.save(member);
         verificationRepository.save(verification);
     }
+    @Override
+    @Transactional
+    public void sendCode(String email) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        if (!member.isLocked()) {
+            throw new BusinessException(ErrorCode.ACCOUNT_NOT_LOCKED);
+        }
+
+        verifyEmailUseCase.sendAccountLockCode(email);
+    }
 }

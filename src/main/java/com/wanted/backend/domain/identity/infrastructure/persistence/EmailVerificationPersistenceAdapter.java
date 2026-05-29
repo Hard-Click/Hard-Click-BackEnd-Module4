@@ -40,9 +40,15 @@ public class EmailVerificationPersistenceAdapter implements EmailVerificationRep
     public Optional<EmailVerification> findLatestByEmailAndPurpose(String email, EmailPurpose purpose) {
         return jpaRepository.findFirstByEmailAndPurposeOrderByCreatedAtDesc(email, purpose)
                 .map(entity -> EmailVerification.restore(
-                        entity.getId(), entity.getEmail(), entity.getCode(), entity.getPurpose(),
-                        entity.isVerified(), entity.getVerificationToken(),
-                        entity.getExpiresAt(), entity.getVerifiedAt()
+                                entity.getId(),
+                                entity.getEmail(),
+                                entity.getCode(),
+                                entity.getPurpose(),
+                                entity.isVerified(),
+                                entity.getVerificationToken(),
+                                entity.isUsed(),
+                                entity.getExpiresAt(),
+                                entity.getVerifiedAt()
                 ));
     }
 
@@ -56,7 +62,7 @@ public class EmailVerificationPersistenceAdapter implements EmailVerificationRep
         return jpaRepository.findByVerificationTokenAndPurpose(token, purpose)
                 .map(entity -> EmailVerification.restore(
                         entity.getId(), entity.getEmail(), entity.getCode(), entity.getPurpose(),
-                        entity.isVerified(), entity.getVerificationToken(),
+                        entity.isVerified(), entity.getVerificationToken(),entity.isUsed(),
                         entity.getExpiresAt(), entity.getVerifiedAt()
                 ));
     }

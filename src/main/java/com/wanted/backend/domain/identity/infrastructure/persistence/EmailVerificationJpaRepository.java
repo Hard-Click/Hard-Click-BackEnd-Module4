@@ -11,4 +11,5 @@ public interface EmailVerificationJpaRepository extends JpaRepository<EmailVerif
     Optional<EmailVerificationJpaEntity> findFirstByEmailAndPurposeOrderByCreatedAtDesc(String email, EmailPurpose purpose);
     long countByEmailAndPurposeAndCreatedAtAfter(String email, EmailPurpose purpose, LocalDateTime startOfDay);
     Optional<EmailVerificationJpaEntity> findByVerificationTokenAndPurpose(String verificationToken, EmailPurpose purpose);
+
 }

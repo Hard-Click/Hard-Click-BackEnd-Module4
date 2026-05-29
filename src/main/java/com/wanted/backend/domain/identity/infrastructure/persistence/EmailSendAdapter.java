@@ -19,7 +19,7 @@ public class EmailSendAdapter implements EmailSendPort {
         message.setSubject("[Hard-Click] 이메일 인증 번호 안내");
         message.setText("안녕하세요. Hard-Click 서비스입니다.\n\n" +
                 "인증 번호는 [" + code + "] 입니다.\n" +
-                "5분 이내에 입력해 주세요.");
+                "3분 이내에 입력해 주세요.");
         mailSender.send(message);
     }
 }
