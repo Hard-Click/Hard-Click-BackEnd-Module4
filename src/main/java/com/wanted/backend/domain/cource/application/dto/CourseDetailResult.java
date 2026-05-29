@@ -36,6 +36,7 @@ public record CourseDetailResult(
             String title,
             String description,
             int orderIndex,
-            Integer durationSeconds
+            Integer durationSeconds,
+            boolean isPreview
     ) {}
 }

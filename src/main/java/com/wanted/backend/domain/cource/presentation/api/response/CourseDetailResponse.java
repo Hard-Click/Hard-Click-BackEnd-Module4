@@ -38,7 +38,8 @@ public record CourseDetailResponse(
             String title,
             String description,
             int orderIndex,
-            Integer durationSeconds
+            Integer durationSeconds,
+            boolean isPreview
     ) {}
 
     public static CourseDetailResponse from(CourseDetailResult result) {
@@ -57,7 +58,8 @@ public record CourseDetailResponse(
                                         l.title(),
                                         l.description(),
                                         l.orderIndex(),
-                                        l.durationSeconds()
+                                        l.durationSeconds(),
+                                        l.isPreview()
                                 ))
                                 .toList()
                 ))

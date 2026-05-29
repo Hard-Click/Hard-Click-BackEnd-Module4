@@ -90,7 +90,8 @@ public class CourseQueryService implements CourseQueryUseCase {
                                         lesson.getTitle(),
                                         lesson.getDescription(),
                                         lesson.getOrderIndex(),
-                                        lesson.getDurationSeconds()
+                                        lesson.getDurationSeconds(),
+                                        section.getOrderIndex() == 0 && lesson.getOrderIndex() == 0
                                 ))
                                 .collect(Collectors.toList())
                 ))
