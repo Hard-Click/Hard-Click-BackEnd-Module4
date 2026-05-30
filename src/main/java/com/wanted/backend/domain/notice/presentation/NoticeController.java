@@ -9,8 +9,10 @@ import com.wanted.backend.domain.notice.presentation.request.UpdateNoticeRequest
 import com.wanted.backend.domain.notice.presentation.response.CreateNoticeResponse;
 import com.wanted.backend.domain.notice.presentation.response.NoticeDetailResponse;
 import com.wanted.backend.domain.notice.presentation.response.NoticeListResponse;
+import com.wanted.backend.domain.notice.presentation.response.UpdateNoticeResponse;
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -31,6 +33,16 @@ public class NoticeController {
 
 
     @PostMapping("/courses/{courseId}/notices")
+    @Operation(
+            summary = "강의 공지사항 작성",
+            description = """
+                강사가 특정 강의의 공지사항을 작성합니다.
+                - INSTRUCTOR 권한을 가진 회원만 작성할 수 있습니다.
+                - 본인이 등록한 강의에만 공지사항을 작성할 수 있습니다.
+                - 제목은 200자 이하여야 합니다.
+                - isPinned: true 설정 시 상단에 고정됩니다.
+                """
+    )
     public ResponseEntity<ApiResponse<CreateNoticeResponse>> createNotice(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long courseId,
@@ -49,6 +61,15 @@ public class NoticeController {
 
 
     @PostMapping("/notices")
+    @Operation(
+            summary = "전체 공지사항 작성",
+            description = """
+                관리자가 전체 공지사항을 작성합니다.
+                - ADMIN 권한을 가진 회원만 작성할 수 있습니다.
+                - 제목은 200자 이하여야 합니다.
+                - isPinned: true 설정 시 상단에 고정됩니다.
+                """
+    )
     public ResponseEntity<ApiResponse<CreateNoticeResponse>> createGlobalNotice(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody CreateGlobalNoticeRequest request) {
@@ -64,6 +85,18 @@ public class NoticeController {
     }
 
     @GetMapping("/notices")
+    @Operation(
+            summary = "공지사항 목록 조회",
+            description = """
+                공지사항 목록을 조회합니다.
+                - 로그인한 회원만 조회 가능합니다.
+                - type으로 조회 범위를 구분합니다. (GLOBAL: 전체 공지, COURSE: 강의 공지)
+                - COURSE 타입 조회 시 courseId를 함께 전달해야 합니다.
+                - keyword로 제목 검색이 가능합니다. (선택사항)
+                - 페이지 기본값: 0, 사이즈 기본값: 10
+                - 상단 고정 공지사항이 우선 노출됩니다.
+                """
+    )
     public ResponseEntity<ApiResponse<NoticeListResponse>> getNotices(
             @RequestParam String type,
             @RequestParam(required = false) Long courseId,
@@ -78,6 +111,14 @@ public class NoticeController {
     }
 
     @GetMapping("/notices/{noticeId}")
+    @Operation(
+            summary = "공지사항 상세 조회",
+            description = """
+                공지사항 상세 내용을 조회합니다.
+                - 로그인한 회원만 조회 가능합니다.
+                - 이전 공지사항 ID와 제목을 함께 반환합니다.
+                """
+    )
     public ResponseEntity<ApiResponse<NoticeDetailResponse>> getNotice(
             @PathVariable Long noticeId) {
 
@@ -87,7 +128,17 @@ public class NoticeController {
     }
 
     @PatchMapping("/notices/{noticeId}")
-    public ResponseEntity<ApiResponse<Void>> updateNotice(
+    @Operation(
+            summary = "공지사항 수정",
+            description = """
+                작성한 공지사항을 수정합니다.
+                - 로그인한 회원만 수정할 수 있습니다.
+                - 본인이 작성한 공지사항인지 검증 후 수정합니다.
+                - 제목은 200자 이하여야 합니다.
+                - isPinned 값을 변경하여 상단 고정 여부를 수정할 수 있습니다.
+                """
+    )
+    public ResponseEntity<ApiResponse<UpdateNoticeResponse>> updateNotice(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long noticeId,
             @Valid @RequestBody UpdateNoticeRequest request) {
@@ -100,10 +151,18 @@ public class NoticeController {
                 request.isPinned()
         ));
 
-        return ApiResponse.successNoContent("공지사항이 수정되었습니다.");
+        return ApiResponse.success("공지사항이 수정되었습니다.", new UpdateNoticeResponse(noticeId));
     }
 
     @DeleteMapping("/notices/{noticeId}")
+    @Operation(
+            summary = "공지사항 삭제",
+            description = """
+                작성한 공지사항을 삭제합니다.
+                - 로그인한 회원만 삭제할 수 있습니다.
+                - 본인이 작성한 공지사항인지 검증 후 삭제합니다.
+                """
+    )
     public ResponseEntity<ApiResponse<Void>> deleteNotice(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long noticeId) {
