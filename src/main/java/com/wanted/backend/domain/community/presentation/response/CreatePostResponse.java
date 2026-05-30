@@ -1,3 +1,10 @@
 package com.wanted.backend.domain.community.presentation.response;
 
-public record CreatePostResponse(Long postId) {}
+import io.swagger.v3.oas.annotations.media.Schema;
+
+public record CreatePostResponse(
+
+        @Schema(description = "작성된 게시글 ID", example = "37")
+        Long postId
+
+) {}
