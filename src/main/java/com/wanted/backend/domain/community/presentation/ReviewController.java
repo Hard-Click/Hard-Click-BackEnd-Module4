@@ -35,7 +35,13 @@ public class ReviewController {
     @PostMapping
     @Operation(
             summary = "리뷰 등록",
-            description = "자기가 시청한 강의 리뷰 1개 등록 가능"
+            description = """
+                강의를 시청한 회원이 해당 강의에 리뷰를 등록합니다.
+                - 강의당 리뷰는 1개만 등록 가능합니다.
+                - 별점은 1~5 사이의 정수만 허용합니다.
+                - 리뷰 내용은 10자 이상 300자 이하여야 합니다.
+                - 로그인한 회원만 등록할 수 있습니다.
+                """
     )
     public ResponseEntity<ApiResponse<CreateReviewResponse>> createReview(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -55,7 +61,14 @@ public class ReviewController {
     @GetMapping
     @Operation(
             summary = "리뷰 목록 조회",
-            description = "리뷰 목록 조회 작성자 리뷰 최신 정렬, 비회원 리뷰 조회 및 조회 시 별점 최신화 계산/별점 분포 조회"
+            description = """
+                강의의 리뷰 목록을 조회합니다.
+                - 비회원도 조회 가능합니다.
+                - 정렬 기준: latest(최신순), rating(별점순) — 기본값: latest
+                - 페이지 기본값: 0
+                - 조회 시 별점 평균 및 별점 분포(1~5점)를 함께 반환합니다.
+                - 본인이 작성한 리뷰는 isMyReview: true로 표시됩니다(최상단 정렬).
+                """
     )
     public ResponseEntity<ApiResponse<ReviewListResponse>> getReviews(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -76,7 +89,13 @@ public class ReviewController {
     @PatchMapping("/{reviewId}")
     @Operation(
             summary = "리뷰 수정",
-            description = "본인이 작성한 리뷰인지 검증 후 리뷰를 수정하는 것 "
+            description = """
+                본인이 작성한 리뷰를 수정합니다.
+                - 본인이 작성한 리뷰인지 검증 후 수정합니다.
+                - 별점은 1~5 사이의 정수만 허용합니다.
+                - 리뷰 내용은 10자 이상 300자 이하여야 합니다.
+                - 로그인한 회원만 수정할 수 있습니다.
+                """
     )
     public ResponseEntity<ApiResponse<UpdateReviewResponse>> updateReview(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -96,7 +115,11 @@ public class ReviewController {
     @DeleteMapping("/{reviewId}")
     @Operation(
             summary = "리뷰 삭제",
-            description = "본인이 작성한 리뷰인지 검증 후 리뷰를 수정하는 것"
+            description = """
+                본인이 작성한 리뷰를 삭제합니다.
+                - 본인이 작성한 리뷰인지 검증 후 삭제합니다.
+                - 로그인한 회원만 삭제할 수 있습니다.
+                """
     )
     public ResponseEntity<ApiResponse<Void>> deleteReview(
             @AuthenticationPrincipal CustomUserDetails userDetails,

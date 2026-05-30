@@ -1,5 +1,12 @@
 package com.wanted.backend.domain.community.presentation.response;
 
-public record UpdatePostResponse(Long postId) {
+import io.swagger.v3.oas.annotations.media.Schema;
+
+public record UpdatePostResponse(
+
+        @Schema(description = "수정된 게시글 ID", example = "37")
+        Long postId
+
+) {
 
 }
