@@ -1,6 +1,8 @@
 # Flown Backend
 
 > 학습자의 성장을 시각화하는 LMS 백엔드 서버
+> <img width="2219" height="1067" alt="image" src="https://github.com/user-attachments/assets/b2e3f4ed-1d1d-404d-9f9b-6907a6c977b6" />
+
 
 ## 프로젝트 소개
 
