@@ -1,5 +1,7 @@
 package com.wanted.backend.domain.enrollment_management.application.port;
 
+import com.wanted.backend.domain.enrollment_management.domain.model.EnrollmentStatus;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -15,7 +17,8 @@ public interface MyEnrolledCourseQueryPort {
             Integer totalLessonCount,
             LocalDateTime lastStudiedAt,
             Long lastVideoId,
-            Integer lastPositionSeconds
+            Integer lastPositionSeconds,
+            EnrollmentStatus enrollmentStatus
     ) {
     }
 }

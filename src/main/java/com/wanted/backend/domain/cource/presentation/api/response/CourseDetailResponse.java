@@ -61,7 +61,16 @@ public record CourseDetailResponse(
         List<String> techTags,
 
         @Schema(description = "난이도", example = "중급~고급")
-        String level
+        String level,
+
+        @Schema(description = "강사 전체 수강생 수", example = "42800")
+        int instructorStudentCount,
+
+        @Schema(description = "강사 강의 수", example = "7")
+        int instructorCourseCount,
+
+        @Schema(description = "강사 평균 평점", example = "4.9")
+        double instructorRating
 ) {
     @Schema(description = "섹션(챕터) 응답")
     public record SectionResponse(
@@ -140,7 +149,10 @@ public record CourseDetailResponse(
                 result.learningObjectives(),
                 result.targetAudience(),
                 result.techTags(),
-                result.level()
+                result.level(),
+                result.instructorStudentCount(),
+                result.instructorCourseCount(),
+                result.instructorRating()
         );
     }
 }

@@ -4,11 +4,10 @@ import com.wanted.backend.domain.cource.application.command.ChangeCourseStatusCo
 import com.wanted.backend.domain.cource.application.command.UploadLessonVideoCommand;
 import com.wanted.backend.domain.cource.application.dto.CourseDetailResult;
 import com.wanted.backend.domain.cource.application.dto.CourseListResult;
-import com.wanted.backend.domain.cource.application.query.CourseListQuery;
 import com.wanted.backend.domain.cource.application.usecase.CourseCommandUseCase;
 import com.wanted.backend.domain.cource.application.usecase.CourseQueryUseCase;
-import com.wanted.backend.domain.cource.domain.model.CourseSortType;
 import com.wanted.backend.domain.cource.domain.model.CourseStatus;
+import com.wanted.backend.domain.cource.presentation.api.request.CourseListRequest;
 import com.wanted.backend.domain.cource.domain.model.FileProcessingStatus;
 import com.wanted.backend.domain.cource.presentation.api.request.CreateCourseRequest;
 import com.wanted.backend.domain.cource.presentation.api.request.UpdateCourseRequest;
@@ -43,15 +42,9 @@ public class CourseController {
     @GetMapping
     @Operation(summary = "강의 목록 조회", description = "키워드/과목/강사명 필터와 정렬을 적용하여 강의 목록을 페이징 조회합니다.")
     public ResponseEntity<ApiResponse<CourseListResponse>> getCourses(
-            @Parameter(description = "검색 키워드 (강의명)", example = "수학") @RequestParam(required = false) String keyword,
-            @Parameter(description = "과목명 필터", example = "수학Ⅱ") @RequestParam(required = false) String subject,
-            @Parameter(description = "강사명 필터", example = "박지훈") @RequestParam(required = false) String instructorName,
-            @Parameter(description = "정렬 기준 (LATEST/POPULAR/RATING)", example = "LATEST") @RequestParam(defaultValue = "LATEST") CourseSortType sort,
-            @Parameter(description = "페이지 번호 (0-based)", example = "0") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "페이지당 항목 수", example = "12") @RequestParam(defaultValue = "12") int size
+            @ModelAttribute CourseListRequest request
     ) {
-        CourseListResult result = courseQueryUseCase.getList(
-                new CourseListQuery(keyword, subject, instructorName, sort, page, size));
+        CourseListResult result = courseQueryUseCase.getList(request.toQuery());
         return ApiResponse.success("강의 목록 조회 성공", CourseListResponse.from(result));
     }
 
