@@ -61,7 +61,8 @@ public class MyEnrolledCourseQueryAdapter implements MyEnrolledCourseQueryPort {
                         enrollment.getCourseId(),
                         courseById.get(enrollment.getCourseId()),
                         videosByCourseId.getOrDefault(enrollment.getCourseId(), List.of()),
-                        progressesByCourseId.getOrDefault(enrollment.getCourseId(), List.of())
+                        progressesByCourseId.getOrDefault(enrollment.getCourseId(), List.of()),
+                        enrollment.getEffectiveStatus()
                 ))
                 .toList();
     }
@@ -90,7 +91,8 @@ public class MyEnrolledCourseQueryAdapter implements MyEnrolledCourseQueryPort {
             Long courseId,
             CourseReferenceEntity course,
             List<EnrolledCourseVideoReferenceEntity> videos,
-            List<VideoProgressReferenceEntity> progresses
+            List<VideoProgressReferenceEntity> progresses,
+            EnrollmentStatus enrollmentStatus
     ) {
         VideoProgressReferenceEntity lastProgress = findLastProgress(progresses);
         EnrolledCourseVideoReferenceEntity firstVideo = videos.isEmpty() ? null : videos.get(0);
@@ -103,7 +105,8 @@ public class MyEnrolledCourseQueryAdapter implements MyEnrolledCourseQueryPort {
                 videos.size(),
                 lastProgress == null ? null : lastProgress.getUpdatedAt(),
                 lastProgress == null ? firstVideoId(firstVideo) : lastProgress.getVideoId(),
-                lastProgress == null ? 0 : lastProgress.getLastPositionSeconds()
+                lastProgress == null ? 0 : lastProgress.getLastPositionSeconds(),
+                enrollmentStatus
         );
     }
 
