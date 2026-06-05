@@ -14,6 +14,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 public class ResetPasswordService implements ResetPasswordUseCase {
@@ -34,6 +36,7 @@ public class ResetPasswordService implements ResetPasswordUseCase {
                 .orElseThrow(() -> new BusinessException(ErrorCode.VERIFICATION_NOT_FOUND));
 
         if (!verification.isVerified()
+                || verification.getVerificationToken() == null
                 || !verification.getVerificationToken().equals(command.passwordChangeToken())) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
@@ -41,7 +44,11 @@ public class ResetPasswordService implements ResetPasswordUseCase {
         Member member = memberRepository.findByEmail(command.email())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        member.changePassword(passwordEncoder.encode(command.newPassword()));
+        member.changePasswordAndUnlock(passwordEncoder.encode(command.newPassword()), LocalDateTime.now());
         memberRepository.save(member);
+
+        // 사용한 토큰 무효화 처리
+        verification.useToken();
+        verificationRepository.save(verification);
     }
 }

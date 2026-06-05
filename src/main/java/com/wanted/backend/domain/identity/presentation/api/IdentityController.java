@@ -1,7 +1,7 @@
 package com.wanted.backend.domain.identity.presentation.api;
 
 import com.wanted.backend.domain.identity.application.command.SignupCommand;
-import com.wanted.backend.domain.identity.application.service.LoginService;
+import com.wanted.backend.domain.identity.application.usecase.LoginUseCase;
 import com.wanted.backend.domain.identity.application.usecase.CheckDuplicateUseCase;
 import com.wanted.backend.domain.identity.application.usecase.LogoutUseCase;
 import com.wanted.backend.domain.identity.application.usecase.SignupUseCase;
@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class IdentityController {
 
-    private final LoginService loginService;
+    private final LoginUseCase loginUseCase;
     private final CheckDuplicateUseCase checkDuplicateUseCase;
     private final SignupUseCase signupUseCase;
     private final LogoutUseCase logoutUseCase;
@@ -46,7 +46,7 @@ public class IdentityController {
     )
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
-        AuthToken token = loginService.login(request.username(), request.password());
+        AuthToken token = loginUseCase.login(request.username(), request.password());
 
         return ApiResponse.success(
                 "로그인에 성공했습니다",
@@ -65,7 +65,7 @@ public class IdentityController {
     )
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<RefreshTokenResponse>> refresh(@Valid @RequestBody RefreshTokenRequest request) {
-        AuthToken token = loginService.refresh(request.refreshToken());
+        AuthToken token = loginUseCase.refresh(request.refreshToken());
 
         return ApiResponse.success(
                 "Access Token이 재발급되었습니다",

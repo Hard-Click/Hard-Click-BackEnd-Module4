@@ -8,19 +8,25 @@ import java.util.Collection;
 public class CustomUserDetails implements UserDetails {
 
     private final Long memberId;
-    private final String email;
+    private final String username;
     private final String password;
+    private final boolean isLocked;
+    private final boolean isEnabled;
     private final Collection<? extends GrantedAuthority> authorities;
 
     public CustomUserDetails(
             Long memberId,
-            String email,
+            String username,
             String password,
+            boolean isLocked,
+            boolean isEnabled,
             Collection<? extends GrantedAuthority> authorities
     ) {
         this.memberId = memberId;
-        this.email = email;
+        this.username = username;
         this.password = password;
+        this.isLocked = isLocked;
+        this.isEnabled = isEnabled;
         this.authorities = authorities;
     }
 
@@ -40,19 +46,28 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getUsername() {
-        // email이 null일 경우 "UNKNOWN" 또는 memberId를 문자열로 반환하여 NPE 방지
-        return email != null ? email : String.valueOf(memberId);
+        return username;
     }
 
     @Override
-    public boolean isAccountNonExpired() { return true; }
+    public boolean isAccountNonExpired() {
+        return true;
+    }
 
     @Override
-    public boolean isAccountNonLocked() { return true; }
+    public boolean isAccountNonLocked() {
+        // 잠기지 않은 상태(isLocked = false)여야 true를 반환하여 로그인을 허용함
+        return !isLocked;
+    }
 
     @Override
-    public boolean isCredentialsNonExpired() { return true; }
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
 
     @Override
-    public boolean isEnabled() { return true; }
+    public boolean isEnabled() {
+        // 활성화된 상태여야 true를 반환하여 로그인을 허용함
+        return isEnabled;
+    }
 }

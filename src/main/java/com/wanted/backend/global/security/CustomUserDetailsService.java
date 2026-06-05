@@ -1,6 +1,7 @@
 package com.wanted.backend.global.security;
 
 import com.wanted.backend.domain.identity.domain.model.Member;
+import com.wanted.backend.domain.identity.domain.model.MemberStatus;
 import com.wanted.backend.domain.identity.domain.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -26,6 +27,8 @@ public class CustomUserDetailsService implements UserDetailsService {
                 member.getId(),
                 member.getUsername(),
                 member.getPassword(),
+                member.isLocked(),
+                member.getStatus() == MemberStatus.ACTIVE,
                 List.of(new SimpleGrantedAuthority("ROLE_" + member.getRole().name()))
         );
     }

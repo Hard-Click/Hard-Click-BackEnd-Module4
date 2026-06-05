@@ -15,7 +15,7 @@ public class CourseInfoQueryAdapter implements CourseInfoQueryPort {
 
     @Override
     public String getCourseTitle(Long courseId) {
-        List<?> results = em.createNativeQuery("SELECT title FROM courses WHERE id = :courseId")
+        List<?> results = em.createNativeQuery("SELECT title FROM course WHERE course_id = :courseId")
                 .setParameter("courseId", courseId)
                 .getResultList();
         return results.isEmpty() ? "(삭제된 강의)" : (String) results.get(0);

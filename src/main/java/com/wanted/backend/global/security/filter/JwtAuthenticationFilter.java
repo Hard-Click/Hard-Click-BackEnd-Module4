@@ -47,6 +47,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         memberId,
                         username,
                         "",
+                        false, // JWT 인증이 완료된 상태이므로 기본적으로 잠기지 않은 것으로 간주
+                        true,  // 활성화된 상태로 간주
                         List.of(new SimpleGrantedAuthority(role))
                 );
 
