@@ -1,6 +1,6 @@
 package com.wanted.backend.domain.identity.presentation.api;
 
-import com.wanted.backend.domain.identity.application.usecase.VerifyEmailUseCase;
+import com.wanted.backend.domain.identity.application.usecase.EmailVerificationUseCase;
 import com.wanted.backend.domain.identity.domain.model.EmailPurpose;
 import com.wanted.backend.domain.identity.presentation.api.request.EmailSendRequest;
 import com.wanted.backend.domain.identity.presentation.api.request.EmailVerifyRequest;
@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class EmailController {
 
-    private final VerifyEmailUseCase verifyEmailUseCase;
+    private final EmailVerificationUseCase emailVerificationUseCase;
 
 
     @Operation(
@@ -31,7 +31,7 @@ public class EmailController {
     public ResponseEntity<ApiResponse<EmptyResponse>> sendCode(
             @Valid @RequestBody EmailSendRequest request
     ) {
-        verifyEmailUseCase.sendVerificationCode(request.email(), EmailPurpose.SIGNUP);
+        emailVerificationUseCase.sendVerificationCode(request.email(), EmailPurpose.SIGNUP);
         return ApiResponse.success("이메일 인증번호가 발송되었습니다", new EmptyResponse());
     }
 
@@ -44,7 +44,7 @@ public class EmailController {
     public ResponseEntity<ApiResponse<EmailVerifyResponse>> verifyCode(
             @Valid @RequestBody EmailVerifyRequest request
     ) {
-        String token = verifyEmailUseCase.verifyCode(
+        String token = emailVerificationUseCase.verifyCode(
                 request.email(),
                 request.code(),
                 EmailPurpose.SIGNUP

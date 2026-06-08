@@ -1,6 +1,6 @@
 package com.wanted.backend.domain.identity.application.service;
 
-import com.wanted.backend.domain.identity.application.usecase.GetMyProfileUseCase;
+import com.wanted.backend.domain.identity.application.usecase.ProfileQueryUseCase;
 import com.wanted.backend.domain.identity.domain.model.Member;
 import com.wanted.backend.domain.identity.domain.repository.MemberRepository;
 import com.wanted.backend.global.exception.BusinessException;
@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class GetMyProfileService implements GetMyProfileUseCase {
+public class ProfileQueryService implements ProfileQueryUseCase {
 
     private static final String DEFAULT_PROFILE_IMAGE_URL = "/images/default-profile.png";
 

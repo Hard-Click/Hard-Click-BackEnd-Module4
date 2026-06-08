@@ -1,6 +1,8 @@
 package com.wanted.backend.domain.identity.application.service;
 
-import com.wanted.backend.domain.identity.application.usecase.VerifyEmailUseCase;
+import com.wanted.backend.domain.identity.application.command.AccountLockVerifyCommand;
+import com.wanted.backend.domain.identity.application.usecase.EmailVerificationUseCase;
+import com.wanted.backend.domain.identity.domain.model.EmailPurpose;
 import com.wanted.backend.domain.identity.domain.model.Member;
 import com.wanted.backend.domain.identity.domain.repository.EmailVerificationRepository;
 import com.wanted.backend.domain.identity.domain.repository.MemberRepository;
@@ -14,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -22,7 +25,7 @@ import static org.mockito.Mockito.when;
 class AccountLockServiceTest {
 
     @InjectMocks
-    private AccountLockService accountLockService;
+    private PasswordCommandService passwordCommandService;
 
     @Mock
     private MemberRepository memberRepository;
@@ -31,23 +34,27 @@ class AccountLockServiceTest {
     private EmailVerificationRepository verificationRepository;
 
     @Mock
-    private VerifyEmailUseCase verifyEmailUseCase;
+    private EmailVerificationUseCase emailVerificationUseCase;
 
     @Mock
     private PasswordEncoder passwordEncoder;
 
     @Test
-    @DisplayName("잠긴 계정이면 계정 잠금 인증번호를 발송한다")
-    void sendCode_lockedMember_success() {
+    @DisplayName("잠긴 계정이면 계정 잠금 인증번호를 검증하고 비밀번호 변경 토큰을 발급한다")
+    void verify_lockedMember_success() {
         String email = "user@example.com";
+        String code = "123456";
+        String token = "password-change-token";
 
         Member member = mock(Member.class);
         when(member.isLocked()).thenReturn(true);
         when(memberRepository.findByEmail(email)).thenReturn(Optional.of(member));
+        when(emailVerificationUseCase.verifyCode(email, code, EmailPurpose.ACCOUNT_LOCK)).thenReturn(token);
 
-        accountLockService.sendCode(email);
+        String result = passwordCommandService.verify(new AccountLockVerifyCommand(email, code));
 
+        assertThat(result).isEqualTo(token);
         verify(memberRepository).findByEmail(email);
-        verify(verifyEmailUseCase).sendAccountLockCode(email);
+        verify(emailVerificationUseCase).verifyCode(email, code, EmailPurpose.ACCOUNT_LOCK);
     }
 }

@@ -2,8 +2,7 @@ package com.wanted.backend.domain.identity.presentation.api;
 
 import com.wanted.backend.domain.identity.application.command.AccountLockPasswordChangeCommand;
 import com.wanted.backend.domain.identity.application.command.AccountLockVerifyCommand;
-import com.wanted.backend.domain.identity.application.usecase.AccountLockUseCase;
-import com.wanted.backend.domain.identity.presentation.api.request.AccountLockEmailRequest;
+import com.wanted.backend.domain.identity.application.usecase.PasswordCommandUseCase;
 import com.wanted.backend.domain.identity.presentation.api.request.AccountLockPasswordChangeRequest;
 import com.wanted.backend.domain.identity.presentation.api.request.AccountLockVerifyRequest;
 import com.wanted.backend.domain.identity.presentation.api.response.EmptyResponse;
@@ -26,25 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AccountLockController {
 
-    private final AccountLockUseCase accountLockUseCase;
-
-
-    @Operation(
-            summary = "계정 잠금 인증번호 발송",
-            description = "잠긴 계정의 이메일로 계정 보호 인증번호를 발송합니다."
-    )
-    @PostMapping("/email")
-    public ResponseEntity<ApiResponse<EmptyResponse>> sendCode(
-            @Valid @RequestBody AccountLockEmailRequest request
-    ) {
-        accountLockUseCase.sendCode(request.email());
-
-        return ApiResponse.success(
-                "계정 보호 인증번호가 발송되었습니다",
-                new EmptyResponse()
-        );
-    }
-
+    private final PasswordCommandUseCase passwordCommandUseCase;
 
     @Operation(
             summary = "계정 잠금 인증",
@@ -54,7 +35,7 @@ public class AccountLockController {
     public ResponseEntity<ApiResponse<PasswordChangeTokenResponse>> verify(
             @Valid @RequestBody AccountLockVerifyRequest request
     ) {
-        String token = accountLockUseCase.verify(new AccountLockVerifyCommand(
+        String token = passwordCommandUseCase.verify(new AccountLockVerifyCommand(
                 request.email(),
                 request.code()
         ));
@@ -73,7 +54,7 @@ public class AccountLockController {
     public ResponseEntity<ApiResponse<EmptyResponse>> changePassword(
             @Valid @RequestBody AccountLockPasswordChangeRequest request
     ) {
-        accountLockUseCase.changePassword(new AccountLockPasswordChangeCommand(
+        passwordCommandUseCase.changePassword(new AccountLockPasswordChangeCommand(
                 request.passwordChangeToken(),
                 request.newPassword(),
                 request.newPasswordConfirm()
@@ -84,5 +65,4 @@ public class AccountLockController {
                 new EmptyResponse()
         );
     }
-
 }

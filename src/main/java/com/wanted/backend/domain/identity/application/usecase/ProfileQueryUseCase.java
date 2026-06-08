@@ -1,6 +1,6 @@
 package com.wanted.backend.domain.identity.application.usecase;
 
-public interface GetMyProfileUseCase {
+public interface ProfileQueryUseCase {
 
     MyProfileView handle(Long memberId);
 

@@ -1,18 +1,18 @@
 package com.wanted.backend.domain.identity.presentation.api;
 
 import com.wanted.backend.domain.identity.application.command.SignupCommand;
-import com.wanted.backend.domain.identity.application.usecase.LoginUseCase;
-
-import com.wanted.backend.domain.identity.application.usecase.CheckDuplicateUseCase;
-import com.wanted.backend.domain.identity.application.usecase.LoginUseCase;
-import com.wanted.backend.domain.identity.application.usecase.LogoutUseCase;
-import com.wanted.backend.domain.identity.application.usecase.SignupUseCase;
+import com.wanted.backend.domain.identity.application.usecase.AuthCommandUseCase;
+import com.wanted.backend.domain.identity.application.usecase.SignupCommandUseCase;
 import com.wanted.backend.domain.identity.domain.model.AuthToken;
 import com.wanted.backend.domain.identity.presentation.api.request.LoginRequest;
 import com.wanted.backend.domain.identity.presentation.api.request.LogoutRequest;
 import com.wanted.backend.domain.identity.presentation.api.request.RefreshTokenRequest;
 import com.wanted.backend.domain.identity.presentation.api.request.SignupRequest;
-import com.wanted.backend.domain.identity.presentation.api.response.*;
+import com.wanted.backend.domain.identity.presentation.api.response.DuplicateCheckResponse;
+import com.wanted.backend.domain.identity.presentation.api.response.EmptyResponse;
+import com.wanted.backend.domain.identity.presentation.api.response.LoginResponse;
+import com.wanted.backend.domain.identity.presentation.api.response.RefreshTokenResponse;
+import com.wanted.backend.domain.identity.presentation.api.response.SignupResponse;
 import com.wanted.backend.global.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -20,7 +20,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "Identity", description = "인증 및 회원가입 API")
 @RestController
@@ -28,11 +33,8 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class IdentityController {
 
-    private final LoginUseCase loginUseCase;
-    private final CheckDuplicateUseCase checkDuplicateUseCase;
-    private final SignupUseCase signupUseCase;
-    private final LogoutUseCase logoutUseCase;
-
+    private final AuthCommandUseCase authCommandUseCase;
+    private final SignupCommandUseCase signupCommandUseCase;
 
     @Operation(
             summary = "로그인",
@@ -40,13 +42,11 @@ public class IdentityController {
     )
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
-        AuthToken token = loginUseCase.login(request.username(), request.password());
+        AuthToken token = authCommandUseCase.login(request.username(), request.password());
 
-        // JWT 내부는 "ROLE_INSTRUCTOR" 형식 유지, 프론트에는 "INSTRUCTOR" 형식으로 전달
         String roleForClient = token.role().startsWith("ROLE_")
                 ? token.role().substring(5)
                 : token.role();
-
 
         return ApiResponse.success(
                 "로그인에 성공했습니다",
@@ -65,7 +65,7 @@ public class IdentityController {
     )
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<RefreshTokenResponse>> refresh(@Valid @RequestBody RefreshTokenRequest request) {
-        AuthToken token = loginUseCase.refresh(request.refreshToken());
+        AuthToken token = authCommandUseCase.refresh(request.refreshToken());
 
         return ApiResponse.success(
                 "Access Token이 재발급되었습니다",
@@ -80,8 +80,9 @@ public class IdentityController {
     @GetMapping("/check-username")
     public ResponseEntity<ApiResponse<DuplicateCheckResponse>> checkUsername(
             @Parameter(description = "중복 확인할 아이디", example = "testuser")
-            @RequestParam String username) {
-        boolean isDuplicated = checkDuplicateUseCase.isUsernameDuplicated(username);
+            @RequestParam String username
+    ) {
+        boolean isDuplicated = signupCommandUseCase.isUsernameDuplicated(username);
         String message = isDuplicated ? "사용이 불가능한 아이디입니다" : "사용 가능한 아이디입니다";
 
         return ApiResponse.success(message, new DuplicateCheckResponse(isDuplicated));
@@ -93,11 +94,10 @@ public class IdentityController {
     )
     @GetMapping("/check-email")
     public ResponseEntity<ApiResponse<DuplicateCheckResponse>> checkEmail(
-
             @Parameter(description = "중복 확인할 이메일", example = "user@example.com")
-            @RequestParam String email) {
-
-        boolean isDuplicated = checkDuplicateUseCase.isEmailDuplicated(email);
+            @RequestParam String email
+    ) {
+        boolean isDuplicated = signupCommandUseCase.isEmailDuplicated(email);
         String message = isDuplicated ? "사용이 불가능한 이메일입니다" : "사용 가능한 이메일입니다";
 
         return ApiResponse.success(message, new DuplicateCheckResponse(isDuplicated));
@@ -109,7 +109,7 @@ public class IdentityController {
     )
     @PostMapping("/signup")
     public ResponseEntity<ApiResponse<SignupResponse>> signup(@Valid @RequestBody SignupRequest request) {
-        Long memberId = signupUseCase.signup(new SignupCommand(
+        Long memberId = signupCommandUseCase.signup(new SignupCommand(
                 request.username(),
                 request.email(),
                 request.password(),
@@ -134,7 +134,7 @@ public class IdentityController {
     )
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<EmptyResponse>> logout(@Valid @RequestBody LogoutRequest request) {
-        logoutUseCase.logout(request.refreshToken());
+        authCommandUseCase.logout(request.refreshToken());
 
         return ApiResponse.success("로그아웃되었습니다", new EmptyResponse());
     }

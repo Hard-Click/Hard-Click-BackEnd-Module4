@@ -1,6 +1,6 @@
 package com.wanted.backend.domain.identity.application.service;
 
-import com.wanted.backend.domain.identity.application.usecase.GetMyProfileUseCase.MyProfileView;
+import com.wanted.backend.domain.identity.application.usecase.ProfileQueryUseCase.MyProfileView;
 import com.wanted.backend.domain.identity.domain.model.Member;
 import com.wanted.backend.domain.identity.domain.model.MemberStatus;
 import com.wanted.backend.domain.identity.domain.model.Role;
@@ -19,15 +19,15 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class GetMyProfileServiceTest {
+class ProfileQueryServiceTest {
 
     private MemberRepository memberRepository;
-    private GetMyProfileService service;
+    private ProfileQueryService service;
 
     @BeforeEach
     void setUp() {
         memberRepository = mock(MemberRepository.class);
-        service = new GetMyProfileService(memberRepository);
+        service = new ProfileQueryService(memberRepository);
     }
 
     @Test

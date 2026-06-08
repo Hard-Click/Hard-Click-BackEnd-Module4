@@ -2,11 +2,12 @@ package com.wanted.backend.domain.identity.application.service;
 
 import com.wanted.backend.domain.identity.application.command.UpdateMyProfileCommand;
 import com.wanted.backend.domain.identity.application.port.ProfileImageStoragePort;
-import com.wanted.backend.domain.identity.application.usecase.UpdateMyProfileUseCase.MyProfileUpdateView;
+import com.wanted.backend.domain.identity.application.usecase.ProfileCommandUseCase.MyProfileUpdateView;
 import com.wanted.backend.domain.identity.domain.model.Member;
 import com.wanted.backend.domain.identity.domain.model.MemberStatus;
 import com.wanted.backend.domain.identity.domain.model.Role;
 import com.wanted.backend.domain.identity.domain.repository.MemberRepository;
+import com.wanted.backend.domain.identity.domain.repository.RefreshTokenRepository;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,19 +26,26 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class UpdateMyProfileServiceTest {
+class ProfileCommandServiceTest {
 
     private MemberRepository memberRepository;
+    private RefreshTokenRepository refreshTokenRepository;
     private PasswordEncoder passwordEncoder;
     private ProfileImageStoragePort profileImageStoragePort;
-    private UpdateMyProfileService service;
+    private ProfileCommandService service;
 
     @BeforeEach
     void setUp() {
         memberRepository = mock(MemberRepository.class);
+        refreshTokenRepository = mock(RefreshTokenRepository.class);
         passwordEncoder = mock(PasswordEncoder.class);
         profileImageStoragePort = mock(ProfileImageStoragePort.class);
-        service = new UpdateMyProfileService(memberRepository, passwordEncoder, profileImageStoragePort);
+        service = new ProfileCommandService(
+                memberRepository,
+                refreshTokenRepository,
+                passwordEncoder,
+                profileImageStoragePort
+        );
     }
 
     @Test
