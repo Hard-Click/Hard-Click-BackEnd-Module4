@@ -1,6 +1,8 @@
 package com.wanted.backend.domain.identity.presentation.api;
 
 import com.wanted.backend.domain.identity.application.command.SignupCommand;
+import com.wanted.backend.domain.identity.application.usecase.LoginUseCase;
+
 import com.wanted.backend.domain.identity.application.usecase.CheckDuplicateUseCase;
 import com.wanted.backend.domain.identity.application.usecase.LoginUseCase;
 import com.wanted.backend.domain.identity.application.usecase.LogoutUseCase;
@@ -44,6 +46,7 @@ public class IdentityController {
         String roleForClient = token.role().startsWith("ROLE_")
                 ? token.role().substring(5)
                 : token.role();
+
 
         return ApiResponse.success(
                 "로그인에 성공했습니다",

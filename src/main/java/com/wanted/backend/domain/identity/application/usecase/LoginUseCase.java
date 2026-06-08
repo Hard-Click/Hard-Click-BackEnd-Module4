@@ -7,3 +7,4 @@ public interface LoginUseCase {
 
     AuthToken refresh(String refreshToken);
 }
+

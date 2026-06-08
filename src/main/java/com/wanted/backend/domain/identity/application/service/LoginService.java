@@ -2,6 +2,7 @@ package com.wanted.backend.domain.identity.application.service;
 
 import com.wanted.backend.domain.identity.application.usecase.LoginUseCase;
 import com.wanted.backend.domain.identity.application.usecase.VerifyEmailUseCase;
+import com.wanted.backend.domain.identity.application.usecase.LoginUseCase;
 import com.wanted.backend.domain.identity.domain.model.AuthToken;
 import com.wanted.backend.domain.identity.domain.model.Member;
 import com.wanted.backend.domain.identity.domain.model.RefreshToken;
@@ -22,13 +23,13 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class LoginService implements LoginUseCase {
 
-
     private final MemberRepository memberRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
     private final ApplicationEventPublisher eventPublisher;
     private final VerifyEmailUseCase verifyEmailUseCase;
+
     @Override
     @Transactional(noRollbackFor = BusinessException.class)
     public AuthToken login(String username, String rawPassword) {
@@ -72,6 +73,7 @@ public class LoginService implements LoginUseCase {
 
         return new AuthToken(accessToken, refreshToken, member.getId(), role);
     }
+
     @Override
     @Transactional
     public AuthToken refresh(String refreshToken) {
