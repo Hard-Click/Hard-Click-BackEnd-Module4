@@ -4,6 +4,7 @@ import com.wanted.backend.domain.community.domain.model.Comment;
 import com.wanted.backend.domain.community.domain.repository.CommentRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,25 +19,6 @@ public class CommentRepositoryAdapter implements CommentRepository {
 
     @Override
     public Comment save(Comment comment) {
-        if (comment.getId() != null) {
-            CommentJpaEntity entity = repository.findById(comment.getId()).orElseThrow();
-
-            // 수정
-            entity.update(comment.getContent(), comment.getImageUrl(), comment.getUpdatedAt());
-
-            // Soft Delete
-            if (comment.isDeleted()) {
-                entity.softDelete(comment.getUpdatedAt());
-            }
-
-            // 채택
-            if (comment.isAccepted()) {
-                entity.accept(comment.getUpdatedAt());
-            }
-
-            return toDomain(repository.save(entity));
-        }
-
         CommentJpaEntity entity = new CommentJpaEntity(
                 comment.getPostId(),
                 comment.getAuthorId(),
@@ -49,6 +31,27 @@ public class CommentRepositoryAdapter implements CommentRepository {
                 comment.getUpdatedAt()
         );
         return toDomain(repository.save(entity));
+    }
+
+    @Override
+    public void update(Comment comment) {
+        CommentJpaEntity entity = repository.findById(comment.getId()).orElseThrow();
+        entity.update(comment.getContent(), comment.getImageUrl(), comment.getUpdatedAt());
+        repository.save(entity);
+    }
+
+    @Override
+    public void softDelete(Long commentId, LocalDateTime updatedAt) {
+        CommentJpaEntity entity = repository.findById(commentId).orElseThrow();
+        entity.softDelete(updatedAt);
+        repository.save(entity);
+    }
+
+    @Override
+    public void accept(Long commentId, LocalDateTime updatedAt) {
+        CommentJpaEntity entity = repository.findById(commentId).orElseThrow();
+        entity.accept(updatedAt);
+        repository.save(entity);
     }
 
     @Override
@@ -102,5 +105,9 @@ public class CommentRepositoryAdapter implements CommentRepository {
         repository.deleteById(commentId);
     }
 
+    @Override
+    public int countByPostId(Long postId) {
+        return repository.countByPostId(postId);
+    }
 
 }

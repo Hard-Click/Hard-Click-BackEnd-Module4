@@ -22,4 +22,7 @@ public interface SpringDataCommentRepository
 
     List<CommentJpaEntity> findByAuthorIdAndIsDeletedFalseOrderByCreatedAtDesc(Long authorId);
 
+    //댓글 수 조회
+    int countByPostId(Long postId);
+
 }
