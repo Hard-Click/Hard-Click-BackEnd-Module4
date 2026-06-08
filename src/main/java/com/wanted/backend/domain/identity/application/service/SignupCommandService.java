@@ -1,7 +1,7 @@
 package com.wanted.backend.domain.identity.application.service;
 
 import com.wanted.backend.domain.identity.application.command.SignupCommand;
-import com.wanted.backend.domain.identity.application.usecase.SignupUseCase;
+import com.wanted.backend.domain.identity.application.usecase.SignupCommandUseCase;
 import com.wanted.backend.domain.identity.domain.model.EmailPurpose;
 import com.wanted.backend.domain.identity.domain.model.EmailVerification;
 import com.wanted.backend.domain.identity.domain.model.Member;
@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class SignupService implements SignupUseCase {
+public class SignupCommandService implements SignupCommandUseCase {
 
     private final MemberRepository memberRepository;
     private final EmailVerificationRepository verificationRepository;
@@ -26,7 +26,6 @@ public class SignupService implements SignupUseCase {
     @Override
     @Transactional
     public Long signup(SignupCommand command) {
-
         EmailVerification verification = verificationRepository
                 .findLatestByEmailAndPurpose(command.email(), EmailPurpose.SIGNUP)
                 .orElseThrow(() -> new BusinessException(ErrorCode.VERIFICATION_NOT_FOUND));
@@ -59,5 +58,17 @@ public class SignupService implements SignupUseCase {
 
         Member savedMember = memberRepository.save(member);
         return savedMember.getId();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isUsernameDuplicated(String username) {
+        return memberRepository.existsByUsername(username);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isEmailDuplicated(String email) {
+        return memberRepository.existsByEmail(email);
     }
 }
