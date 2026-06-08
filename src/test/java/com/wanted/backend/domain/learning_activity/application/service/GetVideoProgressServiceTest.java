@@ -11,6 +11,7 @@ import com.wanted.backend.global.exception.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -49,6 +50,8 @@ class GetVideoProgressServiceTest {
         assertThat(result.videoId()).isEqualTo(10L);
         assertThat(result.lastPositionSeconds()).isEqualTo(142);
         assertThat(result.watchTimeSeconds()).isEqualTo(270);
+        assertThat(result.durationSeconds()).isEqualTo(300);
+        assertThat(result.progressRate()).isEqualByComparingTo(BigDecimal.valueOf(90.0));
         assertThat(result.completed()).isTrue();
         assertThat(result.completedAt()).isEqualTo(completedAt);
     }
@@ -65,6 +68,8 @@ class GetVideoProgressServiceTest {
         assertThat(result.videoId()).isEqualTo(10L);
         assertThat(result.lastPositionSeconds()).isZero();
         assertThat(result.watchTimeSeconds()).isZero();
+        assertThat(result.durationSeconds()).isEqualTo(300);
+        assertThat(result.progressRate()).isEqualByComparingTo(BigDecimal.valueOf(0.0));
         assertThat(result.completed()).isFalse();
         assertThat(result.completedAt()).isNull();
     }

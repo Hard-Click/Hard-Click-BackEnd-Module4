@@ -2,6 +2,8 @@ package com.wanted.backend.domain.learning_activity.infrastructure.persistence;
 
 import com.wanted.backend.domain.learning_activity.domain.model.VideoProgress;
 import com.wanted.backend.domain.learning_activity.domain.repository.VideoProgressRepository;
+import com.wanted.backend.global.exception.BusinessException;
+import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,7 +39,8 @@ public class VideoProgressRepositoryAdapter implements VideoProgressRepository {
                 progress.completedAt(),
                 now
         )
-                : repository.findById(progress.id()).orElseThrow();
+                : repository.findById(progress.id())
+                .orElseThrow(() -> new BusinessException(ErrorCode.VIDEO_NOT_FOUND));
 
         entity.updateProgress(
                 progress.lastPositionSec(),

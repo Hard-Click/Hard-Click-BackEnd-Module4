@@ -40,7 +40,7 @@ public class ReviewRepositoryAdapter implements ReviewRepository {
     @Override
     public List<Review> findByCourseIdExcludeMember(Long courseId, Long memberId,
                                                     ReviewSortType sort, int page, int size) {
-        Pageable pageable = PageRequest.of(page - 1, size, toSort(sort));
+        Pageable pageable = PageRequest.of(page, size, toSort(sort));
         return repository.findByCourseIdAndMemberIdNot(courseId, memberId, pageable)
                 .stream()
                 .map(this::toDomain)
@@ -49,7 +49,7 @@ public class ReviewRepositoryAdapter implements ReviewRepository {
 
     @Override
     public List<Review> findByCourseId(Long courseId, ReviewSortType sort, int page, int size) {
-        Pageable pageable = PageRequest.of(page - 1, size, toSort(sort));
+        Pageable pageable = PageRequest.of(page, size, toSort(sort));
         return repository.findByCourseId(courseId, pageable)
                 .stream()
                 .map(this::toDomain)

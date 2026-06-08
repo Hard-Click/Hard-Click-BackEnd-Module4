@@ -54,6 +54,9 @@ public class SecurityConfig {
                                 "/api/auth/check-email",
                                 "/api/auth/email/send",
                                 "/api/auth/email/verify",
+                                "/api/auth/account-locks/email",
+                                "/api/auth/account-locks/verify",
+                                "/api/auth/account-locks/password",
                                 "/api/auth/password-reset/**",
                                 "/api/auth/account-locks/verify",
                                 "/api/auth/account-locks/password",
@@ -62,7 +65,12 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/courses", "/api/courses/*","/api/courses/*/reviews").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/courses").hasRole("INSTRUCTOR")
+                        .requestMatchers(HttpMethod.PATCH, "/api/courses/*", "/api/courses/*/status").hasRole("INSTRUCTOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/courses/*").hasRole("INSTRUCTOR")
+                        .requestMatchers("/api/instructor/**").hasRole("INSTRUCTOR")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
@@ -81,7 +89,7 @@ public class SecurityConfig {
         configuration.setAllowedHeaders(
                 Arrays.asList(
                         "Access-Control-Allow-Origin",
-                        "Content-type",
+                        "Content-Type",
                         "Access-Control-Allow-Headers",
                         "Authorization",
                         "X-Requested-With"

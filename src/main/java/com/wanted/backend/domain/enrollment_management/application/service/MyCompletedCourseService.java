@@ -2,6 +2,7 @@ package com.wanted.backend.domain.enrollment_management.application.service;
 
 import com.wanted.backend.domain.enrollment_management.application.port.MyEnrolledCourseQueryPort;
 import com.wanted.backend.domain.enrollment_management.application.usecase.GetMyCompletedCoursesUseCase;
+import com.wanted.backend.domain.enrollment_management.domain.model.EnrollmentStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +30,10 @@ public class MyCompletedCourseService implements GetMyCompletedCoursesUseCase {
     }
 
     private boolean isCompletedCourse(MyEnrolledCourseQueryPort.MyEnrolledCourseData data) {
+        // enrollment status가 COMPLETED이거나, 전체 레슨을 모두 완료한 경우
+        if (EnrollmentStatus.COMPLETED.equals(data.enrollmentStatus())) {
+            return true;
+        }
         return data.totalLessonCount() != null
                 && data.totalLessonCount() > 0
                 && data.totalLessonCount().equals(data.completedLessonCount());

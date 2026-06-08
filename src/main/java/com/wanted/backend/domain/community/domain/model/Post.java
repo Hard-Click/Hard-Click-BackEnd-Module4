@@ -93,6 +93,11 @@ public class Post {
         this.updatedAt = LocalDateTime.now();
     }
 
+    public boolean isOwner(Long memberId) {
+        if (memberId == null) return false;
+        return this.authorId.equals(memberId);
+    }
+
     public Long getId() { return id; }
     public Long getAuthorId() { return authorId; }
     public BoardType getBoardType() { return boardType; }

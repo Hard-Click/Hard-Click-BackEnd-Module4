@@ -6,7 +6,6 @@ public interface GetMyProfileUseCase {
 
     record MyProfileView(
             Long memberId,
-            String username,
             String name,
             String email,
             String profileImageUrl

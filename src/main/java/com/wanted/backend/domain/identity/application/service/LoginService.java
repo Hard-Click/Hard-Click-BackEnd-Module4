@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.identity.application.service;
 
+import com.wanted.backend.domain.identity.application.usecase.LoginUseCase;
 import com.wanted.backend.domain.identity.application.usecase.VerifyEmailUseCase;
 import com.wanted.backend.domain.identity.application.usecase.LoginUseCase;
 import com.wanted.backend.domain.identity.domain.model.AuthToken;
@@ -15,7 +16,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.wanted.backend.domain.identity.domain.model.MemberStatus;
 import java.time.LocalDateTime;
 
 @Service
@@ -34,6 +35,11 @@ public class LoginService implements LoginUseCase {
     public AuthToken login(String username, String rawPassword) {
         Member member = memberRepository.findByUsername(username)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_LOGIN_INFO));
+
+        if (member.getStatus() == MemberStatus.WITHDRAWN) {
+            throw new BusinessException(ErrorCode.WITHDRAWN_MEMBER);
+        }
+
 
         if (member.isLocked()) {
             throw new BusinessException(ErrorCode.ACCOUNT_LOCKED);
@@ -87,7 +93,10 @@ public class LoginService implements LoginUseCase {
         Long memberId = storedToken.getMemberId();
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
+        if (member.getStatus() == MemberStatus.WITHDRAWN) {
+            refreshTokenRepository.deleteByMemberId(memberId);
+            throw new BusinessException(ErrorCode.WITHDRAWN_MEMBER);
+        }
         String role = "ROLE_" + member.getRole().name();
         String newAccessToken = jwtProvider.createAccessToken(memberId, member.getUsername(), role);
         String newRefreshToken = jwtProvider.createRefreshToken(memberId);

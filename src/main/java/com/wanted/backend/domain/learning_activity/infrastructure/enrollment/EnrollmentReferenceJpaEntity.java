@@ -1,7 +1,10 @@
 package com.wanted.backend.domain.learning_activity.infrastructure.enrollment;
 
+import com.wanted.backend.domain.enrollment_management.domain.model.EnrollmentStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
@@ -28,8 +31,9 @@ public class EnrollmentReferenceJpaEntity {
     @Column(name = "course_id", nullable = false)
     private Long courseId;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private String status;
+    private EnrollmentStatus status;
 
     @Column(name = "expired_at")
     private LocalDateTime expiredAt;

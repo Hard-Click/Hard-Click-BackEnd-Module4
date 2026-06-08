@@ -4,11 +4,13 @@ import com.wanted.backend.domain.identity.application.port.EmailSendPort;
 import com.wanted.backend.domain.identity.application.usecase.VerifyEmailUseCase;
 import com.wanted.backend.domain.identity.domain.model.EmailPurpose;
 import com.wanted.backend.domain.identity.domain.model.EmailVerification;
+import com.wanted.backend.domain.identity.domain.policy.EmailPolicy;
 import com.wanted.backend.domain.identity.domain.repository.EmailVerificationRepository;
 import com.wanted.backend.domain.identity.domain.repository.MemberRepository;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,13 +26,20 @@ public class VerifyEmailService implements VerifyEmailUseCase {
     private final EmailSendPort emailSendPort;
     private final MemberRepository memberRepository;
 
+    @Value("${identity.email.allowed-domain:gmail.com}")
+    private String allowedEmailDomain;
+
     /**
      * [기본 기능] 인증번호 생성 및 이메일 발송
      */
     @Override
     @Transactional
     public void sendVerificationCode(String email, EmailPurpose purpose) {
-        // 도메인 모델 생성 (숫자 6자리, 5분 유효시간)
+        if (!EmailPolicy.isAllowedDomain(email, allowedEmailDomain)) {
+            throw new BusinessException(ErrorCode.INVALID_EMAIL_DOMAIN);
+        }
+
+        // 도메인 모델 생성 (숫자 6자리, 3분 유효시간)
         EmailVerification verification = EmailVerification.create(email, purpose);
 
         // 저장 (Persistence Adapter 호출)

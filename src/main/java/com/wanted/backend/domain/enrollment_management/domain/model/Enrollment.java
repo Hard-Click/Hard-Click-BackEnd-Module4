@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 public class Enrollment {
 
     private Long id;
-    private Long userId;
+    private Long memberId;
     private Long courseId;
     private Instant enrolledAt;
     private EnrollmentStatus status;
@@ -14,20 +14,20 @@ public class Enrollment {
 
     private Enrollment() {}
 
-    public static Enrollment create(Long userId, Long courseId, Instant now) {
+    public static Enrollment create(Long memberId, Long courseId, Instant now) {
         Enrollment enrollment = new Enrollment();
-        enrollment.userId = userId;
+        enrollment.memberId = memberId;
         enrollment.courseId = courseId;
         enrollment.enrolledAt = now;
         enrollment.status = EnrollmentStatus.IN_PROGRESS;
         return enrollment;
     }
 
-    public static Enrollment restore(Long id, Long userId, Long courseId, Instant enrolledAt,
+    public static Enrollment restore(Long id, Long memberId, Long courseId, Instant enrolledAt,
                                      EnrollmentStatus status, LocalDateTime expiredAt) {
         Enrollment enrollment = new Enrollment();
         enrollment.id = id;
-        enrollment.userId = userId;
+        enrollment.memberId = memberId;
         enrollment.courseId = courseId;
         enrollment.enrolledAt = enrolledAt;
         enrollment.status = status;
@@ -48,7 +48,7 @@ public class Enrollment {
     }
 
     public Long getId() { return id; }
-    public Long getUserId() { return userId; }
+    public Long getMemberId() { return memberId; }
     public Long getCourseId() { return courseId; }
     public Instant getEnrolledAt() { return enrolledAt; }
     public EnrollmentStatus getStatus() { return status; }

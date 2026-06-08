@@ -18,6 +18,9 @@ public record CourseDetailResult(
         double rating,
         int reviewCount,
         int studentCount,
+        int instructorStudentCount,
+        int instructorCourseCount,
+        double instructorRating,
         List<SectionResult> sections,
         List<String> learningObjectives,
         List<String> targetAudience,
@@ -36,6 +39,7 @@ public record CourseDetailResult(
             String title,
             String description,
             int orderIndex,
-            Integer durationSeconds
+            Integer durationSeconds,
+            boolean isPreview
     ) {}
 }

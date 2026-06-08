@@ -47,6 +47,14 @@ public class NoticeJpaEntity {
 
     protected NoticeJpaEntity() {}
 
+    public void update(String title, String content, boolean isPinned,
+                       LocalDateTime updatedAt) {
+        this.title = title;
+        this.content = content;
+        this.isPinned = isPinned;
+        this.updatedAt = updatedAt;
+    }
+
     public NoticeJpaEntity(Long authorId, Long courseId, String title, String content,
                            boolean isPinned, String type, NoticeStatus status,
                            LocalDateTime createdAt, LocalDateTime updatedAt) {

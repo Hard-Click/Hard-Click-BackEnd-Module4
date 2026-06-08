@@ -21,8 +21,8 @@ public class GetMyEnrollmentsService implements GetMyEnrollmentsUseCase {
     private final CourseInfoQueryPort courseInfoQueryPort;
 
     @Override
-    public List<MyEnrollmentResult> handle(Long userId, String statusFilter) {
-        List<Enrollment> enrollments = fetchEnrollments(userId, statusFilter);
+    public List<MyEnrollmentResult> handle(Long memberId, String statusFilter) {
+        List<Enrollment> enrollments = fetchEnrollments(memberId, statusFilter);
 
         return enrollments.stream()
                 .map(e -> new MyEnrollmentResult(
@@ -37,11 +37,11 @@ public class GetMyEnrollmentsService implements GetMyEnrollmentsUseCase {
                 .toList();
     }
 
-    private List<Enrollment> fetchEnrollments(Long userId, String statusFilter) {
+    private List<Enrollment> fetchEnrollments(Long memberId, String statusFilter) {
         if ("ALL".equalsIgnoreCase(statusFilter)) {
-            return enrollmentRepository.findByUserId(userId);
+            return enrollmentRepository.findByMemberId(memberId);
         }
         EnrollmentStatus status = EnrollmentStatus.valueOf(statusFilter.toUpperCase());
-        return enrollmentRepository.findByUserIdAndStatus(userId, status);
+        return enrollmentRepository.findByMemberIdAndStatus(memberId, status);
     }
 }

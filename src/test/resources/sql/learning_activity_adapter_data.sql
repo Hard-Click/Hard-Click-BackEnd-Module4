@@ -39,7 +39,7 @@ INSERT INTO enrollments (
     enrollment_id, member_id, course_id, payment_type, status,
     progress_rate, expired_at, created_at, updated_at
 ) VALUES (
-    200, 1, 20, 'COURSE', 'ENROLLED',
+    200, 1, 20, 'COURSE', 'IN_PROGRESS',
     10.0, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 );
 

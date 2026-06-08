@@ -2,6 +2,7 @@ package com.wanted.backend.domain.enrollment_management.application.service;
 
 import com.wanted.backend.domain.enrollment_management.application.port.MyEnrolledCourseQueryPort;
 import com.wanted.backend.domain.enrollment_management.application.usecase.GetMyEnrolledCourseUseCase;
+import com.wanted.backend.domain.enrollment_management.domain.model.EnrollmentStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +20,8 @@ public class MyEnrolledCourseService implements GetMyEnrolledCourseUseCase {
     @Override
     public List<MyEnrolledCourseView> handle(Long memberId) {
         return myEnrolledCourseQueryPort.findByMemberId(memberId).stream()
+                // 수강 완료(COMPLETED)는 별도 엔드포인트에서 조회 — 여기서는 제외
+                .filter(data -> !EnrollmentStatus.COMPLETED.equals(data.enrollmentStatus()))
                 .map(this::toView)
                 // 최근 학습한 강의가 목록 상단에 오도록 정렬한다.
                 .sorted(Comparator.comparing(

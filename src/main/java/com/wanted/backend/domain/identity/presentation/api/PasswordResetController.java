@@ -10,6 +10,7 @@ import com.wanted.backend.domain.identity.presentation.api.request.ResetPassword
 import com.wanted.backend.domain.identity.presentation.api.response.EmptyResponse;
 import com.wanted.backend.domain.identity.presentation.api.response.PasswordChangeTokenResponse;
 import com.wanted.backend.global.common.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +28,10 @@ public class PasswordResetController {
     private final VerifyEmailUseCase verifyEmailUseCase;
     private final ResetPasswordUseCase resetPasswordUseCase;
 
+    @Operation(
+            summary = "비밀번호 재설정 인증번호 발송",
+            description = "가입된 이메일로 비밀번호 재설정 인증번호를 발송합니다."
+    )
     @PostMapping("/email")
     public ResponseEntity<ApiResponse<EmptyResponse>> sendResetCode(
             @Valid @RequestBody PasswordResetEmailRequest request
@@ -38,7 +43,10 @@ public class PasswordResetController {
                 new EmptyResponse()
         );
     }
-
+    @Operation(
+            summary = "비밀번호 재설정 인증번호 검증",
+            description = "이메일로 발송된 인증번호를 검증하고 비밀번호 변경 토큰을 발급합니다."
+    )
     @PostMapping("/verify")
     public ResponseEntity<ApiResponse<PasswordChangeTokenResponse>> verifyResetCode(
             @Valid @RequestBody PasswordResetVerifyRequest request
@@ -54,7 +62,10 @@ public class PasswordResetController {
                 new PasswordChangeTokenResponse(token)
         );
     }
-
+    @Operation(
+            summary = "비밀번호 재설정",
+            description = "비밀번호 변경 토큰을 사용해 새 비밀번호로 재설정합니다."
+    )
     @PatchMapping
     public ResponseEntity<ApiResponse<EmptyResponse>> resetPassword(
             @Valid @RequestBody ResetPasswordRequest request

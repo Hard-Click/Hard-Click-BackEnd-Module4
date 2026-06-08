@@ -2,7 +2,10 @@ package com.wanted.backend.domain.cource.application.service;
 
 import com.wanted.backend.domain.cource.application.dto.CourseDetailResult;
 import com.wanted.backend.domain.cource.application.dto.CourseListResult;
+import com.wanted.backend.domain.cource.application.port.EnrollmentStatsPort;
 import com.wanted.backend.domain.cource.application.port.InstructorQueryPort;
+import com.wanted.backend.domain.cource.application.port.InstructorStatsPort;
+import com.wanted.backend.domain.cource.application.port.ReviewStatsPort;
 import com.wanted.backend.domain.cource.application.query.CourseListQuery;
 import com.wanted.backend.domain.cource.application.usecase.CourseQueryUseCase;
 import com.wanted.backend.domain.cource.domain.model.Course;
@@ -29,6 +32,9 @@ public class CourseQueryService implements CourseQueryUseCase {
 
     private final CourseRepository courseRepository;
     private final InstructorQueryPort instructorQueryPort;
+    private final ReviewStatsPort reviewStatsPort;
+    private final EnrollmentStatsPort enrollmentStatsPort;
+    private final InstructorStatsPort instructorStatsPort;
 
     @Override
     public CourseListResult getList(CourseListQuery query) {
@@ -54,10 +60,23 @@ public class CourseQueryService implements CourseQueryUseCase {
                         item.courseId(), item.title(), item.subject(), item.thumbnailUrl(),
                         item.priceType(), item.price(),
                         nameMap.getOrDefault(item.authorId(), "알 수 없음"),
-                        0.0, 0, 0,
+                        reviewStatsPort.avgRating(item.courseId()),
+                        reviewStatsPort.reviewCount(item.courseId()),
+                        enrollmentStatsPort.enrollmentCount(item.courseId()),
                         item.status(), item.createdAt()
                 ))
                 .collect(Collectors.toList());
+
+        // POPULAR/RATING은 집계값 기반 인메모리 정렬
+        if (query.sort() == com.wanted.backend.domain.cource.domain.model.CourseSortType.POPULAR) {
+            items = items.stream()
+                    .sorted(Comparator.comparingInt(CourseListResult.Item::studentCount).reversed())
+                    .collect(Collectors.toList());
+        } else if (query.sort() == com.wanted.backend.domain.cource.domain.model.CourseSortType.RATING) {
+            items = items.stream()
+                    .sorted(Comparator.comparingDouble(CourseListResult.Item::rating).reversed())
+                    .collect(Collectors.toList());
+        }
 
         return new CourseListResult(items, pageResult.currentPage(),
                 pageResult.totalPages(), pageResult.totalCount());
@@ -90,7 +109,8 @@ public class CourseQueryService implements CourseQueryUseCase {
                                         lesson.getTitle(),
                                         lesson.getDescription(),
                                         lesson.getOrderIndex(),
-                                        lesson.getDurationSeconds()
+                                        lesson.getDurationSeconds(),
+                                        section.getOrderIndex() == 0 && lesson.getOrderIndex() == 0
                                 ))
                                 .collect(Collectors.toList())
                 ))
@@ -101,7 +121,12 @@ public class CourseQueryService implements CourseQueryUseCase {
                 course.getDescription(), course.getThumbnailUrl(),
                 course.getPriceType(), course.getPrice(), course.getStatus(),
                 instructorName,
-                0.0, 0, 0,
+                reviewStatsPort.avgRating(course.getId()),
+                reviewStatsPort.reviewCount(course.getId()),
+                enrollmentStatsPort.enrollmentCount(course.getId()),
+                instructorStatsPort.totalStudents(course.getAuthorId()),
+                instructorStatsPort.totalCourses(course.getAuthorId()),
+                instructorStatsPort.avgRating(course.getAuthorId()),
                 sections,
                 course.getLearningObjectives(), course.getTargetAudience(),
                 course.getTechTags(), course.getLevel()
@@ -123,7 +148,9 @@ public class CourseQueryService implements CourseQueryUseCase {
                         item.courseId(), item.title(), item.subject(), item.thumbnailUrl(),
                         item.priceType(), item.price(),
                         nameMap.getOrDefault(item.authorId(), "알 수 없음"),
-                        0.0, 0, 0,
+                        reviewStatsPort.avgRating(item.courseId()),
+                        reviewStatsPort.reviewCount(item.courseId()),
+                        enrollmentStatsPort.enrollmentCount(item.courseId()),
                         item.status(), item.createdAt()
                 ))
                 .collect(Collectors.toList());
