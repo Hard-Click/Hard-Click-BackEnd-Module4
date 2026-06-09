@@ -68,6 +68,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/courses", "/api/courses/*","/api/courses/*/reviews").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/courses").hasRole("INSTRUCTOR")
+                        .requestMatchers(HttpMethod.POST, "/api/courses/lessons/*/video").hasRole("INSTRUCTOR")
                         .requestMatchers(HttpMethod.PATCH, "/api/courses/*", "/api/courses/*/status").hasRole("INSTRUCTOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/courses/*").hasRole("INSTRUCTOR")
                         .requestMatchers("/api/instructor/**").hasRole("INSTRUCTOR")

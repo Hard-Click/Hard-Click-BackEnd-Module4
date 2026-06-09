@@ -1,7 +1,7 @@
 DELETE FROM video_progress;
 DELETE FROM enrollments;
 DELETE FROM subscriptions;
-DELETE FROM videos;
+DELETE FROM video;
 DELETE FROM course_curriculum;
 DELETE FROM courses;
 
@@ -21,7 +21,7 @@ INSERT INTO course_curriculum (
     30, 20, 'Section 1', 60, 1
 );
 
-INSERT INTO videos (
+INSERT INTO video (
     video_id, curriculum_id, title, video_url, is_preview, duration_seconds, sort_order
 ) VALUES (
     10, 30, 'Video 1', 'https://stream.example.com/video.m3u8', 1, 300, 1

@@ -6,6 +6,7 @@ import com.wanted.backend.domain.cource.application.command.UpdateCourseCommand;
 import com.wanted.backend.domain.cource.application.command.UploadLessonVideoCommand;
 import com.wanted.backend.domain.cource.application.port.VideoStoragePort;
 import com.wanted.backend.domain.cource.application.usecase.CourseCommandUseCase;
+import com.wanted.backend.domain.cource.domain.dto.CourseAuthorInfo;
 import com.wanted.backend.domain.cource.domain.model.Course;
 import com.wanted.backend.domain.cource.domain.model.CourseSection;
 import com.wanted.backend.domain.cource.domain.model.CourseStatus;
@@ -76,6 +77,10 @@ public class CourseCommandService implements CourseCommandUseCase {
         Course course = courseRepository.findById(command.courseId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.COURSE_NOT_FOUND));
 
+        if (course.isDeleted()) {
+            throw new BusinessException(ErrorCode.COURSE_NOT_FOUND);
+        }
+
         if (!course.getAuthorId().equals(command.requesterId())) {
             throw new BusinessException(ErrorCode.COURSE_ACCESS_DENIED);
         }
@@ -121,6 +126,10 @@ public class CourseCommandService implements CourseCommandUseCase {
         Course course = courseRepository.findById(command.courseId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.COURSE_NOT_FOUND));
 
+        if (course.isDeleted()) {
+            throw new BusinessException(ErrorCode.COURSE_NOT_FOUND);
+        }
+
         if (!course.getAuthorId().equals(command.requesterId())) {
             throw new BusinessException(ErrorCode.COURSE_ACCESS_DENIED);
         }
@@ -138,6 +147,16 @@ public class CourseCommandService implements CourseCommandUseCase {
     public String uploadLessonVideo(UploadLessonVideoCommand command) {
         Lesson lesson = lessonRepository.findById(command.lessonId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+
+        // 삭제된 강의 차단 + 강의 작성자 본인만 영상 업로드 가능
+        CourseAuthorInfo courseInfo = lessonRepository.findCourseAuthorInfo(command.lessonId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+        if (courseInfo.isDeleted()) {
+            throw new BusinessException(ErrorCode.COURSE_NOT_FOUND);
+        }
+        if (!courseInfo.authorId().equals(command.requesterId())) {
+            throw new BusinessException(ErrorCode.COURSE_ACCESS_DENIED);
+        }
 
         String videoUrl = videoStoragePort.store(
                 command.lessonId(),

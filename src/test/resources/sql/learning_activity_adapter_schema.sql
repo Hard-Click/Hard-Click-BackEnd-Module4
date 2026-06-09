@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS course_curriculum (
     sort_order INT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS videos (
+CREATE TABLE IF NOT EXISTS video (
     video_id BIGINT NOT NULL PRIMARY KEY,
     curriculum_id BIGINT NOT NULL,
     title VARCHAR(200) NOT NULL,

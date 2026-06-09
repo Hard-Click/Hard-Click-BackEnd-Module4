@@ -2,6 +2,7 @@ package com.wanted.backend.domain.enrollment_management.application.service;
 
 import com.wanted.backend.domain.enrollment_management.application.port.MyEnrolledCourseQueryPort;
 import com.wanted.backend.domain.enrollment_management.application.usecase.GetMyEnrolledCourseUseCase.MyEnrolledCourseView;
+import com.wanted.backend.domain.enrollment_management.domain.model.EnrollmentStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -35,7 +36,8 @@ class MyEnrolledCourseServiceTest {
                         4,
                         lastStudiedAt,
                         10L,
-                        142
+                        142,
+                        EnrollmentStatus.IN_PROGRESS
                 )
         ));
 
@@ -77,7 +79,8 @@ class MyEnrolledCourseServiceTest {
                         0,
                         null,
                         null,
-                        0
+                        0,
+                        EnrollmentStatus.IN_PROGRESS
                 )
         ));
 
@@ -95,7 +98,8 @@ class MyEnrolledCourseServiceTest {
                 1,
                 lastStudiedAt,
                 courseId * 10,
-                0
+                0,
+                EnrollmentStatus.IN_PROGRESS
         );
     }
 }
