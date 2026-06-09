@@ -48,10 +48,12 @@ public class CommentQueryService implements CommentQueryUseCase {
     private CommentResponse toResponse(Comment comment, Long currentMemberId) {
 
         // 삭제된 댓글은 작성자 정보 마스킹
-        String authorName = comment.isDeleted() ? "" :
-                Review.maskName(memberNamePort.getNameByMemberId(comment.getAuthorId()));
-        String authorInitial = comment.isDeleted() ? "" :
-                memberNamePort.getNameByMemberId(comment.getAuthorId()).substring(0, 1);
+        String rawName = comment.isDeleted()
+                ? null
+                : memberNamePort.getNameByMemberId(comment.getAuthorId()); // 딱 1번만
+
+        String authorName    = rawName == null ? "" : Review.maskName(rawName);
+        String authorInitial = rawName == null ? "" : rawName.substring(0, 1);
 
         // 대댓글 목록 조회 (최신순)
         List<CommentResponse> replies = commentRepository.findByParentId(comment.getId())

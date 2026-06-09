@@ -22,7 +22,6 @@ import static org.assertj.core.api.Assertions.assertThat;
         "spring.jpa.hibernate.ddl-auto=create-drop"
 })
 class CommunityRepositoryTest {
-
     @Autowired
     private SpringDataCommentRepository commentRepository;
 

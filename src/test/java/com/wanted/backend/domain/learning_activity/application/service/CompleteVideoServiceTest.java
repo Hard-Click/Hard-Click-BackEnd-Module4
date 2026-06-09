@@ -1,6 +1,6 @@
 package com.wanted.backend.domain.learning_activity.application.service;
 
-import com.wanted.backend.domain.learning_activity.application.command.CompleteVideoCommand;
+import com.wanted.backend.domain.learning_activity.application.command.MemberVideoCommand;
 import com.wanted.backend.domain.learning_activity.application.policy.VideoCompletionPolicy;
 import com.wanted.backend.domain.learning_activity.application.port.VideoCatalogPort;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoAccessInfo;
@@ -48,7 +48,7 @@ class CompleteVideoServiceTest {
         when(videoCatalogPort.findByVideoId(10L)).thenReturn(Optional.of(accessInfo));
         when(videoProgressRepository.findByMemberIdAndVideoId(1L, 10L)).thenReturn(Optional.of(progress));
 
-        service.handle(new CompleteVideoCommand(1L, 10L));
+        service.handle(new MemberVideoCommand(1L, 10L));
 
         ArgumentCaptor<VideoProgress> captor = ArgumentCaptor.forClass(VideoProgress.class);
         verify(videoAccessService).validatePlayable(1L, accessInfo);
@@ -65,7 +65,7 @@ class CompleteVideoServiceTest {
         when(videoCatalogPort.findByVideoId(10L)).thenReturn(Optional.of(accessInfo));
         when(videoProgressRepository.findByMemberIdAndVideoId(1L, 10L)).thenReturn(Optional.of(progress));
 
-        assertThatThrownBy(() -> service.handle(new CompleteVideoCommand(1L, 10L)))
+        assertThatThrownBy(() -> service.handle(new MemberVideoCommand(1L, 10L)))
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.VIDEO_COMPLETION_CONDITION_NOT_MET);
@@ -75,7 +75,7 @@ class CompleteVideoServiceTest {
     void 영상_접근_정보가_없으면_예외가_발생한다() {
         when(videoCatalogPort.findByVideoId(10L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.handle(new CompleteVideoCommand(1L, 10L)))
+        assertThatThrownBy(() -> service.handle(new MemberVideoCommand(1L, 10L)))
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.VIDEO_NOT_FOUND);

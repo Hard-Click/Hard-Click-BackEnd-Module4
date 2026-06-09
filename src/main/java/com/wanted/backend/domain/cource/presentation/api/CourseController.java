@@ -42,7 +42,7 @@ public class CourseController {
     @GetMapping
     @Operation(summary = "강의 목록 조회", description = "키워드/과목/강사명 필터와 정렬을 적용하여 강의 목록을 페이징 조회합니다.")
     public ResponseEntity<ApiResponse<CourseListResponse>> getCourses(
-            @ModelAttribute CourseListRequest request
+            @Valid @ModelAttribute CourseListRequest request
     ) {
         CourseListResult result = courseQueryUseCase.getList(request.toQuery());
         return ApiResponse.success("강의 목록 조회 성공", CourseListResponse.from(result));
@@ -106,11 +106,12 @@ public class CourseController {
     @PostMapping(value = "/lessons/{lessonId}/video", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "레슨 영상 업로드", description = "레슨 ID에 해당하는 영상 파일을 업로드합니다. multipart/form-data 형식으로 전송.")
     public ResponseEntity<ApiResponse<UploadLessonVideoResponse>> uploadLessonVideo(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @Parameter(description = "레슨 ID", example = "3") @PathVariable Long lessonId,
             @RequestPart("file") MultipartFile file
     ) throws IOException {
         String videoUrl = courseCommandUseCase.uploadLessonVideo(
-                new UploadLessonVideoCommand(lessonId, file.getOriginalFilename(), file.getBytes())
+                new UploadLessonVideoCommand(lessonId, userDetails.getMemberId(), file.getOriginalFilename(), file.getBytes())
         );
         return ApiResponse.success("영상이 업로드되었습니다.",
                 new UploadLessonVideoResponse(lessonId, videoUrl, FileProcessingStatus.PENDING));

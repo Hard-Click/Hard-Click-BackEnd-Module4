@@ -1,6 +1,6 @@
 package com.wanted.backend.domain.learning_activity.application.service;
 
-import com.wanted.backend.domain.learning_activity.application.command.CompleteVideoCommand;
+import com.wanted.backend.domain.learning_activity.application.command.MemberVideoCommand;
 import com.wanted.backend.domain.learning_activity.application.policy.VideoCompletionPolicy;
 import com.wanted.backend.domain.learning_activity.application.usecase.CompleteVideoUseCase;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoAccessInfo;
@@ -24,7 +24,7 @@ public class CompleteVideoService implements CompleteVideoUseCase {
     private final VideoCompletionPolicy videoCompletionPolicy;
 
     @Override
-    public void handle(CompleteVideoCommand command) {
+    public void handle(MemberVideoCommand command) {
         Long memberId = command.memberId();
         Long videoId = command.videoId();
 

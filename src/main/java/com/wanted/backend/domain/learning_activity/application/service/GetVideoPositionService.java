@@ -1,6 +1,8 @@
 package com.wanted.backend.domain.learning_activity.application.service;
 
 import com.wanted.backend.domain.learning_activity.application.command.GetVideoPositionCommand;
+import com.wanted.backend.domain.learning_activity.application.command.MemberVideoCommand;
+import com.wanted.backend.domain.learning_activity.application.port.VideoCatalogPort;
 import com.wanted.backend.domain.learning_activity.application.usecase.GetVideoPositionUseCase;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoProgress;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +17,7 @@ public class GetVideoPositionService implements GetVideoPositionUseCase {
     private final PlayableVideoProgressReader playableVideoProgressReader;
 
     @Override
-    public VideoPositionView handle(GetVideoPositionCommand command) {
+    public VideoPositionView handle(MemberVideoCommand command) {
         Long memberId = command.memberId();
         Long videoId = command.videoId();
 

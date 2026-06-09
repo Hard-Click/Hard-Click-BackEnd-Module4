@@ -2,6 +2,7 @@ package com.wanted.backend.domain.enrollment_management.application.service;
 
 import com.wanted.backend.domain.enrollment_management.application.port.MyEnrolledCourseQueryPort;
 import com.wanted.backend.domain.enrollment_management.application.usecase.GetMyCompletedCoursesUseCase.MyCompletedCourseView;
+import com.wanted.backend.domain.enrollment_management.domain.model.EnrollmentStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -69,7 +70,9 @@ class MyCompletedCourseServiceTest {
                 totalLessonCount,
                 lastStudiedAt,
                 courseId * 10,
-                0
+                0,
+                // 레슨 완료도(progressRate) 기준 필터를 검증하므로 enrollmentStatus는 IN_PROGRESS로 둔다
+                EnrollmentStatus.IN_PROGRESS
         );
     }
 }

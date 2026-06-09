@@ -1,8 +1,6 @@
 package com.wanted.backend.domain.learning_activity.presentation.api;
 
-import com.wanted.backend.domain.learning_activity.application.command.CompleteVideoCommand;
-import com.wanted.backend.domain.learning_activity.application.command.GetVideoProgressCommand;
-import com.wanted.backend.domain.learning_activity.application.command.GetVideoPositionCommand;
+import com.wanted.backend.domain.learning_activity.application.command.MemberVideoCommand;
 import com.wanted.backend.domain.learning_activity.application.command.SaveVideoPositionCommand;
 import com.wanted.backend.domain.learning_activity.application.command.SaveWatchTimeCommand;
 import com.wanted.backend.domain.learning_activity.application.usecase.CompleteVideoUseCase;
@@ -56,7 +54,7 @@ public class VideoProgressController {
     ) {
         return ApiResponse.success(
                 "영상 진도가 조회되었습니다.",
-                getVideoProgressUseCase.handle(new GetVideoProgressCommand(userDetails.getMemberId(), videoId))
+                getVideoProgressUseCase.handle(new MemberVideoCommand(userDetails.getMemberId(), videoId))
         );
     }
 
@@ -73,7 +71,7 @@ public class VideoProgressController {
     ) {
         return ApiResponse.success(
                 "이어보기 위치가 조회되었습니다.",
-                getVideoPositionUseCase.handle(new GetVideoPositionCommand(userDetails.getMemberId(), videoId))
+                getVideoPositionUseCase.handle(new MemberVideoCommand(userDetails.getMemberId(), videoId))
         );
     }
 
@@ -128,7 +126,7 @@ public class VideoProgressController {
             @PathVariable Long videoId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        completeVideoUseCase.handle(new CompleteVideoCommand(userDetails.getMemberId(), videoId));
+        completeVideoUseCase.handle(new MemberVideoCommand(userDetails.getMemberId(), videoId));
         return ApiResponse.successNoContent("영상 완료 처리되었습니다.");
     }
 }

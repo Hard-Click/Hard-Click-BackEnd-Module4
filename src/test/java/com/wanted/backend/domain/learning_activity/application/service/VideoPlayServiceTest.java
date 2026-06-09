@@ -1,6 +1,6 @@
 package com.wanted.backend.domain.learning_activity.application.service;
 
-import com.wanted.backend.domain.learning_activity.application.command.VideoPlayCommand;
+import com.wanted.backend.domain.learning_activity.application.command.MemberVideoCommand;
 import com.wanted.backend.domain.learning_activity.application.port.VideoCatalogPort;
 import com.wanted.backend.domain.learning_activity.application.usecase.VideoPlayUseCase;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoAccessInfo;
@@ -53,7 +53,7 @@ class VideoPlayServiceTest {
         when(videoCatalogPort.findByVideoId(10L)).thenReturn(Optional.of(accessInfo));
         when(videoProgressRepository.findByMemberIdAndVideoId(2L, 10L)).thenReturn(Optional.of(progress));
 
-        VideoPlayUseCase.VideoPlayView result = service.handle(new VideoPlayCommand(2L, 10L));
+        VideoPlayUseCase.VideoPlayView result = service.handle(new MemberVideoCommand(2L, 10L));
 
         assertThat(result.videoId()).isEqualTo(10L);
         assertThat(result.courseId()).isEqualTo(20L);
@@ -71,7 +71,7 @@ class VideoPlayServiceTest {
         when(videoCatalogPort.findByVideoId(10L)).thenReturn(Optional.of(accessInfo));
         when(videoProgressRepository.findByMemberIdAndVideoId(2L, 10L)).thenReturn(Optional.empty());
 
-        VideoPlayUseCase.VideoPlayView result = service.handle(new VideoPlayCommand(2L, 10L));
+        VideoPlayUseCase.VideoPlayView result = service.handle(new MemberVideoCommand(2L, 10L));
 
         assertThat(result.lastPositionSec()).isZero();
         assertThat(result.watchTimeSec()).isZero();
@@ -82,7 +82,7 @@ class VideoPlayServiceTest {
     void 영상_접근_정보가_없으면_예외가_발생한다() {
         when(videoCatalogPort.findByVideoId(10L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.handle(new VideoPlayCommand(2L, 10L)))
+        assertThatThrownBy(() -> service.handle(new MemberVideoCommand(2L, 10L)))
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.VIDEO_NOT_FOUND);

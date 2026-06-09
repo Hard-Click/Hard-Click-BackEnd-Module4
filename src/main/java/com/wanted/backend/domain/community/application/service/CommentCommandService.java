@@ -103,7 +103,7 @@ public class CommentCommandService implements CommentCommandUseCase {
 
         // [3단계] 채택 처리 → 도메인이 담당
         comment.accept();
-        commentRepository.save(comment);
+        commentRepository.accept(comment.getId(), comment.getUpdatedAt());
 
         // [4단계] 게시글 채택 완료 처리 → 도메인이 담당
         post.markAsAccepted();
@@ -141,7 +141,7 @@ public class CommentCommandService implements CommentCommandUseCase {
 
         // [5단계] 댓글 수정 → 도메인이 담당
         comment.update(command.content(), imageUrl);
-        commentRepository.save(comment);
+        commentRepository.update(comment);
     }
 
     @Override
@@ -167,7 +167,7 @@ public class CommentCommandService implements CommentCommandUseCase {
         if (hasReplies) {
             // 대댓글 존재 → Soft Delete
             comment.softDelete();
-            commentRepository.save(comment);
+            commentRepository.softDelete(comment.getId(), comment.getUpdatedAt());
         } else {
             // 대댓글 없음 → Hard Delete
             commentRepository.deleteById(command.commentId());

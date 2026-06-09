@@ -110,11 +110,21 @@ public class CourseRepositoryAdapter implements CourseRepository {
                         e.getStatus(), e.getCreatedAt()))
                 .toList();
 
-        return new PageResult<>(items, result.getNumber() + 1, result.getTotalPages(), result.getTotalElements());
+        return new PageResult<>(items, result.getNumber(), result.getTotalPages(), result.getTotalElements());
     }
 
     // ── 섹션 동기화 ──────────────────────────────────────────────────────────────
     private void syncSections(CourseJpaEntity entity, List<CourseSection> domainSections) {
+        // Must Fix 3: 요청 섹션 ID가 현재 강의 소속인지 검증 (조용한 무시 방지)
+        Set<Long> existingSectionIds = entity.getSections().stream()
+                .map(CourseSectionJpaEntity::getId)
+                .collect(Collectors.toSet());
+        for (CourseSection ds : domainSections) {
+            if (ds.getId() != null && !existingSectionIds.contains(ds.getId())) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+            }
+        }
+
         // 요청에 없는 기존 섹션 제거 (orphanRemoval이 DB 삭제 처리)
         Set<Long> keepIds = domainSections.stream()
                 .filter(s -> s.getId() != null)
@@ -145,6 +155,16 @@ public class CourseRepositoryAdapter implements CourseRepository {
 
     // ── 회차 동기화 ──────────────────────────────────────────────────────────────
     private void syncLessons(CourseSectionJpaEntity sectionEntity, List<Lesson> domainLessons) {
+        // Must Fix 3: 요청 회차 ID가 현재 섹션 소속인지 검증 (조용한 무시 방지)
+        Set<Long> existingLessonIds = sectionEntity.getLessons().stream()
+                .map(LessonJpaEntity::getId)
+                .collect(Collectors.toSet());
+        for (Lesson dl : domainLessons) {
+            if (dl.getId() != null && !existingLessonIds.contains(dl.getId())) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+            }
+        }
+
         Set<Long> keepIds = domainLessons.stream()
                 .filter(l -> l.getId() != null)
                 .map(Lesson::getId)
