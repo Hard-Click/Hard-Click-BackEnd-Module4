@@ -6,6 +6,7 @@ import com.wanted.backend.domain.cource.application.command.UpdateCourseCommand;
 import com.wanted.backend.domain.cource.application.command.UploadLessonVideoCommand;
 import com.wanted.backend.domain.cource.application.port.VideoStoragePort;
 import com.wanted.backend.domain.cource.application.usecase.CourseCommandUseCase;
+import com.wanted.backend.domain.cource.domain.dto.CourseAuthorInfo;
 import com.wanted.backend.domain.cource.domain.model.Course;
 import com.wanted.backend.domain.cource.domain.model.CourseSection;
 import com.wanted.backend.domain.cource.domain.model.CourseStatus;
@@ -147,10 +148,13 @@ public class CourseCommandService implements CourseCommandUseCase {
         Lesson lesson = lessonRepository.findById(command.lessonId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
 
-        // 강의 작성자 본인만 영상 업로드 가능
-        Long authorId = lessonRepository.findCourseAuthorId(command.lessonId())
+        // 삭제된 강의 차단 + 강의 작성자 본인만 영상 업로드 가능
+        CourseAuthorInfo courseInfo = lessonRepository.findCourseAuthorInfo(command.lessonId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
-        if (!authorId.equals(command.requesterId())) {
+        if (courseInfo.isDeleted()) {
+            throw new BusinessException(ErrorCode.COURSE_NOT_FOUND);
+        }
+        if (!courseInfo.authorId().equals(command.requesterId())) {
             throw new BusinessException(ErrorCode.COURSE_ACCESS_DENIED);
         }
 

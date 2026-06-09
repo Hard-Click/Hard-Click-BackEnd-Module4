@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.cource.infrastructure.persistence;
 
+import com.wanted.backend.domain.cource.domain.dto.CourseAuthorInfo;
 import com.wanted.backend.domain.cource.domain.model.Lesson;
 import com.wanted.backend.domain.cource.domain.repository.LessonRepository;
 import com.wanted.backend.global.exception.BusinessException;
@@ -31,8 +32,8 @@ public class LessonRepositoryAdapter implements LessonRepository {
     }
 
     @Override
-    public Optional<Long> findCourseAuthorId(Long lessonId) {
-        return jpaRepository.findCourseAuthorIdByLessonId(lessonId);
+    public Optional<CourseAuthorInfo> findCourseAuthorInfo(Long lessonId) {
+        return jpaRepository.findCourseAuthorInfoByLessonId(lessonId);
     }
 
     private Lesson toDomain(LessonJpaEntity entity) {
