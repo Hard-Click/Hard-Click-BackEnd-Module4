@@ -1,6 +1,6 @@
 package com.wanted.backend.domain.learning_activity.application.service;
 
-import com.wanted.backend.domain.learning_activity.application.command.VideoPlayCommand;
+import com.wanted.backend.domain.learning_activity.application.command.MemberVideoCommand;
 import com.wanted.backend.domain.learning_activity.application.port.VideoCatalogPort;
 import com.wanted.backend.domain.learning_activity.application.usecase.VideoPlayUseCase;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoAccessInfo;
@@ -22,7 +22,7 @@ public class VideoPlayService implements VideoPlayUseCase {
     private final VideoAccessService videoAccessService;
 
     @Override
-    public VideoPlayView handle(VideoPlayCommand command) {
+    public VideoPlayView handle(MemberVideoCommand command) {
         Long memberId = command.memberId();
         Long videoId = command.videoId();
 
