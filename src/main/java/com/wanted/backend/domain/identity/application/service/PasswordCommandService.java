@@ -55,22 +55,21 @@ public class PasswordCommandService implements PasswordCommandUseCase {
         }
 
         EmailVerification verification = verificationRepository
-                .findLatestByEmailAndPurpose(command.email(), EmailPurpose.PASSWORD_RESET)
-                .orElseThrow(() -> new BusinessException(ErrorCode.VERIFICATION_NOT_FOUND));
-
-        if (!verification.isVerified()
-                || verification.getVerificationToken() == null
-                || !verification.getVerificationToken().equals(command.passwordChangeToken())) {
-            throw new BusinessException(ErrorCode.UNAUTHORIZED);
-        }
+                .findValidToken(
+                        command.email(),
+                        command.passwordChangeToken(),
+                        EmailPurpose.PASSWORD_RESET,
+                        LocalDateTime.now()
+                )
+                .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED));
 
         Member member = memberRepository.findByEmail(command.email())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        member.changePasswordAndUnlock(passwordEncoder.encode(command.newPassword()), LocalDateTime.now());
-        memberRepository.save(member);
-
         verification.useToken();
+        member.changePasswordAndUnlock(passwordEncoder.encode(command.newPassword()), LocalDateTime.now());
+
+        memberRepository.save(member);
         verificationRepository.save(verification);
     }
 
@@ -102,10 +101,6 @@ public class PasswordCommandService implements PasswordCommandUseCase {
                 .findByVerificationTokenAndPurpose(command.passwordChangeToken(), EmailPurpose.ACCOUNT_LOCK)
                 .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED));
 
-        if (!verification.isVerified() || verification.isExpired(LocalDateTime.now())) {
-            throw new BusinessException(ErrorCode.VERIFICATION_EXPIRED);
-        }
-
         Member member = memberRepository.findByEmail(verification.getEmail())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
@@ -113,12 +108,20 @@ public class PasswordCommandService implements PasswordCommandUseCase {
             throw new BusinessException(ErrorCode.ACCOUNT_NOT_LOCKED);
         }
 
+        try {
+            verification.useToken();
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("만료")) {
+                verificationRepository.save(verification);
+                throw new BusinessException(ErrorCode.VERIFICATION_EXPIRED);
+            }
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+
         member.changePasswordAndUnlock(
                 passwordEncoder.encode(command.newPassword()),
                 LocalDateTime.now()
         );
-
-        verification.useToken();
 
         memberRepository.save(member);
         verificationRepository.save(verification);

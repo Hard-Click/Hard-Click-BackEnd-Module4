@@ -35,6 +35,7 @@ public class EmailVerificationService implements EmailVerificationUseCase {
         if (!EmailPolicy.isAllowedDomain(email, allowedEmailDomain)) {
             throw new BusinessException(ErrorCode.INVALID_EMAIL_DOMAIN);
         }
+        verificationRepository.revokeActiveByEmailAndPurpose(email, purpose);
 
         EmailVerification verification = EmailVerification.create(email, purpose);
         verificationRepository.save(verification);
@@ -63,7 +64,7 @@ public class EmailVerificationService implements EmailVerificationUseCase {
     @Override
     @Transactional
     public String verifyCode(String email, String code, EmailPurpose purpose) {
-        EmailVerification verification = verificationRepository.findLatestByEmailAndPurpose(email, purpose)
+        EmailVerification verification = verificationRepository.findLatestPendingByEmailAndPurpose(email, purpose)
                 .orElseThrow(() -> new BusinessException(ErrorCode.VERIFICATION_NOT_FOUND));
 
         try {

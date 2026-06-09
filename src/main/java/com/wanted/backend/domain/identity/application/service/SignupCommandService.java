@@ -15,6 +15,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 public class SignupCommandService implements SignupCommandUseCase {
@@ -27,13 +29,13 @@ public class SignupCommandService implements SignupCommandUseCase {
     @Transactional
     public Long signup(SignupCommand command) {
         EmailVerification verification = verificationRepository
-                .findLatestByEmailAndPurpose(command.email(), EmailPurpose.SIGNUP)
-                .orElseThrow(() -> new BusinessException(ErrorCode.VERIFICATION_NOT_FOUND));
-
-        if (!verification.isVerified()
-                || !verification.getVerificationToken().equals(command.emailVerificationToken())) {
-            throw new BusinessException(ErrorCode.UNAUTHORIZED);
-        }
+                .findValidToken(
+                        command.email(),
+                        command.emailVerificationToken(),
+                        EmailPurpose.SIGNUP,
+                        LocalDateTime.now()
+                )
+                .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED));
 
         if (memberRepository.existsByUsername(command.username())) {
             throw new BusinessException(ErrorCode.DUPLICATE_USERNAME);
@@ -42,6 +44,9 @@ public class SignupCommandService implements SignupCommandUseCase {
         if (memberRepository.existsByEmail(command.email())) {
             throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
         }
+
+        verification.useToken();
+        verificationRepository.save(verification);
 
         Member member = Member.create(
                 command.username(),

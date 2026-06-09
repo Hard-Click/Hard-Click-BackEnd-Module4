@@ -9,8 +9,15 @@ import java.util.Optional;
 public interface EmailVerificationRepository {
     void save(EmailVerification verification);
 
-    // 가장 최근 발송된 인증 정보 조회
     Optional<EmailVerification> findLatestByEmailAndPurpose(String email, EmailPurpose purpose);
-    long countByEmailAndPurposeAndCreatedAtAfter(String email, EmailPurpose purpose, LocalDateTime after);
+
+    Optional<EmailVerification> findLatestPendingByEmailAndPurpose(String email, EmailPurpose purpose);
+
     Optional<EmailVerification> findByVerificationTokenAndPurpose(String token, EmailPurpose purpose);
+
+    Optional<EmailVerification> findValidToken(String email, String token, EmailPurpose purpose, LocalDateTime now);
+
+    long countByEmailAndPurposeAndCreatedAtAfter(String email, EmailPurpose purpose, LocalDateTime after);
+
+    void revokeActiveByEmailAndPurpose(String email, EmailPurpose purpose);
 }
