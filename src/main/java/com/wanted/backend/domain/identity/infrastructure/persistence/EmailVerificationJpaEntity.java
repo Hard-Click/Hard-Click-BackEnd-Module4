@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.identity.infrastructure.persistence;
 
 import com.wanted.backend.domain.identity.domain.model.EmailPurpose;
+import com.wanted.backend.domain.identity.domain.model.VerificationStatus;
 import lombok.*;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -32,6 +33,10 @@ public class EmailVerificationJpaEntity {
     @Column(nullable = false, length = 30)
     private EmailPurpose purpose;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private VerificationStatus status = VerificationStatus.PENDING;
+
     @Column(nullable = false)
     private boolean isVerified = false;
 
@@ -52,6 +57,7 @@ public class EmailVerificationJpaEntity {
     }
 
     public void updateFromDomain(com.wanted.backend.domain.identity.domain.model.EmailVerification domain) {
+        this.status = domain.getStatus();
         this.isVerified = domain.isVerified();
         this.verificationToken = domain.getVerificationToken();
         this.used = domain.isUsed();
@@ -63,6 +69,7 @@ public class EmailVerificationJpaEntity {
         this.email = email;
         this.code = code;
         this.purpose = purpose;
+        this.status = VerificationStatus.PENDING;
         this.expiresAt = expiresAt;
     }
 }
