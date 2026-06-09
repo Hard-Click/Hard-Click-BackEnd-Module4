@@ -29,8 +29,9 @@ public record UpdateCourseRequest(
         @Min(value = 0, message = "가격은 0 이상이어야 합니다.")
         int price,
 
-        @NotEmpty(message = "커리큘럼(sections)은 최소 1개 이상이어야 합니다. 강의 수정은 전체 커리큘럼 교체 방식이므로 기존 커리큘럼을 모두 포함해 보내야 합니다.")
-        @Valid
+        `@NotNull`(message = "커리큘럼(sections)은 필수입니다. 전체 삭제가 필요하면 빈 배열([])을 전달하세요.")
+        `@Valid`
+        List<UpdateSectionRequest> sections,
         List<UpdateSectionRequest> sections,
 
         List<String> learningObjectives,
