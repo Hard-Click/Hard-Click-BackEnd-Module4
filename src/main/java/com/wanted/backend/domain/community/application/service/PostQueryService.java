@@ -3,6 +3,7 @@ package com.wanted.backend.domain.community.application.service;
 import com.wanted.backend.domain.community.application.port.MemberNamePort;
 import com.wanted.backend.domain.community.application.usecase.PostQueryUseCase;
 import com.wanted.backend.domain.community.domain.model.*;
+import com.wanted.backend.domain.community.domain.repository.CommentRepository;
 import com.wanted.backend.domain.community.domain.repository.PostFileRepository;
 import com.wanted.backend.domain.community.domain.repository.PostRepository;
 import com.wanted.backend.domain.community.domain.repository.ViewLogRepository;
@@ -20,7 +21,7 @@ import java.util.List;
 
 
 @Service
-@Transactional
+@Transactional(readOnly = true)
 public class PostQueryService implements PostQueryUseCase {
 
     private static final int PAGE_SIZE = 10;
@@ -29,15 +30,17 @@ public class PostQueryService implements PostQueryUseCase {
     private final PostFileRepository postFileRepository;
     private final ViewLogRepository viewLogRepository;
     private final MemberNamePort memberNamePort;
+    private final CommentRepository commentRepository;
 
     public PostQueryService(PostRepository postRepository,
                             PostFileRepository postFileRepository,
                             ViewLogRepository viewLogRepository,
-                            MemberNamePort memberNamePort) {
+                            MemberNamePort memberNamePort, CommentRepository commentRepository) {
         this.postRepository = postRepository;
         this.postFileRepository = postFileRepository;
         this.viewLogRepository = viewLogRepository;
         this.memberNamePort = memberNamePort;
+        this.commentRepository = commentRepository;
     }
 
     @Override
@@ -106,6 +109,7 @@ public class PostQueryService implements PostQueryUseCase {
 
     private PostItemResponse toItemResponse(Post post) {
         String name = memberNamePort.getNameByMemberId(post.getAuthorId());
+        int commentCount = commentRepository.countByPostId(post.getId());
         return new PostItemResponse(
                 post.getId(),
                 post.getBoardType(),
@@ -113,7 +117,7 @@ public class PostQueryService implements PostQueryUseCase {
                 Review.maskName(name),
                 post.getCreatedAt(),
                 post.getViewCount(),
-                0
+                commentCount
         );
     }
 }

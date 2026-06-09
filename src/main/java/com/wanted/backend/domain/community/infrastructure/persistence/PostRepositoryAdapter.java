@@ -5,6 +5,8 @@ import com.wanted.backend.domain.community.domain.model.Post;
 import com.wanted.backend.domain.community.domain.model.PostSortType;
 import com.wanted.backend.domain.community.domain.model.PostStatus;
 import com.wanted.backend.domain.community.domain.repository.PostRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -23,6 +25,9 @@ public class PostRepositoryAdapter implements PostRepository {
         this.repository = repository;
     }
 
+    @PersistenceContext
+    private EntityManager em;
+
     @Override
     public Post save(Post post) {
         PostJpaEntity entity = new PostJpaEntity(
@@ -36,6 +41,24 @@ public class PostRepositoryAdapter implements PostRepository {
     @Override
     public List<Post> findByBoardType(BoardType boardType, PostSortType sort,
                                       String keyword, int page, int size) {
+        if (sort == PostSortType.comments) {
+            return em.createQuery("""
+                SELECT p FROM PostJpaEntity p
+                WHERE p.boardType = :boardType
+                  AND p.title LIKE :keyword
+                  AND p.status = :status
+                ORDER BY (
+                    SELECT COUNT(c) FROM CommentJpaEntity c WHERE c.postId = p.id
+                ) DESC
+                """, PostJpaEntity.class)
+                    .setParameter("boardType", boardType)
+                    .setParameter("keyword", "%" + (keyword != null ? keyword : "") + "%")
+                    .setParameter("status", PostStatus.ACTIVE)
+                    .setFirstResult(page * size)
+                    .setMaxResults(size)
+                    .getResultList()
+                    .stream().map(this::toDomain).toList();
+        }
         Pageable pageable = PageRequest.of(page, size, toSort(sort));
         return repository.findByBoardTypeAndTitleContainingAndStatus(
                         boardType, keyword != null ? keyword : "", PostStatus.ACTIVE, pageable)
@@ -46,6 +69,22 @@ public class PostRepositoryAdapter implements PostRepository {
 
     @Override
     public List<Post> findAll(PostSortType sort, String keyword, int page, int size) {
+        if (sort == PostSortType.comments) {
+            return em.createQuery("""
+                SELECT p FROM PostJpaEntity p
+                WHERE p.title LIKE :keyword
+                  AND p.status = :status
+                ORDER BY (
+                    SELECT COUNT(c) FROM CommentJpaEntity c WHERE c.postId = p.id
+                ) DESC
+                """, PostJpaEntity.class)
+                    .setParameter("keyword", "%" + (keyword != null ? keyword : "") + "%")
+                    .setParameter("status", PostStatus.ACTIVE)
+                    .setFirstResult(page * size)
+                    .setMaxResults(size)
+                    .getResultList()
+                    .stream().map(this::toDomain).toList();
+        }
         Pageable pageable = PageRequest.of(page, size, toSort(sort));
         return repository.findByTitleContainingAndStatus(
                         keyword != null ? keyword : "", PostStatus.ACTIVE, pageable)
@@ -69,7 +108,7 @@ public class PostRepositoryAdapter implements PostRepository {
     private Sort toSort(PostSortType sort) {
         return switch (sort) {
             case views -> Sort.by(Sort.Direction.DESC, "viewCount");
-            case comments -> Sort.by(Sort.Direction.DESC, "createdAt"); // 추후 댓글수로 변경
+            case comments -> Sort.by(Sort.Direction.DESC, "createdAt");
             case latest -> Sort.by(Sort.Direction.DESC, "createdAt");
         };
     }
@@ -101,4 +140,6 @@ public class PostRepositoryAdapter implements PostRepository {
     public void deleteById(Long postId) {
         repository.deleteById(postId);
     }
+
+
 }
