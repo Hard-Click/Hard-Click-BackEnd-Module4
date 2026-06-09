@@ -1,12 +1,10 @@
 package com.wanted.backend.domain.learning_activity.application.service;
 
+import com.wanted.backend.domain.learning_activity.application.command.GetVideoPositionCommand;
 import com.wanted.backend.domain.learning_activity.application.command.MemberVideoCommand;
 import com.wanted.backend.domain.learning_activity.application.port.VideoCatalogPort;
 import com.wanted.backend.domain.learning_activity.application.usecase.GetVideoPositionUseCase;
-import com.wanted.backend.domain.learning_activity.domain.model.VideoAccessInfo;
-import com.wanted.backend.domain.learning_activity.domain.repository.VideoProgressRepository;
-import com.wanted.backend.global.exception.BusinessException;
-import com.wanted.backend.global.exception.ErrorCode;
+import com.wanted.backend.domain.learning_activity.domain.model.VideoProgress;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,24 +14,15 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class GetVideoPositionService implements GetVideoPositionUseCase {
 
-    private final VideoCatalogPort videoCatalogPort;
-    private final VideoProgressRepository videoProgressRepository;
-    private final VideoAccessService videoAccessService;
+    private final PlayableVideoProgressReader playableVideoProgressReader;
 
     @Override
     public VideoPositionView handle(MemberVideoCommand command) {
         Long memberId = command.memberId();
         Long videoId = command.videoId();
 
-        VideoAccessInfo accessInfo = videoCatalogPort.findByVideoId(videoId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.VIDEO_NOT_FOUND));
+        VideoProgress progress = playableVideoProgressReader.get(memberId, videoId).progress();
 
-        videoAccessService.validatePlayable(memberId, accessInfo);
-
-        Integer positionSeconds = videoProgressRepository.findByMemberIdAndVideoId(memberId, videoId)
-                .map(progress -> progress.lastPositionSec())
-                .orElse(0);
-
-        return new VideoPositionView(videoId, positionSeconds);
+        return new VideoPositionView(videoId, progress.lastPositionSec());
     }
 }

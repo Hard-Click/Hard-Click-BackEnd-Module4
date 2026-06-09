@@ -32,7 +32,9 @@ class VideoPlayServiceTest {
         videoCatalogPort = mock(VideoCatalogPort.class);
         videoProgressRepository = mock(VideoProgressRepository.class);
         videoAccessService = mock(VideoAccessService.class);
-        service = new VideoPlayService(videoCatalogPort, videoProgressRepository, videoAccessService);
+        PlayableVideoProgressReader playableVideoProgressReader =
+                new PlayableVideoProgressReader(videoCatalogPort, videoProgressRepository, videoAccessService);
+        service = new VideoPlayService(playableVideoProgressReader);
     }
 
     @Test
