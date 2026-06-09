@@ -1,13 +1,9 @@
 package com.wanted.backend.domain.learning_activity.application.service;
 
 import com.wanted.backend.domain.learning_activity.application.command.GetVideoProgressCommand;
-import com.wanted.backend.domain.learning_activity.application.port.VideoCatalogPort;
 import com.wanted.backend.domain.learning_activity.application.usecase.GetVideoProgressUseCase;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoAccessInfo;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoProgress;
-import com.wanted.backend.domain.learning_activity.domain.repository.VideoProgressRepository;
-import com.wanted.backend.global.exception.BusinessException;
-import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,22 +18,17 @@ public class GetVideoProgressService implements GetVideoProgressUseCase {
 
     private static final BigDecimal MAX_PROGRESS_RATE = BigDecimal.valueOf(100);
 
-    private final VideoCatalogPort videoCatalogPort;
-    private final VideoProgressRepository videoProgressRepository;
-    private final VideoAccessService videoAccessService;
+    private final PlayableVideoProgressReader playableVideoProgressReader;
 
     @Override
     public VideoProgressView handle(GetVideoProgressCommand command) {
         Long memberId = command.memberId();
         Long videoId = command.videoId();
 
-        VideoAccessInfo accessInfo = videoCatalogPort.findByVideoId(videoId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.VIDEO_NOT_FOUND));
-
-        videoAccessService.validatePlayable(memberId, accessInfo);
-
-        VideoProgress progress = videoProgressRepository.findByMemberIdAndVideoId(memberId, videoId)
-                .orElse(VideoProgress.empty(memberId, accessInfo.courseId(), videoId));
+        PlayableVideoProgressReader.PlayableVideoProgress playable =
+                playableVideoProgressReader.get(memberId, videoId);
+        VideoAccessInfo accessInfo = playable.accessInfo();
+        VideoProgress progress = playable.progress();
 
         return new VideoProgressView(
                 videoId,

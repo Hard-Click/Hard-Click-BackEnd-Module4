@@ -2,7 +2,6 @@ package com.wanted.backend.domain.learning_activity.application.service;
 
 import com.wanted.backend.domain.learning_activity.application.command.CompleteVideoCommand;
 import com.wanted.backend.domain.learning_activity.application.policy.VideoCompletionPolicy;
-import com.wanted.backend.domain.learning_activity.application.port.VideoCatalogPort;
 import com.wanted.backend.domain.learning_activity.application.usecase.CompleteVideoUseCase;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoAccessInfo;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoProgress;
@@ -20,9 +19,8 @@ import java.time.LocalDateTime;
 @Transactional
 public class CompleteVideoService implements CompleteVideoUseCase {
 
-    private final VideoCatalogPort videoCatalogPort;
+    private final PlayableVideoProgressReader playableVideoProgressReader;
     private final VideoProgressRepository videoProgressRepository;
-    private final VideoAccessService videoAccessService;
     private final VideoCompletionPolicy videoCompletionPolicy;
 
     @Override
@@ -30,13 +28,10 @@ public class CompleteVideoService implements CompleteVideoUseCase {
         Long memberId = command.memberId();
         Long videoId = command.videoId();
 
-        VideoAccessInfo accessInfo = videoCatalogPort.findByVideoId(videoId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.VIDEO_NOT_FOUND));
-
-        videoAccessService.validatePlayable(memberId, accessInfo);
-
-        VideoProgress progress = videoProgressRepository.findByMemberIdAndVideoId(memberId, videoId)
-                .orElse(VideoProgress.empty(memberId, accessInfo.courseId(), videoId));
+        PlayableVideoProgressReader.PlayableVideoProgress playable =
+                playableVideoProgressReader.get(memberId, videoId);
+        VideoAccessInfo accessInfo = playable.accessInfo();
+        VideoProgress progress = playable.progress();
 
         if (!videoCompletionPolicy.canComplete(progress.watchTimeSec(), accessInfo.durationSeconds())) {
             throw new BusinessException(ErrorCode.VIDEO_COMPLETION_CONDITION_NOT_MET);

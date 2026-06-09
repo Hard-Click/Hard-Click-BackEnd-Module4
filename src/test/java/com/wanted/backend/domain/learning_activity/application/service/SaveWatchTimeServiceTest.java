@@ -31,7 +31,9 @@ class SaveWatchTimeServiceTest {
         videoCatalogPort = mock(VideoCatalogPort.class);
         videoProgressRepository = mock(VideoProgressRepository.class);
         videoAccessService = mock(VideoAccessService.class);
-        service = new SaveWatchTimeService(videoCatalogPort, videoProgressRepository, videoAccessService);
+        PlayableVideoProgressReader playableVideoProgressReader =
+                new PlayableVideoProgressReader(videoCatalogPort, videoProgressRepository, videoAccessService);
+        service = new SaveWatchTimeService(playableVideoProgressReader, videoProgressRepository);
     }
 
     @Test
