@@ -1,6 +1,6 @@
 package com.wanted.backend.domain.learning_activity.application.service;
 
-import com.wanted.backend.domain.learning_activity.application.command.GetVideoProgressCommand;
+import com.wanted.backend.domain.learning_activity.application.command.MemberVideoCommand;
 import com.wanted.backend.domain.learning_activity.application.port.VideoCatalogPort;
 import com.wanted.backend.domain.learning_activity.application.usecase.GetVideoProgressUseCase;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoAccessInfo;
@@ -27,7 +27,7 @@ public class GetVideoProgressService implements GetVideoProgressUseCase {
     private final VideoAccessService videoAccessService;
 
     @Override
-    public VideoProgressView handle(GetVideoProgressCommand command) {
+    public VideoProgressView handle(MemberVideoCommand command) {
         Long memberId = command.memberId();
         Long videoId = command.videoId();
 

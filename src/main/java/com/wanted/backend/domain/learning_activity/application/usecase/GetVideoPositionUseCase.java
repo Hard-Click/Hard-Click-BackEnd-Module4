@@ -1,10 +1,10 @@
 package com.wanted.backend.domain.learning_activity.application.usecase;
 
-import com.wanted.backend.domain.learning_activity.application.command.GetVideoPositionCommand;
+import com.wanted.backend.domain.learning_activity.application.command.MemberVideoCommand;
 
 public interface GetVideoPositionUseCase {
 
-    VideoPositionView handle(GetVideoPositionCommand command);
+    VideoPositionView handle(MemberVideoCommand command);
 
     record VideoPositionView(
             Long videoId,

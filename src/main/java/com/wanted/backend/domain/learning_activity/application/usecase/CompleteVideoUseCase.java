@@ -1,8 +1,8 @@
 package com.wanted.backend.domain.learning_activity.application.usecase;
 
-import com.wanted.backend.domain.learning_activity.application.command.CompleteVideoCommand;
+import com.wanted.backend.domain.learning_activity.application.command.MemberVideoCommand;
 
 public interface CompleteVideoUseCase {
 
-    void handle(CompleteVideoCommand command);
+    void handle(MemberVideoCommand command);
 }

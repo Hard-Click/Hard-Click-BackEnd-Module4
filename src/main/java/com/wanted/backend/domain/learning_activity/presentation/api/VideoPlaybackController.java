@@ -1,6 +1,6 @@
 package com.wanted.backend.domain.learning_activity.presentation.api;
 
-import com.wanted.backend.domain.learning_activity.application.command.VideoPlayCommand;
+import com.wanted.backend.domain.learning_activity.application.command.MemberVideoCommand;
 import com.wanted.backend.domain.learning_activity.application.usecase.VideoPlayUseCase;
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
@@ -39,7 +39,7 @@ public class VideoPlaybackController {
     ) {
         return ApiResponse.success(
                 "영상 재생 정보가 조회되었습니다.",
-                videoPlayUseCase.handle(new VideoPlayCommand(userDetails.getMemberId(), videoId))
+                videoPlayUseCase.handle(new MemberVideoCommand(userDetails.getMemberId(), videoId))
         );
     }
 }

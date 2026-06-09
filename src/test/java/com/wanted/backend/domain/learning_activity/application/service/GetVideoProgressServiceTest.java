@@ -1,6 +1,6 @@
 package com.wanted.backend.domain.learning_activity.application.service;
 
-import com.wanted.backend.domain.learning_activity.application.command.GetVideoProgressCommand;
+import com.wanted.backend.domain.learning_activity.application.command.MemberVideoCommand;
 import com.wanted.backend.domain.learning_activity.application.port.VideoCatalogPort;
 import com.wanted.backend.domain.learning_activity.application.usecase.GetVideoProgressUseCase.VideoProgressView;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoAccessInfo;
@@ -44,7 +44,7 @@ class GetVideoProgressServiceTest {
         when(videoCatalogPort.findByVideoId(10L)).thenReturn(Optional.of(accessInfo));
         when(videoProgressRepository.findByMemberIdAndVideoId(1L, 10L)).thenReturn(Optional.of(progress));
 
-        VideoProgressView result = service.handle(new GetVideoProgressCommand(1L, 10L));
+        VideoProgressView result = service.handle(new MemberVideoCommand(1L, 10L));
 
         verify(videoAccessService).validatePlayable(1L, accessInfo);
         assertThat(result.videoId()).isEqualTo(10L);
@@ -62,7 +62,7 @@ class GetVideoProgressServiceTest {
         when(videoCatalogPort.findByVideoId(10L)).thenReturn(Optional.of(accessInfo));
         when(videoProgressRepository.findByMemberIdAndVideoId(1L, 10L)).thenReturn(Optional.empty());
 
-        VideoProgressView result = service.handle(new GetVideoProgressCommand(1L, 10L));
+        VideoProgressView result = service.handle(new MemberVideoCommand(1L, 10L));
 
         verify(videoAccessService).validatePlayable(1L, accessInfo);
         assertThat(result.videoId()).isEqualTo(10L);
@@ -78,7 +78,7 @@ class GetVideoProgressServiceTest {
     void 영상_접근_정보가_없으면_예외가_발생한다() {
         when(videoCatalogPort.findByVideoId(10L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.handle(new GetVideoProgressCommand(1L, 10L)))
+        assertThatThrownBy(() -> service.handle(new MemberVideoCommand(1L, 10L)))
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.VIDEO_NOT_FOUND);
