@@ -83,6 +83,7 @@ public class Course {
                        List<CourseSection> sections,
                        List<String> learningObjectives, List<String> targetAudience,
                        List<String> techTags, String level) {
+        ensureNotDeleted();
         validatePrice(priceType, price);
         this.title = title;
         this.subject = subject;
@@ -103,12 +104,25 @@ public class Course {
 
     // 강의 공개
     public void publish() {
+        ensureNotDeleted();
         this.status = CourseStatus.PUBLISHED;
     }
 
     // 강의 비공개
     public void unpublish() {
+        ensureNotDeleted();
         this.status = CourseStatus.DRAFT;
+    }
+
+    // 삭제(DELETED)된 강의는 수정·상태변경 불가
+    private void ensureNotDeleted() {
+        if (this.status == CourseStatus.DELETED) {
+            throw new IllegalStateException("삭제된 강의는 변경할 수 없습니다.");
+        }
+    }
+
+    public boolean isDeleted() {
+        return this.status == CourseStatus.DELETED;
     }
 
     private static void validatePrice(PriceType priceType, int price) {

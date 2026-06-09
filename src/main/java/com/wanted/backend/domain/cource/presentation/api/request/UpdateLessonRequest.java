@@ -2,6 +2,7 @@ package com.wanted.backend.domain.cource.presentation.api.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.PositiveOrZero;
 
 @Schema(description = "레슨 수정 요청")
 public record UpdateLessonRequest(
@@ -16,6 +17,7 @@ public record UpdateLessonRequest(
         String description,
 
         @Schema(description = "레슨 순서 (0-based)", example = "1")
+        @PositiveOrZero(message = "레슨 순서는 0 이상이어야 합니다.")
         int orderIndex,
 
         @Schema(description = "영상 재생시간 (초, 프론트에서 메타데이터 추출)", example = "765")

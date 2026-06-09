@@ -76,6 +76,10 @@ public class CourseCommandService implements CourseCommandUseCase {
         Course course = courseRepository.findById(command.courseId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.COURSE_NOT_FOUND));
 
+        if (course.isDeleted()) {
+            throw new BusinessException(ErrorCode.COURSE_NOT_FOUND);
+        }
+
         if (!course.getAuthorId().equals(command.requesterId())) {
             throw new BusinessException(ErrorCode.COURSE_ACCESS_DENIED);
         }
@@ -121,6 +125,10 @@ public class CourseCommandService implements CourseCommandUseCase {
         Course course = courseRepository.findById(command.courseId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.COURSE_NOT_FOUND));
 
+        if (course.isDeleted()) {
+            throw new BusinessException(ErrorCode.COURSE_NOT_FOUND);
+        }
+
         if (!course.getAuthorId().equals(command.requesterId())) {
             throw new BusinessException(ErrorCode.COURSE_ACCESS_DENIED);
         }
@@ -138,6 +146,13 @@ public class CourseCommandService implements CourseCommandUseCase {
     public String uploadLessonVideo(UploadLessonVideoCommand command) {
         Lesson lesson = lessonRepository.findById(command.lessonId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+
+        // 강의 작성자 본인만 영상 업로드 가능
+        Long authorId = lessonRepository.findCourseAuthorId(command.lessonId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+        if (!authorId.equals(command.requesterId())) {
+            throw new BusinessException(ErrorCode.COURSE_ACCESS_DENIED);
+        }
 
         String videoUrl = videoStoragePort.store(
                 command.lessonId(),

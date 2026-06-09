@@ -30,6 +30,11 @@ public class LessonRepositoryAdapter implements LessonRepository {
         return jpaRepository.findById(lessonId).map(this::toDomain);
     }
 
+    @Override
+    public Optional<Long> findCourseAuthorId(Long lessonId) {
+        return jpaRepository.findCourseAuthorIdByLessonId(lessonId);
+    }
+
     private Lesson toDomain(LessonJpaEntity entity) {
         return Lesson.restore(
                 entity.getId(),
