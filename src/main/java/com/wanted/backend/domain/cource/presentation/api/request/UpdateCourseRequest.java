@@ -5,6 +5,7 @@ import com.wanted.backend.domain.cource.domain.model.PriceType;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.ArrayList;
@@ -28,7 +29,7 @@ public record UpdateCourseRequest(
         @Min(value = 0, message = "가격은 0 이상이어야 합니다.")
         int price,
 
-        @NotNull(message = "커리큘럼(sections)은 필수입니다. 강의 수정은 전체 커리큘럼 교체 방식이므로 기존 커리큘럼을 모두 포함해 보내야 합니다.")
+        @NotEmpty(message = "커리큘럼(sections)은 최소 1개 이상이어야 합니다. 강의 수정은 전체 커리큘럼 교체 방식이므로 기존 커리큘럼을 모두 포함해 보내야 합니다.")
         @Valid
         List<UpdateSectionRequest> sections,
 

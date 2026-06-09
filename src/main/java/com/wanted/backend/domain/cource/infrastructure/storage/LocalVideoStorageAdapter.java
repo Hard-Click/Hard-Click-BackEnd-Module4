@@ -28,16 +28,17 @@ public class LocalVideoStorageAdapter implements VideoStoragePort {
     @Override
     public String store(Long lessonId, String originalFilename, byte[] data) {
         try {
-            Path dir = Paths.get(uploadDir);
+            // 절대 경로로 정규화하여 기준 디렉토리를 고정
+            Path dir = Paths.get(uploadDir).toAbsolutePath().normalize();
             Files.createDirectories(dir);
 
             // 원본 파일명을 그대로 쓰지 않고 UUID 기반으로 생성 (경로 조작·중복·덮어쓰기 방지)
             String ext = extractAllowedExtension(originalFilename);
             String filename = lessonId + "_" + UUID.randomUUID() + "." + ext;
 
-            Path target = dir.resolve(filename).normalize();
-            // 업로드 디렉토리 밖으로 벗어나지 못하게 검증
-            if (!target.startsWith(dir.normalize())) {
+            // 최종 경로도 절대 경로로 정규화 후 기준 디렉토리 안에 있는지 검증 (경로 탈출 방어)
+            Path target = dir.resolve(filename).toAbsolutePath().normalize();
+            if (!target.startsWith(dir)) {
                 throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
             }
             Files.write(target, data);
