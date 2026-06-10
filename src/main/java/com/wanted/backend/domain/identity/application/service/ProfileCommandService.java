@@ -1,0 +1,114 @@
+package com.wanted.backend.domain.identity.application.service;
+
+import com.wanted.backend.domain.identity.application.command.UpdateMyProfileCommand;
+import com.wanted.backend.domain.identity.application.command.WithdrawMemberCommand;
+import com.wanted.backend.domain.identity.application.port.ProfileImageStoragePort;
+import com.wanted.backend.domain.identity.application.usecase.ProfileCommandUseCase;
+import com.wanted.backend.domain.identity.domain.model.Member;
+import com.wanted.backend.domain.identity.domain.model.MemberStatus;
+import com.wanted.backend.domain.identity.domain.policy.PasswordPolicy;
+import com.wanted.backend.domain.identity.domain.repository.MemberRepository;
+import com.wanted.backend.domain.identity.domain.repository.RefreshTokenRepository;
+import com.wanted.backend.global.exception.BusinessException;
+import com.wanted.backend.global.exception.ErrorCode;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.time.LocalDateTime;
+
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class ProfileCommandService implements ProfileCommandUseCase {
+
+    private final MemberRepository memberRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final ProfileImageStoragePort profileImageStoragePort;
+
+    @Override
+    public MyProfileUpdateView handle(UpdateMyProfileCommand command) {
+        Member member = memberRepository.findById(command.memberId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        validateHasUpdatableValue(command);
+
+        String profileImageUrl = storeProfileImage(command.profileImage());
+        String encodedPassword = resolveEncodedPassword(command, member);
+
+        member.updateProfile(profileImageUrl, encodedPassword, LocalDateTime.now());
+        Member saved = memberRepository.save(member);
+
+        return new MyProfileUpdateView(
+                saved.getId(),
+                saved.getName(),
+                saved.getEmail(),
+                saved.getProfileImageUrl()
+        );
+    }
+
+    @Override
+    public void withdraw(Long memberId, WithdrawMemberCommand command) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        if (member.getStatus() == MemberStatus.WITHDRAWN) {
+            throw new BusinessException(ErrorCode.ALREADY_WITHDRAWN_MEMBER);
+        }
+
+        if (!passwordEncoder.matches(command.currentPassword(), member.getPassword())) {
+            throw new BusinessException(ErrorCode.INVALID_PASSWORD);
+        }
+
+        member.withdraw(LocalDateTime.now());
+        memberRepository.save(member);
+
+        refreshTokenRepository.deleteByMemberId(memberId);
+    }
+
+    private String storeProfileImage(MultipartFile profileImage) {
+        if (profileImage == null || profileImage.isEmpty()) {
+            return null;
+        }
+        return profileImageStoragePort.store(profileImage);
+    }
+
+    private void validateHasUpdatableValue(UpdateMyProfileCommand command) {
+        boolean hasProfileImage = command.profileImage() != null && !command.profileImage().isEmpty();
+        boolean hasPasswordInput = StringUtils.hasText(command.currentPassword())
+                || StringUtils.hasText(command.newPassword())
+                || StringUtils.hasText(command.newPasswordConfirm());
+
+        if (!hasProfileImage && !hasPasswordInput) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+    }
+
+    private String resolveEncodedPassword(UpdateMyProfileCommand command, Member member) {
+        boolean hasCurrentPassword = StringUtils.hasText(command.currentPassword());
+        boolean hasNewPassword = StringUtils.hasText(command.newPassword());
+        boolean hasNewPasswordConfirm = StringUtils.hasText(command.newPasswordConfirm());
+
+        if (!hasCurrentPassword && !hasNewPassword && !hasNewPasswordConfirm) {
+            return null;
+        }
+        if (!hasCurrentPassword || !hasNewPassword || !hasNewPasswordConfirm) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+        if (!command.newPassword().equals(command.newPasswordConfirm())) {
+            throw new BusinessException(ErrorCode.PASSWORD_CONFIRM_MISMATCH);
+        }
+        if (!PasswordPolicy.isValid(command.newPassword())) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+        if (!passwordEncoder.matches(command.currentPassword(), member.getPassword())) {
+            throw new BusinessException(ErrorCode.PASSWORD_MISMATCH);
+        }
+
+        return passwordEncoder.encode(command.newPassword());
+    }
+}
