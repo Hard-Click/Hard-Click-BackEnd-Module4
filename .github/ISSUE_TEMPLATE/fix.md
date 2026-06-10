@@ -1,12 +1,12 @@
 ---
-name: 🚨 Bug report
-about: 백엔드 버그 및 오류 수정을 위한 템플릿입니다.
+name: "🚨 Bug report"
+about: "백엔드 버그 및 오류 수정을 위한 템플릿입니다."
 title: "[FIX] "
-labels: `fix`
+labels: ["🐛 fix"]
 ---
 
 ## 📊 버그 심각도 및 우선순위
-> 해당하는 우선순위에 체크해 주세요.
+> 해당하는 우선순위에 체크[X]해 주세요.
 - [ ] `P0` : 서비스 핵심 동작 장애 (긴급 핫픽스 필요)
 - [ ] `P1` : 주요 기능 오작동 및 예외 처리 누락
 - [ ] `P2` : 마이너한 버그 및 시스템 영향이 적은 오류
@@ -23,14 +23,14 @@ labels: `fix`
 2. 
 
 ## 🕵️‍♂️ 원인 분석 및 수정 내역
-> 클린 아키텍처 구조에 맞춰 버그의 원인이 된 계층과 수정 사항을 체크하고 작성해 주세요.
-- [ ] `Model` / `Policy`: 
-- [ ] `UseCase` / `Command`: 
-- [ ] `Service`: 
-- [ ] `Port` / `Adapter`: 
-- [ ] `Repository`: 
-- [ ] `Controller`: 
-- [ ] `response` / `request`:
+> 클린 아키텍처 구조에 맞춰 버그의 원인이 된 계층에 체크[X]하고 수정 사항을 작성해 주세요.
+- [ ] `Model` / `Policy` : 
+- [ ] `UseCase` / `Command` : 
+- [ ] `Service` : 
+- [ ] `Port` / `Adapter` : 
+- [ ] `Repository` : 
+- [ ] `Controller` : 
+- [ ] `Response` / `Request` : 
 
 ## 🚨 검증 및 회귀 방지 (TestCode)
 > 버그 수정 후 동일한 문제가 다시 발생하지 않도록 예외 및 검증 테스트를 추가해 주세요.
