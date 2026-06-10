@@ -3,6 +3,7 @@ name: 🚨 Bug report
 about: 백엔드 버그 및 오류 수정을 위한 템플릿입니다.
 title: "[FIX] "
 labels: `fix`
+---
 
 ## 📊 버그 심각도 및 우선순위
 > 해당하는 우선순위에 체크해 주세요.
