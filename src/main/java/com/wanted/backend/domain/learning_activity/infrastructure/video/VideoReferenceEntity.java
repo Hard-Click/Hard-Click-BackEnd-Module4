@@ -12,15 +12,14 @@ import org.hibernate.annotations.Immutable;
 @Entity
 @Getter
 @Immutable
-@Table(name = "lesson")
+@Table(name = "video")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class VideoReferenceEntity {
 
     @Id
-    @Column(name = "id")
+    @Column(name = "video_id")
     private Long id;
 
-    // section_id = FK to course_section.id
-    @Column(name = "section_id", nullable = false)
+    @Column(name = "curriculum_id", nullable = false)
     private Long curriculumId;
 }

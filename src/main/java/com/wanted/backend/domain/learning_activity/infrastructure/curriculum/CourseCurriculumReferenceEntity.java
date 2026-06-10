@@ -9,18 +9,17 @@ import org.hibernate.annotations.Immutable;
 @Entity
 @Getter
 @Immutable
-@Table(name = "course_section")
+@Table(name = "course_curriculum")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CourseCurriculumReferenceEntity {
 
     @Id
-    @Column(name = "id")
+    @Column(name = "curriculum_id")
     private Long id;
 
     @Column(name = "course_id", nullable = false)
-
     private Long courseId;
 
-    @Column(name = "order_index")
+    @Column(name = "sort_order")
     private Integer orderIndex;
 }
