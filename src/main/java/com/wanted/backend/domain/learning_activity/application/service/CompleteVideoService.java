@@ -33,10 +33,17 @@ public class CompleteVideoService implements CompleteVideoUseCase {
         VideoAccessInfo accessInfo = playable.accessInfo();
         VideoProgress progress = playable.progress();
 
-        if (!videoCompletionPolicy.canComplete(progress.watchTimeSec(), accessInfo.durationSeconds())) {
+        if (!videoCompletionPolicy.canComplete(effectiveProgressSeconds(progress), accessInfo.durationSeconds())) {
             throw new BusinessException(ErrorCode.VIDEO_COMPLETION_CONDITION_NOT_MET);
         }
 
         videoProgressRepository.save(progress.complete(LocalDateTime.now()));
+    }
+
+    private int effectiveProgressSeconds(VideoProgress progress) {
+        int watchTimeSec = progress.watchTimeSec() == null ? 0 : progress.watchTimeSec();
+        int lastPositionSec = progress.lastPositionSec() == null ? 0 : progress.lastPositionSec();
+
+        return Math.max(watchTimeSec, lastPositionSec);
     }
 }

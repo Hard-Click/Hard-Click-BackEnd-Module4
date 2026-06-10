@@ -59,6 +59,23 @@ class CompleteVideoServiceTest {
     }
 
     @Test
+    void 배속_재생으로_시청_시간이_부족해도_재생_위치가_충분하면_완료_처리한다() {
+        VideoAccessInfo accessInfo = accessInfo();
+        VideoProgress progress = new VideoProgress(100L, 1L, 20L, 10L, 270, 150, false, null);
+        when(videoCatalogPort.findByVideoId(10L)).thenReturn(Optional.of(accessInfo));
+        when(videoProgressRepository.findByMemberIdAndVideoId(1L, 10L)).thenReturn(Optional.of(progress));
+
+        service.handle(new MemberVideoCommand(1L, 10L));
+
+        ArgumentCaptor<VideoProgress> captor = ArgumentCaptor.forClass(VideoProgress.class);
+        verify(videoProgressRepository).save(captor.capture());
+        assertThat(captor.getValue().completed()).isTrue();
+        assertThat(captor.getValue().completedAt()).isNotNull();
+        assertThat(captor.getValue().lastPositionSec()).isEqualTo(270);
+        assertThat(captor.getValue().watchTimeSec()).isEqualTo(150);
+    }
+
+    @Test
     void 시청_시간이_부족하면_예외가_발생한다() {
         VideoAccessInfo accessInfo = accessInfo();
         VideoProgress progress = new VideoProgress(100L, 1L, 20L, 10L, 42, 269, false, null);
