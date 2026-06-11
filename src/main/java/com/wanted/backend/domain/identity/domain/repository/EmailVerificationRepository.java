@@ -20,4 +20,6 @@ public interface EmailVerificationRepository {
     long countByEmailAndPurposeAndCreatedAtAfter(String email, EmailPurpose purpose, LocalDateTime after);
 
     void revokeActiveByEmailAndPurpose(String email, EmailPurpose purpose);
+
+    long deleteByExpiresAtBefore(LocalDateTime cutoff);
 }

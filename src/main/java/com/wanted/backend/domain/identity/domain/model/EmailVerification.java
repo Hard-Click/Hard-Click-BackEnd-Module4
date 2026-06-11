@@ -1,9 +1,12 @@
 package com.wanted.backend.domain.identity.domain.model;
 
 import java.time.LocalDateTime;
+import java.security.SecureRandom;
 import java.util.UUID;
 
 public class EmailVerification {
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     private final Long id;
     private final String email;
     private final String code;
@@ -27,7 +30,7 @@ public class EmailVerification {
     }
 
     public static EmailVerification create(String email, EmailPurpose purpose) {
-        String code = String.format("%06d", (int) (Math.random() * 1000000));
+        String code = String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
         return new EmailVerification(
                 null,
                 email,

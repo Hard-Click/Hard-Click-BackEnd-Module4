@@ -50,7 +50,8 @@ import org.springframework.http.HttpStatus;
     REFRESH_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND , "AUTH_008", "저장된 Refresh Token이 없습니다."),
     INVALID_CURRENT_PASSWORD(HttpStatus.UNAUTHORIZED, "AUTH_009", "현재 비밀번호가 일치하지 않습니다."),
     ALREADY_WITHDRAWN_MEMBER(HttpStatus.BAD_REQUEST, "AUTH_010","이미 탈퇴한 회원입니다."),
-        WITHDRAWN_MEMBER(HttpStatus.FORBIDDEN,"AUTH_011", "탈퇴한 회원입니다."),
+    WITHDRAWN_MEMBER(HttpStatus.FORBIDDEN,"AUTH_011", "탈퇴한 회원입니다."),
+    BANNED_MEMBER(HttpStatus.FORBIDDEN, "AUTH_012", "영구 정지된 회원입니다."),
 
     /* =========================================================================
        4. 강의(Course) 관련 예외 (CR000)

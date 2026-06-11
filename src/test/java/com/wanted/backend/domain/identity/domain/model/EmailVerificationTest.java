@@ -21,4 +21,14 @@ class EmailVerificationTest {
         assertThat(verification.getVerifiedAt()).isNotNull();
         assertThat(verification.getVerificationToken()).isNotBlank();
     }
+
+    @Test
+    void create_generatesSixDigitNumericCode() {
+        EmailVerification verification = EmailVerification.create(
+                "user@example.com",
+                EmailPurpose.SIGNUP
+        );
+
+        assertThat(verification.getCode()).matches("\\d{6}");
+    }
 }

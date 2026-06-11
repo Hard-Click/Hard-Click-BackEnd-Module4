@@ -100,6 +100,11 @@ public class EmailVerificationPersistenceAdapter implements EmailVerificationRep
         jpaRepository.saveAll(activeEntities);
     }
 
+    @Override
+    public long deleteByExpiresAtBefore(LocalDateTime cutoff) {
+        return jpaRepository.deleteByExpiresAtBefore(cutoff);
+    }
+
     private EmailVerification toDomain(EmailVerificationJpaEntity entity) {
         return EmailVerification.restore(
                 entity.getId(),
