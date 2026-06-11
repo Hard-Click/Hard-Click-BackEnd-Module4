@@ -69,7 +69,7 @@ public class IdentityController {
 
         return ApiResponse.success(
                 "Access Token이 재발급되었습니다",
-                new RefreshTokenResponse(token.accessToken(), token.refreshToken())
+                new RefreshTokenResponse(token.accessToken())
         );
     }
 

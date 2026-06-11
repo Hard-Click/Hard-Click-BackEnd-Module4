@@ -11,6 +11,7 @@ identity:
     upload-dir: src/main/resources/static/identity/profile/
     url: http://localhost:8080/identity/profile/
     max-size: 5242880
+
 email:
   allowed-domain: gmail.com
 
@@ -18,7 +19,6 @@ jwt:
   secret: ${JWT_SECRET}
   access-token-expiration-ms: ${JWT_ACCESS_EXPIRATION:900000}
   refresh-token-expiration-ms: ${JWT_REFRESH_EXPIRATION:1209600000}
-
 
 spring:
   application:
@@ -39,8 +39,7 @@ spring:
     show-sql: true
     open-in-view: false
     hibernate:
-      ddl-auto: validate
-
+      ddl-auto: create-drop
     properties:
       hibernate:
         format_sql: true
