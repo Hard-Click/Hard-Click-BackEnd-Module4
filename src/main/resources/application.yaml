@@ -70,7 +70,7 @@ spring:
       port: ${REDIS_PORT:6379}
 
 influx:
-    url: ${INFLUX_URL:http://localhost:8086}
-    token: ${INFLUX_TOKEN:hardclick-influx-token}
-    org: ${INFLUX_ORG:hardclick}
-    bucket: ${INFLUX_BUCKET:hardclick-metrics}
+  url: ${INFLUX_URL:http://localhost:8086}
+  token: ${INFLUX_TOKEN}
+  org: ${INFLUX_ORG:hardclick}
+  bucket: ${INFLUX_BUCKET:hardclick-metrics}
