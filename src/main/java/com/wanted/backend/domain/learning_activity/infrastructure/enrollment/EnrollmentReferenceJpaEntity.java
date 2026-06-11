@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Immutable
-@Table(name = "enrollment")
+@Table(name = "enrollments")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class EnrollmentReferenceJpaEntity {
 

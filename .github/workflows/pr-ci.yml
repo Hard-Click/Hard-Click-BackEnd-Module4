@@ -9,6 +9,9 @@ jobs:
   build-and-test:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
+    permissions: # ← 추가
+      checks: write       # ← 추가
+      pull-requests: write # ← 추가
 
     steps:
       - name: 코드 체크아웃
