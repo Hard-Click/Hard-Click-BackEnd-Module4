@@ -1,6 +1,5 @@
 ---
 title: "[Daily] YYYY-MM-DD 백엔드 파트 작업 현황"
-category: "General"
 ---
 
 ## ☕ 백엔드 데일리 스탠드업
