@@ -9,9 +9,20 @@ jobs:
   build-and-test:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
-    permissions: # ← 추가
-      checks: write       # ← 추가
-      pull-requests: write # ← 추가
+    permissions:
+      checks: write
+      pull-requests: write
+
+    services:
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: 코드 체크아웃
@@ -41,6 +52,7 @@ jobs:
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+          INFLUX_TOKEN: ${{ secrets.INFLUX_TOKEN }}
 
       - name: 테스트 결과 PR에 표시
         uses: EnricoMi/publish-unit-test-result-action@v2
