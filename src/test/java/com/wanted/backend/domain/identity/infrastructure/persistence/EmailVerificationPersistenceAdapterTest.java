@@ -29,6 +29,7 @@ class EmailVerificationPersistenceAdapterTest {
                     "used boolean not null, " +
                     "code varchar(10) not null, " +
                     "purpose varchar(30) not null, " +
+                    "status varchar(20) not null, " +
                     "is_verified boolean not null, " +
                     "verification_token varchar(200), " +
                     "expires_at timestamp not null, " +
