@@ -17,7 +17,7 @@ public class Member {
     private String username;
     private String email;
     private String password;
-    private final String name;
+    private String name;
     private String gender;
     private LocalDate birthDate;
     private String phoneNumber;
@@ -149,7 +149,7 @@ public class Member {
         this.updatedAt = now;
     }
 
-    public void withdraw(LocalDateTime now) {
+    public void withdraw(String encodedDeletedPassword, LocalDateTime now) {
         if (this.status == MemberStatus.WITHDRAWN) {
             throw new IllegalStateException("이미 탈퇴한 회원입니다.");
         }
@@ -158,8 +158,13 @@ public class Member {
 
         this.status = MemberStatus.WITHDRAWN;
         this.email = "withdrawn_" + this.id + "_" + suffix + "@deleted.local";
-        this.username = "wd_" + this.id;
+        this.username = "withdrawn_" + this.id + "_" + suffix;
+        this.name = "탈퇴회원";
+        this.password = encodedDeletedPassword;
         this.phoneNumber = null;
+        this.profileImageUrl = null;
+        this.gender = null;
+        this.birthDate = null;
         this.updatedAt = now;
     }
 

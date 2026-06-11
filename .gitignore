@@ -37,7 +37,12 @@ out/
 .vscode/
 
 ### .yaml ###
-application-secret.yaml
-### Logs ###
+*.yaml
+*.yml
+
+.env
+.env.*
+!.env.example
+
 logs/
 *.log

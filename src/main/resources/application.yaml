@@ -14,6 +14,11 @@ identity:
 email:
   allowed-domain: gmail.com
 
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expiration-ms: ${JWT_ACCESS_EXPIRATION:900000}
+  refresh-token-expiration-ms: ${JWT_REFRESH_EXPIRATION:1209600000}
+
 
 spring:
   application:
@@ -41,10 +46,6 @@ spring:
         format_sql: true
         highlight_sql: true
         use_sql_comments: true
-  jwt:
-    secret: ${JWT_SECRET}
-    access-token-expiration-ms: ${JWT_ACCESS_EXPIRATION:1800000}
-    refresh-token-expiration-ms: ${JWT_REFRESH_EXPIRATION:1209600000}
 
   servlet:
     multipart:
@@ -62,3 +63,14 @@ spring:
           auth: true
           starttls:
             enable: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+influx:
+    url: ${INFLUX_URL:http://localhost:8086}
+    token: ${INFLUX_TOKEN:hardclick-influx-token}
+    org: ${INFLUX_ORG:hardclick}
+    bucket: ${INFLUX_BUCKET:hardclick-metrics}

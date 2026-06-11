@@ -40,6 +40,10 @@ public class AuthCommandService implements AuthCommandUseCase {
             throw new BusinessException(ErrorCode.WITHDRAWN_MEMBER);
         }
 
+        if (member.getStatus() == MemberStatus.BANNED) {
+            throw new BusinessException(ErrorCode.BANNED_MEMBER);
+        }
+
         if (member.isLocked()) {
             throw new BusinessException(ErrorCode.ACCOUNT_LOCKED);
         }
@@ -95,6 +99,16 @@ public class AuthCommandService implements AuthCommandUseCase {
         if (member.getStatus() == MemberStatus.WITHDRAWN) {
             refreshTokenRepository.deleteByMemberId(memberId);
             throw new BusinessException(ErrorCode.WITHDRAWN_MEMBER);
+        }
+
+        if (member.getStatus() == MemberStatus.BANNED) {
+            refreshTokenRepository.deleteByMemberId(memberId);
+            throw new BusinessException(ErrorCode.BANNED_MEMBER);
+        }
+
+        if (member.isLocked()) {
+            refreshTokenRepository.deleteByMemberId(memberId);
+            throw new BusinessException(ErrorCode.ACCOUNT_LOCKED);
         }
 
         String role = "ROLE_" + member.getRole().name();

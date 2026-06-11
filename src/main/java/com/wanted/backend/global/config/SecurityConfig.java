@@ -2,6 +2,7 @@ package com.wanted.backend.global.config;
 
 import com.wanted.backend.global.security.JwtAccessDeniedHandler;
 import com.wanted.backend.global.security.JwtAuthenticationEntryPoint;
+import com.wanted.backend.global.security.CustomUserDetailsService;
 import com.wanted.backend.global.security.filter.JwtAuthenticationFilter;
 import com.wanted.backend.global.security.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
@@ -18,15 +19,19 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtProvider jwtProvider;
+    private final CustomUserDetailsService customUserDetailsService;
     private final JwtAuthenticationEntryPoint authenticationEntryPoint;
     private final JwtAccessDeniedHandler accessDeniedHandler;
 
@@ -75,7 +80,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(new JwtAuthenticationFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(
+                        new JwtAuthenticationFilter(jwtProvider, customUserDetailsService),
+                        UsernamePasswordAuthenticationFilter.class
+                );
 
         return http.build();
     }
@@ -103,5 +111,12 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
+    }
+    @Bean
+    public RoleHierarchy roleHierarchy() {
+        return RoleHierarchyImpl.fromHierarchy("""
+        ROLE_ADMIN > ROLE_INSTRUCTOR
+        ROLE_INSTRUCTOR > ROLE_STUDENT
+        """);
     }
 }

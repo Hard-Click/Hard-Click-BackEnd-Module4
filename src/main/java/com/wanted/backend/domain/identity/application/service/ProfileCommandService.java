@@ -19,6 +19,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -64,7 +65,8 @@ public class ProfileCommandService implements ProfileCommandUseCase {
             throw new BusinessException(ErrorCode.INVALID_PASSWORD);
         }
 
-        member.withdraw(LocalDateTime.now());
+        String encodedDeletedPassword = passwordEncoder.encode(UUID.randomUUID().toString());
+        member.withdraw(encodedDeletedPassword, LocalDateTime.now());
         memberRepository.save(member);
 
         refreshTokenRepository.deleteByMemberId(memberId);

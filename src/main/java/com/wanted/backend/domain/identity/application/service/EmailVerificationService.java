@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -39,7 +41,7 @@ public class EmailVerificationService implements EmailVerificationUseCase {
 
         EmailVerification verification = EmailVerification.create(email, purpose);
         verificationRepository.save(verification);
-        emailSendPort.sendVerificationCode(email, verification.getCode());
+        sendVerificationCodeAfterCommit(email, verification.getCode());
     }
 
     @Override
@@ -84,5 +86,19 @@ public class EmailVerificationService implements EmailVerificationUseCase {
     @Transactional
     public void sendAccountLockCode(String email) {
         sendVerificationCode(email, EmailPurpose.ACCOUNT_LOCK);
+    }
+
+    private void sendVerificationCodeAfterCommit(String email, String code) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            emailSendPort.sendVerificationCode(email, code);
+            return;
+        }
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                emailSendPort.sendVerificationCode(email, code);
+            }
+        });
     }
 }

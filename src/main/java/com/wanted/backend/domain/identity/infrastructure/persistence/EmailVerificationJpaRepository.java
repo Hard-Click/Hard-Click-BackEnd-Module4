@@ -46,4 +46,6 @@ public interface EmailVerificationJpaRepository extends JpaRepository<EmailVerif
             EmailPurpose purpose,
             LocalDateTime after
     );
+
+    long deleteByExpiresAtBefore(LocalDateTime cutoff);
 }
