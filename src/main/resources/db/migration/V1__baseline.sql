@@ -1,5 +1,4 @@
-﻿SET FOREIGN_KEY_CHECKS=0;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
+﻿/*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `comments` (
   `comment_id` bigint NOT NULL AUTO_INCREMENT,
@@ -95,8 +94,6 @@ CREATE TABLE `email_verifications` (
   `expires_at` datetime(6) NOT NULL,
   `is_verified` bit(1) NOT NULL,
   `purpose` enum('ACCOUNT_LOCK','PASSWORD_RESET','SIGNUP') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `status` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDING',
-  `used` bit(1) NOT NULL DEFAULT b'0',
   `verification_token` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `verified_at` datetime(6) DEFAULT NULL,
   PRIMARY KEY (`verification_id`),
@@ -349,7 +346,7 @@ CREATE TABLE `video_progress` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `video` (
+CREATE TABLE `videos` (
   `video_id` bigint NOT NULL,
   `curriculum_id` bigint NOT NULL,
   `duration_seconds` int NOT NULL,
@@ -368,5 +365,4 @@ CREATE TABLE `view_logs` (
   PRIMARY KEY (`view_log_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-SET FOREIGN_KEY_CHECKS=1;
 

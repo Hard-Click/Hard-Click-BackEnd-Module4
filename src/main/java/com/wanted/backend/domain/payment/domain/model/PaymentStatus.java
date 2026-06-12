@@ -5,7 +5,8 @@ public enum PaymentStatus {
     REFUNDED,
     READY,
     FAILED,
-    CANCELED;
+    CANCELED,
+    CANCELLED;
 
     public static PaymentStatus from(String value) {
         return PaymentStatus.valueOf(value);
