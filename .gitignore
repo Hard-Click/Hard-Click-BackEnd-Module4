@@ -39,9 +39,15 @@ out/
 ### .yaml ###
 *.yaml
 *.yml
+!application.yaml
 !application-test.yml
 !application-test.yaml
+!docker-compose.yml
 !.coderabbit.yaml
+!.github/**/*.yml
+
+### Secrets ###
+application-secret.yaml
 ### Logs ###
 logs/
 *.log

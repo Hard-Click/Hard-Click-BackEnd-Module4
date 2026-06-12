@@ -31,6 +31,9 @@ spring:
       ddl-auto: create-drop
     show-sql: true  # 테스트에서는 SQL 로그 활성화
 
+  flyway:
+    enabled: false
+
   # 테스트용 SQL 초기화 설정
   sql:
     init:

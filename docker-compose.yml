@@ -1,0 +1,36 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: hard-click-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: Hard-Click
+      MYSQL_USER: Hard-Click
+      MYSQL_PASSWORD: Hard-Click
+      MYSQL_ROOT_PASSWORD: Hard-Click
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+  redis:
+    image: redis:7
+    container_name: hardclick-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  influxdb:
+    image: influxdb:2
+    container_name: hardclick-influxdb
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+
+volumes:
+  mysql-data:
+  redis-data:
+  influxdb-data:
