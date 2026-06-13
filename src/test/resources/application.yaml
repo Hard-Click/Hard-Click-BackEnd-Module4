@@ -1,9 +1,0 @@
-spring:
-  flyway:
-    enabled: false
-
-influx:
-  url: ${INFLUX_URL:http://localhost:8086}
-  token: ${INFLUX_TOKEN:test-token-placeholder}
-  org: ${INFLUX_ORG:hardclick}
-  bucket: ${INFLUX_BUCKET:hardclick-metrics}
