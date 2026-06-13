@@ -34,9 +34,18 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd ~/hard-click
+            if ! docker compose version > /dev/null 2>&1; then
+              mkdir -p ~/.docker/cli-plugins
+              curl -SL https://github.com/docker/compose/releases/download/v2.27.0/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
+              chmod +x ~/.docker/cli-plugins/docker-compose
+            fi
 
-            cat > .env << 'ENVEOF'
+            mkdir -p ~/hard-click
+
+            curl -fsSL https://raw.githubusercontent.com/Hard-Click/Hard-Click-BackEnd-Module4/develop/docker-compose.prod.yml \
+              -o ~/hard-click/docker-compose.prod.yml
+
+            cat > ~/hard-click/.env << 'ENVEOF'
             DB_USERNAME=${{ secrets.DB_USERNAME }}
             DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
@@ -44,6 +53,7 @@ jobs:
             INFLUX_TOKEN=${{ secrets.INFLUX_TOKEN }}
             ENVEOF
 
+            cd ~/hard-click
             docker compose -f docker-compose.prod.yml pull app
-            docker compose -f docker-compose.prod.yml up -d --no-deps app
+            docker compose -f docker-compose.prod.yml up -d
             docker image prune -f
