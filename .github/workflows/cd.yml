@@ -51,6 +51,7 @@ jobs:
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
             INFLUX_TOKEN=${{ secrets.INFLUX_TOKEN }}
+            REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
             ENVEOF
 
             cd ~/hard-click
