@@ -12,8 +12,8 @@ reviews:
   poem: false
 
   finishing_touches:
-  docstrings:
-    enabled: false
+    docstrings:
+      enabled: false
 
   auto_review:
     enabled: true
