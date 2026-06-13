@@ -57,18 +57,6 @@ CREATE TABLE `course_section` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `course_sections` (
-  `order_index` int NOT NULL,
-  `course_id` bigint NOT NULL,
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `FK4xiaseygl0aodt5ahkbm8s2ds` (`course_id`),
-  CONSTRAINT `FK4xiaseygl0aodt5ahkbm8s2ds` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `courses` (
   `price` int NOT NULL,
   `author_id` bigint NOT NULL,
@@ -82,6 +70,18 @@ CREATE TABLE `courses` (
   `status` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `id` bigint NOT NULL,
   PRIMARY KEY (`course_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `course_sections` (
+  `order_index` int NOT NULL,
+  `course_id` bigint NOT NULL,
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FK4xiaseygl0aodt5ahkbm8s2ds` (`course_id`),
+  CONSTRAINT `FK4xiaseygl0aodt5ahkbm8s2ds` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
