@@ -67,8 +67,8 @@ spring:
       host: localhost
       port: 6379
 
-influxdb:
+influx:
   url: http://localhost:8086
   token: ${INFLUX_TOKEN}
-  org: hard-click
-  bucket: hard-click
+  org: hardclick
+  bucket: hardclick-metrics
