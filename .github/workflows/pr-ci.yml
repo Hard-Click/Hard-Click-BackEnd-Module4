@@ -41,6 +41,7 @@ jobs:
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+          INFLUX_TOKEN: ${{ secrets.INFLUX_TOKEN }}
 
       - name: 테스트 결과 PR에 표시
         uses: EnricoMi/publish-unit-test-result-action@v2
