@@ -2,6 +2,7 @@ services:
   redis:
     image: redis:7
     container_name: hardclick-redis
+    command: redis-server --requirepass hard_click_redis_2026
     ports:
       - "6379:6379"
     volumes:
