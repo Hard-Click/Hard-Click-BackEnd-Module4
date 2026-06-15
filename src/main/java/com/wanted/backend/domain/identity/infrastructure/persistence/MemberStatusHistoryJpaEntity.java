@@ -33,7 +33,7 @@ public class MemberStatusHistoryJpaEntity {
     @Column(name = "changed_status", nullable = false, length = 20)
     private MemberStatus changedStatus;
 
-    @Column(length = 500)
+    @Column(length = 50)
     private String memo;
 
     @Column(name = "created_at", nullable = false, updatable = false)

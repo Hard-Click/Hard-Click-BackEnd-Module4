@@ -73,9 +73,3 @@ logging:
   level:
     com.wanted.backend: INFO
     org.hibernate.SQL: WARN
-
-influx:
-  url: ${INFLUX_URL:http://localhost:8086}
-  token: ${INFLUX_TOKEN}
-  org: ${INFLUX_ORG:hardclick}
-  bucket: ${INFLUX_BUCKET:hardclick-metrics}

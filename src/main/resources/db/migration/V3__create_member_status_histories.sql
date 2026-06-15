@@ -3,7 +3,7 @@ CREATE TABLE member_status_histories (
     member_id BIGINT NOT NULL,
     previous_status VARCHAR(20) NOT NULL,
     changed_status VARCHAR(20) NOT NULL,
-    memo VARCHAR(500) DEFAULT NULL,
+    memo VARCHAR(50) DEFAULT NULL,
     created_at DATETIME(6) NOT NULL,
     PRIMARY KEY (history_id),
     INDEX idx_member_status_histories_member_id (member_id)
