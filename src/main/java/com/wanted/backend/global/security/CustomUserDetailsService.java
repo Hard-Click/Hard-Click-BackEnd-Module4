@@ -28,7 +28,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 member.getUsername(),
                 member.getPassword(),
                 member.isLocked(),
-                member.getStatus() != MemberStatus.BANNED
+                member.getStatus() != MemberStatus.BLACKLIST
                         && member.getStatus() != MemberStatus.WITHDRAWN,
                 List.of(new SimpleGrantedAuthority("ROLE_" + member.getRole().name()))
         );
