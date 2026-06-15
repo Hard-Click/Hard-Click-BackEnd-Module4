@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS course_curriculum (
     course_id BIGINT NOT NULL,
     title VARCHAR(200) NOT NULL,
     duration_minutes INT,
+    order_index INT NOT NULL DEFAULT 0,
     sort_order INT NOT NULL
 );
 

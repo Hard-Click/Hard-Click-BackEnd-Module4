@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.identity.domain.model;
 
 import com.wanted.backend.domain.identity.domain.event.MemberLoggedInEvent;
+import com.wanted.backend.domain.identity.domain.policy.MemberStatusChangePolicy;
 import com.wanted.backend.global.domain.DomainEvent;
 
 import java.time.LocalDate;
@@ -165,6 +166,15 @@ public class Member {
         this.profileImageUrl = null;
         this.gender = null;
         this.birthDate = null;
+        this.updatedAt = now;
+    }
+
+    public void changeCommunityStatus(MemberStatus status, LocalDateTime now) {
+        if (!MemberStatusChangePolicy.isCommunityStatusChangeAllowed(status)) {
+            throw new IllegalArgumentException("관리자가 변경할 수 없는 회원 상태입니다.");
+        }
+
+        this.status = status;
         this.updatedAt = now;
     }
 
