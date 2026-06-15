@@ -180,7 +180,7 @@ CREATE TABLE `members` (
   `phone_number` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `profile_image_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `role` enum('ADMIN','INSTRUCTOR','STUDENT') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `status` enum('ACTIVE','BANNED','SUSPENDED','WITHDRAWN') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` enum('ACTIVE','BLACKLIST','SUSPENDED','WITHDRAWN') COLLATE utf8mb4_unicode_ci NOT NULL,
   `updated_at` datetime(6) DEFAULT NULL,
   `username` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`member_id`),
