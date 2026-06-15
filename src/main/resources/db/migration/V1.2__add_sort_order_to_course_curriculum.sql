@@ -1,3 +1,6 @@
+USE `Hard-Click`;
+ALTER TABLE course_curriculum
+    ADD COLUMN sort_order INT NOT NULL DEFAULT 0;
 ALTER TABLE course_curriculum ADD COLUMN sort_order INT NOT NULL DEFAULT 0;
 ALTER TABLE email_verifications ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'PENDING';
 ALTER TABLE email_verifications ADD COLUMN used BIT(1) NOT NULL DEFAULT 0;

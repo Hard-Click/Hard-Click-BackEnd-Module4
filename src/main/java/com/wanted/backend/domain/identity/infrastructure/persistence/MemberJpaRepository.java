@@ -2,8 +2,8 @@ package com.wanted.backend.domain.identity.infrastructure.persistence;
 
 import com.wanted.backend.domain.identity.domain.model.MemberStatus;
 import com.wanted.backend.domain.identity.domain.model.Role;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -25,9 +25,9 @@ public interface MemberJpaRepository extends JpaRepository<MemberJpaEntity, Long
                 or lower(m.email) like lower(concat('%', :keyword, '%')))
               and (:role is null or m.role = :role)
               and (:status is null or m.status = :status)
-            order by m.createdAt desc
+            order by m.createdAt desc, m.id desc
             """)
-    Page<MemberJpaEntity> searchAdminMembers(
+    Slice<MemberJpaEntity> searchAdminMembers(
             @Param("keyword") String keyword,
             @Param("role") Role role,
             @Param("status") MemberStatus status,

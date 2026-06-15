@@ -4,8 +4,8 @@ import com.wanted.backend.domain.identity.application.dto.AdminMemberListResult;
 import com.wanted.backend.domain.identity.application.port.AdminMemberQueryPort;
 import com.wanted.backend.domain.identity.application.query.AdminMemberListQuery;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -18,7 +18,7 @@ public class AdminMemberQueryAdapter implements AdminMemberQueryPort {
     public AdminMemberListResult findMembers(AdminMemberListQuery query) {
         PageRequest pageRequest = PageRequest.of(query.page(), query.size());
 
-        Page<MemberJpaEntity> page = memberJpaRepository.searchAdminMembers(
+        Slice<MemberJpaEntity> slice = memberJpaRepository.searchAdminMembers(
                 normalizeKeyword(query.keyword()),
                 query.role(),
                 query.status(),
@@ -26,12 +26,12 @@ public class AdminMemberQueryAdapter implements AdminMemberQueryPort {
         );
 
         return new AdminMemberListResult(
-                page.getContent().stream()
+                slice.getContent().stream()
                         .map(this::toItem)
                         .toList(),
                 query.page(),
                 query.size(),
-                page.hasNext()
+                slice.hasNext()
         );
     }
 

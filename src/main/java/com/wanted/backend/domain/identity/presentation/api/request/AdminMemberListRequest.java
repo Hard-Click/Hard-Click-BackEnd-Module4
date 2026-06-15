@@ -17,7 +17,7 @@ public class AdminMemberListRequest {
 
     @Min(value = 1, message = "조회 크기는 1 이상이어야 합니다.")
     @Max(value = 100, message = "조회 크기는 100 이하여야 합니다.")
-    private int size = 20;
+    private int size = 3;
 
     public String getKeyword() {
         return keyword;
