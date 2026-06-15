@@ -20,6 +20,6 @@ public class CourseCurriculumReferenceEntity {
     @Column(name = "course_id", nullable = false)
     private Long courseId;
 
-    @Column(name = "sort_order")
+    @Column(name = "order_Index")
     private Integer orderIndex;
 }
