@@ -23,6 +23,7 @@ public class StudyTimerSession {
             Integer elapsedSeconds,
             StudyTimerSessionStatus status
     ) {
+        validate(memberId, startedAt, elapsedSeconds, status);
         this.id = id;
         this.memberId = memberId;
         this.courseId = courseId;
@@ -44,6 +45,30 @@ public class StudyTimerSession {
                 0,
                 StudyTimerSessionStatus.RUNNING
         );
+    }
+
+    private static void validate(
+            Long memberId,
+            OffsetDateTime startedAt,
+            Integer elapsedSeconds,
+            StudyTimerSessionStatus status
+    ) {
+        if (memberId == null) {
+            throw new IllegalArgumentException("회원 ID는 필수입니다.");
+        }
+        if (startedAt == null) {
+            throw new IllegalArgumentException("세션 시작 시각은 필수입니다.");
+        }
+        if (elapsedSeconds == null) {
+            throw new IllegalArgumentException("경과 시간은 필수입니다.");
+        }
+        if (status == null) {
+            throw new IllegalArgumentException("세션 상태는 필수입니다.");
+        }
+
+        if (elapsedSeconds < 0) {
+            throw new IllegalArgumentException("경과 시간은 0 이상이어야 합니다.");
+        }
     }
 
     public Long id() {

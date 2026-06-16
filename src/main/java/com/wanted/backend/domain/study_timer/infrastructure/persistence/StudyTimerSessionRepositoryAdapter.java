@@ -3,10 +3,7 @@ package com.wanted.backend.domain.study_timer.infrastructure.persistence;
 import com.wanted.backend.domain.study_timer.domain.model.StudyTimerSession;
 import com.wanted.backend.domain.study_timer.domain.model.StudyTimerSessionStatus;
 import com.wanted.backend.domain.study_timer.domain.repository.StudyTimerSessionRepository;
-import com.wanted.backend.global.exception.BusinessException;
-import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,11 +40,7 @@ public class StudyTimerSessionRepositoryAdapter implements StudyTimerSessionRepo
                 now
         );
 
-        try {
-            return toDomain(repository.saveAndFlush(entity));
-        } catch (DataIntegrityViolationException exception) {
-            throw new BusinessException(ErrorCode.STUDY_TIMER_SESSION_ALREADY_RUNNING);
-        }
+        return toDomain(repository.saveAndFlush(entity));
     }
 
     private StudyTimerSession toDomain(StudyTimerSessionJpaEntity entity) {
