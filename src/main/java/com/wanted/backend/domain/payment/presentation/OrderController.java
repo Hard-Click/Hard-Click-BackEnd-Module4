@@ -4,12 +4,14 @@ import com.wanted.backend.domain.payment.application.command.CreateCourseOrderCo
 import com.wanted.backend.domain.payment.application.command.CreateSubscriptionOrderCommand;
 import com.wanted.backend.domain.payment.application.usecase.CreateCourseOrderUseCase;
 import com.wanted.backend.domain.payment.application.usecase.CreateSubscriptionOrderUseCase;
+import com.wanted.backend.domain.payment.application.usecase.GetOrderDetailUseCase;
 import com.wanted.backend.domain.payment.application.usecase.GetOrderUseCase;
 import com.wanted.backend.domain.payment.presentation.request.CreateCourseOrderRequest;
 import com.wanted.backend.domain.payment.presentation.request.CreateSubscriptionOrderRequest;
 import com.wanted.backend.domain.payment.presentation.response.CreateCourseOrderResponse;
 import com.wanted.backend.domain.payment.presentation.response.CreateSubscriptionOrderResponse;
 import com.wanted.backend.domain.payment.presentation.response.GetOrderResponse;
+import com.wanted.backend.domain.payment.presentation.response.OrderDetailResponse;
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,6 +36,7 @@ public class OrderController {
     private final CreateCourseOrderUseCase createCourseOrderUseCase;
     private final CreateSubscriptionOrderUseCase createSubscriptionOrderUseCase;
     private final GetOrderUseCase getOrderUseCase;
+    private final GetOrderDetailUseCase getOrderDetailUseCase;
 
     @Operation(summary = "단건 강의 주문 생성", description = "선택한 강의들로 주문을 생성합니다. Toss 결제 전에 호출해주세요.")
     @PostMapping("/course")
@@ -65,5 +68,15 @@ public class OrderController {
     ) {
         GetOrderUseCase.Result result = getOrderUseCase.handle(orderId, userDetails.getMemberId());
         return ApiResponse.success("주문 정보를 조회했습니다.", GetOrderResponse.from(result));
+    }
+
+    @Operation(summary = "주문 상세 조회", description = "주문 상세 + 환불 가능 여부 + 진도율 포함 전체 정보를 조회합니다.")
+    @GetMapping("/{orderId}/detail")
+    public ResponseEntity<ApiResponse<OrderDetailResponse>> getOrderDetail(
+            @PathVariable Long orderId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        GetOrderDetailUseCase.Result result = getOrderDetailUseCase.handle(orderId, userDetails.getMemberId());
+        return ApiResponse.success("주문 상세 정보를 조회했습니다.", OrderDetailResponse.from(result));
     }
 }

@@ -109,7 +109,17 @@ import org.springframework.http.HttpStatus;
     COURSE_NOT_FOUND2(HttpStatus.NOT_FOUND, "CO001", "존재하지 않는 강의입니다."),
     NOTICE_ADMIN_ONLY(HttpStatus.FORBIDDEN, "N002", "관리자만 전체 공지사항을 작성할 수 있습니다."),
     NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "N003", "존재하지 않는 공지사항입니다."),
-    COURSE_ID_REQUIRED(HttpStatus.BAD_REQUEST, "N004", "강의 공지 조회 시 강의 ID는 필수입니다.");
+    COURSE_ID_REQUIRED(HttpStatus.BAD_REQUEST, "N004", "강의 공지 조회 시 강의 ID는 필수입니다."),
+
+    /* =========================================================================
+       결제/환불 관련 예외 (PAY000)
+       ========================================================================= */
+    PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "PAY001", "결제 내역을 찾을 수 없습니다."),
+    ALREADY_REFUNDED(HttpStatus.CONFLICT, "PAY002", "이미 환불된 결제입니다."),
+    REFUND_NOT_ELIGIBLE(HttpStatus.BAD_REQUEST, "PAY003", "환불 가능 조건을 충족하지 않습니다."),
+    ENROLLMENT_NOT_FOUND_FOR_REFUND(HttpStatus.NOT_FOUND, "PAY004", "환불 대상 수강 내역을 찾을 수 없습니다."),
+    SUBSCRIPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "PAY005", "구독 내역을 찾을 수 없습니다."),
+    SUBSCRIPTION_NOT_ACTIVE(HttpStatus.BAD_REQUEST, "PAY006", "환불 가능한 활성 구독이 없습니다.");
 
 
     private final HttpStatus status;
