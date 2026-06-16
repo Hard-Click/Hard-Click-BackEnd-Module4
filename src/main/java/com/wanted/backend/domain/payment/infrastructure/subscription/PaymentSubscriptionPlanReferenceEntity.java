@@ -22,4 +22,10 @@ public class PaymentSubscriptionPlanReferenceEntity {
 
     @Column(nullable = false)
     private String name;
+
+    @Column(nullable = false)
+    private Integer price;
+
+    @Column(name = "duration_months", nullable = false)
+    private Integer durationMonths;
 }
