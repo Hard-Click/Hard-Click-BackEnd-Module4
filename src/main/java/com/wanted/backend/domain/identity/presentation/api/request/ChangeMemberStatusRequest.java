@@ -1,6 +1,5 @@
 package com.wanted.backend.domain.identity.presentation.api.request;
 
-import com.wanted.backend.domain.identity.application.command.ChangeMemberStatusCommand;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -14,7 +13,4 @@ public record ChangeMemberStatusRequest(
         @Size(max = 50, message = "관리자 메모는 50자 이하여야 합니다.")
         String memo
 ) {
-    public ChangeMemberStatusCommand toCommand(Long memberId) {
-        return new ChangeMemberStatusCommand(memberId, status, memo);
-    }
 }

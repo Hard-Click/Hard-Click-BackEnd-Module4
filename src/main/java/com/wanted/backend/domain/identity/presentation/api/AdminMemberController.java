@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.identity.presentation.api;
 
+import com.wanted.backend.domain.identity.application.command.ChangeMemberStatusCommand;
 import com.wanted.backend.domain.identity.application.dto.AdminMemberListResult;
 import com.wanted.backend.domain.identity.application.dto.ChangeMemberStatusResult;
 import com.wanted.backend.domain.identity.application.usecase.ChangeMemberStatusUseCase;
@@ -51,14 +52,19 @@ public class AdminMemberController {
     @PatchMapping("/{memberId}/status")
     @Operation(
             summary = "회원 커뮤니티 이용 제한 상태 변경",
-            description = "관리자가 회원 상태를 ACTIVE 또는 SUSPENDED로 변경합니다. BLACKLIST와 WITHDRAWN은 이 API에서 변경할 수 없습니다."
+            description = "관리자가 회원 상태를 ACTIVE 또는 SUSPENDED로 변경합니다. WITHDRAWN은 이 API에서 변경할 수 없습니다."
     )
     public ResponseEntity<ApiResponse<ChangeMemberStatusResponse>> changeMemberStatus(
             @Parameter(description = "상태를 변경할 회원 ID", example = "1")
             @PathVariable Long memberId,
             @Valid @RequestBody ChangeMemberStatusRequest request
     ) {
-        ChangeMemberStatusResult result = changeMemberStatusUseCase.changeStatus(request.toCommand(memberId));
+        ChangeMemberStatusCommand command = new ChangeMemberStatusCommand(
+                memberId,
+                request.status(),
+                request.memo()
+        );
+        ChangeMemberStatusResult result = changeMemberStatusUseCase.changeStatus(command);
 
         return ApiResponse.success(
                 "회원 상태가 변경되었습니다.",
