@@ -69,3 +69,15 @@ logging:
     com.wanted.backend: INFO
     org.hibernate.SQL: WARN
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
