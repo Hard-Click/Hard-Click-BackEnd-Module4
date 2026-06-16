@@ -52,6 +52,7 @@ jobs:
             MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
             INFLUX_TOKEN=${{ secrets.INFLUX_TOKEN }}
             REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+            TOSS_SECRET_KEY=${{ secrets.TOSS_SECRET_KEY }}
             ENVEOF
 
             cd ~/hard-click

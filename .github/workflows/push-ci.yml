@@ -50,3 +50,4 @@ jobs:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
           INFLUX_TOKEN: ${{ secrets.INFLUX_TOKEN }}
+          TOSS_SECRET_KEY: ${{ secrets.TOSS_SECRET_KEY }}
