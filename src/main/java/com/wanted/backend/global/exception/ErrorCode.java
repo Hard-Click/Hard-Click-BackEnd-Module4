@@ -77,7 +77,6 @@ import org.springframework.http.HttpStatus;
     COURSE_NOT_PUBLISHED(HttpStatus.FORBIDDEN, "L002", "공개되지 않은 강의입니다."),
     ENROLLMENT_REQUIRED(HttpStatus.FORBIDDEN, "L003", "수강권 또는 구독권이 필요합니다."),
     VIDEO_COMPLETION_CONDITION_NOT_MET(HttpStatus.BAD_REQUEST, "L004", "영상 시청 비율이 완료 기준을 충족하지 않습니다."),
-
     //게시글 예외
     SUBJECT_REQUIRED(HttpStatus.BAD_REQUEST, "P001", "과목을 선택하세요"),
     POST_NOT_FOUND(HttpStatus.NOT_FOUND, "P003", "존재하지 않는 게시글입니다."),
@@ -109,8 +108,10 @@ import org.springframework.http.HttpStatus;
     COURSE_NOT_FOUND2(HttpStatus.NOT_FOUND, "CO001", "존재하지 않는 강의입니다."),
     NOTICE_ADMIN_ONLY(HttpStatus.FORBIDDEN, "N002", "관리자만 전체 공지사항을 작성할 수 있습니다."),
     NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "N003", "존재하지 않는 공지사항입니다."),
-    COURSE_ID_REQUIRED(HttpStatus.BAD_REQUEST, "N004", "강의 공지 조회 시 강의 ID는 필수입니다.");
+    COURSE_ID_REQUIRED(HttpStatus.BAD_REQUEST, "N004", "강의 공지 조회 시 강의 ID는 필수입니다."),
 
+    // 순공 세션 관련 예외
+    STUDY_TIMER_SESSION_ALREADY_RUNNING(HttpStatus.CONFLICT, "ST001", "이미 실행 중인 순공시간 세션이 있습니다.");
 
     private final HttpStatus status;
     private final String code;

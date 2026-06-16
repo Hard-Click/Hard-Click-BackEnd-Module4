@@ -1,4 +1,5 @@
 DELETE FROM video_progress;
+DELETE FROM study_timer_sessions;
 DELETE FROM enrollments;
 DELETE FROM subscriptions;
 DELETE FROM video;
@@ -16,7 +17,7 @@ INSERT INTO courses (
 );
 
 INSERT INTO course_curriculum (
-    curriculum_id, course_id, title, duration_minutes, sort_order
+    curriculum_id, course_id, title, duration_minutes, order_index
 ) VALUES (
     30, 20, 'Section 1', 60, 1
 );
