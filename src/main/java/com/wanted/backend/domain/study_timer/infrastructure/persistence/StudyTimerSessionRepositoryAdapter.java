@@ -3,7 +3,10 @@ package com.wanted.backend.domain.study_timer.infrastructure.persistence;
 import com.wanted.backend.domain.study_timer.domain.model.StudyTimerSession;
 import com.wanted.backend.domain.study_timer.domain.model.StudyTimerSessionStatus;
 import com.wanted.backend.domain.study_timer.domain.repository.StudyTimerSessionRepository;
+import com.wanted.backend.global.exception.BusinessException;
+import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,7 +43,11 @@ public class StudyTimerSessionRepositoryAdapter implements StudyTimerSessionRepo
                 now
         );
 
-        return toDomain(repository.save(entity));
+        try {
+            return toDomain(repository.saveAndFlush(entity));
+        } catch (DataIntegrityViolationException exception) {
+            throw new BusinessException(ErrorCode.STUDY_TIMER_SESSION_ALREADY_RUNNING);
+        }
     }
 
     private StudyTimerSession toDomain(StudyTimerSessionJpaEntity entity) {
@@ -57,7 +64,6 @@ public class StudyTimerSessionRepositoryAdapter implements StudyTimerSessionRepo
     }
 
     private LocalDateTime toLocalDateTime(OffsetDateTime dateTime) {
-        // atZoneSameInstant : 단 하나의 특정 순간을 유지하면서, 시계 바늘만 다른 나라 시간으로 돌리는 거
         return dateTime == null ? null : dateTime.atZoneSameInstant(clock.getZone()).toLocalDateTime();
     }
 

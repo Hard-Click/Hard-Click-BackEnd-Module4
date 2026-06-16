@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.study_timer.application.service;
 
 import com.wanted.backend.domain.study_timer.application.command.StartStudyTimerSessionCommand;
+import com.wanted.backend.domain.study_timer.application.port.MemberLockPort;
 import com.wanted.backend.domain.study_timer.application.usecase.StartStudyTimerSessionUseCase;
 import com.wanted.backend.domain.study_timer.domain.model.StudyTimerSession;
 import com.wanted.backend.domain.study_timer.domain.repository.StudyTimerSessionRepository;
@@ -15,11 +16,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class StartStudyTimerSessionService implements StartStudyTimerSessionUseCase {
 
+    private final MemberLockPort memberLockPort;
     private final StudyTimerSessionRepository studyTimerSessionRepository;
 
     @Override
     @Transactional
     public StudyTimerSessionStartView handle(StartStudyTimerSessionCommand command) {
+        memberLockPort.lock(command.memberId());
+
         if (studyTimerSessionRepository.existsRunningByMemberId(command.memberId())) {
             throw new BusinessException(ErrorCode.STUDY_TIMER_SESSION_ALREADY_RUNNING);
         }
