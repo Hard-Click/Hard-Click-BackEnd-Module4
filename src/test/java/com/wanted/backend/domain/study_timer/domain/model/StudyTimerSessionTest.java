@@ -203,6 +203,17 @@ class StudyTimerSessionTest {
     }
 
     @Test
+    void endRejectsNullEndedAt() {
+        StudyTimerSession session = StudyTimerSession.start(
+                1L,
+                OffsetDateTime.parse("2026-05-11T15:00:00+09:00")
+        );
+
+        assertThatThrownBy(() -> session.end(null, SERVER_NOW))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void endRejectsEndedSession() {
         StudyTimerSession session = new StudyTimerSession(
                 55L,

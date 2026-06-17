@@ -174,4 +174,18 @@ class EndStudyTimerSessionServiceTest {
         verify(repository, never()).findById(any());
         verify(repository, never()).save(any());
     }
+
+    @Test
+    void throwsInvalidInputWhenEndedAtIsNull() {
+        assertThatThrownBy(() -> service.handle(new EndStudyTimerSessionCommand(
+                1L,
+                55L,
+                null
+        )))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        verify(memberLockPort, never()).lock(any());
+        verify(repository, never()).findById(any());
+        verify(repository, never()).save(any());
+    }
 }
