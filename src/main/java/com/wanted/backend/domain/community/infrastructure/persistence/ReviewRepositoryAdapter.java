@@ -2,6 +2,7 @@ package com.wanted.backend.domain.community.infrastructure.persistence;
 
 import com.wanted.backend.domain.community.domain.model.Review;
 import com.wanted.backend.domain.community.domain.model.ReviewSortType;
+import com.wanted.backend.domain.community.domain.model.ReviewStatus;
 import com.wanted.backend.domain.community.domain.repository.ReviewRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -137,6 +138,7 @@ public class ReviewRepositoryAdapter implements ReviewRepository {
                 entity.getCourseId(),
                 entity.getRating(),
                 entity.getContent(),
+                entity.getStatus(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );
@@ -145,6 +147,14 @@ public class ReviewRepositoryAdapter implements ReviewRepository {
     @Override
     public void deleteById(Long reviewId) {
         repository.deleteById(reviewId);
+    }
+
+    @Override
+    public void adminDeleteById(Long reviewId) {
+        repository.findById(reviewId).ifPresent(entity -> {
+            entity.update(entity.getRating(), entity.getContent(), ReviewStatus.ADMIN_DELETED, java.time.LocalDateTime.now());
+            repository.save(entity);
+        });
     }
 
 }

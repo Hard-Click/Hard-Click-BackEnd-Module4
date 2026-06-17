@@ -25,6 +25,7 @@ import java.util.List;
 public class PostQueryService implements PostQueryUseCase {
 
     private static final int PAGE_SIZE = 10;
+    private static final String ADMIN_DELETED_MESSAGE = "관리자에 의해 삭제되었습니다.";
 
     private final PostRepository postRepository;
     private final PostFileRepository postFileRepository;
@@ -73,6 +74,10 @@ public class PostQueryService implements PostQueryUseCase {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
 
+        if (post.getStatus() == PostStatus.DELETED) {
+            throw new BusinessException(ErrorCode.POST_NOT_FOUND);
+        }
+
         // memberId가 null이면 조회수 트래킹 스킵
         if (memberId != null) {
             LocalDateTime thirtyMinutesAgo = LocalDateTime.now().minusMinutes(30);
@@ -88,7 +93,9 @@ public class PostQueryService implements PostQueryUseCase {
 
         String name = memberNamePort.getNameByMemberId(post.getAuthorId());
 
-        List<String> fileUrls = postFileRepository.findByPostId(postId)
+        List<String> fileUrls = post.isAdminDeleted()
+                ? List.of()
+                : postFileRepository.findByPostId(postId)
                 .stream()
                 .map(PostFile::getFileUrl)
                 .toList();
@@ -96,11 +103,11 @@ public class PostQueryService implements PostQueryUseCase {
         return new PostDetailResponse(
                 post.getId(),
                 post.getBoardType(),
-                post.getTitle(),
+                post.isAdminDeleted() ? ADMIN_DELETED_MESSAGE : post.getTitle(),
                 Review.maskName(name),
                 post.getCreatedAt(),
                 post.getViewCount(),
-                post.getContent(),
+                post.isAdminDeleted() ? ADMIN_DELETED_MESSAGE : post.getContent(),
                 post.isOwner(memberId),   // Post 도메인 모델에 위임
                 post.isAccepted(),
                 fileUrls

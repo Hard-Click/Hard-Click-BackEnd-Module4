@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.community.infrastructure.persistence;
 
 import com.wanted.backend.domain.community.domain.model.Comment;
+import com.wanted.backend.domain.community.domain.model.CommentStatus;
 import com.wanted.backend.domain.community.domain.repository.CommentRepository;
 import org.springframework.stereotype.Repository;
 
@@ -26,6 +27,7 @@ public class CommentRepositoryAdapter implements CommentRepository {
                 comment.getContent(),
                 comment.isAccepted(),
                 comment.isDeleted(),
+                comment.getStatus(),
                 comment.getImageUrl(),
                 comment.getCreatedAt(),
                 comment.getUpdatedAt()
@@ -44,6 +46,13 @@ public class CommentRepositoryAdapter implements CommentRepository {
     public void softDelete(Long commentId, LocalDateTime updatedAt) {
         CommentJpaEntity entity = repository.findById(commentId).orElseThrow();
         entity.softDelete(updatedAt);
+        repository.save(entity);
+    }
+
+    @Override
+    public void softDeleteByAdmin(Long commentId, LocalDateTime updatedAt) {
+        CommentJpaEntity entity = repository.findById(commentId).orElseThrow();
+        entity.softDeleteByAdmin(updatedAt);
         repository.save(entity);
     }
 
@@ -68,6 +77,7 @@ public class CommentRepositoryAdapter implements CommentRepository {
                 entity.getContent(),
                 entity.isAccepted(),
                 entity.isDeleted(),
+                entity.getStatus(),
                 entity.getImageUrl(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
