@@ -18,6 +18,8 @@ public interface CommentRepository {
     //댓글 비공개 처리
     void softDelete(Long commentId, LocalDateTime updatedAt);
 
+    void softDeleteByAdmin(Long commentId, LocalDateTime updatedAt);
+
     //댓글 채택
     void accept(Long commentId, LocalDateTime updatedAt);
 

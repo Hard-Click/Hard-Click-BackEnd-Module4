@@ -117,7 +117,7 @@ public class PostRepositoryAdapter implements PostRepository {
         return Post.restore(
                 entity.getId(), entity.getAuthorId(), entity.getBoardType(),
                 entity.getSubjectId(), entity.getTitle(), entity.getContent(),
-                entity.getViewCount(), entity.isAccepted(),
+                entity.getViewCount(), entity.getStatus(), entity.isAccepted(),
                 entity.getCreatedAt(), entity.getUpdatedAt()
         );
     }
@@ -141,5 +141,15 @@ public class PostRepositoryAdapter implements PostRepository {
         repository.deleteById(postId);
     }
 
+    @Override
+    public void adminDeleteById(Long postId) {
+        repository.findById(postId).ifPresent(entity -> {
+            entity.update(
+                    entity.getSubjectId(), entity.getTitle(), entity.getContent(),
+                    entity.getViewCount(), PostStatus.ADMIN_DELETED, entity.isAccepted(), java.time.LocalDateTime.now()
+            );
+            repository.save(entity);
+        });
+    }
 
 }
