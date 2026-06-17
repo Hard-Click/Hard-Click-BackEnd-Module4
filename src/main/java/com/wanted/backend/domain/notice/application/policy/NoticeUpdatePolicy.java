@@ -23,6 +23,10 @@ public class NoticeUpdatePolicy {
 
         if ("COURSE".equals(notice.getType())) {
 
+            if (adminValidationPort.isAdmin(memberId)) {
+                return;
+            }
+
             // [강의 공지] 해당 강의 담당 강사인지 확인
             Long instructorId = courseInstructorPort
                     .getInstructorIdByCourseId(notice.getCourseId());
