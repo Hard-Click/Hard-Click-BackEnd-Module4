@@ -85,6 +85,40 @@ public class StudyTimerSession {
         );
     }
 
+    public StudyTimerSession end(OffsetDateTime endedAt, OffsetDateTime serverNow) {
+        if (endedAt == null) {
+            throw new IllegalArgumentException("세션 종료 시각은 필수입니다.");
+        }
+        if (serverNow == null) {
+            throw new IllegalArgumentException("서버 현재 시각은 필수입니다.");
+        }
+        if (endedAt.toInstant().isAfter(serverNow.toInstant())) {
+            throw new IllegalArgumentException("세션 종료 시각은 현재 시각 이후일 수 없습니다.");
+        }
+        if (status != StudyTimerSessionStatus.RUNNING) {
+            throw new BusinessException(ErrorCode.STUDY_TIMER_SESSION_NOT_RUNNING);
+        }
+
+        long calculatedAccumulatedStudySeconds = Duration.between(startedAt.toInstant(), endedAt.toInstant()).getSeconds();
+        if (calculatedAccumulatedStudySeconds < 0) {
+            throw new IllegalArgumentException("세션 종료 시각은 세션 시작 시각 이후여야 합니다.");
+        }
+        if (calculatedAccumulatedStudySeconds > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException("누적 순공시간이 허용 범위를 초과했습니다.");
+        }
+
+        return new StudyTimerSession(
+                id,
+                memberId,
+                courseId,
+                lessonId,
+                startedAt,
+                endedAt,
+                Math.max(accumulatedStudySeconds, (int) calculatedAccumulatedStudySeconds),
+                StudyTimerSessionStatus.ENDED
+        );
+    }
+
     private static void validate(
             Long memberId,
             OffsetDateTime startedAt,

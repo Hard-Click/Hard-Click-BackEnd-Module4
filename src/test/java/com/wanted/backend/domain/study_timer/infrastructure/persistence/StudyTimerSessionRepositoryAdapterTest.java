@@ -121,4 +121,41 @@ class StudyTimerSessionRepositoryAdapterTest {
         assertThat(saved.accumulatedStudySeconds()).isEqualTo(200);
         assertThat(saved.status()).isEqualTo(StudyTimerSessionStatus.RUNNING);
     }
+
+    @Test
+    void updatesExistingSessionWhenEndIsSaved() {
+        OffsetDateTime startedAt = OffsetDateTime.parse("2026-05-11T15:00:00+09:00");
+        OffsetDateTime endedAt = OffsetDateTime.parse("2026-05-11T15:08:20+09:00");
+        StudyTimerSessionJpaEntity entity = new StudyTimerSessionJpaEntity(
+                1L,
+                null,
+                null,
+                startedAt.toLocalDateTime(),
+                null,
+                200,
+                StudyTimerSessionStatus.RUNNING,
+                startedAt.toLocalDateTime(),
+                startedAt.toLocalDateTime()
+        );
+        ReflectionTestUtils.setField(entity, "id", 55L);
+
+        when(repository.findById(55L)).thenReturn(Optional.of(entity));
+        when(repository.saveAndFlush(entity)).thenReturn(entity);
+
+        StudyTimerSession saved = adapter.save(new StudyTimerSession(
+                55L,
+                1L,
+                null,
+                null,
+                startedAt,
+                endedAt,
+                500,
+                StudyTimerSessionStatus.ENDED
+        ));
+
+        assertThat(saved.id()).isEqualTo(55L);
+        assertThat(saved.endedAt()).isEqualTo(endedAt);
+        assertThat(saved.accumulatedStudySeconds()).isEqualTo(500);
+        assertThat(saved.status()).isEqualTo(StudyTimerSessionStatus.ENDED);
+    }
 }
