@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS courses (
+CREATE TABLE IF NOT EXISTS course (
     course_id BIGINT NOT NULL PRIMARY KEY,
     instructor_id BIGINT NOT NULL,
     subject_id BIGINT NOT NULL,
@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS video_progress (
     updated_at TIMESTAMP NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS enrollments (
+CREATE TABLE IF NOT EXISTS enrollment (
     enrollment_id BIGINT NOT NULL PRIMARY KEY,
     member_id BIGINT NOT NULL,
     course_id BIGINT NOT NULL,
@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS study_timer_sessions (
     lesson_id BIGINT,
     started_at TIMESTAMP NOT NULL,
     ended_at TIMESTAMP,
-    elapsed_seconds INT NOT NULL DEFAULT 0,
+    accumulated_study_seconds INT NOT NULL DEFAULT 0,
     status VARCHAR(20) NOT NULL,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP

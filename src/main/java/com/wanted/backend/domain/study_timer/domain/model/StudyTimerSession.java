@@ -1,5 +1,9 @@
 package com.wanted.backend.domain.study_timer.domain.model;
 
+import com.wanted.backend.global.exception.BusinessException;
+import com.wanted.backend.global.exception.ErrorCode;
+
+import java.time.Duration;
 import java.time.OffsetDateTime;
 
 public class StudyTimerSession {
@@ -10,7 +14,7 @@ public class StudyTimerSession {
     private final Long lessonId;
     private final OffsetDateTime startedAt;
     private final OffsetDateTime endedAt;
-    private final Integer elapsedSeconds;
+    private final Integer accumulatedStudySeconds;
     private final StudyTimerSessionStatus status;
 
     public StudyTimerSession(
@@ -20,17 +24,17 @@ public class StudyTimerSession {
             Long lessonId,
             OffsetDateTime startedAt,
             OffsetDateTime endedAt,
-            Integer elapsedSeconds,
+            Integer accumulatedStudySeconds,
             StudyTimerSessionStatus status
     ) {
-        validate(memberId, startedAt, elapsedSeconds, status);
+        validate(memberId, startedAt, accumulatedStudySeconds, status);
         this.id = id;
         this.memberId = memberId;
         this.courseId = courseId;
         this.lessonId = lessonId;
         this.startedAt = startedAt;
         this.endedAt = endedAt;
-        this.elapsedSeconds = elapsedSeconds;
+        this.accumulatedStudySeconds = accumulatedStudySeconds;
         this.status = status;
     }
 
@@ -47,10 +51,44 @@ public class StudyTimerSession {
         );
     }
 
+    public StudyTimerSession heartbeat(OffsetDateTime heartbeatAt, OffsetDateTime serverNow) {
+        if (heartbeatAt == null) {
+            throw new IllegalArgumentException("하트비트 시각은 필수입니다.");
+        }
+        if (serverNow == null) {
+            throw new IllegalArgumentException("서버 현재 시각은 필수입니다.");
+        }
+        if (heartbeatAt.toInstant().isAfter(serverNow.toInstant())) {
+            throw new IllegalArgumentException("하트비트 시각은 현재 시각 이후일 수 없습니다.");
+        }
+        if (status != StudyTimerSessionStatus.RUNNING) {
+            throw new BusinessException(ErrorCode.STUDY_TIMER_SESSION_NOT_RUNNING);
+        }
+
+        long calculatedAccumulatedStudySeconds = Duration.between(startedAt.toInstant(), heartbeatAt.toInstant()).getSeconds();
+        if (calculatedAccumulatedStudySeconds < 0) {
+            throw new IllegalArgumentException("하트비트 시각은 세션 시작 시각 이후여야 합니다.");
+        }
+        if (calculatedAccumulatedStudySeconds > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException("경과 시간이 허용 범위를 초과했습니다.");
+        }
+
+        return new StudyTimerSession(
+                id,
+                memberId,
+                courseId,
+                lessonId,
+                startedAt,
+                endedAt,
+                Math.max(accumulatedStudySeconds, (int) calculatedAccumulatedStudySeconds),
+                status
+        );
+    }
+
     private static void validate(
             Long memberId,
             OffsetDateTime startedAt,
-            Integer elapsedSeconds,
+            Integer accumulatedStudySeconds,
             StudyTimerSessionStatus status
     ) {
         if (memberId == null) {
@@ -59,14 +97,14 @@ public class StudyTimerSession {
         if (startedAt == null) {
             throw new IllegalArgumentException("세션 시작 시각은 필수입니다.");
         }
-        if (elapsedSeconds == null) {
+        if (accumulatedStudySeconds == null) {
             throw new IllegalArgumentException("경과 시간은 필수입니다.");
         }
         if (status == null) {
             throw new IllegalArgumentException("세션 상태는 필수입니다.");
         }
 
-        if (elapsedSeconds < 0) {
+        if (accumulatedStudySeconds < 0) {
             throw new IllegalArgumentException("경과 시간은 0 이상이어야 합니다.");
         }
     }
@@ -77,6 +115,10 @@ public class StudyTimerSession {
 
     public Long memberId() {
         return memberId;
+    }
+
+    public boolean isOwnedBy(Long memberId) {
+        return this.memberId.equals(memberId);
     }
 
     public Long courseId() {
@@ -95,8 +137,8 @@ public class StudyTimerSession {
         return endedAt;
     }
 
-    public Integer elapsedSeconds() {
-        return elapsedSeconds;
+    public Integer accumulatedStudySeconds() {
+        return accumulatedStudySeconds;
     }
 
     public StudyTimerSessionStatus status() {

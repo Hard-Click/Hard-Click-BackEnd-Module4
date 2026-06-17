@@ -41,8 +41,8 @@ public class StudyTimerSessionJpaEntity {
     @Column(name = "ended_at")
     private LocalDateTime endedAt;
 
-    @Column(name = "elapsed_seconds", nullable = false)
-    private Integer elapsedSeconds;
+    @Column(name = "accumulated_study_seconds", nullable = false)
+    private Integer accumulatedStudySeconds;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
@@ -60,7 +60,7 @@ public class StudyTimerSessionJpaEntity {
             Long lessonId,
             LocalDateTime startedAt,
             LocalDateTime endedAt,
-            Integer elapsedSeconds,
+            Integer accumulatedStudySeconds,
             StudyTimerSessionStatus status,
             LocalDateTime createdAt,
             LocalDateTime updatedAt
@@ -70,9 +70,25 @@ public class StudyTimerSessionJpaEntity {
         this.lessonId = lessonId;
         this.startedAt = startedAt;
         this.endedAt = endedAt;
-        this.elapsedSeconds = elapsedSeconds;
+        this.accumulatedStudySeconds = accumulatedStudySeconds;
         this.status = status;
         this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
+    public void updateSession(
+            Long courseId,
+            Long lessonId,
+            LocalDateTime endedAt,
+            Integer accumulatedStudySeconds,
+            StudyTimerSessionStatus status,
+            LocalDateTime updatedAt
+    ) {
+        this.courseId = courseId;
+        this.lessonId = lessonId;
+        this.endedAt = endedAt;
+        this.accumulatedStudySeconds = accumulatedStudySeconds;
+        this.status = status;
         this.updatedAt = updatedAt;
     }
 }
