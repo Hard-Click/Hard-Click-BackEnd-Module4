@@ -34,4 +34,6 @@ public interface PostRepository {
 
     //게시글 삭제
     void deleteById(Long postId);
+
+    void adminDeleteById(Long postId);
 }

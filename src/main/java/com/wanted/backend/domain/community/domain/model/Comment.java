@@ -7,6 +7,8 @@ import java.time.LocalDateTime;
 
 public class Comment {
 
+    public static final String ADMIN_DELETED_MESSAGE = "관리자에 의해 삭제되었습니다.";
+
     private Long id;
     private Long postId;
     private Long authorId;
@@ -14,20 +16,24 @@ public class Comment {
     private String content;
     private boolean isAccepted;
     private boolean isDeleted;
+    private CommentStatus status;
     private String imageUrl;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     private Comment(Long id, Long postId, Long authorId, Long parentId,
                     String content, boolean isAccepted, boolean isDeleted,
-                    String imageUrl, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                    CommentStatus status, String imageUrl, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        CommentStatus resolvedStatus = status == null ? legacyStatus(isDeleted) : status;
+
         this.id = id;
         this.postId = postId;
         this.authorId = authorId;
         this.parentId = parentId;
         this.content = content;
         this.isAccepted = isAccepted;
-        this.isDeleted = isDeleted;
+        this.isDeleted = resolvedStatus != CommentStatus.ACTIVE;
+        this.status = resolvedStatus;
         this.imageUrl = imageUrl;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -37,15 +43,22 @@ public class Comment {
     public static Comment create(Long postId, Long authorId, Long parentId,
                                  String content, String imageUrl) {
         return new Comment(null, postId, authorId, parentId, content,
-                false, false, imageUrl, LocalDateTime.now(), LocalDateTime.now());
+                false, false, CommentStatus.ACTIVE, imageUrl, LocalDateTime.now(), LocalDateTime.now());
     }
 
     // DB에서 꺼낸 데이터를 도메인 객체로 복원
     public static Comment restore(Long id, Long postId, Long authorId, Long parentId,
                                   String content, boolean isAccepted, boolean isDeleted,
-                                  String imageUrl, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                                  CommentStatus status, String imageUrl, LocalDateTime createdAt, LocalDateTime updatedAt) {
         return new Comment(id, postId, authorId, parentId, content,
-                isAccepted, isDeleted, imageUrl, createdAt, updatedAt);
+                isAccepted, isDeleted, status, imageUrl, createdAt, updatedAt);
+    }
+
+    public static Comment restore(Long id, Long postId, Long authorId, Long parentId,
+                                  String content, boolean isAccepted, boolean isDeleted,
+                                  String imageUrl, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        return restore(id, postId, authorId, parentId, content,
+                isAccepted, isDeleted, legacyStatus(isDeleted), imageUrl, createdAt, updatedAt);
     }
 
     //채택
@@ -85,8 +98,20 @@ public class Comment {
     public void softDelete() {
         this.content = "삭제된 댓글입니다.";
         this.isDeleted = true;
+        this.status = CommentStatus.DELETED;
         this.imageUrl = null;
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public void softDeleteByAdmin() {
+        this.isDeleted = true;
+        this.status = CommentStatus.ADMIN_DELETED;
+        this.imageUrl = null;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    private static CommentStatus legacyStatus(boolean isDeleted) {
+        return isDeleted ? CommentStatus.DELETED : CommentStatus.ACTIVE;
     }
 
     public Long getId() { return id; }
@@ -96,6 +121,8 @@ public class Comment {
     public String getContent() { return content; }
     public boolean isAccepted() { return isAccepted; }
     public boolean isDeleted() { return isDeleted; }
+    public CommentStatus getStatus() { return status; }
+    public boolean isAdminDeleted() { return status == CommentStatus.ADMIN_DELETED; }
     public String getImageUrl() { return imageUrl; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

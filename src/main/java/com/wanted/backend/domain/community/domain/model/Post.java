@@ -14,12 +14,13 @@ public class Post {
     private String title;
     private String content;
     private int viewCount;
+    private PostStatus status;
     private boolean isAccepted;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     private Post(Long id, Long authorId, BoardType boardType, Long subjectId,
-                 String title, String content, int viewCount, boolean isAccepted,
+                 String title, String content, int viewCount, PostStatus status, boolean isAccepted,
                  LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.authorId = authorId;
@@ -28,6 +29,7 @@ public class Post {
         this.title = title;
         this.content = content;
         this.viewCount = viewCount;
+        this.status = status;
         this.isAccepted = isAccepted;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -42,14 +44,21 @@ public class Post {
             throw new BusinessException(ErrorCode.FILE_COUNT_EXCEEDED);
         }
         return new Post(null, authorId, boardType, subjectId, title, content,
-                0, false, LocalDateTime.now(), LocalDateTime.now());
+                0, PostStatus.ACTIVE, false, LocalDateTime.now(), LocalDateTime.now());
+    }
+
+    public static Post restore(Long id, Long authorId, BoardType boardType, Long subjectId,
+                               String title, String content, int viewCount, PostStatus status, boolean isAccepted,
+                               LocalDateTime createdAt, LocalDateTime updatedAt) {
+        return new Post(id, authorId, boardType, subjectId, title, content,
+                viewCount, status == null ? PostStatus.ACTIVE : status, isAccepted, createdAt, updatedAt);
     }
 
     public static Post restore(Long id, Long authorId, BoardType boardType, Long subjectId,
                                String title, String content, int viewCount, boolean isAccepted,
                                LocalDateTime createdAt, LocalDateTime updatedAt) {
-        return new Post(id, authorId, boardType, subjectId, title, content,
-                viewCount, isAccepted, createdAt, updatedAt);
+        return restore(id, authorId, boardType, subjectId, title, content,
+                viewCount, PostStatus.ACTIVE, isAccepted, createdAt, updatedAt);
     }
 
     public void increaseViewCount() {
@@ -82,6 +91,11 @@ public class Post {
         this.updatedAt = LocalDateTime.now();
     }
 
+    public void softDeleteByAdmin(LocalDateTime now) {
+        this.status = PostStatus.ADMIN_DELETED;
+        this.updatedAt = now;
+    }
+
     public void validateFileCount(int fileCount) {
         if (fileCount > 2) {
             throw new BusinessException(ErrorCode.FILE_COUNT_EXCEEDED);
@@ -98,6 +112,10 @@ public class Post {
         return this.authorId.equals(memberId);
     }
 
+    public boolean isAdminDeleted() {
+        return this.status == PostStatus.ADMIN_DELETED;
+    }
+
     public Long getId() { return id; }
     public Long getAuthorId() { return authorId; }
     public BoardType getBoardType() { return boardType; }
@@ -105,6 +123,7 @@ public class Post {
     public String getTitle() { return title; }
     public String getContent() { return content; }
     public int getViewCount() { return viewCount; }
+    public PostStatus getStatus() { return status; }
     public boolean isAccepted() { return isAccepted; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

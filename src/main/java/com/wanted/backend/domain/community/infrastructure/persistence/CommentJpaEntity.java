@@ -1,9 +1,18 @@
 package com.wanted.backend.domain.community.infrastructure.persistence;
 
-import jakarta.persistence.*;
+import com.wanted.backend.domain.community.domain.model.Comment;
+import com.wanted.backend.domain.community.domain.model.CommentStatus;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.Getter;
-import java.time.LocalDateTime;
 
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "comments")
@@ -33,6 +42,10 @@ public class CommentJpaEntity {
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private CommentStatus status = CommentStatus.ACTIVE;
+
     @Column(name = "accept_count", nullable = false)
     private int acceptCount;
 
@@ -49,17 +62,29 @@ public class CommentJpaEntity {
 
     public CommentJpaEntity(Long postId, Long authorId, Long parentId,
                             String content, boolean isAccepted, boolean isDeleted,
-                            String imageUrl, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                            CommentStatus status, String imageUrl,
+                            LocalDateTime createdAt, LocalDateTime updatedAt) {
+        CommentStatus resolvedStatus = status == null ? legacyStatus(isDeleted) : status;
+
         this.postId = postId;
         this.authorId = authorId;
         this.parentId = parentId;
         this.content = content;
         this.isAccepted = isAccepted;
-        this.isDeleted = isDeleted;
+        this.isDeleted = resolvedStatus != CommentStatus.ACTIVE;
+        this.status = resolvedStatus;
         this.acceptCount = 0;
         this.imageUrl = imageUrl;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+    }
+
+    public CommentJpaEntity(Long postId, Long authorId, Long parentId,
+                            String content, boolean isAccepted, boolean isDeleted,
+                            String imageUrl, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this(postId, authorId, parentId, content, isAccepted, isDeleted,
+                isDeleted ? CommentStatus.DELETED : CommentStatus.ACTIVE,
+                imageUrl, createdAt, updatedAt);
     }
 
     public void accept(LocalDateTime updatedAt) {
@@ -76,7 +101,19 @@ public class CommentJpaEntity {
     public void softDelete(LocalDateTime updatedAt) {
         this.content = "삭제된 댓글입니다.";
         this.isDeleted = true;
+        this.status = CommentStatus.DELETED;
         this.imageUrl = null;
         this.updatedAt = updatedAt;
+    }
+
+    public void softDeleteByAdmin(LocalDateTime updatedAt) {
+        this.isDeleted = true;
+        this.status = CommentStatus.ADMIN_DELETED;
+        this.imageUrl = null;
+        this.updatedAt = updatedAt;
+    }
+
+    private static CommentStatus legacyStatus(boolean isDeleted) {
+        return isDeleted ? CommentStatus.DELETED : CommentStatus.ACTIVE;
     }
 }

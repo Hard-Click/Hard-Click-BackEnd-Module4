@@ -35,6 +35,8 @@ import org.springframework.http.HttpStatus;
     PASSWORD_RESET_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "U011", "비밀번호 재발급은 하루 최대 3회까지만 가능합니다."),
     EMAIL_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "U013", "이메일 인증이 완료되지 않았습니다."),
     INVALID_ROLE(HttpStatus.BAD_REQUEST, "U014", "유효하지 않은 권한입니다."),
+    MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "U018", "회원 정보를 찾을 수 없습니다."),
+    INVALID_MEMBER_STATUS_CHANGE(HttpStatus.BAD_REQUEST, "U019", "변경할 수 없는 회원 상태입니다."),
     PASSWORD_CONFIRM_MISMATCH(HttpStatus.BAD_REQUEST, "U016", "새 비밀번호와 비밀번호 확인이 일치하지 않습니다."),
         INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "AUTH_009", "현재 비밀번호가 일치하지 않습니다."),
 
@@ -51,7 +53,6 @@ import org.springframework.http.HttpStatus;
     INVALID_CURRENT_PASSWORD(HttpStatus.UNAUTHORIZED, "AUTH_009", "현재 비밀번호가 일치하지 않습니다."),
     ALREADY_WITHDRAWN_MEMBER(HttpStatus.BAD_REQUEST, "AUTH_010","이미 탈퇴한 회원입니다."),
     WITHDRAWN_MEMBER(HttpStatus.FORBIDDEN,"AUTH_011", "탈퇴한 회원입니다."),
-    BLACKLIST_MEMBER(HttpStatus.FORBIDDEN, "AUTH_012", "영구 정지된 회원입니다."),
 
     /* =========================================================================
        4. 강의(Course) 관련 예외 (CR000)
@@ -117,7 +118,11 @@ import org.springframework.http.HttpStatus;
     STUDY_TIMER_LOCK_TIMEOUT(HttpStatus.CONFLICT, "ST004", "순공시간 세션 처리 중입니다. 잠시 후 다시 시도해주세요."),
     // 신고 예외
     REPORT_ALREADY_EXISTS(HttpStatus.CONFLICT, "RP001", "이미 신고한 대상입니다."),
-    REPORT_TARGET_NOT_FOUND(HttpStatus.NOT_FOUND, "RP002", "존재하지 않거나 이미 삭제된 대상입니다.");
+    REPORT_TARGET_NOT_FOUND(HttpStatus.NOT_FOUND, "RP002", "존재하지 않거나 이미 삭제된 대상입니다."),
+
+    //공지 예외
+    INVALID_NOTIFICATION(HttpStatus.BAD_REQUEST, "NT001", "알림 생성에 필요한 값이 누락되었습니다."),
+    INVALID_NOTICE_TYPE(HttpStatus.BAD_REQUEST, "N005", "유효하지 않은 공지 타입입니다.");
 
     private final HttpStatus status;
     private final String code;
