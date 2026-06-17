@@ -77,7 +77,8 @@ public class AdminMemberStatusService implements ChangeMemberStatusUseCase {
                 member.getStatus(),
                 MemberStatusChangeReason.ADMIN_MANUAL,
                 statusChangedMessage(member.getStatus()),
-                now
+                now,
+                clock.instant()
         ));
     }
 

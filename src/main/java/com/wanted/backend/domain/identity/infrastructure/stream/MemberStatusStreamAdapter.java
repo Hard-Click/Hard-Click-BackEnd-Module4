@@ -69,14 +69,9 @@ public class MemberStatusStreamAdapter implements MemberStatusStreamPort {
     }
 
     private void remove(Long memberId, SseEmitter emitter) {
-        List<SseEmitter> memberEmitters = emitters.get(memberId);
-        if (memberEmitters == null) {
-            return;
-        }
-
-        memberEmitters.remove(emitter);
-        if (memberEmitters.isEmpty()) {
-            emitters.remove(memberId);
-        }
+        emitters.computeIfPresent(memberId, (id, memberEmitters) -> {
+            memberEmitters.remove(emitter);
+            return memberEmitters.isEmpty() ? null : memberEmitters;
+        });
     }
 }

@@ -54,7 +54,7 @@ public class ReviewJpaEntity {
     public void update(Integer rating, String content, ReviewStatus status, LocalDateTime updatedAt) {
         this.rating = rating;
         this.content = content;
-        this.status = status == null ? ReviewStatus.ACTIVE : status;
+        this.status = status == null ? this.status : status;
         this.updatedAt = updatedAt;
     }
 

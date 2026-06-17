@@ -3,6 +3,8 @@ package com.wanted.backend.domain.community.infrastructure.persistence;
 import com.wanted.backend.domain.community.domain.model.Comment;
 import com.wanted.backend.domain.community.domain.model.CommentStatus;
 import com.wanted.backend.domain.community.domain.repository.CommentRepository;
+import com.wanted.backend.global.exception.BusinessException;
+import com.wanted.backend.global.exception.ErrorCode;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -51,7 +53,8 @@ public class CommentRepositoryAdapter implements CommentRepository {
 
     @Override
     public void softDeleteByAdmin(Long commentId, LocalDateTime updatedAt) {
-        CommentJpaEntity entity = repository.findById(commentId).orElseThrow();
+        CommentJpaEntity entity = repository.findById(commentId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
         entity.softDeleteByAdmin(updatedAt);
         repository.save(entity);
     }

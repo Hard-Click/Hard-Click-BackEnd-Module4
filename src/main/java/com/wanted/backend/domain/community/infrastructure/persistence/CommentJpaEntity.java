@@ -64,13 +64,15 @@ public class CommentJpaEntity {
                             String content, boolean isAccepted, boolean isDeleted,
                             CommentStatus status, String imageUrl,
                             LocalDateTime createdAt, LocalDateTime updatedAt) {
+        CommentStatus resolvedStatus = status == null ? legacyStatus(isDeleted) : status;
+
         this.postId = postId;
         this.authorId = authorId;
         this.parentId = parentId;
         this.content = content;
         this.isAccepted = isAccepted;
-        this.isDeleted = isDeleted;
-        this.status = status == null ? CommentStatus.ACTIVE : status;
+        this.isDeleted = resolvedStatus != CommentStatus.ACTIVE;
+        this.status = resolvedStatus;
         this.acceptCount = 0;
         this.imageUrl = imageUrl;
         this.createdAt = createdAt;
@@ -105,10 +107,13 @@ public class CommentJpaEntity {
     }
 
     public void softDeleteByAdmin(LocalDateTime updatedAt) {
-        this.content = Comment.ADMIN_DELETED_MESSAGE;
         this.isDeleted = true;
         this.status = CommentStatus.ADMIN_DELETED;
         this.imageUrl = null;
         this.updatedAt = updatedAt;
+    }
+
+    private static CommentStatus legacyStatus(boolean isDeleted) {
+        return isDeleted ? CommentStatus.DELETED : CommentStatus.ACTIVE;
     }
 }
