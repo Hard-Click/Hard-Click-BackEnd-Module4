@@ -12,7 +12,7 @@ import org.hibernate.annotations.Immutable;
 @Entity
 @Getter
 @Immutable
-@Table(name = "courses")
+@Table(name = "course")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CatalogCourseReferenceEntity {
 

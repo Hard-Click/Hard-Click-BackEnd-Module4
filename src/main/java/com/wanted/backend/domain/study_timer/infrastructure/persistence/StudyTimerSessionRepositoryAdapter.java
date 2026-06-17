@@ -3,6 +3,8 @@ package com.wanted.backend.domain.study_timer.infrastructure.persistence;
 import com.wanted.backend.domain.study_timer.domain.model.StudyTimerSession;
 import com.wanted.backend.domain.study_timer.domain.model.StudyTimerSessionStatus;
 import com.wanted.backend.domain.study_timer.domain.repository.StudyTimerSessionRepository;
+import com.wanted.backend.global.exception.BusinessException;
+import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -25,18 +28,35 @@ public class StudyTimerSessionRepositoryAdapter implements StudyTimerSessionRepo
     }
 
     @Override
+    public Optional<StudyTimerSession> findById(Long sessionId) {
+        return repository.findById(sessionId).map(this::toDomain);
+    }
+
+    @Override
     @Transactional
     public StudyTimerSession save(StudyTimerSession session) {
         LocalDateTime now = LocalDateTime.now(clock);
-        StudyTimerSessionJpaEntity entity = new StudyTimerSessionJpaEntity(
+        StudyTimerSessionJpaEntity entity = session.id() == null
+                ? new StudyTimerSessionJpaEntity(
                 session.memberId(),
                 session.courseId(),
                 session.lessonId(),
                 toLocalDateTime(session.startedAt()),
                 toLocalDateTime(session.endedAt()),
-                session.elapsedSeconds(),
+                session.accumulatedStudySeconds(),
                 session.status(),
                 now,
+                now
+        )
+                : repository.findById(session.id())
+                .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_TIMER_SESSION_NOT_FOUND));
+
+        entity.updateSession(
+                session.courseId(),
+                session.lessonId(),
+                toLocalDateTime(session.endedAt()),
+                session.accumulatedStudySeconds(),
+                session.status(),
                 now
         );
 
@@ -51,7 +71,7 @@ public class StudyTimerSessionRepositoryAdapter implements StudyTimerSessionRepo
                 entity.getLessonId(),
                 toOffsetDateTime(entity.getStartedAt()),
                 toOffsetDateTime(entity.getEndedAt()),
-                entity.getElapsedSeconds(),
+                entity.getAccumulatedStudySeconds(),
                 entity.getStatus()
         );
     }
