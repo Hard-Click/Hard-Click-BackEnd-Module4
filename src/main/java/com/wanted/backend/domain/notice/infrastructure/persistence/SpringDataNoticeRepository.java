@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 /*
@@ -27,4 +28,8 @@ public interface SpringDataNoticeRepository
     // 이전 공지 조회 - 전체 공지용 (courseId = null)
     Optional<NoticeJpaEntity> findFirstByIdLessThanAndTypeOrderByIdDesc(
             Long id, String type);
+
+    // INSTRUCTOR/STUDENT용 - 특정 강의 ID 목록으로 조회
+    Page<NoticeJpaEntity> findByCourseIdInAndTypeAndTitleContaining(
+            List<Long> courseIds, String type, String keyword, Pageable pageable);
 }

@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /*
@@ -81,6 +82,13 @@ public class NoticeRepositoryAdapter implements NoticeRepository {
                 noticeId, type);
 
         return entity.map(this::toDomain);
+    }
+
+    @Override
+    public Page<Notice> findCourseNoticesByIds(List<Long> courseIds, String keyword, Pageable pageable) {
+        return repository.findByCourseIdInAndTypeAndTitleContaining(
+                        courseIds, "COURSE", keyword, pageable)
+                .map(this::toDomain);
     }
 
     private Notice toDomain(NoticeJpaEntity entity) {
