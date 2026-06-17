@@ -1,11 +1,12 @@
 DELETE FROM video_progress;
-DELETE FROM enrollments;
+DELETE FROM study_timer_sessions;
+DELETE FROM enrollment;
 DELETE FROM subscriptions;
 DELETE FROM video;
 DELETE FROM course_curriculum;
-DELETE FROM courses;
+DELETE FROM course;
 
-INSERT INTO courses (
+INSERT INTO course (
     course_id, instructor_id, subject_id, title, description, price,
     thumbnail_url, file_url, file_status, status, avg_rating, review_count,
     student_count, created_at, updated_at
@@ -16,7 +17,7 @@ INSERT INTO courses (
 );
 
 INSERT INTO course_curriculum (
-    curriculum_id, course_id, title, duration_minutes, sort_order
+    curriculum_id, course_id, title, duration_minutes, order_index
 ) VALUES (
     30, 20, 'Section 1', 60, 1
 );
@@ -35,7 +36,7 @@ INSERT INTO video_progress (
     120, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 );
 
-INSERT INTO enrollments (
+INSERT INTO enrollment (
     enrollment_id, member_id, course_id, payment_type, status,
     progress_rate, expired_at, created_at, updated_at
 ) VALUES (

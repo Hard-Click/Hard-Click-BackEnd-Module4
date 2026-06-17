@@ -48,4 +48,3 @@ services:
 volumes:
   mysql-data:
   redis-data:
-  influxdb-data:
