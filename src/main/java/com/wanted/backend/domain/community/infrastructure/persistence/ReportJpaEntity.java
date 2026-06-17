@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.community.infrastructure.persistence;
 
 import com.wanted.backend.domain.community.domain.model.TargetType;
+import com.wanted.backend.domain.community.domain.model.ReportStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 
@@ -35,6 +36,10 @@ public class ReportJpaEntity {
     @Column(name = "reason")
     private String reason;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private ReportStatus status = ReportStatus.PENDING;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -48,6 +53,7 @@ public class ReportJpaEntity {
         this.targetId = targetId;
         this.reportTypes = reportTypes;
         this.reason = reason;
+        this.status = ReportStatus.PENDING;
         this.createdAt = createdAt;
     }
 }
