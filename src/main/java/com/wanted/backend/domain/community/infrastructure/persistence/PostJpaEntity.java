@@ -76,7 +76,7 @@ public class PostJpaEntity {
         this.title = title;
         this.content = content;
         this.viewCount = viewCount;
-        this.status = status == null ? PostStatus.ACTIVE : status;
+        this.status = status == null ? this.status : status;
         this.isAccepted = isAccepted;
         this.updatedAt = updatedAt;
     }

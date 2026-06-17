@@ -24,14 +24,16 @@ public class Comment {
     private Comment(Long id, Long postId, Long authorId, Long parentId,
                     String content, boolean isAccepted, boolean isDeleted,
                     CommentStatus status, String imageUrl, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        CommentStatus resolvedStatus = status == null ? legacyStatus(isDeleted) : status;
+
         this.id = id;
         this.postId = postId;
         this.authorId = authorId;
         this.parentId = parentId;
         this.content = content;
         this.isAccepted = isAccepted;
-        this.isDeleted = isDeleted;
-        this.status = status == null ? legacyStatus(isDeleted) : status;
+        this.isDeleted = resolvedStatus != CommentStatus.ACTIVE;
+        this.status = resolvedStatus;
         this.imageUrl = imageUrl;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -102,7 +104,6 @@ public class Comment {
     }
 
     public void softDeleteByAdmin() {
-        this.content = ADMIN_DELETED_MESSAGE;
         this.isDeleted = true;
         this.status = CommentStatus.ADMIN_DELETED;
         this.imageUrl = null;

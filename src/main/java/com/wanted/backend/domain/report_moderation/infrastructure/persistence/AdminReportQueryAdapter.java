@@ -1,6 +1,10 @@
 package com.wanted.backend.domain.report_moderation.infrastructure.persistence;
 
+import com.wanted.backend.domain.community.domain.model.Comment;
+import com.wanted.backend.domain.community.domain.model.CommentStatus;
+import com.wanted.backend.domain.community.domain.model.PostStatus;
 import com.wanted.backend.domain.community.domain.model.ReportStatus;
+import com.wanted.backend.domain.community.domain.model.ReviewStatus;
 import com.wanted.backend.domain.community.domain.model.TargetType;
 import com.wanted.backend.domain.community.infrastructure.persistence.CommentJpaEntity;
 import com.wanted.backend.domain.community.infrastructure.persistence.PostJpaEntity;
@@ -23,6 +27,12 @@ public class AdminReportQueryAdapter implements AdminReportQueryPort {
 
     private static final int MIN_REPORT_COUNT_FOR_ADMIN_LIST = 3;
     private static final int PREVIEW_LENGTH = 50;
+    private static final String DELETED_POST_TITLE = "삭제된 게시글";
+    private static final String DELETED_POST_CONTENT = "삭제된 게시글입니다.";
+    private static final String COMMENT_TITLE = "댓글 내용";
+    private static final String DELETED_COMMENT_CONTENT = "삭제된 댓글입니다.";
+    private static final String REVIEW_TITLE = "리뷰 내용";
+    private static final String DELETED_REVIEW_CONTENT = "삭제된 리뷰입니다.";
 
     private final EntityManager entityManager;
 
@@ -121,23 +131,30 @@ public class AdminReportQueryAdapter implements AdminReportQueryPort {
         return switch (targetType) {
             case POST -> {
                 PostJpaEntity post = entityManager.find(PostJpaEntity.class, targetId);
-                yield post == null
-                        ? new TargetContent("삭제된 게시글", "삭제된 게시글입니다.")
+                yield post == null || post.getStatus() != PostStatus.ACTIVE
+                        ? new TargetContent(DELETED_POST_TITLE, DELETED_POST_CONTENT)
                         : new TargetContent(post.getTitle(), post.getContent());
             }
             case COMMENT -> {
                 CommentJpaEntity comment = entityManager.find(CommentJpaEntity.class, targetId);
-                yield comment == null
-                        ? new TargetContent("댓글 내용", "삭제된 댓글입니다.")
-                        : new TargetContent("댓글 내용", comment.getContent());
+                yield comment == null || comment.getStatus() != CommentStatus.ACTIVE
+                        ? new TargetContent(COMMENT_TITLE, deletedCommentContent(comment))
+                        : new TargetContent(COMMENT_TITLE, comment.getContent());
             }
             case REVIEW -> {
                 ReviewJpaEntity review = entityManager.find(ReviewJpaEntity.class, targetId);
-                yield review == null
-                        ? new TargetContent("리뷰 내용", "삭제된 리뷰입니다.")
-                        : new TargetContent("리뷰 내용", review.getContent());
+                yield review == null || review.getStatus() != ReviewStatus.ACTIVE
+                        ? new TargetContent(REVIEW_TITLE, DELETED_REVIEW_CONTENT)
+                        : new TargetContent(REVIEW_TITLE, review.getContent());
             }
         };
+    }
+
+    private String deletedCommentContent(CommentJpaEntity comment) {
+        if (comment != null && comment.getStatus() == CommentStatus.ADMIN_DELETED) {
+            return Comment.ADMIN_DELETED_MESSAGE;
+        }
+        return DELETED_COMMENT_CONTENT;
     }
 
     private String findMemberName(Long memberId) {

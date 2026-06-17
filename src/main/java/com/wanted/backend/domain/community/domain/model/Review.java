@@ -52,6 +52,10 @@ public class Review {
     }
 
     public void update(Integer rating, String content) {
+        if (this.status != ReviewStatus.ACTIVE) {
+            throw new BusinessException(ErrorCode.REVIEW_NOT_AUTHORIZED);
+        }
+
         this.rating = rating;
         this.content = content;
         this.updatedAt = LocalDateTime.now();

@@ -8,7 +8,12 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "reports")
+@Table(
+        name = "reports",
+        indexes = {
+                @Index(name = "idx_reports_reported_member_id", columnList = "reported_member_id")
+        }
+)
 @Getter
 public class ReportJpaEntity {
 
@@ -37,7 +42,7 @@ public class ReportJpaEntity {
     private String reason;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
+    @Column(name = "status", nullable = false)
     private ReportStatus status = ReportStatus.PENDING;
 
     @Column(name = "created_at", nullable = false)

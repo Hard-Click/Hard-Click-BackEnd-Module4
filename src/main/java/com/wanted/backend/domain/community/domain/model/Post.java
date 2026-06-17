@@ -91,6 +91,11 @@ public class Post {
         this.updatedAt = LocalDateTime.now();
     }
 
+    public void softDeleteByAdmin(LocalDateTime now) {
+        this.status = PostStatus.ADMIN_DELETED;
+        this.updatedAt = now;
+    }
+
     public void validateFileCount(int fileCount) {
         if (fileCount > 2) {
             throw new BusinessException(ErrorCode.FILE_COUNT_EXCEEDED);

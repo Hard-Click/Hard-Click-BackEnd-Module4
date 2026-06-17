@@ -23,7 +23,8 @@ public class MemberStatusChangedEvent implements DomainEvent {
             MemberStatus status,
             MemberStatusChangeReason reason,
             String message,
-            LocalDateTime changedAt
+            LocalDateTime changedAt,
+            Instant occurredAt
     ) {
         this.memberId = memberId;
         this.previousStatus = previousStatus;
@@ -31,7 +32,7 @@ public class MemberStatusChangedEvent implements DomainEvent {
         this.reason = reason;
         this.message = message;
         this.changedAt = changedAt;
-        this.occurredAt = Instant.now();
+        this.occurredAt = occurredAt;
     }
 
     @Override

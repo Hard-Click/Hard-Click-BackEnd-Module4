@@ -11,6 +11,7 @@ import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -27,6 +28,7 @@ public class MemberStatusStreamService implements MemberStatusStreamUseCase {
     private final Clock clock;
 
     @Override
+    @Transactional(readOnly = true)
     public SseEmitter connect(Long memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
@@ -35,7 +37,7 @@ public class MemberStatusStreamService implements MemberStatusStreamUseCase {
         return memberStatusStreamPort.connect(memberId, syncMessage);
     }
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handle(MemberStatusChangedEvent event) {
         memberStatusStreamPort.send(MemberStatusChangedMessage.from(event));
     }
