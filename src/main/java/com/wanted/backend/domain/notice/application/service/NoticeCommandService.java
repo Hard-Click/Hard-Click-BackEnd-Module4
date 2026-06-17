@@ -37,7 +37,6 @@ public class NoticeCommandService implements NoticeCommandUseCase {
     @Override
     public Long create(CreateNoticeCommand command) {
 
-        // [1단계] 강사 여부 검증 → Policy에 위임
         noticeCreatePolicy.validate(command.instructorId(), command.courseId());
 
         // [2단계] 공지사항 도메인 생성 (status PUBLISHED 고정)

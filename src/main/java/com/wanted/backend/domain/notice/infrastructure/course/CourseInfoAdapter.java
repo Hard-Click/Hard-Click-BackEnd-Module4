@@ -11,17 +11,16 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class CourseInfoAdapter implements CourseInfoPort {
 
-    private final SpringDataCourseInfoReferenceRepository courseInfoReferenceRepository;
+    private final SpringDataCourseReferenceRepository courseReferenceRepository;
 
-    public CourseInfoAdapter(
-            SpringDataCourseInfoReferenceRepository courseInfoReferenceRepository) {
-        this.courseInfoReferenceRepository = courseInfoReferenceRepository;
+    public CourseInfoAdapter(SpringDataCourseReferenceRepository courseReferenceRepository) {
+        this.courseReferenceRepository = courseReferenceRepository;
     }
 
     @Override
     public String getCourseNameByCourseId(Long courseId) {
-        return courseInfoReferenceRepository.findById(courseId)
-                .map(CourseInfoReferenceEntity::getTitle)
+        return courseReferenceRepository.findById(courseId)
+                .map(CourseReferenceEntity::getTitle)
                 .orElseThrow(() -> new BusinessException(ErrorCode.COURSE_NOT_FOUND));
     }
 }

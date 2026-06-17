@@ -4,6 +4,7 @@ import com.wanted.backend.domain.notice.domain.model.Notice;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Optional;
 
 
@@ -25,4 +26,6 @@ public interface NoticeRepository {
 
     // Hard Delete 추가
     void deleteById(Long noticeId);
+
+    Page<Notice> findCourseNoticesByIds(List<Long> courseIds, String keyword, Pageable pageable);
 }

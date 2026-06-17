@@ -7,7 +7,7 @@ import org.hibernate.annotations.Immutable;
 
 @Entity(name = "NoticeCourseReference")
 @Table(name = "course")
-@Immutable //읽기 전용 테이블
+@Immutable
 @Getter
 public class CourseReferenceEntity {
 
@@ -19,7 +19,8 @@ public class CourseReferenceEntity {
     @Column(name = "author_id", insertable = false, updatable = false)
     private Long authorId;
 
-    protected CourseReferenceEntity() {
+    @Column(name = "title", insertable = false, updatable = false)
+    private String title;
 
-    }
+    protected CourseReferenceEntity() {}
 }
