@@ -11,6 +11,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class StudyTimerSessionTest {
 
+    private static final OffsetDateTime SERVER_NOW = OffsetDateTime.parse("2026-05-11T15:05:00+09:00");
+
     @Test
     void startRejectsNullMemberId() {
         assertThatThrownBy(() -> StudyTimerSession.start(
@@ -52,7 +54,8 @@ class StudyTimerSessionTest {
         );
 
         StudyTimerSession updated = session.heartbeat(
-                OffsetDateTime.parse("2026-05-11T15:03:20+09:00")
+                OffsetDateTime.parse("2026-05-11T15:03:20+09:00"),
+                SERVER_NOW
         );
 
         assertThat(updated.accumulatedStudySeconds()).isEqualTo(200);
@@ -73,7 +76,8 @@ class StudyTimerSessionTest {
         );
 
         StudyTimerSession updated = session.heartbeat(
-                OffsetDateTime.parse("2026-05-11T15:02:30+09:00")
+                OffsetDateTime.parse("2026-05-11T15:02:30+09:00"),
+                SERVER_NOW
         );
 
         assertThat(updated.accumulatedStudySeconds()).isEqualTo(200);
@@ -87,10 +91,26 @@ class StudyTimerSessionTest {
         );
 
         assertThatThrownBy(() -> session.heartbeat(
-                OffsetDateTime.parse("2026-05-11T14:59:59+09:00")
+                OffsetDateTime.parse("2026-05-11T14:59:59+09:00"),
+                SERVER_NOW
         ))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("하트비트 시각은 세션 시작 시각 이후여야 합니다.");
+    }
+
+    @Test
+    void heartbeatRejectsFutureHeartbeatAt() {
+        StudyTimerSession session = StudyTimerSession.start(
+                1L,
+                OffsetDateTime.parse("2026-05-11T15:00:00+09:00")
+        );
+
+        assertThatThrownBy(() -> session.heartbeat(
+                OffsetDateTime.parse("2026-05-11T15:05:01+09:00"),
+                SERVER_NOW
+        ))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("하트비트 시각은 현재 시각 이후일 수 없습니다.");
     }
 
     @Test
@@ -107,7 +127,8 @@ class StudyTimerSessionTest {
         );
 
         assertThatThrownBy(() -> session.heartbeat(
-                OffsetDateTime.parse("2026-05-11T15:03:20+09:00")
+                OffsetDateTime.parse("2026-05-11T15:03:20+09:00"),
+                SERVER_NOW
         ))
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")

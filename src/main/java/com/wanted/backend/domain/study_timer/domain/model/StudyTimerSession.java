@@ -51,9 +51,15 @@ public class StudyTimerSession {
         );
     }
 
-    public StudyTimerSession heartbeat(OffsetDateTime heartbeatAt) {
+    public StudyTimerSession heartbeat(OffsetDateTime heartbeatAt, OffsetDateTime serverNow) {
         if (heartbeatAt == null) {
             throw new IllegalArgumentException("하트비트 시각은 필수입니다.");
+        }
+        if (serverNow == null) {
+            throw new IllegalArgumentException("서버 현재 시각은 필수입니다.");
+        }
+        if (heartbeatAt.toInstant().isAfter(serverNow.toInstant())) {
+            throw new IllegalArgumentException("하트비트 시각은 현재 시각 이후일 수 없습니다.");
         }
         if (status != StudyTimerSessionStatus.RUNNING) {
             throw new BusinessException(ErrorCode.STUDY_TIMER_SESSION_NOT_RUNNING);

@@ -13,7 +13,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,7 +38,8 @@ class SaveStudyTimerHeartbeatServiceTest {
     void setUp() {
         memberLockPort = mock(MemberLockPort.class);
         repository = mock(StudyTimerSessionRepository.class);
-        service = new SaveStudyTimerHeartbeatService(memberLockPort, repository);
+        Clock clock = Clock.fixed(Instant.parse("2026-05-11T06:05:00Z"), ZoneId.of("Asia/Seoul"));
+        service = new SaveStudyTimerHeartbeatService(memberLockPort, repository, clock);
     }
 
     @Test
@@ -152,6 +156,21 @@ class SaveStudyTimerHeartbeatServiceTest {
 
         verify(memberLockPort).lock(1L);
         verify(repository).findById(55L);
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void throwsInvalidInputWhenHeartbeatAtIsInFuture() {
+        assertThatThrownBy(() -> service.handle(new SaveStudyTimerHeartbeatCommand(
+                1L,
+                55L,
+                OffsetDateTime.parse("2026-05-11T15:05:01+09:00")
+        )))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("하트비트 시각은 현재 시각 이후일 수 없습니다.");
+
+        verify(memberLockPort, never()).lock(any());
+        verify(repository, never()).findById(any());
         verify(repository, never()).save(any());
     }
 }

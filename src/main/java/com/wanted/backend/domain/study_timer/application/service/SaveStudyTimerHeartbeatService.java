@@ -11,6 +11,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
+import java.time.OffsetDateTime;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -18,10 +21,14 @@ public class SaveStudyTimerHeartbeatService implements SaveStudyTimerHeartbeatUs
 
     private final MemberLockPort memberLockPort;
     private final StudyTimerSessionRepository studyTimerSessionRepository;
+    private final Clock clock;
 
     @Override
     @Transactional
     public StudyTimerHeartbeatView handle(SaveStudyTimerHeartbeatCommand command) {
+        OffsetDateTime serverNow = OffsetDateTime.now(clock);
+        validateHeartbeatAt(command.heartbeatAt(), serverNow);
+
         memberLockPort.lock(command.memberId());
 
         StudyTimerSession session = studyTimerSessionRepository.findById(command.sessionId())
@@ -31,7 +38,7 @@ public class SaveStudyTimerHeartbeatService implements SaveStudyTimerHeartbeatUs
             throw new BusinessException(ErrorCode.FORBIDDEN);
         }
 
-        StudyTimerSession saved = studyTimerSessionRepository.save(session.heartbeat(command.heartbeatAt()));
+        StudyTimerSession saved = studyTimerSessionRepository.save(session.heartbeat(command.heartbeatAt(), serverNow));
         Integer accumulatedStudySeconds = saved.accumulatedStudySeconds();
 
         return new StudyTimerHeartbeatView(
@@ -40,5 +47,14 @@ public class SaveStudyTimerHeartbeatService implements SaveStudyTimerHeartbeatUs
                 accumulatedStudySeconds,
                 command.heartbeatAt()
         );
+    }
+
+    private void validateHeartbeatAt(OffsetDateTime heartbeatAt, OffsetDateTime serverNow) {
+        if (heartbeatAt == null) {
+            throw new IllegalArgumentException("하트비트 시각은 필수입니다.");
+        }
+        if (heartbeatAt.toInstant().isAfter(serverNow.toInstant())) {
+            throw new IllegalArgumentException("하트비트 시각은 현재 시각 이후일 수 없습니다.");
+        }
     }
 }
