@@ -90,7 +90,7 @@ public class NoticeQueryService implements NoticeQueryUseCase {
             courseName = courseInfoPort.getCourseNameByCourseId(command.courseId());
 
         } else {
-            throw new BusinessException(ErrorCode.NOTICE_NOT_FOUND);
+            throw new BusinessException(ErrorCode.INVALID_NOTICE_TYPE);
         }
 
         String finalCourseName = courseName;
