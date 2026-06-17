@@ -1,3 +1,10 @@
 package com.wanted.backend.domain.notification.presentation.response;
 
-public record UnreadCountResponse(int unreadCount) {}
+import io.swagger.v3.oas.annotations.media.Schema;
+
+public record UnreadCountResponse(
+
+        @Schema(description = "읽지 않은 알림 총 개수", example = "3")
+        int unreadCount
+
+) {}
