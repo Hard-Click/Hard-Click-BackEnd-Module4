@@ -111,7 +111,7 @@ import org.springframework.http.HttpStatus;
     COURSE_ID_REQUIRED(HttpStatus.BAD_REQUEST, "N004", "강의 공지 조회 시 강의 ID는 필수입니다."),
 
     // 순공 세션 관련 예외
-    STUDY_TIMER_SESSION_ALREADY_RUNNING(HttpStatus.CONFLICT, "ST001", "이미 실행 중인 순공시간 세션이 있습니다.");
+    STUDY_TIMER_SESSION_ALREADY_RUNNING(HttpStatus.CONFLICT, "ST001", "이미 실행 중인 순공시간 세션이 있습니다."),
     // 신고 예외
     REPORT_ALREADY_EXISTS(HttpStatus.CONFLICT, "RP001", "이미 신고한 대상입니다."),
     REPORT_TARGET_NOT_FOUND(HttpStatus.NOT_FOUND, "RP002", "존재하지 않거나 이미 삭제된 대상입니다.");
