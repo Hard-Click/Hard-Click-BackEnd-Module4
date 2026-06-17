@@ -45,12 +45,13 @@ public class ReportCommandService implements ReportCommandUseCase {
             throw new BusinessException(ErrorCode.REPORT_ALREADY_EXISTS);
         }
 
-        // 2. 대상 존재 여부 체크
-        validateTargetExists(command.targetType(), command.targetId());
+        // 2. 신고 대상 작성자 확인
+        Long reportedMemberId = findReportedMemberId(command.targetType(), command.targetId());
 
         // 3. 신고 저장
         Long reportId = reportRepository.save(Report.create(
                 command.reporterId(),
+                reportedMemberId,
                 command.targetType(),
                 command.targetId(),
                 command.reportTypes(),
@@ -68,14 +69,17 @@ public class ReportCommandService implements ReportCommandUseCase {
         return reportId;
     }
 
-    private void validateTargetExists(TargetType targetType, Long targetId) {
-        boolean exists = switch (targetType) {
-            case POST -> postRepository.findById(targetId).isPresent();
-            case COMMENT -> commentRepository.findById(targetId).isPresent();
-            case REVIEW -> reviewRepository.findById(targetId).isPresent();
+    private Long findReportedMemberId(TargetType targetType, Long targetId) {
+        return switch (targetType) {
+            case POST -> postRepository.findById(targetId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.REPORT_TARGET_NOT_FOUND))
+                    .getAuthorId();
+            case COMMENT -> commentRepository.findById(targetId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.REPORT_TARGET_NOT_FOUND))
+                    .getAuthorId();
+            case REVIEW -> reviewRepository.findById(targetId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.REPORT_TARGET_NOT_FOUND))
+                    .getMemberId();
         };
-        if (!exists) {
-            throw new BusinessException(ErrorCode.REPORT_TARGET_NOT_FOUND);
-        }
     }
 }

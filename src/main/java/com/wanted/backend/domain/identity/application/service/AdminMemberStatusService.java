@@ -7,9 +7,7 @@ import com.wanted.backend.domain.identity.domain.event.MemberStatusChangedEvent;
 import com.wanted.backend.domain.identity.domain.model.Member;
 import com.wanted.backend.domain.identity.domain.model.MemberStatus;
 import com.wanted.backend.domain.identity.domain.model.MemberStatusChangeReason;
-import com.wanted.backend.domain.identity.domain.model.MemberStatusHistory;
 import com.wanted.backend.domain.identity.domain.repository.MemberRepository;
-import com.wanted.backend.domain.identity.domain.repository.MemberStatusHistoryRepository;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +25,6 @@ import java.util.Locale;
 public class AdminMemberStatusService implements ChangeMemberStatusUseCase {
 
     private final MemberRepository memberRepository;
-    private final MemberStatusHistoryRepository memberStatusHistoryRepository;
     private final Clock clock;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -44,13 +41,6 @@ public class AdminMemberStatusService implements ChangeMemberStatusUseCase {
 
         changeCommunityStatus(member, status, now);
         Member savedMember = memberRepository.save(member);
-        memberStatusHistoryRepository.save(MemberStatusHistory.create(
-                savedMember.getId(),
-                previousStatus,
-                savedMember.getStatus(),
-                memo,
-                now
-        ));
         publishStatusChangedEvent(savedMember, previousStatus, now);
 
         return new ChangeMemberStatusResult(

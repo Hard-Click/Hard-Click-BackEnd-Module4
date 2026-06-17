@@ -19,6 +19,9 @@ public class ReportJpaEntity {
     @Column(name = "reporter_id", nullable = false)
     private Long reporterId;
 
+    @Column(name = "reported_member_id", nullable = false)
+    private Long reportedMemberId;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "target_type", nullable = false)
     private TargetType targetType;
@@ -37,9 +40,10 @@ public class ReportJpaEntity {
 
     protected ReportJpaEntity() {}
 
-    public ReportJpaEntity(Long reporterId, TargetType targetType, Long targetId,
+    public ReportJpaEntity(Long reporterId, Long reportedMemberId, TargetType targetType, Long targetId,
                            String reportTypes, String reason, LocalDateTime createdAt) {
         this.reporterId = reporterId;
+        this.reportedMemberId = reportedMemberId;
         this.targetType = targetType;
         this.targetId = targetId;
         this.reportTypes = reportTypes;

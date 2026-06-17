@@ -10,7 +10,9 @@ import jakarta.persistence.TypedQuery;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -30,10 +32,11 @@ public class AdminMemberQueryAdapter implements AdminMemberQueryPort {
 
         boolean hasNext = members.size() > query.size();
         List<MemberJpaEntity> content = hasNext ? members.subList(0, query.size()) : members;
+        Map<Long, Long> reportCounts = findReportCounts(content);
 
         return new AdminMemberListResult(
                 content.stream()
-                        .map(this::toItem)
+                        .map(member -> toItem(member, reportCounts))
                         .toList(),
                 query.page(),
                 query.size(),
@@ -69,7 +72,39 @@ public class AdminMemberQueryAdapter implements AdminMemberQueryPort {
         return query.getResultList();
     }
 
-    private AdminMemberListResult.Item toItem(MemberJpaEntity member) {
+    private Map<Long, Long> findReportCounts(List<MemberJpaEntity> members) {
+        List<Long> memberIds = members.stream()
+                .map(MemberJpaEntity::getId)
+                .toList();
+        if (memberIds.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<Long, Long> reportCounts = new HashMap<>();
+        mergeReportCounts(reportCounts, countReports(memberIds));
+        return reportCounts;
+    }
+
+    private List<Object[]> countReports(List<Long> memberIds) {
+        return entityManager.createQuery("""
+                select r.reportedMemberId, count(r.id)
+                from ReportJpaEntity r
+                where r.reportedMemberId in :memberIds
+                group by r.reportedMemberId
+                """, Object[].class)
+                .setParameter("memberIds", memberIds)
+                .getResultList();
+    }
+
+    private void mergeReportCounts(Map<Long, Long> reportCounts, List<Object[]> rows) {
+        for (Object[] row : rows) {
+            Long memberId = (Long) row[0];
+            Long count = (Long) row[1];
+            reportCounts.merge(memberId, count, Long::sum);
+        }
+    }
+
+    private AdminMemberListResult.Item toItem(MemberJpaEntity member, Map<Long, Long> reportCounts) {
         return new AdminMemberListResult.Item(
                 member.getId(),
                 member.getUsername(),
@@ -77,7 +112,7 @@ public class AdminMemberQueryAdapter implements AdminMemberQueryPort {
                 member.getEmail(),
                 member.getRole(),
                 member.getStatus(),
-                0,
+                Math.toIntExact(reportCounts.getOrDefault(member.getId(), 0L)),
                 member.getCreatedAt(),
                 member.getLastLoginAt()
         );
