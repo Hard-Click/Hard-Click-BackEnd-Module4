@@ -23,6 +23,7 @@ public class ReportRepositoryAdapter implements ReportRepository {
     public Long save(Report report) {
         ReportJpaEntity entity = new ReportJpaEntity(
                 report.getReporterId(),
+                report.getReportedMemberId(),
                 report.getTargetType(),
                 report.getTargetId(),
                 toCommaSeparated(report.getReportTypes()),
