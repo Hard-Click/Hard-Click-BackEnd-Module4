@@ -3,6 +3,9 @@ package com.wanted.backend.domain.notification.infrastructure.persistence;
 import com.wanted.backend.domain.notification.domain.model.Notification;
 import com.wanted.backend.domain.notification.domain.repository.NotificationRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Repository
 public class NotificationRepositoryAdapter implements NotificationRepository {
@@ -29,6 +32,18 @@ public class NotificationRepositoryAdapter implements NotificationRepository {
     @Override
     public int countUnreadByReceiverId(Long receiverId) {
         return repository.countByReceiverIdAndIsRead(receiverId, false);
+    }
+
+    @Override
+    public Optional<Notification> findById(Long notificationId) {
+        return repository.findById(notificationId).map(this::toDomain);
+    }
+
+    @Override
+    @Transactional
+    public void updateRead(Long notificationId) {
+        NotificationJpaEntity entity = repository.findById(notificationId).orElseThrow();
+        entity.markAsRead();
     }
 
     private Notification toDomain(NotificationJpaEntity entity) {

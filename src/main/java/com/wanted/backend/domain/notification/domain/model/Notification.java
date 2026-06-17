@@ -1,5 +1,8 @@
 package com.wanted.backend.domain.notification.domain.model;
 
+import com.wanted.backend.global.exception.BusinessException;
+import com.wanted.backend.global.exception.ErrorCode;
+
 import java.time.LocalDateTime;
 
 public class Notification {
@@ -26,6 +29,9 @@ public class Notification {
 
     public static Notification create(Long receiverId, NotificationType type,
                                       String message, String redirectUrl) {
+        if (receiverId == null || type == null || message == null || message.isBlank()) {
+            throw new BusinessException(ErrorCode.INVALID_NOTIFICATION);
+        }
         return new Notification(null, receiverId, type, message, false,
                 redirectUrl, LocalDateTime.now());
     }
