@@ -3,6 +3,8 @@ package com.wanted.backend.domain.identity.domain.model;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class EmailVerificationTest {
@@ -12,7 +14,8 @@ class EmailVerificationTest {
     void verify_success() {
         EmailVerification verification = EmailVerification.create(
                 "user@example.com",
-                EmailPurpose.SIGNUP
+                EmailPurpose.SIGNUP,
+                Duration.ofMinutes(3)
         );
 
         verification.verify(verification.getCode());
@@ -26,9 +29,12 @@ class EmailVerificationTest {
     void create_generatesSixDigitNumericCode() {
         EmailVerification verification = EmailVerification.create(
                 "user@example.com",
-                EmailPurpose.SIGNUP
+                EmailPurpose.SIGNUP,
+                Duration.ofMinutes(3)
         );
 
         assertThat(verification.getCode()).matches("\\d{6}");
+        assertThat(verification.getCodeHash()).hasSize(64);
+        assertThat(verification.getCodeHash()).isNotEqualTo(verification.getCode());
     }
 }

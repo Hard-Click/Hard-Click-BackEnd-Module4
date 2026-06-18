@@ -48,8 +48,15 @@ server:
   port: 8080
 
 identity:
+  redis:
+    mutation-retry-attempts: ${IDENTITY_REDIS_MUTATION_RETRY_ATTEMPTS:3}
   email:
-    allowed-domain: gmail.com
+    allowed-domain: ${IDENTITY_EMAIL_ALLOWED_DOMAIN:gmail.com}
+    code-ttl: ${IDENTITY_EMAIL_CODE_TTL:3m}
+    verified-token-ttl: ${IDENTITY_EMAIL_VERIFIED_TOKEN_TTL:30m}
+    processing-reservation-ttl: ${IDENTITY_EMAIL_PROCESSING_RESERVATION_TTL:30s}
+    completion-retry-attempts: ${IDENTITY_EMAIL_COMPLETION_RETRY_ATTEMPTS:3}
+    password-reset-daily-limit: ${IDENTITY_EMAIL_PASSWORD_RESET_DAILY_LIMIT:3}
   profile-image:
     upload-dir: uploads/profiles
     url: /uploads/profiles
