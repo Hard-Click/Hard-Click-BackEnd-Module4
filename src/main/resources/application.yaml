@@ -47,20 +47,19 @@ jwt:
 server:
   port: 8080
 
+aws:
+  s3:
+    bucket: ${S3_BUCKET}
+    region: ${AWS_REGION:ap-northeast-2}
+
 identity:
   email:
     allowed-domain: gmail.com
   profile-image:
-    upload-dir: uploads/profiles
-    url: /uploads/profiles
     max-size: 5242880
 
 community:
   image:
-    post-dir: uploads/posts
-    post-url: /uploads/posts
-    comment-dir: uploads/comments
-    comment-url: /uploads/comments
     max-size: 5242880
 
 study-timer:
