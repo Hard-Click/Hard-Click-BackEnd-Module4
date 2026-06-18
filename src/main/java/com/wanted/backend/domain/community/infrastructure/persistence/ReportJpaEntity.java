@@ -1,0 +1,64 @@
+package com.wanted.backend.domain.community.infrastructure.persistence;
+
+import com.wanted.backend.domain.community.domain.model.TargetType;
+import com.wanted.backend.domain.community.domain.model.ReportStatus;
+import jakarta.persistence.*;
+import lombok.Getter;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(
+        name = "reports",
+        indexes = {
+                @Index(name = "idx_reports_reported_member_id", columnList = "reported_member_id")
+        }
+)
+@Getter
+public class ReportJpaEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "report_id")
+    private Long id;
+
+    @Column(name = "reporter_id", nullable = false)
+    private Long reporterId;
+
+    @Column(name = "reported_member_id", nullable = false)
+    private Long reportedMemberId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "target_type", nullable = false)
+    private TargetType targetType;
+
+    @Column(name = "target_id", nullable = false)
+    private Long targetId;
+
+    @Column(name = "report_types", nullable = false)
+    private String reportTypes;
+
+    @Column(name = "reason")
+    private String reason;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private ReportStatus status = ReportStatus.PENDING;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
+
+    protected ReportJpaEntity() {}
+
+    public ReportJpaEntity(Long reporterId, Long reportedMemberId, TargetType targetType, Long targetId,
+                           String reportTypes, String reason, LocalDateTime createdAt) {
+        this.reporterId = reporterId;
+        this.reportedMemberId = reportedMemberId;
+        this.targetType = targetType;
+        this.targetId = targetId;
+        this.reportTypes = reportTypes;
+        this.reason = reason;
+        this.status = ReportStatus.PENDING;
+        this.createdAt = createdAt;
+    }
+}

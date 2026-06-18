@@ -5,6 +5,8 @@ import com.wanted.backend.domain.community.domain.model.Post;
 import com.wanted.backend.domain.community.domain.model.PostSortType;
 import com.wanted.backend.domain.community.domain.model.PostStatus;
 import com.wanted.backend.domain.community.domain.repository.PostRepository;
+import com.wanted.backend.global.exception.BusinessException;
+import com.wanted.backend.global.exception.ErrorCode;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.data.domain.PageRequest;
@@ -12,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -117,7 +120,7 @@ public class PostRepositoryAdapter implements PostRepository {
         return Post.restore(
                 entity.getId(), entity.getAuthorId(), entity.getBoardType(),
                 entity.getSubjectId(), entity.getTitle(), entity.getContent(),
-                entity.getViewCount(), entity.isAccepted(),
+                entity.getViewCount(), entity.getStatus(), entity.isAccepted(),
                 entity.getCreatedAt(), entity.getUpdatedAt()
         );
     }
@@ -141,5 +144,18 @@ public class PostRepositoryAdapter implements PostRepository {
         repository.deleteById(postId);
     }
 
+    @Override
+    public void adminDeleteById(Long postId) {
+        PostJpaEntity entity = repository.findById(postId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
+        Post post = toDomain(entity);
+        post.softDeleteByAdmin(LocalDateTime.now());
+
+        entity.update(
+                post.getSubjectId(), post.getTitle(), post.getContent(),
+                post.getViewCount(), post.getStatus(), post.isAccepted(), post.getUpdatedAt()
+        );
+        repository.save(entity);
+    }
 
 }

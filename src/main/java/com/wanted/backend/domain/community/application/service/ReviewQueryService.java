@@ -17,6 +17,7 @@ import java.util.List;
 public class ReviewQueryService implements ReviewQueryUseCase {
 
     private static final int PAGE_SIZE = 10;
+    private static final String ADMIN_DELETED_MESSAGE = "관리자에 의해 삭제되었습니다.";
 
     private final ReviewRepository reviewRepository;
     private final MemberNamePort memberNamePort;
@@ -71,7 +72,7 @@ public class ReviewQueryService implements ReviewQueryUseCase {
                 review.maskName(name),
                 name.substring(0, 1),
                 review.getRating(),
-                review.getContent(),
+                review.isAdminDeleted() ? ADMIN_DELETED_MESSAGE : review.getContent(),
                 review.getCreatedAt().toLocalDate(),
                 review.isOwner(currentMemberId)
         );

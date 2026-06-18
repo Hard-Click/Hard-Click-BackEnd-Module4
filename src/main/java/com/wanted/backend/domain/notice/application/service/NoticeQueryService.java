@@ -2,6 +2,8 @@ package com.wanted.backend.domain.notice.application.service;
 
 import com.wanted.backend.domain.notice.application.command.GetNoticeListCommand;
 import com.wanted.backend.domain.notice.application.port.CourseInfoPort;
+import com.wanted.backend.domain.notice.application.port.EnrolledCoursePort;
+import com.wanted.backend.domain.notice.application.port.InstructorCoursePort;
 import com.wanted.backend.domain.notice.application.usecase.NoticeQueryUseCase;
 import com.wanted.backend.domain.notice.domain.model.Notice;
 import com.wanted.backend.domain.notice.domain.repository.NoticeRepository;
@@ -25,47 +27,76 @@ public class NoticeQueryService implements NoticeQueryUseCase {
 
     private final NoticeRepository noticeRepository;
     private final CourseInfoPort courseInfoPort;
+    private final InstructorCoursePort instructorCoursePort;
+    private final EnrolledCoursePort enrolledCoursePort;
 
     public NoticeQueryService(NoticeRepository noticeRepository,
-                              CourseInfoPort courseInfoPort) {
+                              CourseInfoPort courseInfoPort,
+                              InstructorCoursePort instructorCoursePort,
+                              EnrolledCoursePort enrolledCoursePort) {
         this.noticeRepository = noticeRepository;
         this.courseInfoPort = courseInfoPort;
+        this.instructorCoursePort = instructorCoursePort;
+        this.enrolledCoursePort = enrolledCoursePort;
     }
 
     @Override
     public NoticeListResponse getList(GetNoticeListCommand command) {
 
-        // type=COURSE일 때 courseId 필수 검증
-        if ("COURSE".equals(command.type()) && command.courseId() == null) {
-            throw new BusinessException(ErrorCode.COURSE_ID_REQUIRED);
-        }
-
-        // isPinned 최상단 + 최신순 정렬
         Pageable pageable = PageRequest.of(
                 command.page(),
                 command.size(),
-                Sort.by(
-                        Sort.Order.desc("isPinned"),
-                        Sort.Order.desc("createdAt")
-                )
+                Sort.by(Sort.Order.desc("isPinned"), Sort.Order.desc("createdAt"))
         );
 
-        // type에 따라 조회 분기
-        Page<Notice> noticePage = "GLOBAL".equals(command.type())
-                ? noticeRepository.findGlobalNotices(
-                command.keyword() != null ? command.keyword() : "", pageable)
-                : noticeRepository.findCourseNotices(
-                command.courseId(),
-                command.keyword() != null ? command.keyword() : "", pageable);
+        Page<Notice> noticePage;
+        String courseName = null;
 
-        // 강의명 조회 (COURSE 타입일 때만)
-        String courseName = "COURSE".equals(command.type())
-                ? courseInfoPort.getCourseNameByCourseId(command.courseId())
-                : null;
+        if ("GLOBAL".equals(command.type())) {
+            noticePage = noticeRepository.findGlobalNotices(
+                    command.keyword() != null ? command.keyword() : "", pageable);
 
+        } else if ("COURSE".equals(command.type())) {
+            if (command.courseId() == null) {
+                throw new BusinessException(ErrorCode.COURSE_ID_REQUIRED);
+            }
+
+            String role = command.role();
+
+            if ("ADMIN".equals(role)) {
+                noticePage = noticeRepository.findCourseNotices(
+                        command.courseId(),
+                        command.keyword() != null ? command.keyword() : "", pageable);
+
+            } else if ("INSTRUCTOR".equals(role)) {
+                List<Long> myCourseIds = instructorCoursePort.getCourseIdsByInstructorId(command.memberId());
+                if (!myCourseIds.contains(command.courseId())) {
+                    throw new BusinessException(ErrorCode.NOTICE_NOT_AUTHORIZED);
+                }
+                noticePage = noticeRepository.findCourseNotices(
+                        command.courseId(),
+                        command.keyword() != null ? command.keyword() : "", pageable);
+
+            } else {
+                List<Long> enrolledIds = enrolledCoursePort.getEnrolledCourseIdsByMemberId(command.memberId());
+                if (!enrolledIds.contains(command.courseId())) {
+                    throw new BusinessException(ErrorCode.NOTICE_NOT_AUTHORIZED);
+                }
+                noticePage = noticeRepository.findCourseNotices(
+                        command.courseId(),
+                        command.keyword() != null ? command.keyword() : "", pageable);
+            }
+
+            courseName = courseInfoPort.getCourseNameByCourseId(command.courseId());
+
+        } else {
+            throw new BusinessException(ErrorCode.INVALID_NOTICE_TYPE);
+        }
+
+        String finalCourseName = courseName;
         List<NoticeItemResponse> content = noticePage.getContent()
                 .stream()
-                .map(notice -> toItemResponse(notice, courseName))
+                .map(notice -> toItemResponse(notice, finalCourseName))
                 .toList();
 
         return new NoticeListResponse(content, noticePage.getTotalPages());

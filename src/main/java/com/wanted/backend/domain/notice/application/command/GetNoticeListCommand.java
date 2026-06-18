@@ -6,7 +6,9 @@ public record GetNoticeListCommand(
         Long courseId,
         String keyword,
         int page,
-        int size
+        int size,
+        Long memberId,
+        String role
 ) {
 
 }
