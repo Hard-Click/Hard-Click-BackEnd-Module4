@@ -2,6 +2,7 @@ package com.wanted.backend.domain.notification.presentation;
 
 import com.wanted.backend.domain.notification.application.usecase.NotificationQueryUseCase;
 import com.wanted.backend.domain.notification.presentation.response.NotificationListResponse;
+import com.wanted.backend.domain.notification.presentation.response.NotificationReadResponse;
 import com.wanted.backend.domain.notification.presentation.response.UnreadCountResponse;
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
@@ -45,5 +46,15 @@ public class NotificationController {
                 userDetails.getMemberId(), cursorId);
 
         return ApiResponse.success("알림 목록 조회 완료", response);
+    }
+
+    @PatchMapping("/{notiId}/read")
+    @Operation(summary = "알림 읽음 처리", description = "알림을 읽음 상태로 변경합니다.")
+    public ResponseEntity<ApiResponse<NotificationReadResponse>> markAsRead(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long notiId) {
+        NotificationReadResponse response = notificationQueryUseCase.markAsRead(
+                userDetails.getMemberId(), notiId);
+        return ApiResponse.success("알림 읽음 처리 완료", response);
     }
 }
