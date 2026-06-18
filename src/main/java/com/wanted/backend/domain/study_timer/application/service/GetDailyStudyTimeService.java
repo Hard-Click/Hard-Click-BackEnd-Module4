@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.Period;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -17,6 +18,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class GetDailyStudyTimeService implements GetDailyStudyTimeUseCase {
+
+    private static final Period MAX_DAILY_STUDY_TIME_QUERY_PERIOD = Period.ofYears(1);
 
     private final DailyStudyStatsRepository dailyStudyStatsRepository;
 
@@ -58,6 +61,15 @@ public class GetDailyStudyTimeService implements GetDailyStudyTimeUseCase {
         }
         if (query.startDate().isAfter(query.endDate())) {
             throw new IllegalArgumentException("시작 날짜는 종료 날짜 이후일 수 없습니다.");
+        }
+        validateDateRange(query.startDate(), query.endDate());
+    }
+
+    private void validateDateRange(LocalDate startDate, LocalDate endDate) {
+        LocalDate maxAllowedEndDate = startDate.plus(MAX_DAILY_STUDY_TIME_QUERY_PERIOD).minusDays(1);
+
+        if (endDate.isAfter(maxAllowedEndDate)) {
+            throw new IllegalArgumentException("일별 학습 시간은 최대 1년치까지만 조회할 수 있습니다.");
         }
     }
 }

@@ -35,9 +35,9 @@ public class StudyTimerStatsController {
     public ResponseEntity<ApiResponse<List<GetDailyStudyTimeUseCase.DailyStudyTimeItem>>> daily(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Parameter(description = "조회 시작 날짜(yyyy-MM-dd)", example = "2026-05-01")
-            @RequestParam(required = false) String startDate,
+            @RequestParam String startDate,
             @Parameter(description = "조회 종료 날짜(yyyy-MM-dd)", example = "2026-05-07")
-            @RequestParam(required = false) String endDate
+            @RequestParam String endDate
     ) {
         List<GetDailyStudyTimeUseCase.DailyStudyTimeItem> result =
                 getDailyStudyTimeUseCase.handle(new GetDailyStudyTimeQuery(
@@ -57,7 +57,7 @@ public class StudyTimerStatsController {
         try {
             return LocalDate.parse(value);
         } catch (DateTimeParseException exception) {
-            throw new IllegalArgumentException(fieldName + "는 yyyy-MM-dd 형식이어야 합니다.");
+            throw new IllegalArgumentException(fieldName + "는 yyyy-MM-dd 형식이어야 합니다.", exception);
         }
     }
 }
