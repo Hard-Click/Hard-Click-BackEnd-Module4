@@ -1,7 +1,10 @@
 package com.wanted.backend.domain.community.infrastructure.persistence;
 
 import com.wanted.backend.domain.community.domain.model.Comment;
+import com.wanted.backend.domain.community.domain.model.CommentStatus;
 import com.wanted.backend.domain.community.domain.repository.CommentRepository;
+import com.wanted.backend.global.exception.BusinessException;
+import com.wanted.backend.global.exception.ErrorCode;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -26,6 +29,7 @@ public class CommentRepositoryAdapter implements CommentRepository {
                 comment.getContent(),
                 comment.isAccepted(),
                 comment.isDeleted(),
+                comment.getStatus(),
                 comment.getImageUrl(),
                 comment.getCreatedAt(),
                 comment.getUpdatedAt()
@@ -44,6 +48,14 @@ public class CommentRepositoryAdapter implements CommentRepository {
     public void softDelete(Long commentId, LocalDateTime updatedAt) {
         CommentJpaEntity entity = repository.findById(commentId).orElseThrow();
         entity.softDelete(updatedAt);
+        repository.save(entity);
+    }
+
+    @Override
+    public void softDeleteByAdmin(Long commentId, LocalDateTime updatedAt) {
+        CommentJpaEntity entity = repository.findById(commentId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
+        entity.softDeleteByAdmin(updatedAt);
         repository.save(entity);
     }
 
@@ -68,6 +80,7 @@ public class CommentRepositoryAdapter implements CommentRepository {
                 entity.getContent(),
                 entity.isAccepted(),
                 entity.isDeleted(),
+                entity.getStatus(),
                 entity.getImageUrl(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()

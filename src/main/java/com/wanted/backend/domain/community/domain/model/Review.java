@@ -12,10 +12,11 @@ public class Review {
     private final Long courseId;
     private Integer rating;
     private String content;
+    private ReviewStatus status;
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    private Review(Long id, Long memberId, Long courseId, Integer rating, String content,
+    private Review(Long id, Long memberId, Long courseId, Integer rating, String content, ReviewStatus status,
                    LocalDateTime createdAt, LocalDateTime updatedAt) {
         if (memberId == null || courseId == null) {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
@@ -25,18 +26,19 @@ public class Review {
         this.courseId = courseId;
         this.rating = rating;
         this.content = content;
+        this.status = status == null ? ReviewStatus.ACTIVE : status;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
 
     public static Review create(Long memberId, Long courseId, Integer rating, String content) {
-        return new Review(null, memberId, courseId, rating, content,
+        return new Review(null, memberId, courseId, rating, content, ReviewStatus.ACTIVE,
                 LocalDateTime.now(), LocalDateTime.now());
     }
 
     public static Review restore(Long id, Long memberId, Long courseId, Integer rating, String content,
-                                 LocalDateTime createdAt, LocalDateTime updatedAt) {
-        return new Review(id, memberId, courseId, rating, content, createdAt, updatedAt);
+                                 ReviewStatus status, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        return new Review(id, memberId, courseId, rating, content, status, createdAt, updatedAt);
     }
 
     public boolean isOwner(Long memberId) {
@@ -50,6 +52,10 @@ public class Review {
     }
 
     public void update(Integer rating, String content) {
+        if (this.status != ReviewStatus.ACTIVE) {
+            throw new BusinessException(ErrorCode.REVIEW_NOT_AUTHORIZED);
+        }
+
         this.rating = rating;
         this.content = content;
         this.updatedAt = LocalDateTime.now();
@@ -60,6 +66,8 @@ public class Review {
     public Long getCourseId() { return courseId; }
     public Integer getRating() { return rating; }
     public String getContent() { return content; }
+    public ReviewStatus getStatus() { return status; }
+    public boolean isAdminDeleted() { return status == ReviewStatus.ADMIN_DELETED; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 }

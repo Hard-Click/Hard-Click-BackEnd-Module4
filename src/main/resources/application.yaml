@@ -47,21 +47,34 @@ jwt:
 server:
   port: 8080
 
+aws:
+  s3:
+    bucket: ${S3_BUCKET}
+    region: ${AWS_REGION:ap-northeast-2}
+
 identity:
   email:
     allowed-domain: gmail.com
   profile-image:
-    upload-dir: uploads/profiles
-    url: /uploads/profiles
     max-size: 5242880
 
 community:
   image:
-    post-dir: uploads/posts
-    post-url: /uploads/posts
-    comment-dir: uploads/comments
-    comment-url: /uploads/comments
     max-size: 5242880
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  metrics:
+    distribution:
+      slo:
+        payment.processing.duration: 100ms, 250ms, 500ms, 1000ms, 2000ms, 5000ms, 10000ms
+      percentiles-histogram:
+        payment.processing.duration: true
+      percentiles:
+        payment.processing.duration: 0.5, 0.95, 0.99
 
 logging:
   config: classpath:logback-spring.xml
@@ -69,3 +82,14 @@ logging:
     com.wanted.backend: INFO
     org.hibernate.SQL: WARN
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}

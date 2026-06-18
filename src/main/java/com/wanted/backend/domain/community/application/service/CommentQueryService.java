@@ -65,7 +65,7 @@ public class CommentQueryService implements CommentQueryUseCase {
                 comment.getId(),
                 authorName,
                 authorInitial,
-                comment.getContent(),
+                comment.isAdminDeleted() ? Comment.ADMIN_DELETED_MESSAGE : comment.getContent(),
                 comment.getCreatedAt(),
                 comment.isAccepted(),
                 comment.getAuthorId().equals(currentMemberId),  // 본인 댓글 여부

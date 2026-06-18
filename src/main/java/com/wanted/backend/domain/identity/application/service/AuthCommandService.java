@@ -40,10 +40,6 @@ public class AuthCommandService implements AuthCommandUseCase {
             throw new BusinessException(ErrorCode.WITHDRAWN_MEMBER);
         }
 
-        if (member.getStatus() == MemberStatus.BLACKLIST) {
-            throw new BusinessException(ErrorCode.BLACKLIST_MEMBER);
-        }
-
         if (member.isLocked()) {
             throw new BusinessException(ErrorCode.ACCOUNT_LOCKED);
         }
@@ -99,11 +95,6 @@ public class AuthCommandService implements AuthCommandUseCase {
         if (member.getStatus() == MemberStatus.WITHDRAWN) {
             refreshTokenRepository.deleteByMemberId(memberId);
             throw new BusinessException(ErrorCode.WITHDRAWN_MEMBER);
-        }
-
-        if (member.getStatus() == MemberStatus.BLACKLIST) {
-            refreshTokenRepository.deleteByMemberId(memberId);
-            throw new BusinessException(ErrorCode.BLACKLIST_MEMBER);
         }
 
         if (member.isLocked()) {

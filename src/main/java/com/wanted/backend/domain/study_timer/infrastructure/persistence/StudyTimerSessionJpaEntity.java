@@ -8,6 +8,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -17,7 +18,12 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@Table(name = "study_timer_sessions")
+@Table(
+        name = "study_timer_sessions",
+        indexes = {
+                @Index(name = "idx_study_timer_sessions_member_id_status", columnList = "member_id,status")
+        }
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class StudyTimerSessionJpaEntity {
 

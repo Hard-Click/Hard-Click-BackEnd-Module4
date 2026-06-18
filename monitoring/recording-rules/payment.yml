@@ -1,0 +1,11 @@
+groups:
+  - name: payment_recording
+    interval: 15s
+    rules:
+      - record: job:payment_success_rate:rate5m
+        expr: |
+          rate(payment_result_total{status="SUCCESS"}[5m])
+          / rate(payment_result_total[5m])
+
+      - record: job:payment_error_budget_consumed:ratio7d
+        expr: 1 - job:payment_success_rate:rate5m

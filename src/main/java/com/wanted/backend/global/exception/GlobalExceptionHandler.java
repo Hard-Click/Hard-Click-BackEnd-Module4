@@ -1,5 +1,6 @@
 package com.wanted.backend.global.exception;
 
+import com.wanted.backend.domain.cource.domain.model.InvalidCoursePriceException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -42,7 +43,25 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * [2차 방어선] 도메인 규칙 위반 예외 처리
+     * [2차 방어선-A] Course 도메인 가격 검증 예외
+     */
+    @ExceptionHandler(InvalidCoursePriceException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidCoursePriceException(
+            InvalidCoursePriceException e,
+            HttpServletRequest request) {
+
+        log.warn("[Domain Validation Error] Path: {}, Message: {}", request.getRequestURI(), e.getMessage());
+
+        ErrorResponse response = ErrorResponse.create()
+                .errorCode(ErrorCode.INVALID_COURSE_PRICE.getCode())
+                .message(ErrorCode.INVALID_COURSE_PRICE.getMessage())
+                .path(request.getRequestURI());
+
+        return ResponseEntity.status(ErrorCode.INVALID_COURSE_PRICE.getStatus()).body(response);
+    }
+
+    /**
+     * [2차 방어선-B] 도메인 규칙 위반 예외 처리
      * 도메인 모델(Course 등)이 던지는 IllegalArgumentException (WARN 레벨)
      */
     @ExceptionHandler(IllegalArgumentException.class)

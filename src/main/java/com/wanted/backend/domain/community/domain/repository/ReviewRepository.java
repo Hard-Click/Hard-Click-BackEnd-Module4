@@ -39,5 +39,7 @@ public interface ReviewRepository {
     //삭제용
     void deleteById(Long reviewId);
 
+    void adminDeleteById(Long reviewId);
+
     record RatingCount(Integer rating, Long count) {}
 }

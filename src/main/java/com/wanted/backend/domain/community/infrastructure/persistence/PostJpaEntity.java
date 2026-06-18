@@ -69,4 +69,15 @@ public class PostJpaEntity {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
+
+    public void update(Long subjectId, String title, String content, int viewCount,
+                       PostStatus status, boolean isAccepted, LocalDateTime updatedAt) {
+        this.subjectId = subjectId;
+        this.title = title;
+        this.content = content;
+        this.viewCount = viewCount;
+        this.status = status == null ? this.status : status;
+        this.isAccepted = isAccepted;
+        this.updatedAt = updatedAt;
+    }
 }
