@@ -4,12 +4,11 @@ import com.wanted.backend.domain.payment.application.facade.PaymentFacade;
 import com.wanted.backend.domain.payment.domain.model.PaymentStatus;
 
 public record PaymentConfirmResponse(
-        Long paymentId,
         PaymentStatus status,
         String pgTransactionId,
         boolean duplicate
 ) {
     public static PaymentConfirmResponse from(PaymentFacade.Result result) {
-        return new PaymentConfirmResponse(result.paymentId(), result.status(), result.pgTransactionId(), result.duplicate());
+        return new PaymentConfirmResponse(result.status(), result.pgTransactionId(), result.duplicate());
     }
 }
