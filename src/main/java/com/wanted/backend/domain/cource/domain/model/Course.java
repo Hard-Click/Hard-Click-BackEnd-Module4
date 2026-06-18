@@ -1,8 +1,6 @@
 package com.wanted.backend.domain.cource.domain.model;
 
 import com.wanted.backend.global.domain.DomainEvent;
-import com.wanted.backend.global.exception.BusinessException;
-import com.wanted.backend.global.exception.ErrorCode;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -129,10 +127,10 @@ public class Course {
 
     private static void validatePrice(PriceType priceType, int price) {
         if (priceType == PriceType.FREE && price != 0) {
-            throw new BusinessException(ErrorCode.INVALID_COURSE_PRICE);
+            throw new InvalidCoursePriceException("강의 가격 설정이 올바르지 않습니다.");
         }
         if (priceType == PriceType.PAID && price <= 0) {
-            throw new BusinessException(ErrorCode.INVALID_COURSE_PRICE);
+            throw new InvalidCoursePriceException("강의 가격 설정이 올바르지 않습니다.");
         }
     }
 
