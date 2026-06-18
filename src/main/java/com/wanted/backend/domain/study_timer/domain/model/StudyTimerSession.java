@@ -52,26 +52,12 @@ public class StudyTimerSession {
     }
 
     public StudyTimerSession heartbeat(OffsetDateTime heartbeatAt, OffsetDateTime serverNow) {
-        if (heartbeatAt == null) {
-            throw new IllegalArgumentException("하트비트 시각은 필수입니다.");
-        }
-        if (serverNow == null) {
-            throw new IllegalArgumentException("서버 현재 시각은 필수입니다.");
-        }
-        if (heartbeatAt.toInstant().isAfter(serverNow.toInstant())) {
-            throw new IllegalArgumentException("하트비트 시각은 현재 시각 이후일 수 없습니다.");
-        }
-        if (status != StudyTimerSessionStatus.RUNNING) {
-            throw new BusinessException(ErrorCode.STUDY_TIMER_SESSION_NOT_RUNNING);
-        }
-
-        long calculatedAccumulatedStudySeconds = Duration.between(startedAt.toInstant(), heartbeatAt.toInstant()).getSeconds();
-        if (calculatedAccumulatedStudySeconds < 0) {
-            throw new IllegalArgumentException("하트비트 시각은 세션 시작 시각 이후여야 합니다.");
-        }
-        if (calculatedAccumulatedStudySeconds > Integer.MAX_VALUE) {
-            throw new IllegalArgumentException("경과 시간이 허용 범위를 초과했습니다.");
-        }
+        long calculatedAccumulatedStudySeconds = calculateAccumulatedStudySeconds(
+                heartbeatAt,
+                serverNow,
+                "하트비트 시각",
+                "경과 시간이 허용 범위를 초과했습니다."
+        );
 
         return new StudyTimerSession(
                 id,
@@ -83,6 +69,68 @@ public class StudyTimerSession {
                 Math.max(accumulatedStudySeconds, (int) calculatedAccumulatedStudySeconds),
                 status
         );
+    }
+
+    public StudyTimerSession end(OffsetDateTime endedAt, OffsetDateTime serverNow) {
+        long calculatedAccumulatedStudySeconds = calculateAccumulatedStudySeconds(
+                endedAt,
+                serverNow,
+                "세션 종료 시각",
+                "누적 순공시간이 허용 범위를 초과했습니다."
+        );
+
+        return new StudyTimerSession(
+                id,
+                memberId,
+                courseId,
+                lessonId,
+                startedAt,
+                endedAt,
+                Math.max(accumulatedStudySeconds, (int) calculatedAccumulatedStudySeconds),
+                StudyTimerSessionStatus.ENDED
+        );
+    }
+
+    private long calculateAccumulatedStudySeconds(
+            OffsetDateTime measuredAt,
+            OffsetDateTime serverNow,
+            String measuredAtName,
+            String overflowMessage
+    ) {
+        validateMeasuredAt(measuredAt, serverNow, measuredAtName);
+        validateRunning();
+
+        long calculatedAccumulatedStudySeconds = Duration.between(startedAt.toInstant(), measuredAt.toInstant()).getSeconds();
+        if (calculatedAccumulatedStudySeconds < 0) {
+            throw new IllegalArgumentException(measuredAtName + "은 세션 시작 시각 이후여야 합니다.");
+        }
+        if (calculatedAccumulatedStudySeconds > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException(overflowMessage);
+        }
+
+        return calculatedAccumulatedStudySeconds;
+    }
+
+    private void validateMeasuredAt(
+            OffsetDateTime measuredAt,
+            OffsetDateTime serverNow,
+            String measuredAtName
+    ) {
+        if (measuredAt == null) {
+            throw new IllegalArgumentException(measuredAtName + "은 필수입니다.");
+        }
+        if (serverNow == null) {
+            throw new IllegalArgumentException("서버 현재 시각은 필수입니다.");
+        }
+        if (measuredAt.toInstant().isAfter(serverNow.toInstant())) {
+            throw new IllegalArgumentException(measuredAtName + "은 현재 시각 이후일 수 없습니다.");
+        }
+    }
+
+    private void validateRunning() {
+        if (status != StudyTimerSessionStatus.RUNNING) {
+            throw new BusinessException(ErrorCode.STUDY_TIMER_SESSION_NOT_RUNNING);
+        }
     }
 
     private static void validate(

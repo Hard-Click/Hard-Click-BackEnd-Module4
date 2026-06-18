@@ -63,6 +63,10 @@ community:
     comment-url: /uploads/comments
     max-size: 5242880
 
+study-timer:
+  member-lock:
+    timeout-milliseconds: 3000
+
 logging:
   config: classpath:logback-spring.xml
   level:
