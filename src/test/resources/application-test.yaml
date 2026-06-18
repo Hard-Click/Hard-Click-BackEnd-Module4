@@ -37,6 +37,10 @@ spring:
       mode: never
 
 # 테스트용 로깅 설정
+aws:
+  s3:
+    bucket: test-bucket
+
 logging:
   # 테스트 환경에서는 파일에 로그를 남기지 않고 콘솔에만 찍도록 test 프로필 적용
   config: classpath:logback-spring.xml

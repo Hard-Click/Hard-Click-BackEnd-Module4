@@ -69,6 +69,10 @@ community:
   image:
     max-size: 5242880
 
+study-timer:
+  member-lock:
+    timeout-milliseconds: ${STUDY_TIMER_MEMBER_LOCK_TIMEOUT_MILLISECONDS:3000}
+
 management:
   endpoints:
     web:
