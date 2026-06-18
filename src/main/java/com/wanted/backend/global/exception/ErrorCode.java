@@ -111,10 +111,17 @@ import org.springframework.http.HttpStatus;
     NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "N003", "존재하지 않는 공지사항입니다."),
     COURSE_ID_REQUIRED(HttpStatus.BAD_REQUEST, "N004", "강의 공지 조회 시 강의 ID는 필수입니다."),
 
+    /* =========================================================================
+       7. 결제 관련 예외 (PAY000)
+       ========================================================================= */
+    DUPLICATE_PAYMENT_REQUEST(HttpStatus.CONFLICT, "P001", "이미 처리 중인 결제 요청입니다."),
+    PG_TIMEOUT(HttpStatus.INTERNAL_SERVER_ERROR, "P002", "PG사 응답이 지연되어 결제에 실패했습니다."),
+    PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "P003", "결제 내역을 찾을 수 없습니다."),
     // 순공 세션 관련 예외
     STUDY_TIMER_SESSION_ALREADY_RUNNING(HttpStatus.CONFLICT, "ST001", "이미 실행 중인 순공시간 세션이 있습니다."),
     STUDY_TIMER_SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "ST002", "존재하지 않는 순공시간 세션입니다."),
-    STUDY_TIMER_SESSION_NOT_RUNNING(HttpStatus.CONFLICT, "ST003", "실행 중인 순공시간 세션만 하트비트를 저장할 수 있습니다."),
+    STUDY_TIMER_SESSION_NOT_RUNNING(HttpStatus.CONFLICT, "ST003", "실행 중인 순공시간 세션만 처리할 수 있습니다."),
+    STUDY_TIMER_LOCK_TIMEOUT(HttpStatus.CONFLICT, "ST004", "순공시간 세션 처리 중입니다. 잠시 후 다시 시도해주세요."),
     // 신고 예외
     REPORT_ALREADY_EXISTS(HttpStatus.CONFLICT, "RP001", "이미 신고한 대상입니다."),
     REPORT_TARGET_NOT_FOUND(HttpStatus.NOT_FOUND, "RP002", "존재하지 않거나 이미 삭제된 대상입니다."),
