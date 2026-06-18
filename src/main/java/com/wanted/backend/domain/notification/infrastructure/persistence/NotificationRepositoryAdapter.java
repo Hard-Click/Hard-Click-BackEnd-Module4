@@ -2,9 +2,12 @@ package com.wanted.backend.domain.notification.infrastructure.persistence;
 
 import com.wanted.backend.domain.notification.domain.model.Notification;
 import com.wanted.backend.domain.notification.domain.repository.NotificationRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -45,6 +48,21 @@ public class NotificationRepositoryAdapter implements NotificationRepository {
         NotificationJpaEntity entity = repository.findById(notificationId).orElseThrow();
         entity.markAsRead();
     }
+
+    @Override
+    public List<Notification> findByReceiverIdWithCursor(Long receiverId, Long cursorId, int size) {
+        Pageable pageable = PageRequest.of(0, size);
+        List<NotificationJpaEntity> entities = cursorId == null
+                ? repository.findByReceiverIdOrderByIdDesc(receiverId, pageable)
+                : repository.findByReceiverIdAndIdLessThanOrderByIdDesc(receiverId, cursorId, pageable);
+        return entities.stream().map(this::toDomain).toList();
+    }
+
+    @Override
+    public boolean existsNextPage(Long receiverId, Long lastId) {
+        return repository.existsByReceiverIdAndIdLessThan(receiverId, lastId);
+    }
+
 
     private Notification toDomain(NotificationJpaEntity entity) {
         return Notification.restore(
