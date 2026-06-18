@@ -11,6 +11,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
@@ -108,7 +109,16 @@ public class PaymentFacade {
     }
 
     private Result processPayment(Long memberId, Long courseId, Integer amount, String idempotencyKey) {
-        Payment created = createPending(memberId, courseId, amount, idempotencyKey);
+        Payment created;
+        try {
+            created = createPending(memberId, courseId, amount, idempotencyKey);
+        } catch (DataIntegrityViolationException e) {
+            // 분산락 획득 후 DB unique constraint 위반 = 락이 막지 못한 진짜 동시 중복
+            // DuplicatePaymentDetected alert은 이 카운터가 > 0 일 때 발화
+            log.error("[DUPLICATE_CHARGED] 분산락 우회 중복결제 감지 — idempotencyKey: {}", idempotencyKey, e);
+            recordResult("DUPLICATE_CHARGED");
+            throw new BusinessException(ErrorCode.DUPLICATE_PAYMENT_REQUEST, e);
+        }
 
         String pgTransactionId;
         try {
