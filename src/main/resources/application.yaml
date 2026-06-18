@@ -62,9 +62,19 @@ community:
   image:
     max-size: 5242880
 
-study-timer:
-  member-lock:
-    timeout-milliseconds: 3000
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  metrics:
+    distribution:
+      slo:
+        payment.processing.duration: 100ms, 250ms, 500ms, 1000ms, 2000ms, 5000ms, 10000ms
+      percentiles-histogram:
+        payment.processing.duration: true
+      percentiles:
+        payment.processing.duration: 0.5, 0.95, 0.99
 
 logging:
   config: classpath:logback-spring.xml
