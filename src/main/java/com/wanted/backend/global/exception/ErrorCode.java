@@ -109,7 +109,14 @@ import org.springframework.http.HttpStatus;
     COURSE_NOT_FOUND2(HttpStatus.NOT_FOUND, "CO001", "존재하지 않는 강의입니다."),
     NOTICE_ADMIN_ONLY(HttpStatus.FORBIDDEN, "N002", "관리자만 전체 공지사항을 작성할 수 있습니다."),
     NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "N003", "존재하지 않는 공지사항입니다."),
-    COURSE_ID_REQUIRED(HttpStatus.BAD_REQUEST, "N004", "강의 공지 조회 시 강의 ID는 필수입니다.");
+    COURSE_ID_REQUIRED(HttpStatus.BAD_REQUEST, "N004", "강의 공지 조회 시 강의 ID는 필수입니다."),
+
+    /* =========================================================================
+       7. 결제 관련 예외 (PAY000)
+       ========================================================================= */
+    PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "PAY001", "결제 내역을 찾을 수 없습니다."),
+    DUPLICATE_PAYMENT_REQUEST(HttpStatus.CONFLICT, "PAY002", "이미 처리 중인 결제 요청입니다."),
+    PG_TIMEOUT(HttpStatus.GATEWAY_TIMEOUT, "PAY003", "PG사 응답이 지연되어 결제에 실패했습니다.");
 
 
     private final HttpStatus status;
