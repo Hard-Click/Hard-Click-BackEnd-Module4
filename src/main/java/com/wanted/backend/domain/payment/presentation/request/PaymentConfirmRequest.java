@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Positive;
 
 public record PaymentConfirmRequest(
         @NotNull
+        @Positive
         Long courseId,
 
         @NotNull
