@@ -8,6 +8,8 @@ public interface StudyTimerSessionRepository {
 
     boolean existsRunningByMemberId(Long memberId);
 
+    Optional<StudyTimerSession> findRunningByMemberId(Long memberId);
+
     Optional<StudyTimerSession> findById(Long sessionId);
 
     StudyTimerSession save(StudyTimerSession session);

@@ -1,0 +1,36 @@
+groups:
+  - name: payment_slo
+    rules:
+      - alert: DuplicatePaymentDetected
+        expr: increase(payment_result_total{status="DUPLICATE_CHARGED"}[5m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+          domain: payment
+        annotations:
+          summary: "[PAYMENT] 중복 결제 발생"
+          description: "5분 내 중복 결제 {{ $value }}건 감지. 즉시 확인 필요."
+
+      - alert: PaymentSuccessRateDropped
+        expr: |
+          rate(payment_result_total{status="SUCCESS"}[5m])
+          / rate(payment_result_total[5m]) < 0.995
+        for: 2m
+        labels:
+          severity: warning
+          domain: payment
+        annotations:
+          summary: "[PAYMENT] 결제 성공률 99.5% 미달"
+          description: "현재 성공률: {{ $value | humanizePercentage }}"
+
+      - alert: PaymentLatencyP95High
+        expr: |
+          histogram_quantile(0.95,
+            rate(payment_processing_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          domain: payment
+        annotations:
+          summary: "[PAYMENT] 결제 응답 P95 2초 초과"
+          description: "P95: {{ $value | humanizeDuration }}"
