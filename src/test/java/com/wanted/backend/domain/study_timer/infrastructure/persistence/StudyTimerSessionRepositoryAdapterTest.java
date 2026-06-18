@@ -37,6 +37,34 @@ class StudyTimerSessionRepositoryAdapterTest {
     }
 
     @Test
+    void findsRunningSessionByMemberId() {
+        OffsetDateTime startedAt = OffsetDateTime.parse("2026-05-11T15:00:00+09:00");
+        StudyTimerSessionJpaEntity entity = new StudyTimerSessionJpaEntity(
+                1L,
+                null,
+                null,
+                startedAt.toLocalDateTime(),
+                null,
+                200,
+                StudyTimerSessionStatus.RUNNING,
+                startedAt.toLocalDateTime(),
+                startedAt.toLocalDateTime()
+        );
+        ReflectionTestUtils.setField(entity, "id", 55L);
+
+        when(repository.findByMemberIdAndStatus(1L, StudyTimerSessionStatus.RUNNING))
+                .thenReturn(Optional.of(entity));
+
+        Optional<StudyTimerSession> found = adapter.findRunningByMemberId(1L);
+
+        assertThat(found).isPresent();
+        assertThat(found.orElseThrow().id()).isEqualTo(55L);
+        assertThat(found.orElseThrow().memberId()).isEqualTo(1L);
+        assertThat(found.orElseThrow().status()).isEqualTo(StudyTimerSessionStatus.RUNNING);
+        assertThat(found.orElseThrow().accumulatedStudySeconds()).isEqualTo(200);
+    }
+
+    @Test
     void findsSessionById() {
         OffsetDateTime startedAt = OffsetDateTime.parse("2026-05-11T15:00:00+09:00");
         StudyTimerSessionJpaEntity entity = new StudyTimerSessionJpaEntity(
