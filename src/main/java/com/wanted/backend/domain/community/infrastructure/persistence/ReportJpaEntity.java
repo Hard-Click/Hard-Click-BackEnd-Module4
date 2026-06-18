@@ -41,6 +41,9 @@ public class ReportJpaEntity {
     @Column(name = "reason")
     private String reason;
 
+    @Column(name = "memo", length = 500)
+    private String memo;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private ReportStatus status = ReportStatus.PENDING;
