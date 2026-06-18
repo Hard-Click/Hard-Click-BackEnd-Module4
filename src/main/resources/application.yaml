@@ -49,7 +49,7 @@ server:
 
 aws:
   s3:
-    bucket: ${S3_BUCKET:hard-click-files-970636746023-ap-northeast-2-an}
+    bucket: ${S3_BUCKET}
     region: ${AWS_REGION:ap-northeast-2}
 
 identity:

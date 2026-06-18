@@ -55,7 +55,7 @@ public class S3ProfileImageStorageAdapter implements ProfileImageStoragePort {
                     RequestBody.fromInputStream(file.getInputStream(), file.getSize())
             );
         } catch (IOException e) {
-            throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED);
+            throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED, e);
         }
 
         return s3Presigner.presignGetObject(GetObjectPresignRequest.builder()

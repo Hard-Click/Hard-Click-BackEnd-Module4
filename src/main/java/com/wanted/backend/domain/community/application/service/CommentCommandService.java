@@ -66,16 +66,23 @@ public class CommentCommandService implements CommentCommandUseCase {
             imageUrl = storagePort.store(command.file(), "comments", maxFileSize);
         }
 
-        // [4단계] 댓글 도메인 생성 및 저장
-        Comment comment = Comment.create(
-                command.postId(),
-                command.memberId(),
-                command.parentId(),
-                command.content(),
-                imageUrl
-        );
-
-        return commentRepository.save(comment).getId();
+        // [4단계] 댓글 도메인 생성 및 저장 — S3 업로드 성공 후 DB 실패 시 롤백
+        final String uploadedUrl = imageUrl;
+        try {
+            Comment comment = Comment.create(
+                    command.postId(),
+                    command.memberId(),
+                    command.parentId(),
+                    command.content(),
+                    imageUrl
+            );
+            return commentRepository.save(comment).getId();
+        } catch (Exception e) {
+            if (uploadedUrl != null) {
+                storagePort.delete(uploadedUrl);
+            }
+            throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED, e);
+        }
     }
 
     @Override
@@ -105,15 +112,15 @@ public class CommentCommandService implements CommentCommandUseCase {
         // [2단계] 본인 댓글 여부 + 채택 여부 검증 → 도메인이 담당
         comment.validateUpdatable(command.memberId());
 
-        // [3단계] 기존 파일 S3 삭제
-        if (comment.getImageUrl() != null) {
-            storagePort.delete(comment.getImageUrl());
-        }
-
-        // [4단계] 새 파일 S3 업로드 (파일 있을 때만)
+        // [3단계] 새 파일 S3 업로드 먼저 — 업로드 성공 후 기존 파일 삭제
         String imageUrl = null;
         if (command.file() != null && !command.file().isEmpty()) {
             imageUrl = storagePort.store(command.file(), "comments", maxFileSize);
+        }
+
+        // [4단계] 기존 파일 S3 삭제 — 새 업로드 성공 후에 삭제
+        if (comment.getImageUrl() != null) {
+            storagePort.delete(comment.getImageUrl());
         }
 
         // [5단계] 댓글 수정 → 도메인이 담당

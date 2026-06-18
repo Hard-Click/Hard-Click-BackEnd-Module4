@@ -64,7 +64,7 @@ public class PostCommandService implements PostCommandUseCase {
                 }
             } catch (Exception e) {
                 uploadedUrls.forEach(storagePort::delete);
-                throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED);
+                throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED, e);
             }
         }
 
@@ -104,14 +104,9 @@ public class PostCommandService implements PostCommandUseCase {
         // [5단계] 변경된 게시글 DB 저장
         Post saved = postRepository.save(post);
 
-        // [6단계] 기존 첨부파일 S3 삭제 및 DB 삭제
-        postFileRepository.findByPostId(command.postId())
-                .forEach(file -> storagePort.delete(file.getFileUrl()));
-        postFileRepository.deleteByPostId(command.postId());
-
-        // [7단계] 새 파일 S3 업로드 (파일 있을 때만)
+        // [6단계] 새 파일 S3 업로드 (파일 있을 때만) — 기존 파일 삭제 전에 먼저 업로드
+        List<String> uploadedUrls = new ArrayList<>();
         if (fileCount > 0) {
-            List<String> uploadedUrls = new ArrayList<>();
             try {
                 for (int i = 0; i < command.files().size(); i++) {
                     MultipartFile file = command.files().get(i);
@@ -121,9 +116,15 @@ public class PostCommandService implements PostCommandUseCase {
                 }
             } catch (Exception e) {
                 uploadedUrls.forEach(storagePort::delete);
-                throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED);
+                throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED, e);
             }
         }
+
+        // [7단계] 기존 첨부파일 S3 삭제 및 DB 삭제 — 새 업로드 성공 후에 삭제
+        postFileRepository.findByPostId(command.postId()).stream()
+                .filter(file -> !uploadedUrls.contains(file.getFileUrl()))
+                .forEach(file -> storagePort.delete(file.getFileUrl()));
+        postFileRepository.deleteByPostId(command.postId());
 
         return saved.getId();
     }

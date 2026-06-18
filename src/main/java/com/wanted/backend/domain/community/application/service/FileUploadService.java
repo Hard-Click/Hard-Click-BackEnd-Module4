@@ -30,7 +30,7 @@ public class FileUploadService implements FileUploadUseCase {
 
     @Override
     public FileUploadResponse handle(FileUploadCommand command) {
-        String prefix = command.fileType().equals("POST") ? "posts" : "comments";
+        String prefix = "POST".equals(command.fileType()) ? "posts" : "comments";
         String fileUrl = storagePort.store(command.file(), prefix, maxFileSize);
 
         try {
@@ -46,7 +46,7 @@ public class FileUploadService implements FileUploadUseCase {
             return new FileUploadResponse(saved.getId(), saved.getFileUrl());
         } catch (Exception e) {
             storagePort.delete(fileUrl);
-            throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED);
+            throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED, e);
         }
     }
 }

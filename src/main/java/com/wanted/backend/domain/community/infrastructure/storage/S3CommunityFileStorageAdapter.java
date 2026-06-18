@@ -3,6 +3,7 @@ package com.wanted.backend.domain.community.infrastructure.storage;
 import com.wanted.backend.domain.community.application.port.CommunityFileStoragePort;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,6 +19,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Component
 public class S3CommunityFileStorageAdapter implements CommunityFileStoragePort {
 
@@ -53,7 +55,7 @@ public class S3CommunityFileStorageAdapter implements CommunityFileStoragePort {
                     RequestBody.fromInputStream(file.getInputStream(), file.getSize())
             );
         } catch (IOException e) {
-            throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED);
+            throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED, e);
         }
 
         return s3Presigner.presignGetObject(GetObjectPresignRequest.builder()
@@ -67,12 +69,11 @@ public class S3CommunityFileStorageAdapter implements CommunityFileStoragePort {
     @Override
     public void delete(String fileUrl) {
         try {
-            // Presigned URL: https://bucket.s3.region.amazonaws.com/key?X-Amz-...
-            String path = URI.create(fileUrl).getPath(); // "/posts/uuid.jpg"
+            String path = URI.create(fileUrl).getPath();
             String key = path.startsWith("/") ? path.substring(1) : path;
             s3Client.deleteObject(r -> r.bucket(bucket).key(key));
-        } catch (Exception ignored) {
-            // S3 삭제 실패는 비즈니스 로직 차단하지 않음
+        } catch (Exception e) {
+            log.warn("S3 파일 삭제 실패: {}", fileUrl, e);
         }
     }
 
