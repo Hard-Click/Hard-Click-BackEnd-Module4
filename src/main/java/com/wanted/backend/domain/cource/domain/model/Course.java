@@ -127,10 +127,10 @@ public class Course {
 
     private static void validatePrice(PriceType priceType, int price) {
         if (priceType == PriceType.FREE && price != 0) {
-            throw new IllegalArgumentException("무료 강의의 가격은 0이어야 합니다.");
+            throw new InvalidCoursePriceException("강의 가격 설정이 올바르지 않습니다.");
         }
         if (priceType == PriceType.PAID && price <= 0) {
-            throw new IllegalArgumentException("유료 강의의 가격은 0보다 커야 합니다.");
+            throw new InvalidCoursePriceException("강의 가격 설정이 올바르지 않습니다.");
         }
     }
 
