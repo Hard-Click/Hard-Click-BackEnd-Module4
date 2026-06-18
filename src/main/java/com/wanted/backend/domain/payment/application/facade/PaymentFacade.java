@@ -1,9 +1,9 @@
 package com.wanted.backend.domain.payment.application.facade;
 
+import com.wanted.backend.domain.payment.application.port.PgClient;
 import com.wanted.backend.domain.payment.domain.model.Payment;
 import com.wanted.backend.domain.payment.domain.model.PaymentStatus;
 import com.wanted.backend.domain.payment.domain.repository.PaymentRepository;
-import com.wanted.backend.domain.payment.infrastructure.pg.MockPgClient;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import io.micrometer.core.instrument.Counter;
@@ -34,7 +34,7 @@ public class PaymentFacade {
 
     private final StringRedisTemplate redisTemplate;
     private final PaymentRepository paymentRepository;
-    private final MockPgClient pgClient;
+    private final PgClient pgClient;
     private final MeterRegistry meterRegistry;
 
     public Result confirm(Long memberId, Long courseId, Integer amount, String idempotencyKey) {
@@ -54,9 +54,20 @@ public class PaymentFacade {
     }
 
     private Result doConfirm(Long memberId, Long courseId, Integer amount, String idempotencyKey) {
-        // 1. 이미 처리된(혹은 처리 중인) 멱등키인지 먼저 확인 — 재시도/중복 클릭에 대한 빠른 응답
+        // 1. Redis 멱등키 캐시 먼저 확인 — 이미 처리 완료된 요청이면 DB 조회 없이 즉시 반환
+        String cachedPaymentId = redisTemplate.opsForValue().get(IDEMPOTENCY_KEY_PREFIX + idempotencyKey);
+        if (cachedPaymentId != null) {
+            Payment cached = paymentRepository.findById(Long.parseLong(cachedPaymentId)).orElse(null);
+            if (cached != null) {
+                validateOwner(cached, memberId);
+                return Result.from(cached, true);
+            }
+        }
+
+        // 2. DB 확인 — 이미 처리된(혹은 처리 중인) 멱등키인지 확인
         Payment existing = paymentRepository.findByIdempotencyKey(idempotencyKey).orElse(null);
         if (existing != null) {
+            validateOwner(existing, memberId);
             return Result.from(existing, true);
         }
 
@@ -71,6 +82,7 @@ public class PaymentFacade {
             // 락 획득 후 재확인 (락 대기 중 다른 스레드가 이미 처리를 끝냈을 수 있음)
             Payment racedExisting = paymentRepository.findByIdempotencyKey(idempotencyKey).orElse(null);
             if (racedExisting != null) {
+                validateOwner(racedExisting, memberId);
                 return Result.from(racedExisting, true);
             }
 
@@ -80,20 +92,26 @@ public class PaymentFacade {
         }
     }
 
+    private void validateOwner(Payment payment, Long memberId) {
+        if (!payment.getMemberId().equals(memberId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+    }
+
     private Result processPayment(Long memberId, Long courseId, Integer amount, String idempotencyKey) {
         Payment created = createPending(memberId, courseId, amount, idempotencyKey);
 
         String pgTransactionId;
         try {
             pgTransactionId = pgClient.confirm(memberId, courseId, amount);
-        } catch (MockPgClient.PgTimeoutException e) {
+        } catch (RuntimeException e) {
             failPayment(created.getId());
-            throw new BusinessException(ErrorCode.PG_TIMEOUT);
+            throw new BusinessException(ErrorCode.PG_TIMEOUT, e);
         }
 
         Payment confirmed = confirmPayment(created.getId(), pgTransactionId);
 
-        // 멱등키 캐시 저장 (TTL 10분) — 동일 키로 재요청 시 PG를 다시 호출하지 않는다.
+        // 멱등키 캐시 저장 (TTL 10분) — 동일 키로 재요청 시 Redis hit으로 즉시 반환
         redisTemplate.opsForValue().set(IDEMPOTENCY_KEY_PREFIX + idempotencyKey, String.valueOf(confirmed.getId()), IDEMPOTENCY_TTL);
 
         return Result.from(confirmed, false);
