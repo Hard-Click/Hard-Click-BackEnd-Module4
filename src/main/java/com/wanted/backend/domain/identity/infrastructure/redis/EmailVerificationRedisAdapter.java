@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Repository;
+import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -22,6 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Repository
+@Slf4j
 public class EmailVerificationRedisAdapter implements EmailVerificationRepository {
 
     private static final String VERIFICATION_KEY_PREFIX = "email:{verification}:record:";
@@ -39,10 +41,12 @@ public class EmailVerificationRedisAdapter implements EmailVerificationRepositor
     private static final DefaultRedisScript<Long> SAVE_VERIFICATION_SCRIPT =
             new DefaultRedisScript<>("""
                     local previousTokenHash = redis.call('HGET', KEYS[1], 'tokenHash')
+                    local expectedPreviousTokenHash = ARGV[11]
+                    if (previousTokenHash or '') ~= expectedPreviousTokenHash then
+                        return 0
+                    end
                     if previousTokenHash and previousTokenHash ~= '' and previousTokenHash ~= ARGV[8] then
-                        if previousTokenHash == ARGV[11] then
-                            redis.call('DEL', KEYS[3])
-                        end
+                        redis.call('DEL', KEYS[3])
                     end
                     redis.call('HSET', KEYS[1],
                         'email', ARGV[1],
@@ -134,6 +138,7 @@ public class EmailVerificationRedisAdapter implements EmailVerificationRepositor
                         redis.call('PEXPIREAT', KEYS[1], ARGV[2])
                     end
                     if count > tonumber(ARGV[1]) then
+                        redis.call('DECR', KEYS[1])
                         return 0
                     end
                     return 1
@@ -187,27 +192,34 @@ public class EmailVerificationRedisAdapter implements EmailVerificationRepositor
         String token = blankIfNull(verification.getVerificationToken());
         String tokenHash = token.isBlank() ? "" : hash(token);
         String tokenKey = token.isBlank() ? verificationKey : tokenKey(verification.getPurpose(), token);
-        Object previousTokenHashValue = redisTemplate.opsForHash().get(verificationKey, "tokenHash");
-        String previousTokenHash = previousTokenHashValue == null ? "" : String.valueOf(previousTokenHashValue);
-        String previousTokenKey = previousTokenHash.isBlank()
-                ? verificationKey
-                : tokenKeyByHash(verification.getPurpose(), previousTokenHash);
+        for (int attempt = 0; attempt < mutationRetryAttempts; attempt++) {
+            Object previousTokenHashValue = redisTemplate.opsForHash().get(verificationKey, "tokenHash");
+            String previousTokenHash = previousTokenHashValue == null ? "" : String.valueOf(previousTokenHashValue);
+            String previousTokenKey = previousTokenHash.isBlank()
+                    ? verificationKey
+                    : tokenKeyByHash(verification.getPurpose(), previousTokenHash);
 
-        redisTemplate.execute(
-                SAVE_VERIFICATION_SCRIPT,
-                List.of(verificationKey, tokenKey, previousTokenKey),
-                verification.getEmail(),
-                verification.getCodeHash(),
-                verification.getPurpose().name(),
-                verification.getStatus().name(),
-                token,
-                effectiveExpiresAt.toString(),
-                blankIfNull(verification.getVerifiedAt()),
-                tokenHash,
-                String.valueOf(ttl.toMillis()),
-                verification.getStatus() == VerificationStatus.VERIFIED && !token.isBlank() ? "1" : "0",
-                previousTokenHash
-        );
+            Long saved = redisTemplate.execute(
+                    SAVE_VERIFICATION_SCRIPT,
+                    List.of(verificationKey, tokenKey, previousTokenKey),
+                    verification.getEmail(),
+                    verification.getCodeHash(),
+                    verification.getPurpose().name(),
+                    verification.getStatus().name(),
+                    token,
+                    effectiveExpiresAt.toString(),
+                    blankIfNull(verification.getVerifiedAt()),
+                    tokenHash,
+                    String.valueOf(ttl.toMillis()),
+                    verification.getStatus() == VerificationStatus.VERIFIED && !token.isBlank() ? "1" : "0",
+                    previousTokenHash
+            );
+            if (Long.valueOf(1L).equals(saved)) {
+                return;
+            }
+        }
+        log.error("Failed to save email verification after all mutation retries. email={}, purpose={}",
+                verification.getEmail(), verification.getPurpose());
     }
 
     @Override
@@ -316,6 +328,8 @@ public class EmailVerificationRedisAdapter implements EmailVerificationRepositor
                 return;
             }
         }
+        log.warn("Failed to revoke active email verification after all mutation retries. email={}, purpose={}",
+                email, purpose);
     }
 
     private Optional<EmailVerification> findByVerificationKey(String key) {

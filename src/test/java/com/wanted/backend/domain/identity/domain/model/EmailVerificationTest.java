@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class EmailVerificationTest {
 
@@ -36,5 +37,24 @@ class EmailVerificationTest {
         assertThat(verification.getCode()).matches("\\d{6}");
         assertThat(verification.getCodeHash()).hasSize(64);
         assertThat(verification.getCodeHash()).isNotEqualTo(verification.getCode());
+    }
+
+    @Test
+    void create_rejectsInvalidCodeTtl() {
+        assertThatThrownBy(() -> EmailVerification.create(
+                "user@example.com",
+                EmailPurpose.SIGNUP,
+                null
+        )).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> EmailVerification.create(
+                "user@example.com",
+                EmailPurpose.SIGNUP,
+                Duration.ZERO
+        )).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> EmailVerification.create(
+                "user@example.com",
+                EmailPurpose.SIGNUP,
+                Duration.ofSeconds(-1)
+        )).isInstanceOf(IllegalArgumentException.class);
     }
 }

@@ -5,6 +5,6 @@ import com.wanted.backend.domain.community.presentation.response.ReviewListRespo
 
 public interface ReviewQueryUseCase {
 
-    ReviewListResponse handle(Long courseId, Long memberId, ReviewSortType sort, int page);
+    ReviewListResponse handle(Long courseId, Long memberId, ReviewSortType sort, int page, int size);
 
 }

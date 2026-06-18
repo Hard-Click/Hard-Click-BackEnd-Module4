@@ -74,6 +74,14 @@ public class EmailVerificationTokenCoordinator {
                 log.warn("Email verification token consumption failed after DB commit. purpose={}, attempt={}/{}",
                         purpose, attempt, completionRetryAttempts, exception);
             }
+            if (attempt < completionRetryAttempts) {
+                try {
+                    Thread.sleep(50L * attempt);
+                } catch (InterruptedException exception) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
         }
         log.error("Email verification token remains reserved after all completion retries. purpose={}, reservationId={}",
                 purpose, reservationId);

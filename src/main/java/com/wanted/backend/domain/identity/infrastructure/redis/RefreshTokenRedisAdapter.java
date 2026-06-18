@@ -25,12 +25,30 @@ public class RefreshTokenRedisAdapter implements RefreshTokenRepository {
     private static final DefaultRedisScript<Long> SAVE_TOKEN_SCRIPT =
             new DefaultRedisScript<>("""
                     local previousHash = redis.call('GET', KEYS[1])
-                    if previousHash and previousHash == ARGV[4] then
+                    if (previousHash or '') ~= ARGV[4] then
+                        return 0
+                    end
+                    if previousHash and previousHash ~= ARGV[1] then
                         redis.call('DEL', KEYS[3])
                     end
                     redis.call('PSETEX', KEYS[1], ARGV[3], ARGV[1])
                     redis.call('PSETEX', KEYS[2], ARGV[3], ARGV[2])
                     return 1
+                    """, Long.class);
+
+    private static final DefaultRedisScript<Long> FIND_TOKEN_SCRIPT =
+            new DefaultRedisScript<>("""
+                    if redis.call('GET', KEYS[1]) ~= ARGV[1] then
+                        return -1
+                    end
+                    if redis.call('GET', KEYS[2]) ~= ARGV[2] then
+                        return -1
+                    end
+                    local ttl = redis.call('PTTL', KEYS[1])
+                    if ttl <= 0 then
+                        return -1
+                    end
+                    return ttl
                     """, Long.class);
 
     private static final DefaultRedisScript<Long> DELETE_TOKEN_SCRIPT =
@@ -64,14 +82,13 @@ public class RefreshTokenRedisAdapter implements RefreshTokenRepository {
         }
 
         Long parsedMemberId = Long.valueOf(memberId);
-        String storedHash = redisTemplate.opsForValue().get(memberKey(parsedMemberId));
-        if (!tokenHash.equals(storedHash)) {
-            return Optional.empty();
-        }
-
-        Long ttlSeconds = redisTemplate.getExpire(tokenKey(tokenHash));
-        if (ttlSeconds == null || ttlSeconds <= 0) {
-            deleteByMemberId(parsedMemberId);
+        Long ttlMillis = redisTemplate.execute(
+                FIND_TOKEN_SCRIPT,
+                List.of(tokenKey(tokenHash), memberKey(parsedMemberId)),
+                memberId,
+                tokenHash
+        );
+        if (ttlMillis == null || ttlMillis <= 0) {
             return Optional.empty();
         }
 
@@ -80,7 +97,7 @@ public class RefreshTokenRedisAdapter implements RefreshTokenRepository {
                 null,
                 parsedMemberId,
                 token,
-                now.plusSeconds(ttlSeconds),
+                now.plusNanos(Duration.ofMillis(ttlMillis).toNanos()),
                 now
         ));
     }
@@ -94,18 +111,23 @@ public class RefreshTokenRedisAdapter implements RefreshTokenRepository {
 
         String tokenHash = hash(refreshToken.getToken());
         String memberKey = memberKey(refreshToken.getMemberId());
-        String previousTokenHash = redisTemplate.opsForValue().get(memberKey);
-        String previousTokenKey = previousTokenHash == null
-                ? memberKey
-                : tokenKey(previousTokenHash);
-        redisTemplate.execute(
-                SAVE_TOKEN_SCRIPT,
-                List.of(memberKey, tokenKey(tokenHash), previousTokenKey),
-                tokenHash,
-                String.valueOf(refreshToken.getMemberId()),
-                String.valueOf(ttl.toMillis()),
-                previousTokenHash == null ? "" : previousTokenHash
-        );
+        for (int attempt = 0; attempt < mutationRetryAttempts; attempt++) {
+            String previousTokenHash = redisTemplate.opsForValue().get(memberKey);
+            String previousTokenKey = previousTokenHash == null
+                    ? memberKey
+                    : tokenKey(previousTokenHash);
+            Long saved = redisTemplate.execute(
+                    SAVE_TOKEN_SCRIPT,
+                    List.of(memberKey, tokenKey(tokenHash), previousTokenKey),
+                    tokenHash,
+                    String.valueOf(refreshToken.getMemberId()),
+                    String.valueOf(ttl.toMillis()),
+                    previousTokenHash == null ? "" : previousTokenHash
+            );
+            if (Long.valueOf(1L).equals(saved)) {
+                break;
+            }
+        }
         return refreshToken;
     }
 

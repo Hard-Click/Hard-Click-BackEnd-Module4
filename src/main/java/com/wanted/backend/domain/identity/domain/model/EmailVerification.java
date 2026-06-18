@@ -45,6 +45,9 @@ public class EmailVerification {
     }
 
     public static EmailVerification create(String email, EmailPurpose purpose, Duration codeTtl) {
+        if (codeTtl == null || codeTtl.isZero() || codeTtl.isNegative()) {
+            throw new IllegalArgumentException("Verification code TTL must be positive");
+        }
         String code = String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
         return new EmailVerification(
                 null,

@@ -20,6 +20,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @ExtendWith(MockitoExtension.class)
 class EmailVerificationTokenCoordinatorTest {
@@ -94,5 +95,59 @@ class EmailVerificationTokenCoordinatorTest {
                 eq(EmailPurpose.SIGNUP),
                 anyString()
         );
+    }
+
+    @Test
+    void completesImmediatelyWithoutTransactionSynchronization() {
+        TransactionSynchronizationManager.clearSynchronization();
+        EmailVerification verification = EmailVerification.create(
+                "user@example.com",
+                EmailPurpose.SIGNUP,
+                Duration.ofMinutes(3)
+        );
+        when(verificationRepository.reserveValidToken(
+                eq("user@example.com"),
+                eq("token"),
+                eq(EmailPurpose.SIGNUP),
+                anyString()
+        )).thenReturn(Optional.of(verification));
+        when(verificationRepository.completeTokenConsumption(
+                eq("token"),
+                eq(EmailPurpose.SIGNUP),
+                anyString()
+        )).thenReturn(true);
+
+        coordinator.reserveForCurrentTransaction("user@example.com", "token", EmailPurpose.SIGNUP);
+
+        verify(verificationRepository).completeTokenConsumption(
+                eq("token"),
+                eq(EmailPurpose.SIGNUP),
+                anyString()
+        );
+    }
+
+    @Test
+    void failsImmediatelyWhenCompletionFailsWithoutTransactionSynchronization() {
+        TransactionSynchronizationManager.clearSynchronization();
+        EmailVerification verification = EmailVerification.create(
+                "user@example.com",
+                EmailPurpose.SIGNUP,
+                Duration.ofMinutes(3)
+        );
+        when(verificationRepository.reserveValidToken(
+                eq("user@example.com"),
+                eq("token"),
+                eq(EmailPurpose.SIGNUP),
+                anyString()
+        )).thenReturn(Optional.of(verification));
+        when(verificationRepository.completeTokenConsumption(
+                eq("token"),
+                eq(EmailPurpose.SIGNUP),
+                anyString()
+        )).thenReturn(false);
+
+        assertThatThrownBy(() ->
+                coordinator.reserveForCurrentTransaction("user@example.com", "token", EmailPurpose.SIGNUP)
+        ).isInstanceOf(IllegalStateException.class);
     }
 }

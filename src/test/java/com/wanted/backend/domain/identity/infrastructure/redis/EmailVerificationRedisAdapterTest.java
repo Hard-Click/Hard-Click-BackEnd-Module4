@@ -95,6 +95,36 @@ class EmailVerificationRedisAdapterTest {
     }
 
     @Test
+    void returnsEmptyWhenTokenKeyDoesNotExist() {
+        String token = "missing-token";
+        String tokenKey = "email:{verification}:token:SIGNUP:" + hash(token);
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get(tokenKey)).thenReturn(null);
+
+        assertThat(adapter.reserveValidToken(
+                "user@example.com",
+                token,
+                EmailPurpose.SIGNUP,
+                "reservation-id"
+        )).isEmpty();
+    }
+
+    @Test
+    void returnsEmptyWhenProcessingReservationLeaseIsStillActive() {
+        assertAtomicReservationRejection("processing-token");
+    }
+
+    @Test
+    void returnsEmptyWhenEmailOrPurposeDoesNotMatch() {
+        assertAtomicReservationRejection("mismatched-token");
+    }
+
+    @Test
+    void returnsEmptyWhenAtomicReservationFails() {
+        assertAtomicReservationRejection("failed-token");
+    }
+
+    @Test
     void savesPendingVerificationAtomicallyWithoutPlainCode() {
         EmailVerification verification = EmailVerification.create(
                 "user@example.com",
@@ -103,6 +133,11 @@ class EmailVerificationRedisAdapterTest {
         );
         String rawCode = verification.getCode();
         when(redisTemplate.opsForHash()).thenReturn(hashOperations);
+        when(redisTemplate.execute(
+                org.mockito.ArgumentMatchers.<RedisScript<Long>>any(),
+                any(List.class),
+                any(Object[].class)
+        )).thenReturn(1L);
 
         adapter.save(verification);
 
@@ -131,6 +166,11 @@ class EmailVerificationRedisAdapterTest {
         verification.verify(verification.getCode());
         String token = verification.getVerificationToken();
         when(redisTemplate.opsForHash()).thenReturn(hashOperations);
+        when(redisTemplate.execute(
+                org.mockito.ArgumentMatchers.<RedisScript<Long>>any(),
+                any(List.class),
+                any(Object[].class)
+        )).thenReturn(1L);
 
         adapter.save(verification);
 
@@ -164,8 +204,27 @@ class EmailVerificationRedisAdapterTest {
             field.setAccessible(true);
             RedisScript<?> script = (RedisScript<?>) field.get(null);
             assertThat(script.getScriptAsString())
-                    .doesNotMatch("(?s).*redis\\.call\\('[A-Z]+',\\s*ARGV\\[.*");
+                    .doesNotMatch("(?s).*redis\\.call\\('[A-Za-z]+',\\s*ARGV\\[.*");
         }
+    }
+
+    private void assertAtomicReservationRejection(String token) {
+        String tokenKey = "email:{verification}:token:SIGNUP:" + hash(token);
+        String verificationKey = "email:{verification}:record:SIGNUP:user@example.com";
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get(tokenKey)).thenReturn(verificationKey);
+        when(redisTemplate.execute(
+                org.mockito.ArgumentMatchers.<RedisScript<Long>>any(),
+                eq(List.of(tokenKey, verificationKey)),
+                any(Object[].class)
+        )).thenReturn(0L);
+
+        assertThat(adapter.reserveValidToken(
+                "user@example.com",
+                token,
+                EmailPurpose.SIGNUP,
+                "reservation-id"
+        )).isEmpty();
     }
 
     private String hash(String value) {

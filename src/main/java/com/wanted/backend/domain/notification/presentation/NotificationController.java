@@ -39,10 +39,11 @@ public class NotificationController {
     )
     public ResponseEntity<ApiResponse<NotificationListResponse>> getNotifications(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestParam(required = false) Long cursorId) {
+            @RequestParam(required = false) Long cursorId,
+            @RequestParam(defaultValue = "10") int size) {
 
         NotificationListResponse response = notificationQueryUseCase.getList(
-                userDetails.getMemberId(), cursorId);
+                userDetails.getMemberId(), cursorId, size);
 
         return ApiResponse.success("알림 목록 조회 완료", response);
     }

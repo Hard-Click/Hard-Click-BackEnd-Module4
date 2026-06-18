@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -50,6 +51,11 @@ class RefreshTokenRedisAdapterTest {
                 now
         );
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(redisTemplate.execute(
+                org.mockito.ArgumentMatchers.<RedisScript<Long>>any(),
+                any(List.class),
+                any(Object[].class)
+        )).thenReturn(1L);
         adapter.save(refreshToken);
 
         verify(redisTemplate).execute(
@@ -74,14 +80,53 @@ class RefreshTokenRedisAdapterTest {
 
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         when(valueOperations.get(tokenKey)).thenReturn("1");
-        when(valueOperations.get("auth:{refresh}:member:1")).thenReturn(tokenHash);
-        when(redisTemplate.getExpire(tokenKey)).thenReturn(120L);
+        when(redisTemplate.execute(
+                org.mockito.ArgumentMatchers.<RedisScript<Long>>any(),
+                eq(List.of(tokenKey, "auth:{refresh}:member:1")),
+                eq("1"),
+                eq(tokenHash)
+        )).thenReturn(120_000L);
 
         RefreshToken found = adapter.findByToken(token).orElseThrow();
 
         assertThat(found.getMemberId()).isEqualTo(1L);
         assertThat(found.getToken()).isEqualTo(token);
         assertThat(found.isExpired()).isFalse();
+    }
+
+    @Test
+    void returnsEmptyWhenStoredTokenHashDoesNotMatch() {
+        String token = "refresh-token";
+        String tokenHash = hash(token);
+        String tokenKey = "auth:{refresh}:token:" + tokenHash;
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get(tokenKey)).thenReturn("1");
+        when(redisTemplate.execute(
+                org.mockito.ArgumentMatchers.<RedisScript<Long>>any(),
+                eq(List.of(tokenKey, "auth:{refresh}:member:1")),
+                eq("1"),
+                eq(tokenHash)
+        )).thenReturn(-1L);
+
+        assertThat(adapter.findByToken(token)).isEmpty();
+    }
+
+    @Test
+    void returnsEmptyWithoutDeletingWhenTokenTtlIsNotPositive() {
+        String token = "refresh-token";
+        String tokenHash = hash(token);
+        String tokenKey = "auth:{refresh}:token:" + tokenHash;
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get(tokenKey)).thenReturn("1");
+        when(redisTemplate.execute(
+                org.mockito.ArgumentMatchers.<RedisScript<Long>>any(),
+                eq(List.of(tokenKey, "auth:{refresh}:member:1")),
+                eq("1"),
+                eq(tokenHash)
+        )).thenReturn(-1L);
+
+        assertThat(adapter.findByToken(token)).isEmpty();
+        verify(valueOperations, never()).get("auth:{refresh}:member:1");
     }
 
     @Test
@@ -93,7 +138,7 @@ class RefreshTokenRedisAdapterTest {
             field.setAccessible(true);
             RedisScript<?> script = (RedisScript<?>) field.get(null);
             assertThat(script.getScriptAsString())
-                    .doesNotMatch("(?s).*redis\\.call\\('[A-Z]+',\\s*ARGV\\[.*");
+                    .doesNotMatch("(?s).*redis\\.call\\('[A-Za-z]+',\\s*ARGV\\[.*");
         }
     }
 
