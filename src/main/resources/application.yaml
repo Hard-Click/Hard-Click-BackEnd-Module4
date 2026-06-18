@@ -62,9 +62,24 @@ community:
   image:
     max-size: 5242880
 
+study-timer:
+  member-lock:
+    timeout-milliseconds: 3000
+
 logging:
   config: classpath:logback-spring.xml
   level:
     com.wanted.backend: INFO
     org.hibernate.SQL: WARN
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}
