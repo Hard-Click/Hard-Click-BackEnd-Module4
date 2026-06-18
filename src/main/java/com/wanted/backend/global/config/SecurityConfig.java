@@ -68,8 +68,10 @@ public class SecurityConfig {
                                 "/api/courses/*/reviews",
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+                                "/actuator/health"
                         ).permitAll()
+                        .requestMatchers("/actuator/prometheus").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/courses", "/api/courses/*","/api/courses/*/reviews").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/courses").hasRole("INSTRUCTOR")
