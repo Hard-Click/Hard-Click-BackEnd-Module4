@@ -6,6 +6,7 @@ import com.wanted.backend.domain.payment.domain.repository.PaymentRepository;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,7 +29,17 @@ public class PaymentRepositoryAdapter implements PaymentRepository {
                 payment.getStatus().name(),
                 payment.getIdempotencyKey()
         );
-        return toDomain(repository.save(entity));
+        try {
+            return toDomain(repository.save(entity));
+        } catch (DataIntegrityViolationException e) {
+            throw new BusinessException(ErrorCode.DUPLICATE_PAYMENT_REQUEST);
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Payment> findById(Long paymentId) {
+        return repository.findById(paymentId).map(this::toDomain);
     }
 
     @Override
@@ -42,7 +53,10 @@ public class PaymentRepositoryAdapter implements PaymentRepository {
     public Payment confirmPayment(Long paymentId, String pgTransactionId, LocalDateTime paidAt) {
         PaymentJpaEntity entity = repository.findById(paymentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
-        entity.confirm(PaymentStatus.PAID.name(), pgTransactionId, paidAt);
+        if (!"PENDING".equals(entity.getStatus())) {
+            throw new BusinessException(ErrorCode.DUPLICATE_PAYMENT_REQUEST);
+        }
+        entity.confirm(pgTransactionId, paidAt);
         return toDomain(entity);
     }
 
@@ -51,7 +65,10 @@ public class PaymentRepositoryAdapter implements PaymentRepository {
     public Payment failPayment(Long paymentId) {
         PaymentJpaEntity entity = repository.findById(paymentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
-        entity.markFailed(PaymentStatus.FAILED.name());
+        if (!"PENDING".equals(entity.getStatus())) {
+            throw new BusinessException(ErrorCode.DUPLICATE_PAYMENT_REQUEST);
+        }
+        entity.markFailed();
         return toDomain(entity);
     }
 

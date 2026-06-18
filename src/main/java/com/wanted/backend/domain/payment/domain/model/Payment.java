@@ -25,73 +25,54 @@ public class Payment {
         this.paidAt = paidAt;
     }
 
-    /**
-     * 결제 요청이 막 들어온 시점의 신규 결제를 생성한다. (PENDING 상태)
-     */
     public static Payment create(Long memberId, Long courseId, Integer amount, String idempotencyKey) {
+        validateCreate(memberId, courseId, amount, idempotencyKey);
         return new Payment(null, memberId, courseId, amount, PaymentStatus.PENDING, idempotencyKey, null, null);
     }
 
-    /**
-     * 영속화된 결제를 복원할 때 사용한다.
-     */
     public static Payment reconstruct(Long id, Long memberId, Long courseId, Integer amount, PaymentStatus status,
                                        String idempotencyKey, String pgTransactionId, LocalDateTime paidAt) {
+        if (id == null) throw new IllegalArgumentException("id는 필수입니다.");
+        if (status == null) throw new IllegalArgumentException("status는 필수입니다.");
+        validateCreate(memberId, courseId, amount, idempotencyKey);
         return new Payment(id, memberId, courseId, amount, status, idempotencyKey, pgTransactionId, paidAt);
     }
 
-    /**
-     * PG 호출 전 PENDING 상태로 전환한다.
-     */
-    public void markPending() {
-        this.status = PaymentStatus.PENDING;
-    }
-
-    /**
-     * PG 승인 결과를 받아 결제를 확정한다.
-     */
     public void confirm(String pgTransactionId, LocalDateTime paidAt) {
+        if (this.status != PaymentStatus.PENDING) {
+            throw new IllegalStateException("PENDING 상태에서만 결제 확정이 가능합니다. 현재 상태: " + this.status);
+        }
+        if (pgTransactionId == null || pgTransactionId.isBlank()) {
+            throw new IllegalArgumentException("pgTransactionId는 필수입니다.");
+        }
+        if (paidAt == null) {
+            throw new IllegalArgumentException("paidAt은 필수입니다.");
+        }
         this.status = PaymentStatus.PAID;
         this.pgTransactionId = pgTransactionId;
         this.paidAt = paidAt;
     }
 
-    /**
-     * PG 호출 실패/타임아웃 시 결제를 실패 처리한다.
-     */
     public void fail() {
+        if (this.status != PaymentStatus.PENDING) {
+            throw new IllegalStateException("PENDING 상태에서만 결제 실패 처리가 가능합니다. 현재 상태: " + this.status);
+        }
         this.status = PaymentStatus.FAILED;
     }
 
-    public Long getId() {
-        return id;
+    private static void validateCreate(Long memberId, Long courseId, Integer amount, String idempotencyKey) {
+        if (memberId == null) throw new IllegalArgumentException("memberId는 필수입니다.");
+        if (courseId == null) throw new IllegalArgumentException("courseId는 필수입니다.");
+        if (amount == null || amount <= 0) throw new IllegalArgumentException("amount는 0보다 커야 합니다.");
+        if (idempotencyKey == null || idempotencyKey.isBlank()) throw new IllegalArgumentException("idempotencyKey는 필수입니다.");
     }
 
-    public Long getMemberId() {
-        return memberId;
-    }
-
-    public Long getCourseId() {
-        return courseId;
-    }
-
-    public Integer getAmount() {
-        return amount;
-    }
-
-    public PaymentStatus getStatus() {
-        return status;
-    }
-
-    public String getIdempotencyKey() {
-        return idempotencyKey;
-    }
-
-    public String getPgTransactionId() {
-        return pgTransactionId;
-    }
-
-    public LocalDateTime getPaidAt() {
-        return paidAt;
-    }
+    public Long getId() { return id; }
+    public Long getMemberId() { return memberId; }
+    public Long getCourseId() { return courseId; }
+    public Integer getAmount() { return amount; }
+    public PaymentStatus getStatus() { return status; }
+    public String getIdempotencyKey() { return idempotencyKey; }
+    public String getPgTransactionId() { return pgTransactionId; }
+    public LocalDateTime getPaidAt() { return paidAt; }
 }

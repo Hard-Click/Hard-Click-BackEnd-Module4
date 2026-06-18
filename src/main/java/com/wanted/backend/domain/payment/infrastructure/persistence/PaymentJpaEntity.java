@@ -40,7 +40,7 @@ public class PaymentJpaEntity {
     @Column(nullable = false)
     private String status;
 
-    @Column(name = "idempotency_key", unique = true, length = 64)
+    @Column(name = "idempotency_key", unique = true, nullable = false, length = 64)
     private String idempotencyKey;
 
     @Column(name = "pg_transaction_id", length = 128)
@@ -57,13 +57,13 @@ public class PaymentJpaEntity {
         this.idempotencyKey = idempotencyKey;
     }
 
-    public void confirm(String status, String pgTransactionId, LocalDateTime paidAt) {
-        this.status = status;
+    public void confirm(String pgTransactionId, LocalDateTime paidAt) {
+        this.status = "PAID";
         this.pgTransactionId = pgTransactionId;
         this.paidAt = paidAt;
     }
 
-    public void markFailed(String status) {
-        this.status = status;
+    public void markFailed() {
+        this.status = "FAILED";
     }
 }
