@@ -1,5 +1,7 @@
 package com.wanted.backend.domain.identity.domain.model;
 
+import com.wanted.backend.global.exception.BusinessException;
+import com.wanted.backend.global.exception.ErrorCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -45,16 +47,25 @@ class EmailVerificationTest {
                 "user@example.com",
                 EmailPurpose.SIGNUP,
                 null
-        )).isInstanceOf(IllegalArgumentException.class);
+        ))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_INPUT_VALUE);
         assertThatThrownBy(() -> EmailVerification.create(
                 "user@example.com",
                 EmailPurpose.SIGNUP,
                 Duration.ZERO
-        )).isInstanceOf(IllegalArgumentException.class);
+        ))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_INPUT_VALUE);
         assertThatThrownBy(() -> EmailVerification.create(
                 "user@example.com",
                 EmailPurpose.SIGNUP,
                 Duration.ofSeconds(-1)
-        )).isInstanceOf(IllegalArgumentException.class);
+        ))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_INPUT_VALUE);
     }
 }

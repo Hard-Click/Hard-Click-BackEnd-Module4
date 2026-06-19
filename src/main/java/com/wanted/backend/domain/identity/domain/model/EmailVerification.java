@@ -1,5 +1,8 @@
 package com.wanted.backend.domain.identity.domain.model;
 
+import com.wanted.backend.global.exception.BusinessException;
+import com.wanted.backend.global.exception.ErrorCode;
+
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -46,7 +49,7 @@ public class EmailVerification {
 
     public static EmailVerification create(String email, EmailPurpose purpose, Duration codeTtl) {
         if (codeTtl == null || codeTtl.isZero() || codeTtl.isNegative()) {
-            throw new IllegalArgumentException("Verification code TTL must be positive");
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
         String code = String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
         return new EmailVerification(

@@ -86,18 +86,17 @@ public class AdminReportQueryAdapter implements AdminReportQueryPort {
             return Optional.empty();
         }
 
-        ReportJpaEntity latestReport = reports.get(0);
         DetailTargetContent targetContent = findDetailTargetContent(
-                latestReport.getTargetType(),
-                latestReport.getTargetId(),
-                latestReport.getReportedMemberId()
+                requestedReport.getTargetType(),
+                requestedReport.getTargetId(),
+                requestedReport.getReportedMemberId()
         );
-        MemberInfo reporter = findMemberInfo(latestReport.getReporterId());
+        MemberInfo reporter = findMemberInfo(requestedReport.getReporterId());
 
         return Optional.of(new AdminReportDetailResult(
-                latestReport.getId(),
-                latestReport.getTargetType(),
-                latestReport.getTargetId(),
+                requestedReport.getId(),
+                requestedReport.getTargetType(),
+                requestedReport.getTargetId(),
                 targetContent.title(),
                 targetContent.content(),
                 targetContent.url(),
@@ -105,11 +104,11 @@ public class AdminReportQueryAdapter implements AdminReportQueryPort {
                 findMemberName(targetContent.authorId()),
                 reports.size(),
                 aggregateReasonCounts(reports),
-                latestReport.getReporterId(),
+                requestedReport.getReporterId(),
                 reporter.name(),
                 reporter.username(),
-                normalizeStatus(latestReport.getStatus()),
-                latestReport.getMemo()
+                normalizeStatus(requestedReport.getStatus()),
+                requestedReport.getMemo()
         ));
     }
 
