@@ -378,11 +378,14 @@ function thinkTimeMs(meanSec = 1.0) {
 
 /** 공통 요청 헤더 */
 function makeHeaders(idempotencyKey) {
+    let scenarioName = 'setup';
+    try { scenarioName = exec.scenario.name; } catch { /* setup/teardown: VU 컨텍스트 없음 */ }
+
     return {
         'Content-Type':    'application/json',
         'Idempotency-Key': idempotencyKey,
         'X-Request-Id':    uuidv4(),             // 분산 추적 correlation ID
-        'X-Scenario':      exec.scenario.name,   // Grafana 필터링용 커스텀 헤더
+        'X-Scenario':      scenarioName,         // Grafana 필터링용 커스텀 헤더
         ...(CFG.token ? { Authorization: `Bearer ${CFG.token}` } : {}),
     };
 }
