@@ -8,7 +8,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -64,6 +66,26 @@ public class GlobalExceptionHandler {
      * [2차 방어선-B] 도메인 규칙 위반 예외 처리
      * 도메인 모델(Course 등)이 던지는 IllegalArgumentException (WARN 레벨)
      */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatchException(
+            MethodArgumentTypeMismatchException e,
+            HttpServletRequest request) {
+
+        String message = "요청 파라미터 형식이 올바르지 않습니다.";
+        if (e.getRequiredType() == LocalDate.class) {
+            message = "날짜는 yyyy-MM-dd 형식이어야 합니다.";
+        }
+
+        log.warn("[Type Mismatch Error] Path: {}, Message: {}", request.getRequestURI(), message);
+
+        ErrorResponse response = ErrorResponse.create()
+                .errorCode(ErrorCode.INVALID_INPUT_VALUE.getCode())
+                .message(message)
+                .path(request.getRequestURI());
+
+        return ResponseEntity.status(ErrorCode.INVALID_INPUT_VALUE.getStatus()).body(response);
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
             IllegalArgumentException e,

@@ -1,0 +1,105 @@
+spring:
+  application:
+    name: hard-click
+
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/Hard-Click}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 10
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: false
+
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+
+  config:
+    import: optional:classpath:application-secret.yaml
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expiration-ms: ${JWT_ACCESS_EXPIRATION:1800000}
+  refresh-token-expiration-ms: ${JWT_REFRESH_EXPIRATION:1209600000}
+
+server:
+  port: 8080
+  tomcat:
+    threads:
+      max: 400
+      min-spare: 50
+    accept-count: 500
+    max-connections: 10000
+
+identity:
+  email:
+    allowed-domain: gmail.com
+  profile-image:
+    upload-dir: uploads/profiles
+    url: /uploads/profiles
+    max-size: 5242880
+
+community:
+  image:
+    post-dir: uploads/posts
+    post-url: /uploads/posts
+    comment-dir: uploads/comments
+    comment-url: /uploads/comments
+    max-size: 5242880
+
+grass:
+  lesson:
+    max-level: ${GRASS_LESSON_MAX_LEVEL:4}
+
+study-timer:
+  member-lock:
+    timeout-milliseconds: 3000
+
+logging:
+  config: classpath:logback-spring.xml
+  level:
+    com.wanted.backend: INFO
+    org.hibernate.SQL: WARN
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+  health:
+    mail:
+      enabled: false
+  metrics:
+    tags:
+      application: ${spring.application.name}
