@@ -29,7 +29,7 @@ class DailyStudyStatsRepositoryAdapterTest {
         LocalDate startDate = LocalDate.parse("2026-05-01");
         LocalDate endDate = LocalDate.parse("2026-05-03");
         LocalDateTime now = LocalDateTime.parse("2026-05-04T00:00:00");
-        when(repository.findByMemberIdAndStudyDateBetweenOrderByStudyDateAsc(1L, startDate, endDate))
+        when(repository.findByMemberIdAndStatDateBetweenOrderByStatDateAsc(1L, startDate, endDate))
                 .thenReturn(List.of(
                         new DailyStudyStatsJpaEntity(1L, LocalDate.parse("2026-05-01"), 120, now, now),
                         new DailyStudyStatsJpaEntity(1L, LocalDate.parse("2026-05-03"), 300, now, now)
@@ -43,6 +43,6 @@ class DailyStudyStatsRepositoryAdapterTest {
                         org.assertj.core.groups.Tuple.tuple(1L, LocalDate.parse("2026-05-01"), 120),
                         org.assertj.core.groups.Tuple.tuple(1L, LocalDate.parse("2026-05-03"), 300)
                 );
-        verify(repository).findByMemberIdAndStudyDateBetweenOrderByStudyDateAsc(1L, startDate, endDate);
+        verify(repository).findByMemberIdAndStatDateBetweenOrderByStatDateAsc(1L, startDate, endDate);
     }
 }
