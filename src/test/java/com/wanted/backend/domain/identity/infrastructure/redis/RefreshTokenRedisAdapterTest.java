@@ -11,6 +11,7 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.core.script.RedisScript;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
@@ -18,6 +19,7 @@ import java.util.HexFormat;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -130,11 +132,45 @@ class RefreshTokenRedisAdapterTest {
     }
 
     @Test
+    void returnsEmptyWhenStoredMemberIdIsInvalid() {
+        String token = "refresh-token";
+        String tokenKey = "auth:{refresh}:token:" + hash(token);
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get(tokenKey)).thenReturn("invalid-member-id");
+
+        assertThat(adapter.findByToken(token)).isEmpty();
+    }
+
+    @Test
+    void throwsWhenRefreshTokenSaveRetriesAreExhausted() {
+        LocalDateTime now = LocalDateTime.now();
+        RefreshToken refreshToken = new RefreshToken(
+                null,
+                1L,
+                "refresh-token",
+                now.plusDays(14),
+                now
+        );
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(redisTemplate.execute(
+                org.mockito.ArgumentMatchers.<RedisScript<Long>>any(),
+                any(List.class),
+                any(Object[].class)
+        )).thenReturn(0L);
+
+        assertThatThrownBy(() -> adapter.save(refreshToken))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
     void luaScriptsNeverUseArgumentsAsRedisKeys() throws IllegalAccessException {
         for (Field field : RefreshTokenRedisAdapter.class.getDeclaredFields()) {
             if (!RedisScript.class.isAssignableFrom(field.getType())) {
                 continue;
             }
+            assertThat(Modifier.isStatic(field.getModifiers()))
+                    .as("RedisScript field %s must remain static", field.getName())
+                    .isTrue();
             field.setAccessible(true);
             RedisScript<?> script = (RedisScript<?>) field.get(null);
             assertThat(script.getScriptAsString())

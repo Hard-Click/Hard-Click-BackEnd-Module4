@@ -16,6 +16,8 @@ import com.wanted.backend.domain.report_moderation.application.dto.AdminReportLi
 import com.wanted.backend.domain.report_moderation.application.port.AdminReportQueryPort;
 import com.wanted.backend.domain.report_moderation.application.query.AdminReportListQuery;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -40,30 +42,15 @@ public class AdminReportQueryAdapter implements AdminReportQueryPort {
     private static final String REVIEW_TITLE = "리뷰 내용";
     private static final String DELETED_REVIEW_CONTENT = "삭제된 리뷰입니다.";
 
-    private static final String DETAIL_DELETED_POST_TITLE = "삭제된 게시글";
     private static final String DETAIL_DELETED_POST_CONTENT = "관리자에 의해 삭제된 게시글입니다.";
-    private static final String DETAIL_COMMENT_TITLE = "댓글 내용";
-    private static final String DETAIL_DELETED_COMMENT_CONTENT = "삭제된 댓글입니다.";
-    private static final String DETAIL_REVIEW_TITLE = "리뷰 내용";
-    private static final String DETAIL_DELETED_REVIEW_CONTENT = "삭제된 리뷰입니다.";
 
     private final EntityManager entityManager;
 
     @Override
     public AdminReportListResult findReports(AdminReportListQuery query) {
-        List<ReportTargetGroup> groups = findTargetGroups(query.targetType()).stream()
-                .map(this::toReportTargetGroup)
-                .filter(group -> query.status() == null || group.status() == query.status())
-                .sorted(Comparator.comparing(ReportTargetGroup::reportedAt)
-                        .thenComparing(ReportTargetGroup::reportId)
-                        .reversed())
-                .toList();
-
-        int totalElements = groups.size();
+        List<ReportTargetGroup> pageGroups = findTargetGroupPage(query);
+        int totalElements = countTargetGroups(query);
         int totalPages = calculateTotalPages(totalElements, query.size());
-        int fromIndex = Math.min(query.page() * query.size(), totalElements);
-        int toIndex = Math.min(fromIndex + query.size(), totalElements);
-        List<ReportTargetGroup> pageGroups = groups.subList(fromIndex, toIndex);
 
         return new AdminReportListResult(
                 pageGroups.stream()
@@ -73,7 +60,7 @@ public class AdminReportQueryAdapter implements AdminReportQueryPort {
                 query.size(),
                 totalElements,
                 totalPages,
-                toIndex < totalElements
+                query.page() + 1 < totalPages
         );
     }
 
@@ -164,7 +151,7 @@ public class AdminReportQueryAdapter implements AdminReportQueryPort {
                 PostJpaEntity post = entityManager.find(PostJpaEntity.class, targetId);
                 if (post == null) {
                     yield new DetailTargetContent(
-                            DETAIL_DELETED_POST_TITLE,
+                            DELETED_POST_TITLE,
                             DETAIL_DELETED_POST_CONTENT,
                             null,
                             reportedMemberId
@@ -183,17 +170,17 @@ public class AdminReportQueryAdapter implements AdminReportQueryPort {
                 CommentJpaEntity comment = entityManager.find(CommentJpaEntity.class, targetId);
                 if (comment == null) {
                     yield new DetailTargetContent(
-                            DETAIL_COMMENT_TITLE,
-                            DETAIL_DELETED_COMMENT_CONTENT,
+                            COMMENT_TITLE,
+                            DELETED_COMMENT_CONTENT,
                             null,
                             reportedMemberId
                     );
                 }
                 yield new DetailTargetContent(
-                        DETAIL_COMMENT_TITLE,
+                        COMMENT_TITLE,
                         comment.getStatus() == CommentStatus.ACTIVE
                                 ? comment.getContent()
-                                : DETAIL_DELETED_COMMENT_CONTENT,
+                                : DELETED_COMMENT_CONTENT,
                         "/posts/" + comment.getPostId(),
                         comment.getAuthorId()
                 );
@@ -202,17 +189,17 @@ public class AdminReportQueryAdapter implements AdminReportQueryPort {
                 ReviewJpaEntity review = entityManager.find(ReviewJpaEntity.class, targetId);
                 if (review == null) {
                     yield new DetailTargetContent(
-                            DETAIL_REVIEW_TITLE,
-                            DETAIL_DELETED_REVIEW_CONTENT,
+                            REVIEW_TITLE,
+                            DELETED_REVIEW_CONTENT,
                             null,
                             reportedMemberId
                     );
                 }
                 yield new DetailTargetContent(
-                        DETAIL_REVIEW_TITLE,
+                        REVIEW_TITLE,
                         review.getStatus() == ReviewStatus.ACTIVE
                                 ? review.getContent()
-                                : DETAIL_DELETED_REVIEW_CONTENT,
+                                : DELETED_REVIEW_CONTENT,
                         "/courses/" + review.getCourseId(),
                         review.getMemberId()
                 );
@@ -242,49 +229,106 @@ public class AdminReportQueryAdapter implements AdminReportQueryPort {
         );
     }
 
-    private List<Object[]> findTargetGroups(TargetType targetType) {
+    private List<ReportTargetGroup> findTargetGroupPage(AdminReportListQuery query) {
+        return createTargetGroupQuery(query)
+                .setFirstResult(query.page() * query.size())
+                .setMaxResults(query.size())
+                .getResultList()
+                .stream()
+                .map(this::toReportTargetGroup)
+                .toList();
+    }
+
+    private int countTargetGroups(AdminReportListQuery query) {
+        StringBuilder sql = new StringBuilder("""
+                select count(*)
+                from reports latest
+                where not exists (
+                    select 1
+                    from reports newer
+                    where newer.target_type = latest.target_type
+                      and newer.target_id = latest.target_id
+                      and (
+                          newer.created_at > latest.created_at
+                          or (newer.created_at = latest.created_at and newer.report_id > latest.report_id)
+                      )
+                )
+                  and (
+                      select count(*)
+                      from reports report
+                      where report.target_type = latest.target_type
+                        and report.target_id = latest.target_id
+                  ) >= :minReportCount
+                """);
+        if (query.targetType() != null) {
+            sql.append(" and latest.target_type = :targetType");
+        }
+        if (query.status() != null) {
+            sql.append(" and latest.status = :status");
+        }
+
+        Query countQuery = entityManager.createNativeQuery(sql.toString())
+                .setParameter("minReportCount", MIN_REPORT_COUNT_FOR_ADMIN_LIST);
+        if (query.targetType() != null) {
+            countQuery.setParameter("targetType", query.targetType().name());
+        }
+        if (query.status() != null) {
+            countQuery.setParameter("status", query.status().name());
+        }
+        return ((Number) countQuery.getSingleResult()).intValue();
+    }
+
+    private TypedQuery<Object[]> createTargetGroupQuery(AdminReportListQuery query) {
         return entityManager.createQuery("""
-                select r.targetType, r.targetId, count(r.id)
-                from ReportJpaEntity r
-                where (:targetType is null or r.targetType = :targetType)
-                group by r.targetType, r.targetId
-                having count(r.id) >= :minReportCount
+                select latest.id,
+                       latest.targetType,
+                       latest.targetId,
+                       latest.reportedMemberId,
+                       latest.status,
+                       latest.reportTypes,
+                       latest.createdAt,
+                       count(report.id)
+                from ReportJpaEntity latest, ReportJpaEntity report
+                where report.targetType = latest.targetType
+                  and report.targetId = latest.targetId
+                  and (:targetType is null or latest.targetType = :targetType)
+                  and (:status is null or latest.status = :status)
+                  and not exists (
+                      select newer.id
+                      from ReportJpaEntity newer
+                      where newer.targetType = latest.targetType
+                        and newer.targetId = latest.targetId
+                        and (
+                            newer.createdAt > latest.createdAt
+                            or (newer.createdAt = latest.createdAt and newer.id > latest.id)
+                        )
+                  )
+                group by latest.id,
+                         latest.targetType,
+                         latest.targetId,
+                         latest.reportedMemberId,
+                         latest.status,
+                         latest.reportTypes,
+                         latest.createdAt
+                having count(report.id) >= :minReportCount
+                order by latest.createdAt desc, latest.id desc
                 """, Object[].class)
-                .setParameter("targetType", targetType)
-                .setParameter("minReportCount", (long) MIN_REPORT_COUNT_FOR_ADMIN_LIST)
-                .getResultList();
+                .setParameter("targetType", query.targetType())
+                .setParameter("status", query.status())
+                .setParameter("minReportCount", (long) MIN_REPORT_COUNT_FOR_ADMIN_LIST);
     }
 
     private ReportTargetGroup toReportTargetGroup(Object[] row) {
-        TargetType targetType = (TargetType) row[0];
-        Long targetId = (Long) row[1];
-        Long reportCount = (Long) row[2];
-        ReportJpaEntity latestReport = findLatestReport(targetType, targetId);
-
         return new ReportTargetGroup(
-                latestReport.getId(),
-                targetType,
-                targetId,
-                latestReport.getReportedMemberId(),
-                reportCount.intValue(),
-                normalizeStatus(latestReport.getStatus()),
-                latestReport.getReportTypes(),
-                latestReport.getCreatedAt()
+                (Long) row[0],
+                (TargetType) row[1],
+                (Long) row[2],
+                (Long) row[3],
+                ((Long) row[7]).intValue(),
+                normalizeStatus((ReportStatus) row[4]),
+                (String) row[5],
+                (LocalDateTime) row[6]
         );
-    }
-
-    private ReportJpaEntity findLatestReport(TargetType targetType, Long targetId) {
-        return entityManager.createQuery("""
-                select r
-                from ReportJpaEntity r
-                where r.targetType = :targetType
-                  and r.targetId = :targetId
-                order by r.createdAt desc, r.id desc
-                """, ReportJpaEntity.class)
-                .setParameter("targetType", targetType)
-                .setParameter("targetId", targetId)
-                .setMaxResults(1)
-                .getSingleResult();
     }
 
     private AdminReportListResult.Item toItem(ReportTargetGroup group) {

@@ -18,9 +18,12 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 
 @Service
 public class EmailVerificationService implements EmailVerificationUseCase {
+
+    private static final ZoneId DAILY_LIMIT_ZONE = ZoneId.of("Asia/Seoul");
 
     private final EmailVerificationRepository verificationRepository;
     private final EmailSendPort emailSendPort;
@@ -66,7 +69,7 @@ public class EmailVerificationService implements EmailVerificationUseCase {
         }
 
         LocalDateTime tomorrow = LocalDateTime.of(
-                LocalDateTime.now().toLocalDate().plusDays(1),
+                LocalDateTime.now(DAILY_LIMIT_ZONE).toLocalDate().plusDays(1),
                 LocalTime.MIN
         );
         if (!verificationRepository.tryAcquireSendPermission(

@@ -16,6 +16,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
@@ -29,6 +30,7 @@ public class EmailVerificationRedisAdapter implements EmailVerificationRepositor
     private static final String VERIFICATION_KEY_PREFIX = "email:{verification}:record:";
     private static final String TOKEN_KEY_PREFIX = "email:{verification}:token:";
     private static final String SEND_COUNT_KEY_PREFIX = "email:{send-count}:";
+    private static final ZoneId DAILY_LIMIT_ZONE = ZoneId.of("Asia/Seoul");
 
     private static final String FIELD_EMAIL = "email";
     private static final String FIELD_CODE = "code";
@@ -220,6 +222,7 @@ public class EmailVerificationRedisAdapter implements EmailVerificationRepositor
         }
         log.error("Failed to save email verification after all mutation retries. email={}, purpose={}",
                 verification.getEmail(), verification.getPurpose());
+        throw new IllegalStateException("Failed to save email verification");
     }
 
     @Override
@@ -305,7 +308,7 @@ public class EmailVerificationRedisAdapter implements EmailVerificationRepositor
     ) {
         Long acquired = redisTemplate.execute(
                 ACQUIRE_SEND_PERMISSION_SCRIPT,
-                List.of(sendCountKey(email, purpose, LocalDate.now())),
+                List.of(sendCountKey(email, purpose, LocalDate.now(DAILY_LIMIT_ZONE))),
                 String.valueOf(dailyLimit),
                 String.valueOf(toEpochMilli(expiresAt))
         );
@@ -393,7 +396,7 @@ public class EmailVerificationRedisAdapter implements EmailVerificationRepositor
     }
 
     private long toEpochMilli(LocalDateTime dateTime) {
-        return dateTime.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+        return dateTime.atZone(DAILY_LIMIT_ZONE).toInstant().toEpochMilli();
     }
 
     private String hash(String value) {

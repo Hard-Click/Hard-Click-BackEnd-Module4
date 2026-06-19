@@ -14,8 +14,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class NotificationQueryService implements NotificationQueryUseCase {
 
-    private static final int DEFAULT_PAGE_SIZE = 10;
-    private static final int MAX_PAGE_SIZE = 50;
+    private static final int PAGE_SIZE = 10;
 
     private final NotificationRepository notificationRepository;
 
@@ -29,10 +28,9 @@ public class NotificationQueryService implements NotificationQueryUseCase {
     }
 
     @Override
-    public NotificationListResponse getList(Long memberId, Long cursorId, int size) {
-        int normalizedSize = normalizeSize(size);
+    public NotificationListResponse getList(Long memberId, Long cursorId) {
         List<Notification> notifications = notificationRepository
-                .findByReceiverIdWithCursor(memberId, cursorId, normalizedSize);
+                .findByReceiverIdWithCursor(memberId, cursorId, PAGE_SIZE);
 
         boolean hasNext = false;
         if (!notifications.isEmpty()) {
@@ -52,12 +50,5 @@ public class NotificationQueryService implements NotificationQueryUseCase {
                 .toList();
 
         return new NotificationListResponse(content, hasNext);
-    }
-
-    private int normalizeSize(int size) {
-        if (size <= 0) {
-            return DEFAULT_PAGE_SIZE;
-        }
-        return Math.min(size, MAX_PAGE_SIZE);
     }
 }
