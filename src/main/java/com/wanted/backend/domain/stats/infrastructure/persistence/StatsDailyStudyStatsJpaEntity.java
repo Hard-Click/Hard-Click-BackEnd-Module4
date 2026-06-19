@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
         }
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class DailyStudyStatsJpaEntity {
+public class StatsDailyStudyStatsJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -54,7 +54,7 @@ public class DailyStudyStatsJpaEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public DailyStudyStatsJpaEntity(
+    public StatsDailyStudyStatsJpaEntity(
             Long memberId,
             LocalDate statDate,
             Integer watchedLessonCount,

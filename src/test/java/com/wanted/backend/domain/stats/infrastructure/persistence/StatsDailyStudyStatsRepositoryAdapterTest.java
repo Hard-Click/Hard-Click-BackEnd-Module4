@@ -13,15 +13,15 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class DailyStudyStatsRepositoryAdapterTest {
+class StatsDailyStudyStatsRepositoryAdapterTest {
 
-    private SpringDataDailyStudyStatsRepository repository;
-    private DailyStudyStatsRepositoryAdapter adapter;
+    private SpringDataStatsDailyStudyStatsRepository repository;
+    private StatsDailyStudyStatsRepositoryAdapter adapter;
 
     @BeforeEach
     void setUp() {
-        repository = mock(SpringDataDailyStudyStatsRepository.class);
-        adapter = new DailyStudyStatsRepositoryAdapter(repository);
+        repository = mock(SpringDataStatsDailyStudyStatsRepository.class);
+        adapter = new StatsDailyStudyStatsRepositoryAdapter(repository);
     }
 
     @Test
@@ -29,7 +29,7 @@ class DailyStudyStatsRepositoryAdapterTest {
         LocalDate date = LocalDate.parse("2026-06-18");
         LocalDateTime now = LocalDateTime.parse("2026-06-18T23:59:59");
         when(repository.findByMemberIdAndStatDate(1L, date))
-                .thenReturn(Optional.of(new DailyStudyStatsJpaEntity(
+                .thenReturn(Optional.of(new StatsDailyStudyStatsJpaEntity(
                         1L,
                         date,
                         3,

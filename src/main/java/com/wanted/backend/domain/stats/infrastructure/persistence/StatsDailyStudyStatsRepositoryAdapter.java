@@ -10,9 +10,9 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class DailyStudyStatsRepositoryAdapter implements DailyStudyStatsRepository {
+public class StatsDailyStudyStatsRepositoryAdapter implements DailyStudyStatsRepository {
 
-    private final SpringDataDailyStudyStatsRepository repository;
+    private final SpringDataStatsDailyStudyStatsRepository repository;
 
     @Override
     public Optional<DailyStudyStat> findByMemberIdAndStatDate(Long memberId, LocalDate statDate) {
@@ -20,7 +20,7 @@ public class DailyStudyStatsRepositoryAdapter implements DailyStudyStatsReposito
                 .map(this::toDomain);
     }
 
-    private DailyStudyStat toDomain(DailyStudyStatsJpaEntity entity) {
+    private DailyStudyStat toDomain(StatsDailyStudyStatsJpaEntity entity) {
         return new DailyStudyStat(
                 entity.getMemberId(),
                 entity.getStatDate(),

@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 @Table(
         name = "daily_study_stats",
         indexes = {
-                @Index(name = "idx_daily_study_stats_member_id_study_date", columnList = "member_id,study_date")
+                @Index(name = "idx_daily_study_stats_member_id_stat_date", columnList = "member_id,stat_date")
         }
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -33,8 +33,8 @@ public class DailyStudyStatsJpaEntity {
     @Column(name = "member_id", nullable = false)
     private Long memberId;
 
-    @Column(name = "study_date", nullable = false)
-    private LocalDate studyDate;
+    @Column(name = "stat_date", nullable = false)
+    private LocalDate statDate;
 
     @Column(name = "study_seconds", nullable = false)
     private Integer studySeconds;
@@ -47,13 +47,13 @@ public class DailyStudyStatsJpaEntity {
 
     public DailyStudyStatsJpaEntity(
             Long memberId,
-            LocalDate studyDate,
+            LocalDate statDate,
             Integer studySeconds,
             LocalDateTime createdAt,
             LocalDateTime updatedAt
     ) {
         this.memberId = memberId;
-        this.studyDate = studyDate;
+        this.statDate = statDate;
         this.studySeconds = studySeconds;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
