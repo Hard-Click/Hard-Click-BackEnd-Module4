@@ -2,6 +2,7 @@ package com.wanted.backend.domain.stats.infrastructure.persistence;
 
 import com.wanted.backend.domain.stats.domain.model.DailyStudyStat;
 import com.wanted.backend.domain.stats.domain.repository.DailyStudyStatsRepository;
+import com.wanted.backend.domain.study_timer.infrastructure.persistence.DailyStudyStatsJpaEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -20,7 +21,7 @@ public class StatsDailyStudyStatsRepositoryAdapter implements DailyStudyStatsRep
                 .map(this::toDomain);
     }
 
-    private DailyStudyStat toDomain(StatsDailyStudyStatsJpaEntity entity) {
+    private DailyStudyStat toDomain(DailyStudyStatsJpaEntity entity) {
         return new DailyStudyStat(
                 entity.getMemberId(),
                 entity.getStatDate(),

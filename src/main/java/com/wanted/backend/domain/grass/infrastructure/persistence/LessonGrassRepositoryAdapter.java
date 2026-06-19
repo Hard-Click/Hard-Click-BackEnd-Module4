@@ -2,6 +2,7 @@ package com.wanted.backend.domain.grass.infrastructure.persistence;
 
 import com.wanted.backend.domain.grass.domain.model.LessonGrassStat;
 import com.wanted.backend.domain.grass.domain.repository.LessonGrassRepository;
+import com.wanted.backend.domain.study_timer.infrastructure.persistence.DailyStudyStatsJpaEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -22,7 +23,7 @@ public class LessonGrassRepositoryAdapter implements LessonGrassRepository {
                 .toList();
     }
 
-    private LessonGrassStat toDomain(LessonGrassStatsJpaEntity entity) {
+    private LessonGrassStat toDomain(DailyStudyStatsJpaEntity entity) {
         return new LessonGrassStat(
                 entity.getMemberId(),
                 entity.getStatDate(),

@@ -1,11 +1,12 @@
 package com.wanted.backend.domain.stats.infrastructure.persistence;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import com.wanted.backend.domain.study_timer.infrastructure.persistence.DailyStudyStatsJpaEntity;
+import org.springframework.data.repository.Repository;
 
 import java.time.LocalDate;
 import java.util.Optional;
 
-public interface SpringDataStatsDailyStudyStatsRepository extends JpaRepository<StatsDailyStudyStatsJpaEntity, Long> {
+public interface SpringDataStatsDailyStudyStatsRepository extends Repository<DailyStudyStatsJpaEntity, Long> {
 
-    Optional<StatsDailyStudyStatsJpaEntity> findByMemberIdAndStatDate(Long memberId, LocalDate statDate);
+    Optional<DailyStudyStatsJpaEntity> findByMemberIdAndStatDate(Long memberId, LocalDate statDate);
 }

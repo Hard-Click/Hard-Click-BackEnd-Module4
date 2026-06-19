@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.stats.infrastructure.persistence;
 
 import com.wanted.backend.domain.stats.domain.model.DailyStudyStat;
+import com.wanted.backend.domain.study_timer.infrastructure.persistence.DailyStudyStatsJpaEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -29,7 +30,7 @@ class StatsDailyStudyStatsRepositoryAdapterTest {
         LocalDate date = LocalDate.parse("2026-06-18");
         LocalDateTime now = LocalDateTime.parse("2026-06-18T23:59:59");
         when(repository.findByMemberIdAndStatDate(1L, date))
-                .thenReturn(Optional.of(new StatsDailyStudyStatsJpaEntity(
+                .thenReturn(Optional.of(new DailyStudyStatsJpaEntity(
                         1L,
                         date,
                         3,

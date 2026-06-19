@@ -27,7 +27,7 @@ public class GetLessonGrassService implements GetLessonGrassUseCase {
     private final Clock clock;
 
     @Override
-    @Cacheable(cacheNames = "grassLessons", key = "#query.memberId()")
+    @Cacheable(cacheNames = "grassLessons", key = "#query.memberId() + ':' + T(java.time.LocalDate).now(@clock)")
     public List<LessonGrassView> handle(GetLessonGrassQuery query) {
         validate(query);
 

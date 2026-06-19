@@ -3,6 +3,8 @@ package com.wanted.backend.domain.grass.presentation.api;
 import com.wanted.backend.domain.grass.application.query.GetLessonGrassQuery;
 import com.wanted.backend.domain.grass.application.usecase.GetLessonGrassUseCase;
 import com.wanted.backend.global.common.ApiResponse;
+import com.wanted.backend.global.exception.BusinessException;
+import com.wanted.backend.global.exception.ErrorCode;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,9 +33,14 @@ public class GrassController {
     public ResponseEntity<ApiResponse<List<GetLessonGrassUseCase.LessonGrassView>>> lessons(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
+        Long memberId = userDetails != null ? userDetails.getMemberId() : null;
+        if (memberId == null) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+
         List<GetLessonGrassUseCase.LessonGrassView> result =
                 getLessonGrassUseCase.handle(new GetLessonGrassQuery(
-                        userDetails.getMemberId()
+                        memberId
                 ));
 
         return ApiResponse.success("수강량 잔디 데이터를 조회했습니다.", result);
