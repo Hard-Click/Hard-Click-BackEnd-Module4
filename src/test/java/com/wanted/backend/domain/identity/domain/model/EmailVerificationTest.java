@@ -3,7 +3,10 @@ package com.wanted.backend.domain.identity.domain.model;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class EmailVerificationTest {
 
@@ -12,7 +15,8 @@ class EmailVerificationTest {
     void verify_success() {
         EmailVerification verification = EmailVerification.create(
                 "user@example.com",
-                EmailPurpose.SIGNUP
+                EmailPurpose.SIGNUP,
+                Duration.ofMinutes(3)
         );
 
         verification.verify(verification.getCode());
@@ -26,9 +30,31 @@ class EmailVerificationTest {
     void create_generatesSixDigitNumericCode() {
         EmailVerification verification = EmailVerification.create(
                 "user@example.com",
-                EmailPurpose.SIGNUP
+                EmailPurpose.SIGNUP,
+                Duration.ofMinutes(3)
         );
 
         assertThat(verification.getCode()).matches("\\d{6}");
+        assertThat(verification.getCodeHash()).hasSize(64);
+        assertThat(verification.getCodeHash()).isNotEqualTo(verification.getCode());
+    }
+
+    @Test
+    void create_rejectsInvalidCodeTtl() {
+        assertThatThrownBy(() -> EmailVerification.create(
+                "user@example.com",
+                EmailPurpose.SIGNUP,
+                null
+        )).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> EmailVerification.create(
+                "user@example.com",
+                EmailPurpose.SIGNUP,
+                Duration.ZERO
+        )).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> EmailVerification.create(
+                "user@example.com",
+                EmailPurpose.SIGNUP,
+                Duration.ofSeconds(-1)
+        )).isInstanceOf(IllegalArgumentException.class);
     }
 }

@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.time.Duration;
 import java.util.Date;
 
 @Component
@@ -81,6 +82,10 @@ public class JwtProvider {
 
     public String getTokenType(String token) {
         return parseClaims(token).getBody().get("tokenType", String.class);
+    }
+
+    public Duration getRefreshTokenExpiration() {
+        return Duration.ofMillis(refreshTokenExpirationMs);
     }
 
     private Jws<Claims> parseClaims(String token) {

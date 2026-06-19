@@ -87,9 +87,10 @@ public class PostController {
             @PathVariable(required = false) BoardType boardType,
             @RequestParam(defaultValue = "latest") PostSortType sort,
             @RequestParam(required = false) String keyword,
-            @RequestParam(defaultValue = "0") int page) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
-        PostListResponse response = postQueryUseCase.getList(boardType, sort, keyword, page);
+        PostListResponse response = postQueryUseCase.getList(boardType, sort, keyword, page, size);
         return ApiResponse.success("게시글 목록 조회 성공", response);
     }
 
@@ -109,9 +110,10 @@ public class PostController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(defaultValue = "latest") PostSortType sort,
             @RequestParam(required = false) String keyword,
-            @RequestParam(defaultValue = "0") int page) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
-        PostListResponse response = postQueryUseCase.getList(null, sort, keyword, page);
+        PostListResponse response = postQueryUseCase.getList(null, sort, keyword, page, size);
         return ApiResponse.success("게시글 목록 조회 성공", response);
     }
 
