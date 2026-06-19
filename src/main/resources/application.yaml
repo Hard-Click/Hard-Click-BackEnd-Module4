@@ -2,11 +2,17 @@ spring:
   application:
     name: hard-click
 
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+
   datasource:
     url: ${DB_URL:jdbc:mysql://localhost:3306/Hard-Click}
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 10
 
   jpa:
     hibernate:
@@ -46,10 +52,25 @@ jwt:
 
 server:
   port: 8080
+  tomcat:
+    threads:
+      max: 400
+      min-spare: 50
+    accept-count: 500
+    max-connections: 10000
 
 identity:
+  redis:
+    mutation-retry-attempts: ${IDENTITY_REDIS_MUTATION_RETRY_ATTEMPTS:3}
+
   email:
     allowed-domain: gmail.com
+    code-ttl: 300000
+    verified-token-ttl: 300000
+    processing-reservation-ttl: 300000
+    completion-retry-attempts: ${IDENTITY_EMAIL_COMPLETION_RETRY_ATTEMPTS:3}
+    password-reset-daily-limit: ${IDENTITY_EMAIL_PASSWORD_RESET_DAILY_LIMIT:3}
+
   profile-image:
     upload-dir: uploads/profiles
     url: /uploads/profiles
@@ -63,9 +84,31 @@ community:
     comment-url: /uploads/comments
     max-size: 5242880
 
+grass:
+  lesson:
+    max-level: ${GRASS_LESSON_MAX_LEVEL:4}
+
+study-timer:
+  member-lock:
+    timeout-milliseconds: 3000
+
 logging:
   config: classpath:logback-spring.xml
   level:
     com.wanted.backend: INFO
     org.hibernate.SQL: WARN
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+  health:
+    mail:
+      enabled: false
+  metrics:
+    tags:
+      application: ${spring.application.name}
