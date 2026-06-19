@@ -28,6 +28,12 @@ public class StudyTimerSessionRepositoryAdapter implements StudyTimerSessionRepo
     }
 
     @Override
+    public Optional<StudyTimerSession> findRunningByMemberId(Long memberId) {
+        return repository.findByMemberIdAndStatus(memberId, StudyTimerSessionStatus.RUNNING)
+                .map(this::toDomain);
+    }
+
+    @Override
     public Optional<StudyTimerSession> findById(Long sessionId) {
         return repository.findById(sessionId).map(this::toDomain);
     }

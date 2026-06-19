@@ -3,7 +3,7 @@ name: CD
 on:
   push:
     branches:
-      - develop
+      - main
 
 jobs:
   build-and-deploy:
@@ -51,6 +51,8 @@ jobs:
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
             REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+            S3_BUCKET=${{ secrets.S3_BUCKET }}
+            MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
             ENVEOF
 
             cd ~/hard-click

@@ -59,20 +59,19 @@ server:
     accept-count: 500
     max-connections: 10000
 
+aws:
+  s3:
+    bucket: ${S3_BUCKET}
+    region: ${AWS_REGION:ap-northeast-2}
+
 identity:
   email:
     allowed-domain: gmail.com
   profile-image:
-    upload-dir: uploads/profiles
-    url: /uploads/profiles
     max-size: 5242880
 
 community:
   image:
-    post-dir: uploads/posts
-    post-url: /uploads/posts
-    comment-dir: uploads/comments
-    comment-url: /uploads/comments
     max-size: 5242880
 
 logging:
@@ -85,7 +84,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health, prometheus
+        include: health, prometheus, info
   endpoint:
     health:
       show-details: when-authorized
@@ -95,3 +94,10 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
+    distribution:
+      slo:
+        payment.processing.duration: 100ms, 250ms, 500ms, 1000ms, 2000ms, 5000ms, 10000ms
+      percentiles-histogram:
+        payment.processing.duration: true
+      percentiles:
+        payment.processing.duration: 0.5, 0.95, 0.99
