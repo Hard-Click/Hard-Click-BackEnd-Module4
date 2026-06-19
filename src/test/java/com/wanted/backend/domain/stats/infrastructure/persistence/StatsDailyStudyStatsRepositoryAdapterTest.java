@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.stats.infrastructure.persistence;
 
 import com.wanted.backend.domain.stats.domain.model.DailyStudyStat;
+import com.wanted.backend.domain.study_timer.infrastructure.persistence.DailyStudyStatsJpaEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -13,15 +14,15 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class DailyStudyStatsRepositoryAdapterTest {
+class StatsDailyStudyStatsRepositoryAdapterTest {
 
-    private SpringDataDailyStudyStatsRepository repository;
-    private DailyStudyStatsRepositoryAdapter adapter;
+    private SpringDataStatsDailyStudyStatsRepository repository;
+    private StatsDailyStudyStatsRepositoryAdapter adapter;
 
     @BeforeEach
     void setUp() {
-        repository = mock(SpringDataDailyStudyStatsRepository.class);
-        adapter = new DailyStudyStatsRepositoryAdapter(repository);
+        repository = mock(SpringDataStatsDailyStudyStatsRepository.class);
+        adapter = new StatsDailyStudyStatsRepositoryAdapter(repository);
     }
 
     @Test

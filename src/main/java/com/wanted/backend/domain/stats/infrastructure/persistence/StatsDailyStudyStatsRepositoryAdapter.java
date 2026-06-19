@@ -2,6 +2,7 @@ package com.wanted.backend.domain.stats.infrastructure.persistence;
 
 import com.wanted.backend.domain.stats.domain.model.DailyStudyStat;
 import com.wanted.backend.domain.stats.domain.repository.DailyStudyStatsRepository;
+import com.wanted.backend.domain.study_timer.infrastructure.persistence.DailyStudyStatsJpaEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -10,9 +11,9 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class DailyStudyStatsRepositoryAdapter implements DailyStudyStatsRepository {
+public class StatsDailyStudyStatsRepositoryAdapter implements DailyStudyStatsRepository {
 
-    private final SpringDataDailyStudyStatsRepository repository;
+    private final SpringDataStatsDailyStudyStatsRepository repository;
 
     @Override
     public Optional<DailyStudyStat> findByMemberIdAndStatDate(Long memberId, LocalDate statDate) {
