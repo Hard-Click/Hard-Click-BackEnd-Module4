@@ -5,8 +5,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,8 +18,11 @@ import java.time.LocalDateTime;
 @Getter
 @Table(
         name = "daily_study_stats",
-        indexes = {
-                @Index(name = "idx_daily_study_stats_member_id_stat_date", columnList = "member_id,stat_date")
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_daily_study_stats_member_id_stat_date",
+                        columnNames = {"member_id", "stat_date"}
+                )
         }
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

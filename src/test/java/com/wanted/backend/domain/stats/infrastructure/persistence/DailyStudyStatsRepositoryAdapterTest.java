@@ -49,4 +49,15 @@ class DailyStudyStatsRepositoryAdapterTest {
         assertThat(result.orElseThrow().completedLessonCount()).isEqualTo(2);
         verify(repository).findByMemberIdAndStatDate(1L, date);
     }
+
+    @Test
+    void returnsEmptyWhenStatDoesNotExist() {
+        LocalDate date = LocalDate.parse("2026-06-18");
+        when(repository.findByMemberIdAndStatDate(1L, date)).thenReturn(Optional.empty());
+
+        Optional<DailyStudyStat> result = adapter.findByMemberIdAndStatDate(1L, date);
+
+        assertThat(result).isEmpty();
+        verify(repository).findByMemberIdAndStatDate(1L, date);
+    }
 }

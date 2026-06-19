@@ -14,6 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class GetDailyStudyStatServiceTest {
@@ -65,9 +66,22 @@ class GetDailyStudyStatServiceTest {
     }
 
     @Test
+    void rejectsNullMemberId() {
+        LocalDate date = LocalDate.parse("2026-06-18");
+
+        assertThatThrownBy(() -> service.handle(new GetDailyStudyStatQuery(null, date)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("회원 ID는 필수입니다.");
+
+        verifyNoInteractions(repository);
+    }
+
+    @Test
     void rejectsNullDate() {
         assertThatThrownBy(() -> service.handle(new GetDailyStudyStatQuery(1L, null)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("조회 날짜는 필수입니다.");
+
+        verifyNoInteractions(repository);
     }
 }
