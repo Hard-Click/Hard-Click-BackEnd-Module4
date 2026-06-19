@@ -6,7 +6,6 @@ import com.wanted.backend.domain.grass.domain.model.StudyTimeGrassStat;
 import com.wanted.backend.domain.grass.domain.policy.StudyTimeGrassLevelPolicy;
 import com.wanted.backend.domain.grass.domain.repository.StudyTimeGrassRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +26,6 @@ public class GetStudyTimeGrassService implements GetStudyTimeGrassUseCase {
     private final Clock clock;
 
     @Override
-    @Cacheable(cacheNames = "grassStudyTime", key = "#query.memberId() + ':' + T(java.time.LocalDate).now(@clock)")
     public List<StudyTimeGrassView> handle(GetStudyTimeGrassQuery query) {
         LocalDate today = LocalDate.now(clock);
         LocalDate startDate = LocalDate.of(today.getYear(), Month.JANUARY, 1);

@@ -68,6 +68,34 @@ class GetStudyTimeGrassServiceTest {
     }
 
     @Test
+    void returnsLeapYearStudyTimeGrassWith366Days() {
+        Clock leapYearClock = Clock.fixed(Instant.parse("2024-12-31T00:00:00Z"), ZoneId.of("Asia/Seoul"));
+        GetStudyTimeGrassService leapYearService = new GetStudyTimeGrassService(
+                repository,
+                new StudyTimeGrassLevelPolicy(List.of(1, 1800, 3600, 7200)),
+                leapYearClock
+        );
+
+        when(repository.findByMemberIdAndDateBetween(
+                1L,
+                LocalDate.parse("2024-01-01"),
+                LocalDate.parse("2024-12-31")
+        )).thenReturn(List.of(
+                new StudyTimeGrassStat(1L, LocalDate.parse("2024-12-31"), 7200)
+        ));
+
+        List<GetStudyTimeGrassUseCase.StudyTimeGrassView> result =
+                leapYearService.handle(new GetStudyTimeGrassQuery(1L));
+
+        assertThat(result).hasSize(366);
+        assertThat(result.get(0).date()).isEqualTo(LocalDate.parse("2024-01-01"));
+        assertThat(result.get(365).date()).isEqualTo(LocalDate.parse("2024-12-31"));
+        assertThat(result.get(365).studySeconds()).isEqualTo(7200);
+        assertThat(result.get(365).level()).isEqualTo(4);
+        assertThat(result.get(365).isFuture()).isFalse();
+    }
+
+    @Test
     void sumsDuplicatedDateRowsDefensively() {
         when(repository.findByMemberIdAndDateBetween(
                 1L,

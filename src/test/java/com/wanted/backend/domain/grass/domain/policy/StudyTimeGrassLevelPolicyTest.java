@@ -30,6 +30,30 @@ class StudyTimeGrassLevelPolicyTest {
     }
 
     @Test
+    void rejectsNullThresholds() {
+        assertThatThrownBy(() -> new StudyTimeGrassLevelPolicy(null))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void rejectsEmptyThresholds() {
+        assertThatThrownBy(() -> new StudyTimeGrassLevelPolicy(List.of()))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void rejectsNullThresholdValue() {
+        assertThatThrownBy(() -> new StudyTimeGrassLevelPolicy(java.util.Arrays.asList(1, null, 3600)))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void rejectsZeroThresholdValue() {
+        assertThatThrownBy(() -> new StudyTimeGrassLevelPolicy(List.of(1, 0, 3600)))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void rejectsNegativeStudySeconds() {
         StudyTimeGrassLevelPolicy policy = new StudyTimeGrassLevelPolicy(List.of(1, 1800, 3600, 7200));
 
