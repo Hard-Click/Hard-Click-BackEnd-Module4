@@ -78,6 +78,8 @@ community:
 grass:
   lesson:
     max-level: ${GRASS_LESSON_MAX_LEVEL:4}
+  study-time:
+    level-threshold-seconds: ${GRASS_STUDY_TIME_LEVEL_THRESHOLD_SECONDS:1,1800,3600,7200}
 
 study-timer:
   member-lock:
