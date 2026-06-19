@@ -15,6 +15,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.expression.WebExpressionAuthorizationManager;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -71,7 +72,11 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/actuator/health"
                         ).permitAll()
-                        .requestMatchers("/actuator/prometheus").permitAll()
+                        // Prometheus는 같은 Docker 네트워크(브리지 대역) 또는 localhost에서만 스크랩하므로
+                        // 외부 인터넷으로 메트릭이 그대로 노출되지 않도록 발신 IP를 제한한다.
+                        .requestMatchers("/actuator/prometheus").access(
+                                new WebExpressionAuthorizationManager(
+                                        "hasIpAddress('127.0.0.1') or hasIpAddress('::1') or hasIpAddress('172.16.0.0/12')"))
                         .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/courses", "/api/courses/*","/api/courses/*/reviews").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/courses").hasRole("INSTRUCTOR")

@@ -31,7 +31,7 @@ public class MyPaymentHistoryService implements GetMyPaymentHistoryUseCase {
         PageRequest pageRequest = PageRequest.of(
                 Math.max(page, 0),
                 normalizeSize(size),
-                Sort.by(Sort.Direction.DESC, "paidAt")
+                Sort.by(Sort.Direction.DESC, "paidAt", "id")
         );
         Page<MyPaymentHistoryQueryPort.MyPaymentHistoryData> histories =
                 myPaymentHistoryQueryPort.findByMemberId(memberId, pageRequest);

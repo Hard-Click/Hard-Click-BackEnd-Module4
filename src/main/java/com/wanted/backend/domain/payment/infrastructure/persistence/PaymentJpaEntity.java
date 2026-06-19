@@ -16,7 +16,8 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Table(name = "payments", indexes = {
-        @Index(name = "idx_payments_member_id", columnList = "member_id")
+        @Index(name = "idx_payments_member_id", columnList = "member_id"),
+        @Index(name = "idx_payments_member_id_paid_at_id", columnList = "member_id, paid_at DESC, payment_id DESC")
 })
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PaymentJpaEntity {
