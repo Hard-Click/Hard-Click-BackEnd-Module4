@@ -86,15 +86,16 @@ public class AdminReportQueryAdapter implements AdminReportQueryPort {
             return Optional.empty();
         }
 
+        ReportJpaEntity representativeReport = reports.get(0);
         DetailTargetContent targetContent = findDetailTargetContent(
                 requestedReport.getTargetType(),
                 requestedReport.getTargetId(),
                 requestedReport.getReportedMemberId()
         );
-        MemberInfo reporter = findMemberInfo(requestedReport.getReporterId());
+        MemberInfo reporter = findMemberInfo(representativeReport.getReporterId());
 
         return Optional.of(new AdminReportDetailResult(
-                requestedReport.getId(),
+                representativeReport.getId(),
                 requestedReport.getTargetType(),
                 requestedReport.getTargetId(),
                 targetContent.title(),
@@ -104,11 +105,11 @@ public class AdminReportQueryAdapter implements AdminReportQueryPort {
                 findMemberName(targetContent.authorId()),
                 reports.size(),
                 aggregateReasonCounts(reports),
-                requestedReport.getReporterId(),
+                representativeReport.getReporterId(),
                 reporter.name(),
                 reporter.username(),
-                normalizeStatus(requestedReport.getStatus()),
-                requestedReport.getMemo()
+                normalizeStatus(representativeReport.getStatus()),
+                representativeReport.getMemo()
         ));
     }
 
@@ -121,12 +122,13 @@ public class AdminReportQueryAdapter implements AdminReportQueryPort {
                 continue;
             }
             for (String value : report.getReportTypes().split(",")) {
+                ReportType type;
                 try {
-                    ReportType type = ReportType.valueOf(value.trim());
-                    counts.merge(type, 1, Integer::sum);
+                    type = ReportType.valueOf(value.trim());
                 } catch (IllegalArgumentException ignored) {
-                    // Unknown legacy values cannot be represented by ReportType.
+                    type = ReportType.OTHER;
                 }
+                counts.merge(type, 1, Integer::sum);
             }
         }
 
