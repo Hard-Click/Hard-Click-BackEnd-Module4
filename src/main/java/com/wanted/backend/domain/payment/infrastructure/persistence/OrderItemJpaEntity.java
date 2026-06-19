@@ -3,6 +3,7 @@ package com.wanted.backend.domain.payment.infrastructure.persistence;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -12,7 +13,9 @@ import org.hibernate.annotations.Immutable;
 @Entity
 @Getter
 @Immutable
-@Table(name = "order_items")
+@Table(name = "order_items", indexes = {
+        @Index(name = "idx_order_items_order_id", columnList = "order_id")
+})
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class OrderItemJpaEntity {
 
