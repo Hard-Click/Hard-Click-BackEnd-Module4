@@ -400,7 +400,7 @@ function validateBody201(res) {
 
     const d = body?.data;
     if (!d)                                        { m.bodyInvalid.add(1); return false; }
-    if (typeof d.paymentId      !== 'number')      { m.bodyInvalid.add(1); return false; }
+    if (typeof d.status         !== 'string')      { m.bodyInvalid.add(1); return false; }
     if (typeof d.pgTransactionId !== 'string'
         || d.pgTransactionId.length === 0)         { m.bodyInvalid.add(1); return false; }
     if (d.duplicate             !== false)         { m.bodyInvalid.add(1); return false; }
@@ -740,7 +740,8 @@ export function handleSummary(data) {
     const metrics = data.metrics;
 
     // ── 헬퍼 ───────────────────────────────────────────────────────────────
-    const v    = (name, key)    => metrics[name]?.[key]  ?? 0;
+    // k6 v2.0+: 메트릭 값이 metrics[name].values 하위에 위치
+    const v    = (name, key)    => metrics[name]?.values?.[key]  ?? 0;
     const ms   = (name, key)    => `${v(name, key).toFixed(0)}ms`;
     const cnt  = (name)         => v(name, 'count');
     const rate = (name, key)    => v(name, key);
