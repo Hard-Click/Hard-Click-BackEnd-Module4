@@ -41,5 +41,10 @@ class CachedGetYearlyGrassUseCaseTest {
 
         assertThat(cacheable).isNotNull();
         assertThat(cacheable.cacheNames()).containsExactly("grassYearly");
+        assertThat(cacheable.key())
+                .contains("#query.memberId()")
+                .contains("#query.year()")
+                .contains("LocalDate")
+                .contains("@clock");
     }
 }

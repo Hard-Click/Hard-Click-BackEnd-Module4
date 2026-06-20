@@ -8,6 +8,17 @@ public record YearlyGrassStat(
         LocalDate statDate,
         Integer watchedLessonCount
 ) {
+    public YearlyGrassStat {
+        if (memberId == null) {
+            throw new IllegalArgumentException("회원 ID는 필수입니다.");
+        }
+        if (statDate == null) {
+            throw new IllegalArgumentException("통계 날짜는 필수입니다.");
+        }
+        if (watchedLessonCount == null) {
+            throw new IllegalArgumentException("수강량은 필수입니다.");
+        }
+    }
 
     public YearlyGrassStat merge(YearlyGrassStat other) {
         if (other == null) {

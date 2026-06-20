@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.Year;
 import java.time.ZoneId;
 import java.util.List;
 
@@ -74,6 +75,30 @@ class GetYearlyGrassServiceTest {
                 );
         assertThat(result.days().get(364).date()).isEqualTo(LocalDate.parse("2026-12-31"));
         assertThat(result.days().get(364).isFuture()).isTrue();
+    }
+
+    @Test
+    void returnsLeapYearGrassWith366Days() {
+        Clock leapYearClock = Clock.fixed(
+                Instant.parse("2028-01-03T00:00:00Z"),
+                ZoneId.of("Asia/Seoul")
+        );
+        GetYearlyGrassService leapYearService = new GetYearlyGrassService(
+                repository,
+                new YearlyGrassViewMapper(new LessonGrassLevelPolicy(4)),
+                new YearlyGrassPeriodPolicy(),
+                leapYearClock
+        );
+        LocalDate startDate = LocalDate.parse("2028-01-01");
+        LocalDate today = LocalDate.parse("2028-01-03");
+        when(repository.findByMemberIdAndDateBetween(1L, startDate, today))
+                .thenReturn(List.of());
+
+        GetYearlyGrassUseCase.YearlyGrassView result =
+                leapYearService.handle(new GetYearlyGrassQuery(1L, 2028));
+
+        assertThat(result.days()).hasSize(366);
+        assertThat(result.days().get(59).date()).isEqualTo(LocalDate.parse("2028-02-29"));
     }
 
     @Test
@@ -140,5 +165,12 @@ class GetYearlyGrassServiceTest {
         assertThatThrownBy(() -> service.handle(new GetYearlyGrassQuery(1L, null)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("조회 연도는 필수입니다.");
+    }
+
+    @Test
+    void rejectsYearOverSupportedRange() {
+        assertThatThrownBy(() -> service.handle(new GetYearlyGrassQuery(1L, Year.MAX_VALUE + 1)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("조회 연도 범위를 초과했습니다.");
     }
 }
