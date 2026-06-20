@@ -110,6 +110,28 @@ class RedisRankingSummaryAdapterTest {
     }
 
     @Test
+    void skipsInvalidRankingEntriesFromRedisSortedSet() {
+        Set<ZSetOperations.TypedTuple<String>> tuples = new LinkedHashSet<>();
+        tuples.add(new DefaultTypedTuple<>("invalid-member", 9000.0));
+        tuples.add(new DefaultTypedTuple<>(" ", 7200.0));
+        tuples.add(new DefaultTypedTuple<>("2", 3600.0));
+        when(zSetOperations.zCard("ranking:study-time:daily")).thenReturn(3L);
+        when(zSetOperations.reverseRangeWithScores("ranking:study-time:daily", 0, 99))
+                .thenReturn(tuples);
+
+        var result = adapter.findByMetricAndPeriod(
+                RankingMetric.STUDY_TIME,
+                RankingPeriod.DAILY
+        );
+
+        assertThat(result.totalUsers()).isEqualTo(3L);
+        assertThat(result.entries()).hasSize(1);
+        assertThat(result.entries().get(0).rank()).isEqualTo(1L);
+        assertThat(result.entries().get(0).memberId()).isEqualTo(2L);
+        assertThat(result.entries().get(0).score()).isEqualTo(3600L);
+    }
+
+    @Test
     void returnsEmptyRankingListWhenDataDoesNotExist() {
         when(zSetOperations.zCard("ranking:study-time:weekly")).thenReturn(0L);
         when(zSetOperations.reverseRangeWithScores("ranking:study-time:weekly", 0, 99))

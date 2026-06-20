@@ -56,9 +56,20 @@ public class RedisRankingSummaryAdapter implements RankingSummaryReader, Ranking
         List<RankingEntry> entries = new ArrayList<>();
         long rank = 1L;
         for (ZSetOperations.TypedTuple<String> tuple : tuples) {
+            if (tuple == null || tuple.getValue() == null || tuple.getValue().isBlank() || tuple.getScore() == null) {
+                continue;
+            }
+
+            Long memberId;
+            try {
+                memberId = Long.valueOf(tuple.getValue());
+            } catch (NumberFormatException exception) {
+                continue;
+            }
+
             entries.add(new RankingEntry(
                     rank,
-                    Long.valueOf(tuple.getValue()),
+                    memberId,
                     Math.round(tuple.getScore())
             ));
             rank++;

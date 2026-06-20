@@ -58,6 +58,20 @@ class GetStudyTimeRankingServiceTest {
     }
 
     @Test
+    void usesMonthlyPeriodByDefault() {
+        when(rankingListReader.findByMetricAndPeriod(RankingMetric.STUDY_TIME, RankingPeriod.MONTHLY))
+                .thenReturn(RankingList.empty(0L));
+
+        GetStudyTimeRankingUseCase.StudyTimeRankingView result =
+                service.handle(new GetStudyTimeRankingQuery(null));
+
+        assertThat(result.period()).isEqualTo("monthly");
+        assertThat(result.totalUsers()).isZero();
+        assertThat(result.rankings()).isEmpty();
+        verify(rankingListReader).findByMetricAndPeriod(RankingMetric.STUDY_TIME, RankingPeriod.MONTHLY);
+    }
+
+    @Test
     void returnsEmptyRankingWhenDataDoesNotExist() {
         when(rankingListReader.findByMetricAndPeriod(RankingMetric.STUDY_TIME, RankingPeriod.WEEKLY))
                 .thenReturn(RankingList.empty(0L));
