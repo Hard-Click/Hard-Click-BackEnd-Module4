@@ -2,8 +2,10 @@ package com.wanted.backend.domain.grass.presentation.api;
 
 import com.wanted.backend.domain.grass.application.query.GetLessonGrassQuery;
 import com.wanted.backend.domain.grass.application.query.GetStudyTimeGrassQuery;
+import com.wanted.backend.domain.grass.application.query.GetYearlyGrassQuery;
 import com.wanted.backend.domain.grass.application.usecase.GetLessonGrassUseCase;
 import com.wanted.backend.domain.grass.application.usecase.GetStudyTimeGrassUseCase;
+import com.wanted.backend.domain.grass.application.usecase.GetYearlyGrassUseCase;
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
@@ -14,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,6 +30,7 @@ public class GrassController {
 
     private final GetLessonGrassUseCase getLessonGrassUseCase;
     private final GetStudyTimeGrassUseCase getStudyTimeGrassUseCase;
+    private final GetYearlyGrassUseCase getYearlyGrassUseCase;
 
     @GetMapping("/lessons")
     @Operation(
@@ -68,5 +72,28 @@ public class GrassController {
                 ));
 
         return ApiResponse.success("순공시간 잔디 데이터를 조회했습니다.", result);
+    }
+
+    @GetMapping("/yearly")
+    @Operation(
+            summary = "연간 잔디 조회",
+            description = "현재 로그인 사용자의 특정 연도 날짜별 학습 값 기준 연간 잔디 데이터를 조회합니다."
+    )
+    public ResponseEntity<ApiResponse<GetYearlyGrassUseCase.YearlyGrassView>> yearly(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam Integer year
+    ) {
+        Long memberId = userDetails != null ? userDetails.getMemberId() : null;
+        if (memberId == null) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+
+        GetYearlyGrassUseCase.YearlyGrassView result =
+                getYearlyGrassUseCase.handle(new GetYearlyGrassQuery(
+                        memberId,
+                        year
+                ));
+
+        return ApiResponse.success("연간 잔디 데이터를 조회했습니다.", result);
     }
 }
