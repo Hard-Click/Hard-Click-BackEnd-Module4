@@ -98,7 +98,7 @@ study-timer:
 
 ranking:
   redis:
-    key-prefix: ${RANKING_REDIS_KEY_PREFIX:ranking}
+    key-prefix: ${RANKING_REDIS_KEY_PREFIX:${spring.profiles.active:local}:ranking}
 
 logging:
   config: classpath:logback-spring.xml

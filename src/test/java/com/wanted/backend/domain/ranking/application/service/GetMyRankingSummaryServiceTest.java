@@ -68,6 +68,22 @@ class GetMyRankingSummaryServiceTest {
     }
 
     @Test
+    void usesStudyTimeMetricAndMonthlyPeriodWhenParametersAreBlank() {
+        when(rankingSummaryReader.findByMetricAndPeriodAndMemberId(RankingMetric.STUDY_TIME, RankingPeriod.MONTHLY, 1L))
+                .thenReturn(RankingSummary.notRanked(200L));
+
+        MyRankingSummaryView result = service.handle(new GetMyRankingSummaryQuery(1L, "", " "));
+
+        assertThat(result.metric()).isEqualTo("study-time");
+        assertThat(result.period()).isEqualTo("monthly");
+        assertThat(result.rank()).isNull();
+        assertThat(result.totalUsers()).isEqualTo(200L);
+        assertThat(result.topPercent()).isEqualTo(0.0);
+        verify(rankingSummaryReader)
+                .findByMetricAndPeriodAndMemberId(RankingMetric.STUDY_TIME, RankingPeriod.MONTHLY, 1L);
+    }
+
+    @Test
     void rejectsInvalidMetric() {
         assertThatThrownBy(() -> service.handle(new GetMyRankingSummaryQuery(1L, "likes", "monthly")))
                 .isInstanceOf(IllegalArgumentException.class)
