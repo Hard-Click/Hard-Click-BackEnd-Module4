@@ -16,6 +16,7 @@ import com.wanted.backend.domain.report_moderation.domain.model.AdminReportDecis
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -88,6 +89,7 @@ public class AdminReportCommandAdapter implements AdminReportCommandPort {
                 """, ReportJpaEntity.class)
                 .setParameter("targetType", report.getTargetType())
                 .setParameter("targetId", report.getTargetId())
+                .setLockMode(LockModeType.PESSIMISTIC_WRITE)
                 .getResultList();
     }
 

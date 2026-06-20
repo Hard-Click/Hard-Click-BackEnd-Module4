@@ -160,9 +160,7 @@ public class AdminReportQueryAdapter implements AdminReportQueryPort {
                 }
                 yield new DetailTargetContent(
                         post.getTitle(),
-                        post.getStatus() == PostStatus.ACTIVE
-                                ? post.getContent()
-                                : DETAIL_DELETED_POST_CONTENT,
+                        postDetailContent(post),
                         "/posts/" + post.getId(),
                         post.getAuthorId()
                 );
@@ -265,7 +263,11 @@ public class AdminReportQueryAdapter implements AdminReportQueryPort {
             sql.append(" and latest.target_type = :targetType");
         }
         if (query.status() != null) {
-            sql.append(" and latest.status = :status");
+            if (query.status() == ReportStatus.PENDING) {
+                sql.append(" and (latest.status = :status or latest.status is null)");
+            } else {
+                sql.append(" and latest.status = :status");
+            }
         }
 
         Query countQuery = entityManager.createNativeQuery(sql.toString())
@@ -293,7 +295,11 @@ public class AdminReportQueryAdapter implements AdminReportQueryPort {
                 where report.targetType = latest.targetType
                   and report.targetId = latest.targetId
                   and (:targetType is null or latest.targetType = :targetType)
-                  and (:status is null or latest.status = :status)
+                  and (
+                      :status is null
+                      or latest.status = :status
+                      or (:status = com.wanted.backend.domain.community.domain.model.ReportStatus.PENDING and latest.status is null)
+                  )
                   and not exists (
                       select newer.id
                       from ReportJpaEntity newer
@@ -378,6 +384,18 @@ public class AdminReportQueryAdapter implements AdminReportQueryPort {
             return Comment.ADMIN_DELETED_MESSAGE;
         }
         return DELETED_COMMENT_CONTENT;
+    }
+
+    private String postDetailContent(PostJpaEntity post) {
+        if (post.getStatus() == PostStatus.ACTIVE) {
+            return post.getContent();
+        }
+
+        if (post.getStatus() == PostStatus.ADMIN_DELETED) {
+            return DETAIL_DELETED_POST_CONTENT;
+        }
+
+        return DELETED_POST_CONTENT;
     }
 
     private String findMemberName(Long memberId) {
