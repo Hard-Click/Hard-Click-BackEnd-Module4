@@ -60,8 +60,17 @@ server:
     max-connections: 10000
 
 identity:
+  redis:
+    mutation-retry-attempts: ${IDENTITY_REDIS_MUTATION_RETRY_ATTEMPTS:3}
+
   email:
     allowed-domain: gmail.com
+    code-ttl: ${IDENTITY_EMAIL_CODE_TTL:300000}
+    verified-token-ttl: ${IDENTITY_EMAIL_VERIFIED_TOKEN_TTL:300000}
+    processing-reservation-ttl: ${IDENTITY_EMAIL_PROCESSING_RESERVATION_TTL:300000}
+    completion-retry-attempts: ${IDENTITY_EMAIL_COMPLETION_RETRY_ATTEMPTS:3}
+    password-reset-daily-limit: ${IDENTITY_EMAIL_PASSWORD_RESET_DAILY_LIMIT:3}
+
   profile-image:
     upload-dir: uploads/profiles
     url: /uploads/profiles
