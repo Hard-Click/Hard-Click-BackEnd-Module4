@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.grass.infrastructure.config;
 
 import com.wanted.backend.domain.grass.domain.policy.GrassLearningStatusPolicy;
+import com.wanted.backend.domain.grass.domain.policy.GrassViewModePolicy;
 import com.wanted.backend.domain.grass.domain.policy.LessonGrassLevelPolicy;
 import com.wanted.backend.domain.grass.domain.policy.MonthlyGrassPeriodPolicy;
 import com.wanted.backend.domain.grass.domain.policy.StudyTimeGrassLevelPolicy;
@@ -15,6 +16,11 @@ public class GrassPolicyConfig {
     @Bean
     public GrassLearningStatusPolicy grassLearningStatusPolicy() {
         return new GrassLearningStatusPolicy();
+    }
+
+    @Bean
+    public GrassViewModePolicy grassViewModePolicy() {
+        return new GrassViewModePolicy();
     }
 
     @Bean

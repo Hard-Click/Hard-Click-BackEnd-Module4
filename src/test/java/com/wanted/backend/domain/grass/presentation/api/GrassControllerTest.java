@@ -1,7 +1,9 @@
 package com.wanted.backend.domain.grass.presentation.api;
 
 import com.wanted.backend.domain.grass.application.query.GetStudyStreakQuery;
+import com.wanted.backend.domain.grass.application.query.GetGrassViewQuery;
 import com.wanted.backend.domain.grass.application.usecase.GetDailyGrassDetailUseCase;
+import com.wanted.backend.domain.grass.application.usecase.GetGrassViewUseCase;
 import com.wanted.backend.domain.grass.application.usecase.GetLessonGrassUseCase;
 import com.wanted.backend.domain.grass.application.usecase.GetMonthlyGrassUseCase;
 import com.wanted.backend.domain.grass.application.usecase.GetStudyStreakUseCase;
@@ -19,6 +21,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.mockito.Mockito.when;
@@ -39,10 +42,57 @@ class GrassControllerTest {
     @MockitoBean private GetYearlyGrassUseCase getYearlyGrassUseCase;
     @MockitoBean private GetDailyGrassDetailUseCase getDailyGrassDetailUseCase;
     @MockitoBean private GetStudyStreakUseCase getStudyStreakUseCase;
+    @MockitoBean private GetGrassViewUseCase getGrassViewUseCase;
 
     @AfterEach
     void tearDown() {
         SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    void grassReturnsOkWithGrassViewData() throws Exception {
+        CustomUserDetails userDetails = new CustomUserDetails(
+                1L,
+                "test@example.com",
+                "password",
+                false,
+                true,
+                "USER",
+                List.of(new SimpleGrantedAuthority("ROLE_USER"))
+        );
+        when(getGrassViewUseCase.handle(new GetGrassViewQuery(1L, "monthly", 2026, 6)))
+                .thenReturn(new GetGrassViewUseCase.GrassView(
+                        "monthly",
+                        2026,
+                        6,
+                        List.of(new GetGrassViewUseCase.GrassDayView(
+                                LocalDate.parse("2026-06-01"),
+                                3,
+                                2,
+                                false
+                        ))
+                ));
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        userDetails.getPassword(),
+                        userDetails.getAuthorities()
+                )
+        );
+
+        mockMvc.perform(get("/api/grass")
+                        .param("view", "monthly")
+                        .param("year", "2026")
+                        .param("month", "6"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.httpStatus").value(200))
+                .andExpect(jsonPath("$.data.view").value("monthly"))
+                .andExpect(jsonPath("$.data.year").value(2026))
+                .andExpect(jsonPath("$.data.month").value(6))
+                .andExpect(jsonPath("$.data.days[0].date").value("2026-06-01"))
+                .andExpect(jsonPath("$.data.days[0].value").value(3))
+                .andExpect(jsonPath("$.data.days[0].level").value(2))
+                .andExpect(jsonPath("$.data.days[0].isFuture").value(false));
     }
 
     @Test

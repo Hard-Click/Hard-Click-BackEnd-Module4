@@ -1,12 +1,14 @@
 package com.wanted.backend.domain.grass.presentation.api;
 
 import com.wanted.backend.domain.grass.application.query.GetDailyGrassDetailQuery;
+import com.wanted.backend.domain.grass.application.query.GetGrassViewQuery;
 import com.wanted.backend.domain.grass.application.query.GetLessonGrassQuery;
 import com.wanted.backend.domain.grass.application.query.GetMonthlyGrassQuery;
 import com.wanted.backend.domain.grass.application.query.GetStudyStreakQuery;
 import com.wanted.backend.domain.grass.application.query.GetStudyTimeGrassQuery;
 import com.wanted.backend.domain.grass.application.query.GetYearlyGrassQuery;
 import com.wanted.backend.domain.grass.application.usecase.GetDailyGrassDetailUseCase;
+import com.wanted.backend.domain.grass.application.usecase.GetGrassViewUseCase;
 import com.wanted.backend.domain.grass.application.usecase.GetLessonGrassUseCase;
 import com.wanted.backend.domain.grass.application.usecase.GetMonthlyGrassUseCase;
 import com.wanted.backend.domain.grass.application.usecase.GetStudyStreakUseCase;
@@ -43,6 +45,34 @@ public class GrassController {
     private final GetYearlyGrassUseCase getYearlyGrassUseCase;
     private final GetDailyGrassDetailUseCase getDailyGrassDetailUseCase;
     private final GetStudyStreakUseCase getStudyStreakUseCase;
+    private final GetGrassViewUseCase getGrassViewUseCase;
+
+    @GetMapping
+    @Operation(
+            summary = "잔디 보기 모드 전환 조회",
+            description = "월별 또는 연간 보기 모드에 맞는 잔디 데이터를 조회합니다."
+    )
+    public ResponseEntity<ApiResponse<GetGrassViewUseCase.GrassView>> grass(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam String view,
+            @RequestParam Integer year,
+            @RequestParam(required = false) Integer month
+    ) {
+        Long memberId = userDetails != null ? userDetails.getMemberId() : null;
+        if (memberId == null) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+
+        GetGrassViewUseCase.GrassView result =
+                getGrassViewUseCase.handle(new GetGrassViewQuery(
+                        memberId,
+                        view,
+                        year,
+                        month
+                ));
+
+        return ApiResponse.success("잔디 데이터를 조회했습니다.", result);
+    }
 
     @GetMapping("/lessons")
     @Operation(
