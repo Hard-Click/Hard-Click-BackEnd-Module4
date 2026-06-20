@@ -96,6 +96,42 @@ class GrassControllerTest {
     }
 
     @Test
+    void grassReturnsUnauthorizedWhenUserIsNotAuthenticated() throws Exception {
+        mockMvc.perform(get("/api/grass")
+                        .param("view", "monthly")
+                        .param("year", "2026")
+                        .param("month", "6"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("C003"));
+    }
+
+    @Test
+    void grassReturnsBadRequestWhenViewIsInvalid() throws Exception {
+        authenticateMember(1L);
+        when(getGrassViewUseCase.handle(new GetGrassViewQuery(1L, "weekly", 2026, null)))
+                .thenThrow(new IllegalArgumentException("잔디 보기 모드는 monthly 또는 yearly여야 합니다."));
+
+        mockMvc.perform(get("/api/grass")
+                        .param("view", "weekly")
+                        .param("year", "2026"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("C001"));
+    }
+
+    @Test
+    void grassReturnsBadRequestWhenMonthIsMissingInMonthlyView() throws Exception {
+        authenticateMember(1L);
+        when(getGrassViewUseCase.handle(new GetGrassViewQuery(1L, "monthly", 2026, null)))
+                .thenThrow(new IllegalArgumentException("월별 잔디 조회 시 month는 필수입니다."));
+
+        mockMvc.perform(get("/api/grass")
+                        .param("view", "monthly")
+                        .param("year", "2026"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("C001"));
+    }
+
+    @Test
     void dailyDetailReturnsBadRequestWhenDateFormatIsInvalid() throws Exception {
         mockMvc.perform(get("/api/grass/days/not-a-date"))
                 .andExpect(status().isBadRequest())
@@ -141,5 +177,24 @@ class GrassControllerTest {
         mockMvc.perform(get("/api/grass/streak"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.errorCode").value("C003"));
+    }
+
+    private void authenticateMember(Long memberId) {
+        CustomUserDetails userDetails = new CustomUserDetails(
+                memberId,
+                "test@example.com",
+                "password",
+                false,
+                true,
+                "USER",
+                List.of(new SimpleGrantedAuthority("ROLE_USER"))
+        );
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        userDetails.getPassword(),
+                        userDetails.getAuthorities()
+                )
+        );
     }
 }

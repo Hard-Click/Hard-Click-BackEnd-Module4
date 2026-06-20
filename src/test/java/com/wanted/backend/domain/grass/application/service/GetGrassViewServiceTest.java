@@ -61,6 +61,8 @@ class GetGrassViewServiceTest {
         assertThat(result.days()).hasSize(1);
         assertThat(result.days().get(0).date()).isEqualTo(LocalDate.parse("2026-06-01"));
         assertThat(result.days().get(0).value()).isEqualTo(2);
+        assertThat(result.days().get(0).level()).isEqualTo(2);
+        assertThat(result.days().get(0).isFuture()).isFalse();
         verify(getMonthlyGrassUseCase).handle(argThat(query ->
                 query.memberId().equals(1L)
                         && query.year().equals(2026)
@@ -90,6 +92,8 @@ class GetGrassViewServiceTest {
         assertThat(result.days()).hasSize(1);
         assertThat(result.days().get(0).date()).isEqualTo(LocalDate.parse("2026-01-01"));
         assertThat(result.days().get(0).value()).isEqualTo(1);
+        assertThat(result.days().get(0).level()).isEqualTo(1);
+        assertThat(result.days().get(0).isFuture()).isFalse();
         verify(getYearlyGrassUseCase).handle(argThat(query ->
                 query.memberId().equals(1L)
                         && query.year().equals(2026)
@@ -109,6 +113,26 @@ class GetGrassViewServiceTest {
         assertThatThrownBy(() -> service.handle(new GetGrassViewQuery(1L, "monthly", 2026, null)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("월별 잔디 조회 시 month는 필수입니다.");
+
+        verify(getMonthlyGrassUseCase, never()).handle(any());
+        verify(getYearlyGrassUseCase, never()).handle(any());
+    }
+
+    @Test
+    void rejectsMonthlyViewWhenMonthIsLessThanOne() {
+        assertThatThrownBy(() -> service.handle(new GetGrassViewQuery(1L, "monthly", 2026, 0)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("월별 잔디 조회 시 month는 1~12여야 합니다.");
+
+        verify(getMonthlyGrassUseCase, never()).handle(any());
+        verify(getYearlyGrassUseCase, never()).handle(any());
+    }
+
+    @Test
+    void rejectsMonthlyViewWhenMonthIsGreaterThanTwelve() {
+        assertThatThrownBy(() -> service.handle(new GetGrassViewQuery(1L, "monthly", 2026, 13)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("월별 잔디 조회 시 month는 1~12여야 합니다.");
 
         verify(getMonthlyGrassUseCase, never()).handle(any());
         verify(getYearlyGrassUseCase, never()).handle(any());

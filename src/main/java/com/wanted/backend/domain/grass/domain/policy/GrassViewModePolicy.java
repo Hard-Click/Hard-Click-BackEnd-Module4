@@ -21,6 +21,9 @@ public class GrassViewModePolicy {
         if (month == null) {
             throw new IllegalArgumentException("월별 잔디 조회 시 month는 필수입니다.");
         }
+        if (month < 1 || month > 12) {
+            throw new IllegalArgumentException("월별 잔디 조회 시 month는 1~12여야 합니다.");
+        }
         return month;
     }
 }

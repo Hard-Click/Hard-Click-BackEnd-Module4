@@ -44,6 +44,8 @@ class CachedGetGrassViewUseCaseTest {
         assertThat(cacheable.key())
                 .contains("#query.memberId()")
                 .contains("#query.view()")
+                .contains("trim()")
+                .contains("toLowerCase()")
                 .contains("#query.year()")
                 .contains("#query.month()")
                 .contains("LocalDate")

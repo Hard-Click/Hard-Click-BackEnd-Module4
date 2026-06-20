@@ -40,4 +40,18 @@ class GrassViewModePolicyTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("월별 잔디 조회 시 month는 필수입니다.");
     }
+
+    @Test
+    void rejectsMonthlyViewWhenMonthIsLessThanOne() {
+        assertThatThrownBy(() -> policy.requireMonthForMonthly(0))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("월별 잔디 조회 시 month는 1~12여야 합니다.");
+    }
+
+    @Test
+    void rejectsMonthlyViewWhenMonthIsGreaterThanTwelve() {
+        assertThatThrownBy(() -> policy.requireMonthForMonthly(13))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("월별 잔디 조회 시 month는 1~12여야 합니다.");
+    }
 }
