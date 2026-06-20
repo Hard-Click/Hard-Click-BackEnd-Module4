@@ -1,9 +1,11 @@
 package com.wanted.backend.domain.grass.presentation.api;
 
+import com.wanted.backend.domain.grass.application.query.GetDailyGrassDetailQuery;
 import com.wanted.backend.domain.grass.application.query.GetLessonGrassQuery;
 import com.wanted.backend.domain.grass.application.query.GetMonthlyGrassQuery;
 import com.wanted.backend.domain.grass.application.query.GetStudyTimeGrassQuery;
 import com.wanted.backend.domain.grass.application.query.GetYearlyGrassQuery;
+import com.wanted.backend.domain.grass.application.usecase.GetDailyGrassDetailUseCase;
 import com.wanted.backend.domain.grass.application.usecase.GetLessonGrassUseCase;
 import com.wanted.backend.domain.grass.application.usecase.GetMonthlyGrassUseCase;
 import com.wanted.backend.domain.grass.application.usecase.GetStudyTimeGrassUseCase;
@@ -15,13 +17,16 @@ import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -34,6 +39,7 @@ public class GrassController {
     private final GetStudyTimeGrassUseCase getStudyTimeGrassUseCase;
     private final GetMonthlyGrassUseCase getMonthlyGrassUseCase;
     private final GetYearlyGrassUseCase getYearlyGrassUseCase;
+    private final GetDailyGrassDetailUseCase getDailyGrassDetailUseCase;
 
     @GetMapping("/lessons")
     @Operation(
@@ -100,6 +106,31 @@ public class GrassController {
                 ));
 
         return ApiResponse.success("월별 잔디 데이터를 조회했습니다.", result);
+    }
+
+    @GetMapping("/days/{date}")
+    @Operation(
+            summary = "특정 날짜 잔디 상세 조회",
+            description = "현재 로그인 사용자의 특정 날짜 수강량, 순공시간, 학습 여부를 조회합니다."
+    )
+    public ResponseEntity<ApiResponse<GetDailyGrassDetailUseCase.DailyGrassDetailView>> dailyDetail(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate date
+    ) {
+        Long memberId = userDetails != null ? userDetails.getMemberId() : null;
+        if (memberId == null) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+
+        GetDailyGrassDetailUseCase.DailyGrassDetailView result =
+                getDailyGrassDetailUseCase.handle(new GetDailyGrassDetailQuery(
+                        memberId,
+                        date
+                ));
+
+        return ApiResponse.success("잔디 상세 정보를 조회했습니다.", result);
     }
 
     @GetMapping("/yearly")
