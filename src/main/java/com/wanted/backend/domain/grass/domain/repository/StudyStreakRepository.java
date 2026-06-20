@@ -7,5 +7,10 @@ import java.util.List;
 
 public interface StudyStreakRepository {
 
-    List<StudyStreakStat> findByMemberIdAndDateLessThanEqual(Long memberId, LocalDate endDate);
+    List<StudyStreakStat> findByMemberIdAndDateLessThanEqual(
+            Long memberId,
+            LocalDate endDate,
+            int pageNumber,
+            int pageSize
+    );
 }
