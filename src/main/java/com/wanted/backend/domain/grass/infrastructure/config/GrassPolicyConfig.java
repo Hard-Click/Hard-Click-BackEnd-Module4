@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.grass.infrastructure.config;
 
+import com.wanted.backend.domain.grass.domain.policy.GrassLearningStatusPolicy;
 import com.wanted.backend.domain.grass.domain.policy.LessonGrassLevelPolicy;
 import com.wanted.backend.domain.grass.domain.policy.MonthlyGrassPeriodPolicy;
 import com.wanted.backend.domain.grass.domain.policy.StudyTimeGrassLevelPolicy;
@@ -9,6 +10,11 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class GrassPolicyConfig {
+
+    @Bean
+    public GrassLearningStatusPolicy grassLearningStatusPolicy() {
+        return new GrassLearningStatusPolicy();
+    }
 
     @Bean
     public LessonGrassLevelPolicy lessonGrassLevelPolicy(GrassLessonProperties properties) {
