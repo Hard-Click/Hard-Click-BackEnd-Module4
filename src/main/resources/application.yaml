@@ -96,6 +96,10 @@ study-timer:
   member-lock:
     timeout-milliseconds: 3000
 
+ranking:
+  redis:
+    key-prefix: ${RANKING_REDIS_KEY_PREFIX:ranking}
+
 logging:
   config: classpath:logback-spring.xml
   level:
