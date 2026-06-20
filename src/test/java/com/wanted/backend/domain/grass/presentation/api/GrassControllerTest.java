@@ -3,6 +3,7 @@ package com.wanted.backend.domain.grass.presentation.api;
 import com.wanted.backend.domain.grass.application.usecase.GetDailyGrassDetailUseCase;
 import com.wanted.backend.domain.grass.application.usecase.GetLessonGrassUseCase;
 import com.wanted.backend.domain.grass.application.usecase.GetMonthlyGrassUseCase;
+import com.wanted.backend.domain.grass.application.usecase.GetStudyStreakUseCase;
 import com.wanted.backend.domain.grass.application.usecase.GetStudyTimeGrassUseCase;
 import com.wanted.backend.domain.grass.application.usecase.GetYearlyGrassUseCase;
 import org.junit.jupiter.api.Test;
@@ -28,6 +29,7 @@ class GrassControllerTest {
     @MockitoBean private GetMonthlyGrassUseCase getMonthlyGrassUseCase;
     @MockitoBean private GetYearlyGrassUseCase getYearlyGrassUseCase;
     @MockitoBean private GetDailyGrassDetailUseCase getDailyGrassDetailUseCase;
+    @MockitoBean private GetStudyStreakUseCase getStudyStreakUseCase;
 
     @Test
     void dailyDetailReturnsBadRequestWhenDateFormatIsInvalid() throws Exception {

@@ -16,4 +16,9 @@ public interface SpringDataGrassDailyStudyStatsRepository extends Repository<Dai
     );
 
     Optional<DailyStudyStatsJpaEntity> findByMemberIdAndStatDate(Long memberId, LocalDate statDate);
+
+    List<DailyStudyStatsJpaEntity> findByMemberIdAndStatDateLessThanEqualOrderByStatDateDesc(
+            Long memberId,
+            LocalDate endDate
+    );
 }

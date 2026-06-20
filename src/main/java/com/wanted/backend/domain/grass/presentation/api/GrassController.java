@@ -3,11 +3,13 @@ package com.wanted.backend.domain.grass.presentation.api;
 import com.wanted.backend.domain.grass.application.query.GetDailyGrassDetailQuery;
 import com.wanted.backend.domain.grass.application.query.GetLessonGrassQuery;
 import com.wanted.backend.domain.grass.application.query.GetMonthlyGrassQuery;
+import com.wanted.backend.domain.grass.application.query.GetStudyStreakQuery;
 import com.wanted.backend.domain.grass.application.query.GetStudyTimeGrassQuery;
 import com.wanted.backend.domain.grass.application.query.GetYearlyGrassQuery;
 import com.wanted.backend.domain.grass.application.usecase.GetDailyGrassDetailUseCase;
 import com.wanted.backend.domain.grass.application.usecase.GetLessonGrassUseCase;
 import com.wanted.backend.domain.grass.application.usecase.GetMonthlyGrassUseCase;
+import com.wanted.backend.domain.grass.application.usecase.GetStudyStreakUseCase;
 import com.wanted.backend.domain.grass.application.usecase.GetStudyTimeGrassUseCase;
 import com.wanted.backend.domain.grass.application.usecase.GetYearlyGrassUseCase;
 import com.wanted.backend.global.common.ApiResponse;
@@ -40,6 +42,7 @@ public class GrassController {
     private final GetMonthlyGrassUseCase getMonthlyGrassUseCase;
     private final GetYearlyGrassUseCase getYearlyGrassUseCase;
     private final GetDailyGrassDetailUseCase getDailyGrassDetailUseCase;
+    private final GetStudyStreakUseCase getStudyStreakUseCase;
 
     @GetMapping("/lessons")
     @Operation(
@@ -131,6 +134,27 @@ public class GrassController {
                 ));
 
         return ApiResponse.success("잔디 상세 정보를 조회했습니다.", result);
+    }
+
+    @GetMapping("/streak")
+    @Operation(
+            summary = "연속 학습일 조회",
+            description = "현재 로그인 사용자의 오늘 기준 연속 학습일을 조회합니다."
+    )
+    public ResponseEntity<ApiResponse<GetStudyStreakUseCase.StudyStreakView>> streak(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        Long memberId = userDetails != null ? userDetails.getMemberId() : null;
+        if (memberId == null) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+
+        GetStudyStreakUseCase.StudyStreakView result =
+                getStudyStreakUseCase.handle(new GetStudyStreakQuery(
+                        memberId
+                ));
+
+        return ApiResponse.success("연속 학습일을 조회했습니다.", result);
     }
 
     @GetMapping("/yearly")
