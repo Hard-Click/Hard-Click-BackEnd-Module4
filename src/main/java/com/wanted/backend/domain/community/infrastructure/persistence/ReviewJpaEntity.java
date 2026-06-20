@@ -61,4 +61,12 @@ public class ReviewJpaEntity {
     public void update(Integer rating, String content, LocalDateTime updatedAt) {
         update(rating, content, this.status, updatedAt);
     }
+    public boolean isActive() {
+        return this.status == ReviewStatus.ACTIVE;
+    }
+
+    public void softDeleteByAdmin(LocalDateTime updatedAt) {
+        this.status = ReviewStatus.ADMIN_DELETED;
+        this.updatedAt = updatedAt;
+    }
 }

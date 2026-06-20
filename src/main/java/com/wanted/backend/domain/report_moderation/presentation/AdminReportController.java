@@ -1,10 +1,15 @@
 package com.wanted.backend.domain.report_moderation.presentation;
 
+import com.wanted.backend.domain.report_moderation.application.dto.AdminReportDecisionResult;
 import com.wanted.backend.domain.report_moderation.application.dto.AdminReportDetailResult;
 import com.wanted.backend.domain.report_moderation.application.dto.AdminReportListResult;
+import com.wanted.backend.domain.report_moderation.application.usecase.DecideAdminReportUseCase;
 import com.wanted.backend.domain.report_moderation.application.usecase.GetAdminReportDetailUseCase;
 import com.wanted.backend.domain.report_moderation.application.usecase.GetAdminReportListUseCase;
+import com.wanted.backend.domain.report_moderation.domain.model.AdminReportDecision;
+import com.wanted.backend.domain.report_moderation.presentation.request.AdminReportDecisionRequest;
 import com.wanted.backend.domain.report_moderation.presentation.request.AdminReportListRequest;
+import com.wanted.backend.domain.report_moderation.presentation.response.AdminReportDecisionResponse;
 import com.wanted.backend.domain.report_moderation.presentation.response.AdminReportDetailResponse;
 import com.wanted.backend.domain.report_moderation.presentation.response.AdminReportListResponse;
 import com.wanted.backend.global.common.ApiResponse;
@@ -17,11 +22,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Validated
@@ -32,6 +33,7 @@ public class AdminReportController {
 
     private final GetAdminReportListUseCase getAdminReportListUseCase;
     private final GetAdminReportDetailUseCase getAdminReportDetailUseCase;
+    private final DecideAdminReportUseCase decideAdminReportUseCase;
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -67,5 +69,35 @@ public class AdminReportController {
                 "신고 상세 조회 성공",
                 AdminReportDetailResponse.from(result)
         );
+    }
+    @PatchMapping("/{reportId}/decision")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(
+            summary = "신고 처리 결정",
+            description = "관리자가 신고를 반려하거나 신고 대상 콘텐츠를 관리자 삭제 처리합니다."
+    )
+    public ResponseEntity<ApiResponse<AdminReportDecisionResponse>> decideReport(
+            @Parameter(description = "신고 ID", example = "101")
+            @PathVariable
+            @Positive Long reportId,
+
+            @Valid
+            @RequestBody AdminReportDecisionRequest request
+    ) {
+        AdminReportDecisionResult result = decideAdminReportUseCase.decide(
+                request.toCommand(reportId)
+        );
+
+        return ApiResponse.success(
+                successMessage(result.decision()),
+                AdminReportDecisionResponse.from(result)
+        );
+    }
+
+    private String successMessage(AdminReportDecision decision) {
+        if (decision == AdminReportDecision.REJECT) {
+            return "신고가 반려되었습니다.";
+        }
+        return "신고 처리가 완료되었습니다.";
     }
 }

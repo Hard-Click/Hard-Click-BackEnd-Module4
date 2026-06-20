@@ -68,4 +68,17 @@ public class ReportJpaEntity {
         this.status = ReportStatus.PENDING;
         this.createdAt = createdAt;
     }
+    public boolean isProcessed() {
+        return this.status != ReportStatus.PENDING;
+    }
+
+    public void reject(String memo) {
+        this.status = ReportStatus.REJECTED;
+        this.memo = memo;
+    }
+
+    public void resolve(String memo) {
+        this.status = ReportStatus.RESOLVED;
+        this.memo = memo;
+    }
 }
