@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.grass.infrastructure.config;
 
 import com.wanted.backend.domain.grass.domain.policy.LessonGrassLevelPolicy;
+import com.wanted.backend.domain.grass.domain.policy.MonthlyGrassPeriodPolicy;
 import com.wanted.backend.domain.grass.domain.policy.StudyTimeGrassLevelPolicy;
 import com.wanted.backend.domain.grass.domain.policy.YearlyGrassPeriodPolicy;
 import org.springframework.context.annotation.Bean;
@@ -17,6 +18,11 @@ public class GrassPolicyConfig {
     @Bean
     public StudyTimeGrassLevelPolicy studyTimeGrassLevelPolicy(GrassStudyTimeProperties properties) {
         return new StudyTimeGrassLevelPolicy(properties.levelThresholdSeconds());
+    }
+
+    @Bean
+    public MonthlyGrassPeriodPolicy monthlyGrassPeriodPolicy() {
+        return new MonthlyGrassPeriodPolicy();
     }
 
     @Bean

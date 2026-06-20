@@ -1,9 +1,11 @@
 package com.wanted.backend.domain.grass.presentation.api;
 
 import com.wanted.backend.domain.grass.application.query.GetLessonGrassQuery;
+import com.wanted.backend.domain.grass.application.query.GetMonthlyGrassQuery;
 import com.wanted.backend.domain.grass.application.query.GetStudyTimeGrassQuery;
 import com.wanted.backend.domain.grass.application.query.GetYearlyGrassQuery;
 import com.wanted.backend.domain.grass.application.usecase.GetLessonGrassUseCase;
+import com.wanted.backend.domain.grass.application.usecase.GetMonthlyGrassUseCase;
 import com.wanted.backend.domain.grass.application.usecase.GetStudyTimeGrassUseCase;
 import com.wanted.backend.domain.grass.application.usecase.GetYearlyGrassUseCase;
 import com.wanted.backend.global.common.ApiResponse;
@@ -30,6 +32,7 @@ public class GrassController {
 
     private final GetLessonGrassUseCase getLessonGrassUseCase;
     private final GetStudyTimeGrassUseCase getStudyTimeGrassUseCase;
+    private final GetMonthlyGrassUseCase getMonthlyGrassUseCase;
     private final GetYearlyGrassUseCase getYearlyGrassUseCase;
 
     @GetMapping("/lessons")
@@ -72,6 +75,31 @@ public class GrassController {
                 ));
 
         return ApiResponse.success("순공시간 잔디 데이터를 조회했습니다.", result);
+    }
+
+    @GetMapping("/monthly")
+    @Operation(
+            summary = "월별 잔디 조회",
+            description = "현재 로그인 사용자의 특정 월 날짜별 학습 값 기준 월별 잔디 데이터를 조회합니다."
+    )
+    public ResponseEntity<ApiResponse<GetMonthlyGrassUseCase.MonthlyGrassView>> monthly(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam Integer year,
+            @RequestParam Integer month
+    ) {
+        Long memberId = userDetails != null ? userDetails.getMemberId() : null;
+        if (memberId == null) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+
+        GetMonthlyGrassUseCase.MonthlyGrassView result =
+                getMonthlyGrassUseCase.handle(new GetMonthlyGrassQuery(
+                        memberId,
+                        year,
+                        month
+                ));
+
+        return ApiResponse.success("월별 잔디 데이터를 조회했습니다.", result);
     }
 
     @GetMapping("/yearly")
