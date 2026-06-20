@@ -99,6 +99,7 @@ study-timer:
 ranking:
   redis:
     key-prefix: ${RANKING_REDIS_KEY_PREFIX:${spring.profiles.active:local}:ranking}
+    default-limit: ${RANKING_REDIS_DEFAULT_LIMIT:10}
 
 logging:
   config: classpath:logback-spring.xml

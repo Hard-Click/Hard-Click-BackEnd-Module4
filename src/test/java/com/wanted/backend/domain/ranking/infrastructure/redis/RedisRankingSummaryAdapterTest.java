@@ -10,6 +10,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.data.redis.core.DefaultTypedTuple;
+
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
@@ -30,6 +34,7 @@ class RedisRankingSummaryAdapterTest {
     void setUp() {
         RankingRedisProperties properties = new RankingRedisProperties();
         properties.setKeyPrefix("ranking");
+        properties.setDefaultLimit(100);
         adapter = new RedisRankingSummaryAdapter(redisTemplate, properties);
         when(redisTemplate.opsForZSet()).thenReturn(zSetOperations);
     }
@@ -78,5 +83,44 @@ class RedisRankingSummaryAdapterTest {
 
         assertThat(result.rank()).isNull();
         assertThat(result.totalUsers()).isZero();
+    }
+
+    @Test
+    void readsRankingListFromRedisSortedSet() {
+        Set<ZSetOperations.TypedTuple<String>> tuples = new LinkedHashSet<>();
+        tuples.add(new DefaultTypedTuple<>("1", 7200.0));
+        tuples.add(new DefaultTypedTuple<>("2", 3600.0));
+        when(zSetOperations.zCard("ranking:study-time:daily")).thenReturn(2L);
+        when(zSetOperations.reverseRangeWithScores("ranking:study-time:daily", 0, 99))
+                .thenReturn(tuples);
+
+        var result = adapter.findByMetricAndPeriod(
+                RankingMetric.STUDY_TIME,
+                RankingPeriod.DAILY
+        );
+
+        assertThat(result.totalUsers()).isEqualTo(2L);
+        assertThat(result.entries()).hasSize(2);
+        assertThat(result.entries().get(0).rank()).isEqualTo(1L);
+        assertThat(result.entries().get(0).memberId()).isEqualTo(1L);
+        assertThat(result.entries().get(0).score()).isEqualTo(7200L);
+        assertThat(result.entries().get(1).rank()).isEqualTo(2L);
+        assertThat(result.entries().get(1).memberId()).isEqualTo(2L);
+        assertThat(result.entries().get(1).score()).isEqualTo(3600L);
+    }
+
+    @Test
+    void returnsEmptyRankingListWhenDataDoesNotExist() {
+        when(zSetOperations.zCard("ranking:study-time:weekly")).thenReturn(0L);
+        when(zSetOperations.reverseRangeWithScores("ranking:study-time:weekly", 0, 99))
+                .thenReturn(Set.of());
+
+        var result = adapter.findByMetricAndPeriod(
+                RankingMetric.STUDY_TIME,
+                RankingPeriod.WEEKLY
+        );
+
+        assertThat(result.totalUsers()).isZero();
+        assertThat(result.entries()).isEmpty();
     }
 }
