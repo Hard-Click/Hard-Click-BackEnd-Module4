@@ -4,6 +4,7 @@ import com.wanted.backend.domain.grass.domain.policy.MonthlyGrassPeriodPolicy.Mo
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.time.Year;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -50,5 +51,16 @@ class MonthlyGrassPeriodPolicyTest {
         ))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("조회 월은 1~12 사이여야 합니다.");
+    }
+
+    @Test
+    void rejectsYearOverSupportedRange() {
+        assertThatThrownBy(() -> policy.calculate(
+                Year.MAX_VALUE + 1,
+                6,
+                LocalDate.parse("2026-06-03")
+        ))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("조회 연도/월 값이 유효하지 않습니다.");
     }
 }

@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.grass.domain.policy;
 
 import java.time.LocalDate;
+import java.time.DateTimeException;
 import java.time.YearMonth;
 import java.util.Optional;
 
@@ -23,7 +24,12 @@ public class MonthlyGrassPeriodPolicy {
             throw new IllegalArgumentException("오늘 날짜는 필수입니다.");
         }
 
-        YearMonth yearMonth = YearMonth.of(year, month);
+        YearMonth yearMonth;
+        try {
+            yearMonth = YearMonth.of(year, month);
+        } catch (DateTimeException exception) {
+            throw new IllegalArgumentException("조회 연도/월 값이 유효하지 않습니다.", exception);
+        }
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
         LocalDate queryEndDate = calculateQueryEndDate(startDate, endDate, today);

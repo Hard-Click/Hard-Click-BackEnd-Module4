@@ -51,4 +51,17 @@ class MonthlyGrassRepositoryAdapterTest {
                 );
         verify(repository).findByMemberIdAndStatDateBetweenOrderByStatDateAsc(1L, startDate, endDate);
     }
+
+    @Test
+    void returnsEmptyListWhenNoStatsInRange() {
+        LocalDate startDate = LocalDate.parse("2026-06-01");
+        LocalDate endDate = LocalDate.parse("2026-06-30");
+        when(repository.findByMemberIdAndStatDateBetweenOrderByStatDateAsc(1L, startDate, endDate))
+                .thenReturn(List.of());
+
+        List<MonthlyGrassStat> result = adapter.findByMemberIdAndDateBetween(1L, startDate, endDate);
+
+        assertThat(result).isEmpty();
+        verify(repository).findByMemberIdAndStatDateBetweenOrderByStatDateAsc(1L, startDate, endDate);
+    }
 }
