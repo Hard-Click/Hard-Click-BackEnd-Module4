@@ -43,4 +43,16 @@ class DailyGrassDetailRepositoryAdapterTest {
         assertThat(result.orElseThrow().studySeconds()).isEqualTo(5400);
         verify(repository).findByMemberIdAndStatDate(1L, date);
     }
+
+    @Test
+    void returnsEmptyWhenDailyGrassDetailDoesNotExist() {
+        LocalDate date = LocalDate.parse("2026-06-18");
+        when(repository.findByMemberIdAndStatDate(1L, date))
+                .thenReturn(Optional.empty());
+
+        Optional<DailyGrassDetailStat> result = adapter.findByMemberIdAndStatDate(1L, date);
+
+        assertThat(result).isEmpty();
+        verify(repository).findByMemberIdAndStatDate(1L, date);
+    }
 }

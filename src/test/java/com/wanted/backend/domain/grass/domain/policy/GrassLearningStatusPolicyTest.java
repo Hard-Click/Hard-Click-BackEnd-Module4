@@ -22,4 +22,19 @@ class GrassLearningStatusPolicyTest {
     void returnsFalseWhenNoLearningActivityExists() {
         assertThat(policy.hasStudyRecord(0, 0)).isFalse();
     }
+
+    @Test
+    void returnsFalseWhenLearningActivityValuesAreNull() {
+        assertThat(policy.hasStudyRecord(null, null)).isFalse();
+    }
+
+    @Test
+    void returnsTrueWhenWatchedLessonExistsAndStudySecondsIsNull() {
+        assertThat(policy.hasStudyRecord(1, null)).isTrue();
+    }
+
+    @Test
+    void returnsTrueWhenStudySecondsExistsAndWatchedLessonIsNull() {
+        assertThat(policy.hasStudyRecord(null, 1)).isTrue();
+    }
 }
