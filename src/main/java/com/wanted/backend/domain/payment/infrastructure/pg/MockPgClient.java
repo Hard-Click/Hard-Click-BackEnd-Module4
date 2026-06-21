@@ -13,7 +13,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * local/test 프로파일에서만 활성화된다.
  */
 @Component
-@Profile({"default", "local", "test"})
+@Profile({"local", "test"})
 public class MockPgClient implements PgClient {
 
     private static final double DEFAULT_TIMEOUT_PROBABILITY = 0.05;

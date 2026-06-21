@@ -14,6 +14,7 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.core.script.RedisScript;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Duration;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -196,11 +198,32 @@ class EmailVerificationRedisAdapterTest {
     }
 
     @Test
+    void throwsWhenVerificationSaveRetriesAreExhausted() {
+        EmailVerification verification = EmailVerification.create(
+                "user@example.com",
+                EmailPurpose.SIGNUP,
+                Duration.ofMinutes(3)
+        );
+        when(redisTemplate.opsForHash()).thenReturn(hashOperations);
+        when(redisTemplate.execute(
+                org.mockito.ArgumentMatchers.<RedisScript<Long>>any(),
+                any(List.class),
+                any(Object[].class)
+        )).thenReturn(0L);
+
+        assertThatThrownBy(() -> adapter.save(verification))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
     void luaScriptsNeverUseArgumentsAsRedisKeys() throws IllegalAccessException {
         for (Field field : EmailVerificationRedisAdapter.class.getDeclaredFields()) {
             if (!RedisScript.class.isAssignableFrom(field.getType())) {
                 continue;
             }
+            assertThat(Modifier.isStatic(field.getModifiers()))
+                    .as("RedisScript field %s must remain static", field.getName())
+                    .isTrue();
             field.setAccessible(true);
             RedisScript<?> script = (RedisScript<?>) field.get(null);
             assertThat(script.getScriptAsString())

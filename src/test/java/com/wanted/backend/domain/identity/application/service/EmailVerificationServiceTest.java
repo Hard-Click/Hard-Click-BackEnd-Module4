@@ -19,6 +19,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -59,6 +60,8 @@ class EmailVerificationServiceTest {
                 any(LocalDateTime.class)
         );
         verify(verificationRepository).save(any());
+        verify(emailSendPort, times(1))
+                .sendVerificationCode(eq("user@example.com"), any(String.class));
     }
 
     @Test
@@ -78,6 +81,7 @@ class EmailVerificationServiceTest {
                 .isEqualTo(ErrorCode.PASSWORD_RESET_LIMIT_EXCEEDED);
 
         verify(verificationRepository, never()).save(any());
+        verify(emailSendPort, never()).sendVerificationCode(any(), any());
     }
 
     @Test
@@ -93,6 +97,7 @@ class EmailVerificationServiceTest {
         verify(verificationRepository, never()).tryAcquireSendPermission(
                 any(), any(), any(Integer.class), any(LocalDateTime.class)
         );
+        verify(emailSendPort, never()).sendVerificationCode(any(), any());
     }
 
     private EmailVerificationService createService(int dailyLimit) {

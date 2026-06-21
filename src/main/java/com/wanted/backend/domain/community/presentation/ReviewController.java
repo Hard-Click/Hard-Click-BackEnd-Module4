@@ -74,14 +74,13 @@ public class ReviewController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long courseId,
             @RequestParam(defaultValue = "latest") ReviewSortType sort,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "0") int page) {
 
         //비회원도 조회가 가능하도록
         Long currentMemberId = userDetails != null ? userDetails.getMemberId() : -1L;
 
         ReviewListResponse response = reviewQueryUseCase.handle(
-                courseId, currentMemberId, sort, page, size);
+                courseId, currentMemberId, sort, page);
 
         return ApiResponse.success("리뷰 목록 조회 성공", response);
     }

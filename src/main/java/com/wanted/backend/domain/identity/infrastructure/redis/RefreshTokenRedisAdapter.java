@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Repository;
+import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
+@Slf4j
 public class RefreshTokenRedisAdapter implements RefreshTokenRepository {
 
     private static final String MEMBER_KEY_PREFIX = "auth:{refresh}:member:";
@@ -81,7 +83,13 @@ public class RefreshTokenRedisAdapter implements RefreshTokenRepository {
             return Optional.empty();
         }
 
-        Long parsedMemberId = Long.valueOf(memberId);
+        Long parsedMemberId;
+        try {
+            parsedMemberId = Long.valueOf(memberId);
+        } catch (NumberFormatException exception) {
+            log.error("Invalid member ID stored for refresh token. memberId={}", memberId, exception);
+            return Optional.empty();
+        }
         Long ttlMillis = redisTemplate.execute(
                 FIND_TOKEN_SCRIPT,
                 List.of(tokenKey(tokenHash), memberKey(parsedMemberId)),
@@ -97,7 +105,7 @@ public class RefreshTokenRedisAdapter implements RefreshTokenRepository {
                 null,
                 parsedMemberId,
                 token,
-                now.plusNanos(Duration.ofMillis(ttlMillis).toNanos()),
+                now.plus(Duration.ofMillis(ttlMillis)),
                 now
         ));
     }
@@ -125,10 +133,12 @@ public class RefreshTokenRedisAdapter implements RefreshTokenRepository {
                     previousTokenHash == null ? "" : previousTokenHash
             );
             if (Long.valueOf(1L).equals(saved)) {
-                break;
+                return refreshToken;
             }
         }
-        return refreshToken;
+        log.error("Failed to save refresh token after all mutation retries. memberId={}",
+                refreshToken.getMemberId());
+        throw new IllegalStateException("Failed to save refresh token");
     }
 
     @Override

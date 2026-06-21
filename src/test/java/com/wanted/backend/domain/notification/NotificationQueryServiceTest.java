@@ -70,7 +70,7 @@ class NotificationQueryServiceTest {
         when(notificationRepository.existsNextPage(memberId, 9L)).thenReturn(false);
 
         // when
-        NotificationListResponse response = notificationQueryService.getList(memberId, null, 10);
+        NotificationListResponse response = notificationQueryService.getList(memberId, null);
 
         // then
         assertThat(response.content()).hasSize(2);
@@ -90,7 +90,7 @@ class NotificationQueryServiceTest {
         when(notificationRepository.existsNextPage(memberId, 9L)).thenReturn(true);
 
         // when
-        NotificationListResponse response = notificationQueryService.getList(memberId, null, 10);
+        NotificationListResponse response = notificationQueryService.getList(memberId, null);
 
         // then
         assertThat(response.hasNext()).isTrue();
@@ -106,7 +106,7 @@ class NotificationQueryServiceTest {
         when(notificationRepository.existsNextPage(memberId, 8L)).thenReturn(false);
 
         // when
-        NotificationListResponse response = notificationQueryService.getList(memberId, 9L, 10);
+        NotificationListResponse response = notificationQueryService.getList(memberId, 9L);
 
         // then
         assertThat(response.content()).hasSize(1);
@@ -122,7 +122,7 @@ class NotificationQueryServiceTest {
                 .thenReturn(Collections.emptyList());
 
         // when
-        NotificationListResponse response = notificationQueryService.getList(memberId, null, 10);
+        NotificationListResponse response = notificationQueryService.getList(memberId, null);
 
         // then
         assertThat(response.content()).isEmpty();
