@@ -14,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.List;
 
@@ -36,7 +38,7 @@ public class NotificationEventListener {
     // ── 커뮤니티 ──────────────────────────────────────────────────
 
     @Async("notificationExecutor")
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onPostComment(PostCommentCreatedEvent event) {
         if (event.postAuthorId().equals(event.commentAuthorId())) return;
 
@@ -49,7 +51,7 @@ public class NotificationEventListener {
     }
 
     @Async("notificationExecutor")
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onCommentReply(CommentReplyCreatedEvent event) {
         if (event.parentCommentAuthorId().equals(event.replyAuthorId())) return;
 
@@ -62,7 +64,7 @@ public class NotificationEventListener {
     }
 
     @Async("notificationExecutor")
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onCommentAccepted(CommentAcceptedEvent event) {
         notificationCommandUseCase.send(
                 event.commentAuthorId(),
@@ -73,7 +75,7 @@ public class NotificationEventListener {
     }
 
     @Async("notificationExecutor")
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onReportCreated(ReportCreatedEvent event) {
         List<Long> adminIds = memberIdQueryPort.findAllAdminIds();
         for (Long adminId : adminIds) {
@@ -89,7 +91,7 @@ public class NotificationEventListener {
     // ── 공지 ──────────────────────────────────────────────────────
 
     @Async("notificationExecutor")
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onNoticeCreated(NoticeCreatedEvent event) {
         if ("GLOBAL".equals(event.type())) {
             // 관리자 전체 공지 → 강사 전원 + 학생 전원
@@ -136,7 +138,7 @@ public class NotificationEventListener {
     // ── 강좌 개설 ─────────────────────────────────────────────────
 
     @Async("notificationExecutor")
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onCourseCreated(CourseCreatedEvent event) {
         // 강사 강좌 개설 → 관리자 전원에게 알림
         for (Long adminId : memberIdQueryPort.findAllAdminIds()) {

@@ -1,7 +1,7 @@
 package com.wanted.backend.domain.notification.infrastructure.sse;
 
+import com.wanted.backend.domain.notification.application.dto.NotificationPayload;
 import com.wanted.backend.domain.notification.application.port.NotificationSsePort;
-import com.wanted.backend.domain.notification.presentation.response.NotificationItemResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -44,13 +44,13 @@ public class NotificationSseAdapter implements NotificationSsePort {
     }
 
     @Override
-    public void send(Long memberId, NotificationItemResponse response) {
+    public void send(Long memberId, NotificationPayload payload) {
         List<SseEmitter> memberEmitters = emitters.get(memberId);
         if (memberEmitters == null || memberEmitters.isEmpty()) {
-            return; // 연결 안 돼 있으면 조용히 무시 (다음 목록 조회 때 확인)
+            return;
         }
         for (SseEmitter emitter : memberEmitters) {
-            sendToEmitter(memberId, emitter, EVENT_NAME, response);
+            sendToEmitter(memberId, emitter, EVENT_NAME, payload);
         }
     }
 

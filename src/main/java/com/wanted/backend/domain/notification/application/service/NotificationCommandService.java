@@ -1,11 +1,11 @@
 package com.wanted.backend.domain.notification.application.service;
 
+import com.wanted.backend.domain.notification.application.dto.NotificationPayload;
 import com.wanted.backend.domain.notification.application.port.NotificationSsePort;
 import com.wanted.backend.domain.notification.application.usecase.NotificationCommandUseCase;
 import com.wanted.backend.domain.notification.domain.model.Notification;
 import com.wanted.backend.domain.notification.domain.model.NotificationType;
 import com.wanted.backend.domain.notification.domain.repository.NotificationRepository;
-import com.wanted.backend.domain.notification.presentation.response.NotificationItemResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,15 +39,14 @@ public class NotificationCommandService implements NotificationCommandUseCase {
         );
 
         // [2] SSE 실시간 발송 (연결 안 돼 있으면 어댑터에서 조용히 무시)
-        NotificationItemResponse response = new NotificationItemResponse(
+        notificationSsePort.send(receiverId, new NotificationPayload(
                 notification.getId(),
                 notification.getType(),
                 notification.getMessage(),
                 notification.isRead(),
                 notification.getRedirectUrl(),
                 notification.getCreatedAt()
-        );
-        notificationSsePort.send(receiverId, response);
+        ));
         log.debug("[Notification] sent to memberId={}, type={}", receiverId, type);
     }
 }
