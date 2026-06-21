@@ -45,7 +45,7 @@ public class PostCommandService implements PostCommandUseCase {
         Post post = Post.create(
                 command.authorId(),
                 command.boardType(),
-                command.subjectId(),
+                command.subject(),
                 command.title(),
                 command.content(),
                 fileCount
@@ -99,7 +99,7 @@ public class PostCommandService implements PostCommandUseCase {
         post.validateFileCount(fileCount);
 
         // [4단계] 게시글 값 수정 → 도메인이 담당
-        post.update(command.subjectId(), command.title(), command.content());
+        post.update(command.subject(), command.title(), command.content());
 
         // [5단계] 변경된 게시글 DB 저장
         Post saved = postRepository.save(post);

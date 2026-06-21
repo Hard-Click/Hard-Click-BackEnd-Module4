@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.community.presentation.request;
 
 import com.wanted.backend.domain.community.domain.model.BoardType;
+import com.wanted.backend.global.domain.SubjectType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -12,8 +13,8 @@ public record CreatePostRequest(
         @NotNull(message = "게시판 타입은 필수입니다.")
         BoardType boardType,
 
-        @Schema(description = "과목 ID (QUESTION 게시판일 경우 필수)", example = "10")
-        Long subjectId,
+        @Schema(description = "과목 (QUESTION 게시판일 경우 필수)", example = "MATH_1")
+        SubjectType subject,
 
         @Schema(description = "게시글 제목 (300자 이하)", example = "Spring Security 질문드립니다.")
         @NotBlank(message = "제목은 필수입니다.")

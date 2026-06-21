@@ -10,7 +10,7 @@ public class Post {
     private Long id;
     private Long authorId;
     private BoardType boardType;
-    private Long subjectId;
+    private String subject;
     private String title;
     private String content;
     private int viewCount;
@@ -19,13 +19,13 @@ public class Post {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    private Post(Long id, Long authorId, BoardType boardType, Long subjectId,
+    private Post(Long id, Long authorId, BoardType boardType, String subject,
                  String title, String content, int viewCount, PostStatus status, boolean isAccepted,
                  LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.authorId = authorId;
         this.boardType = boardType;
-        this.subjectId = subjectId;
+        this.subject = subject;
         this.title = title;
         this.content = content;
         this.viewCount = viewCount;
@@ -35,29 +35,29 @@ public class Post {
         this.updatedAt = updatedAt;
     }
 
-    public static Post create(Long authorId, BoardType boardType, Long subjectId,
+    public static Post create(Long authorId, BoardType boardType, String subject,
                               String title, String content, int fileCount) {
-        if (boardType == BoardType.QUESTION && subjectId == null) {
+        if (boardType == BoardType.QUESTION && subject == null) {
             throw new BusinessException(ErrorCode.SUBJECT_REQUIRED);
         }
         if (fileCount > 2) {
             throw new BusinessException(ErrorCode.FILE_COUNT_EXCEEDED);
         }
-        return new Post(null, authorId, boardType, subjectId, title, content,
+        return new Post(null, authorId, boardType, subject, title, content,
                 0, PostStatus.ACTIVE, false, LocalDateTime.now(), LocalDateTime.now());
     }
 
-    public static Post restore(Long id, Long authorId, BoardType boardType, Long subjectId,
+    public static Post restore(Long id, Long authorId, BoardType boardType, String subject,
                                String title, String content, int viewCount, PostStatus status, boolean isAccepted,
                                LocalDateTime createdAt, LocalDateTime updatedAt) {
-        return new Post(id, authorId, boardType, subjectId, title, content,
+        return new Post(id, authorId, boardType, subject, title, content,
                 viewCount, status == null ? PostStatus.ACTIVE : status, isAccepted, createdAt, updatedAt);
     }
 
-    public static Post restore(Long id, Long authorId, BoardType boardType, Long subjectId,
+    public static Post restore(Long id, Long authorId, BoardType boardType, String subject,
                                String title, String content, int viewCount, boolean isAccepted,
                                LocalDateTime createdAt, LocalDateTime updatedAt) {
-        return restore(id, authorId, boardType, subjectId, title, content,
+        return restore(id, authorId, boardType, subject, title, content,
                 viewCount, PostStatus.ACTIVE, isAccepted, createdAt, updatedAt);
     }
 
@@ -84,8 +84,8 @@ public class Post {
         }
     }
 
-    public void update(Long subjectId, String title, String content) {
-        this.subjectId = subjectId;
+    public void update(String subject, String title, String content) {
+        this.subject = subject;
         this.title = title;
         this.content = content;
         this.updatedAt = LocalDateTime.now();
@@ -119,7 +119,7 @@ public class Post {
     public Long getId() { return id; }
     public Long getAuthorId() { return authorId; }
     public BoardType getBoardType() { return boardType; }
-    public Long getSubjectId() { return subjectId; }
+    public String getSubject() { return subject; }
     public String getTitle() { return title; }
     public String getContent() { return content; }
     public int getViewCount() { return viewCount; }

@@ -24,8 +24,8 @@ public class PostJpaEntity {
     @Column(name = "board_type", nullable = false)
     private BoardType boardType;
 
-    @Column(name = "subject_id")
-    private Long subjectId;
+    @Column(name = "subject", length = 50)
+    private String subject;
 
     @Column(nullable = false, length = 300)
     private String title;
@@ -55,12 +55,12 @@ public class PostJpaEntity {
         this.viewCount = viewCount;
     }
 
-    public PostJpaEntity(Long authorId, BoardType boardType, Long subjectId,
+    public PostJpaEntity(Long authorId, BoardType boardType, String subject,
                          String title, String content, int viewCount,
                          boolean isAccepted, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.authorId = authorId;
         this.boardType = boardType;
-        this.subjectId = subjectId;
+        this.subject = subject;
         this.title = title;
         this.content = content;
         this.viewCount = viewCount;
@@ -70,9 +70,9 @@ public class PostJpaEntity {
         this.updatedAt = updatedAt;
     }
 
-    public void update(Long subjectId, String title, String content, int viewCount,
+    public void update(String subject, String title, String content, int viewCount,
                        PostStatus status, boolean isAccepted, LocalDateTime updatedAt) {
-        this.subjectId = subjectId;
+        this.subject = subject;
         this.title = title;
         this.content = content;
         this.viewCount = viewCount;
