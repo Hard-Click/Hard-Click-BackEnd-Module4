@@ -10,4 +10,5 @@ interface SpringDataEnrollmentRepository extends JpaRepository<EnrollmentJpaEnti
     List<EnrollmentJpaEntity> findByMemberId(Long memberId);
     List<EnrollmentJpaEntity> findByMemberIdAndStatus(Long memberId, EnrollmentStatus status);
     int countByCourseId(Long courseId);
+    boolean existsByMemberIdAndCourseIdAndStatus(Long memberId, Long courseId, EnrollmentStatus status);
 }
