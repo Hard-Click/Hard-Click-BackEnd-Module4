@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface SpringDataDailyStudyStatsRepository extends JpaRepository<DailyStudyStatsJpaEntity, Long> {
 
-    List<DailyStudyStatsJpaEntity> findByMemberIdAndStudyDateBetweenOrderByStudyDateAsc(
+    List<DailyStudyStatsJpaEntity> findByMemberIdAndStatDateBetweenOrderByStatDateAsc(
             Long memberId,
             LocalDate startDate,
             LocalDate endDate

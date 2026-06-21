@@ -22,7 +22,7 @@ public class DailyStudyStatsRepositoryAdapter implements DailyStudyStatsReposito
             LocalDate startDate,
             LocalDate endDate
     ) {
-        return repository.findByMemberIdAndStudyDateBetweenOrderByStudyDateAsc(memberId, startDate, endDate).stream()
+        return repository.findByMemberIdAndStatDateBetweenOrderByStatDateAsc(memberId, startDate, endDate).stream()
                 .map(this::toDomain)
                 .toList();
     }
@@ -30,7 +30,7 @@ public class DailyStudyStatsRepositoryAdapter implements DailyStudyStatsReposito
     private DailyStudyStat toDomain(DailyStudyStatsJpaEntity entity) {
         return new DailyStudyStat(
                 entity.getMemberId(),
-                entity.getStudyDate(),
+                entity.getStatDate(),
                 entity.getStudySeconds()
         );
     }

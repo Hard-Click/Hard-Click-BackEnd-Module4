@@ -24,7 +24,8 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class PostQueryService implements PostQueryUseCase {
 
-    private static final int PAGE_SIZE = 10;
+    private static final int DEFAULT_PAGE_SIZE = 10;
+    private static final int MAX_PAGE_SIZE = 50;
     private static final String ADMIN_DELETED_MESSAGE = "관리자에 의해 삭제되었습니다.";
 
     private final PostRepository postRepository;
@@ -46,10 +47,11 @@ public class PostQueryService implements PostQueryUseCase {
 
     @Override
     public PostListResponse getList(BoardType boardType, PostSortType sort,
-                                    String keyword, int page) {
+                                    String keyword, int page, int size) {
+        int normalizedSize = normalizeSize(size);
         List<Post> posts = boardType != null
-                ? postRepository.findByBoardType(boardType, sort, keyword, page, PAGE_SIZE)
-                : postRepository.findAll(sort, keyword, page, PAGE_SIZE);
+                ? postRepository.findByBoardType(boardType, sort, keyword, page, normalizedSize)
+                : postRepository.findAll(sort, keyword, page, normalizedSize);
 
         int totalCount = boardType != null
                 ? postRepository.countByBoardType(boardType, keyword)
@@ -62,9 +64,16 @@ public class PostQueryService implements PostQueryUseCase {
         return new PostListResponse(
                 items,
                 page,
-                (int) Math.ceil((double) totalCount / PAGE_SIZE),
+                (int) Math.ceil((double) totalCount / normalizedSize),
                 totalCount
         );
+    }
+
+    private int normalizeSize(int size) {
+        if (size <= 0) {
+            return DEFAULT_PAGE_SIZE;
+        }
+        return Math.min(size, MAX_PAGE_SIZE);
     }
 
     @Override

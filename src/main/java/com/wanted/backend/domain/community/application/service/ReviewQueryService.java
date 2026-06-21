@@ -16,7 +16,8 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class ReviewQueryService implements ReviewQueryUseCase {
 
-    private static final int PAGE_SIZE = 10;
+    private static final int DEFAULT_PAGE_SIZE = 10;
+    private static final int MAX_PAGE_SIZE = 50;
     private static final String ADMIN_DELETED_MESSAGE = "관리자에 의해 삭제되었습니다.";
 
     private final ReviewRepository reviewRepository;
@@ -29,8 +30,8 @@ public class ReviewQueryService implements ReviewQueryUseCase {
     }
 
     @Override
-    public ReviewListResponse handle(Long courseId, Long memberId, ReviewSortType sort, int page) {
-
+    public ReviewListResponse handle(Long courseId, Long memberId, ReviewSortType sort, int page, int size) {
+        int normalizedSize = normalizeSize(size);
 
         List<ReviewItemResponse> items = new ArrayList<>();
 
@@ -42,8 +43,8 @@ public class ReviewQueryService implements ReviewQueryUseCase {
 
         //나머지 리뷰 페이징
         List<Review> others = !memberId.equals(-1L)
-                ? reviewRepository.findByCourseIdExcludeMember(courseId, memberId, sort, page, PAGE_SIZE)
-                : reviewRepository.findByCourseId(courseId, sort, page, PAGE_SIZE);
+                ? reviewRepository.findByCourseIdExcludeMember(courseId, memberId, sort, page, normalizedSize)
+                : reviewRepository.findByCourseId(courseId, sort, page, normalizedSize);
 
         //이미 있는 리스트에 add 하는 값들
         others.forEach(r -> items.add(toItemResponse(r, memberId)));
@@ -60,8 +61,15 @@ public class ReviewQueryService implements ReviewQueryUseCase {
                         .toList(),
                 items,
                 page,
-                (int) Math.ceil((double) totalCount / PAGE_SIZE)
+                (int) Math.ceil((double) totalCount / normalizedSize)
         );
+    }
+
+    private int normalizeSize(int size) {
+        if (size <= 0) {
+            return DEFAULT_PAGE_SIZE;
+        }
+        return Math.min(size, MAX_PAGE_SIZE);
     }
 
     private ReviewItemResponse toItemResponse(Review review, Long currentMemberId) {

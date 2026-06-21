@@ -59,35 +59,47 @@ server:
     accept-count: 500
     max-connections: 10000
 
-aws:
-  s3:
-    bucket: ${S3_BUCKET}
-    region: ${AWS_REGION:ap-northeast-2}
-
 identity:
   redis:
     mutation-retry-attempts: ${IDENTITY_REDIS_MUTATION_RETRY_ATTEMPTS:3}
+
   email:
-    allowed-domain: ${IDENTITY_EMAIL_ALLOWED_DOMAIN:gmail.com}
-    code-ttl: ${IDENTITY_EMAIL_CODE_TTL:3m}
-    verified-token-ttl: ${IDENTITY_EMAIL_VERIFIED_TOKEN_TTL:30m}
-    processing-reservation-ttl: ${IDENTITY_EMAIL_PROCESSING_RESERVATION_TTL:30s}
+    allowed-domain: gmail.com
+    code-ttl: ${IDENTITY_EMAIL_CODE_TTL:300000}
+    verified-token-ttl: ${IDENTITY_EMAIL_VERIFIED_TOKEN_TTL:300000}
+    processing-reservation-ttl: ${IDENTITY_EMAIL_PROCESSING_RESERVATION_TTL:300000}
     completion-retry-attempts: ${IDENTITY_EMAIL_COMPLETION_RETRY_ATTEMPTS:3}
     password-reset-daily-limit: ${IDENTITY_EMAIL_PASSWORD_RESET_DAILY_LIMIT:3}
+
   profile-image:
+    upload-dir: uploads/profiles
+    url: /uploads/profiles
     max-size: 5242880
 
 community:
   image:
+    post-dir: uploads/posts
+    post-url: /uploads/posts
+    comment-dir: uploads/comments
+    comment-url: /uploads/comments
     max-size: 5242880
 
 grass:
   lesson:
     max-level: ${GRASS_LESSON_MAX_LEVEL:4}
+  study-time:
+    level-threshold-seconds: ${GRASS_STUDY_TIME_LEVEL_THRESHOLD_SECONDS:1,1800,3600,7200}
+  streak:
+    query-page-size: ${GRASS_STREAK_QUERY_PAGE_SIZE:100}
 
 study-timer:
   member-lock:
-    timeout-milliseconds: ${STUDY_TIMER_MEMBER_LOCK_TIMEOUT_MILLISECONDS:3000}
+    timeout-milliseconds: 3000
+
+ranking:
+  redis:
+    key-prefix: ${RANKING_REDIS_KEY_PREFIX:${spring.profiles.active:local}:ranking}
+    default-limit: ${RANKING_REDIS_DEFAULT_LIMIT:10}
 
 logging:
   config: classpath:logback-spring.xml
@@ -99,7 +111,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health, prometheus, info
+        include: health, prometheus
   endpoint:
     health:
       show-details: when-authorized
@@ -109,10 +121,3 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
-    distribution:
-      slo:
-        payment.processing.duration: 100ms, 250ms, 500ms, 1000ms, 2000ms, 5000ms, 10000ms
-      percentiles-histogram:
-        payment.processing.duration: true
-      percentiles:
-        payment.processing.duration: 0.5, 0.95, 0.99
