@@ -125,6 +125,7 @@ import org.springframework.http.HttpStatus;
     // 신고 예외
     REPORT_ALREADY_EXISTS(HttpStatus.CONFLICT, "RP001", "이미 신고한 대상입니다."),
     REPORT_TARGET_NOT_FOUND(HttpStatus.NOT_FOUND, "RP002", "존재하지 않거나 이미 삭제된 대상입니다."),
+    REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "RP003", "신고를 찾을 수 없습니다."),
 
     //알림 예외
     INVALID_NOTIFICATION(HttpStatus.BAD_REQUEST, "NT001", "알림 생성에 필요한 값이 누락되었습니다."),
