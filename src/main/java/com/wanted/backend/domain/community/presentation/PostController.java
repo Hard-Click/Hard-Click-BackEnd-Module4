@@ -123,15 +123,6 @@ public class PostController {
                 new UnifiedBoardListResponse(items, postList.currentPage(), postList.totalPages(), postList.totalCount()));
     }
 
-    // private 헬퍼 추가
-    private UnifiedBoardListResponse toUnified(PostListResponse postList) {
-        List<UnifiedBoardItemResponse> items = postList.posts().stream()
-                .map(UnifiedBoardItemResponse::fromPost)
-                .toList();
-        return new UnifiedBoardListResponse(items, postList.currentPage(), postList.totalPages(), postList.totalCount());
-    }
-
-
     @GetMapping("/posts/{postId}")
     @Operation(
             summary = "게시글 상세 조회",
