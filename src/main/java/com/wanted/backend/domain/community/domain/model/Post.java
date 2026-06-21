@@ -85,6 +85,9 @@ public class Post {
     }
 
     public void update(String subject, String title, String content) {
+        if (boardType == BoardType.QUESTION && subject == null) {
+            throw new BusinessException(ErrorCode.SUBJECT_REQUIRED);
+        }
         this.subject = subject;
         this.title = title;
         this.content = content;
