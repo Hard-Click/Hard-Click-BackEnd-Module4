@@ -13,7 +13,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class LessonGrassRepositoryAdapter implements LessonGrassRepository {
 
-    private final SpringDataLessonGrassStatsRepository repository;
+    private final SpringDataGrassDailyStudyStatsRepository repository;
 
     @Override
     public List<LessonGrassStat> findByMemberIdAndDateBetween(Long memberId, LocalDate startDate, LocalDate endDate) {

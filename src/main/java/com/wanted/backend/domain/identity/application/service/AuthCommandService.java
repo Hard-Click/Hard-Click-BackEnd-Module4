@@ -66,7 +66,6 @@ public class AuthCommandService implements AuthCommandUseCase {
         String accessToken = jwtProvider.createAccessToken(member.getId(), member.getUsername(), role);
         String refreshToken = jwtProvider.createRefreshToken(member.getId());
 
-        refreshTokenRepository.deleteByMemberId(member.getId());
         saveRefreshToken(member.getId(), refreshToken);
 
         return new AuthToken(accessToken, refreshToken, member.getId(), role);
@@ -118,12 +117,13 @@ public class AuthCommandService implements AuthCommandUseCase {
     }
 
     private void saveRefreshToken(Long memberId, String token) {
+        LocalDateTime now = LocalDateTime.now();
         RefreshToken refreshTokenModel = new RefreshToken(
                 null,
                 memberId,
                 token,
-                LocalDateTime.now().plusDays(14),
-                LocalDateTime.now()
+                now.plus(jwtProvider.getRefreshTokenExpiration()),
+                now
         );
         refreshTokenRepository.save(refreshTokenModel);
     }

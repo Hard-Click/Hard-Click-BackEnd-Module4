@@ -29,8 +29,6 @@ public class GetLessonGrassService implements GetLessonGrassUseCase {
     @Override
     @Cacheable(cacheNames = "grassLessons", key = "#query.memberId() + ':' + T(java.time.LocalDate).now(@clock)")
     public List<LessonGrassView> handle(GetLessonGrassQuery query) {
-        validate(query);
-
         LocalDate today = LocalDate.now(clock);
         LocalDate startDate = LocalDate.of(today.getYear(), Month.JANUARY, 1);
         LocalDate endDate = LocalDate.of(today.getYear(), Month.DECEMBER, 31);
@@ -49,22 +47,15 @@ public class GetLessonGrassService implements GetLessonGrassUseCase {
                 ));
 
         return startDate.datesUntil(endDate.plusDays(1))
-                .map(date -> toView(date, watchedLessonCountByDate.getOrDefault(date, 0), date.isAfter(today)))
+                .map(date -> {
+                    int watchedLessonCount = watchedLessonCountByDate.getOrDefault(date, 0);
+                    return new LessonGrassView(
+                            date,
+                            watchedLessonCount,
+                            lessonGrassLevelPolicy.calculate(watchedLessonCount),
+                            date.isAfter(today)
+                    );
+                })
                 .toList();
-    }
-
-    private LessonGrassView toView(LocalDate date, Integer watchedLessonCount, boolean isFuture) {
-        return new LessonGrassView(
-                date,
-                watchedLessonCount,
-                lessonGrassLevelPolicy.calculate(watchedLessonCount),
-                isFuture
-        );
-    }
-
-    private void validate(GetLessonGrassQuery query) {
-        if (query.memberId() == null) {
-            throw new IllegalArgumentException("회원 ID는 필수입니다.");
-        }
     }
 }

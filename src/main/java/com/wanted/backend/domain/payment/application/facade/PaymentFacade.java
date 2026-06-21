@@ -108,7 +108,20 @@ public class PaymentFacade {
     }
 
     private Result processPayment(Long memberId, Long courseId, Integer amount, String idempotencyKey) {
-        Payment created = createPending(memberId, courseId, amount, idempotencyKey);
+        Payment created;
+        try {
+            created = createPending(memberId, courseId, amount, idempotencyKey);
+        } catch (BusinessException e) {
+            // PaymentRepositoryAdapter.save()가 DB unique constraint 위반(DataIntegrityViolationException)을
+            // 이미 BusinessException(DUPLICATE_PAYMENT_REQUEST)으로 변환해 던진다.
+            // 분산락 획득 후에도 발생했다면 = 락이 막지 못한 진짜 동시 중복.
+            // DuplicatePaymentDetected alert은 이 카운터가 > 0 일 때 발화
+            if (e.getErrorCode() == ErrorCode.DUPLICATE_PAYMENT_REQUEST) {
+                log.error("[DUPLICATE_CHARGED] 분산락 우회 중복결제 감지 — idempotencyKey: {}", idempotencyKey, e);
+                recordResult("DUPLICATE_CHARGED");
+            }
+            throw e;
+        }
 
         String pgTransactionId;
         try {

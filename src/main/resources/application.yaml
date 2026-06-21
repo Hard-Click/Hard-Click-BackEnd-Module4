@@ -65,9 +65,9 @@ identity:
 
   email:
     allowed-domain: gmail.com
-    code-ttl: 300000
-    verified-token-ttl: 300000
-    processing-reservation-ttl: 300000
+    code-ttl: ${IDENTITY_EMAIL_CODE_TTL:300000}
+    verified-token-ttl: ${IDENTITY_EMAIL_VERIFIED_TOKEN_TTL:300000}
+    processing-reservation-ttl: ${IDENTITY_EMAIL_PROCESSING_RESERVATION_TTL:300000}
     completion-retry-attempts: ${IDENTITY_EMAIL_COMPLETION_RETRY_ATTEMPTS:3}
     password-reset-daily-limit: ${IDENTITY_EMAIL_PASSWORD_RESET_DAILY_LIMIT:3}
 
@@ -87,10 +87,19 @@ community:
 grass:
   lesson:
     max-level: ${GRASS_LESSON_MAX_LEVEL:4}
+  study-time:
+    level-threshold-seconds: ${GRASS_STUDY_TIME_LEVEL_THRESHOLD_SECONDS:1,1800,3600,7200}
+  streak:
+    query-page-size: ${GRASS_STREAK_QUERY_PAGE_SIZE:100}
 
 study-timer:
   member-lock:
     timeout-milliseconds: 3000
+
+ranking:
+  redis:
+    key-prefix: ${RANKING_REDIS_KEY_PREFIX:${spring.profiles.active:local}:ranking}
+    default-limit: ${RANKING_REDIS_DEFAULT_LIMIT:10}
 
 logging:
   config: classpath:logback-spring.xml
