@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -14,7 +15,10 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@Table(name = "payments")
+@Table(name = "payments", indexes = {
+        @Index(name = "idx_payments_member_id", columnList = "member_id"),
+        @Index(name = "idx_payments_member_id_paid_at_id", columnList = "member_id, paid_at DESC, payment_id DESC")
+})
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PaymentJpaEntity {
 
