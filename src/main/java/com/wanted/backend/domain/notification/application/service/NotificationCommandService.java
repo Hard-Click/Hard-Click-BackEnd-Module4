@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.notification.application.service;
 
 import com.wanted.backend.domain.notification.application.dto.NotificationPayload;
+import com.wanted.backend.domain.notification.application.dto.NotificationRequest;
 import com.wanted.backend.domain.notification.application.port.NotificationSsePort;
 import com.wanted.backend.domain.notification.application.usecase.NotificationCommandUseCase;
 import com.wanted.backend.domain.notification.domain.model.Notification;
@@ -10,6 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -28,6 +31,20 @@ public class NotificationCommandService implements NotificationCommandUseCase {
     @Transactional(readOnly = true)  // SSE 연결은 DB 쓰기 없음
     public SseEmitter subscribe(Long memberId) {
         return notificationSsePort.connect(memberId);
+    }
+
+    @Override
+    @Transactional
+    public void sendBatch(List<NotificationRequest> requests) {
+        List<Notification> notifications = requests.stream()
+                .map(req -> Notification.create(req.receiverId(), req.type(), req.message(), req.redirectUrl()))
+                .toList();
+        List<Notification> saved = notificationRepository.saveAll(notifications);
+        for (Notification noti : saved) {
+            notificationSsePort.send(noti.getReceiverId(), new NotificationPayload(
+                    noti.getId(), noti.getType(), noti.getMessage(),
+                    noti.isRead(), noti.getRedirectUrl(), noti.getCreatedAt()));
+        }
     }
 
     @Override

@@ -1,7 +1,10 @@
 package com.wanted.backend.domain.notification.application.usecase;
 
+import com.wanted.backend.domain.notification.application.dto.NotificationRequest;
 import com.wanted.backend.domain.notification.domain.model.NotificationType;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+import java.util.List;
 
 /**
  * 알림 생성/발송 유스케이스.
@@ -21,4 +24,6 @@ public interface NotificationCommandUseCase {
      * @param redirectUrl 클릭 시 이동할 URL (nullable)
      */
     void send(Long receiverId, NotificationType type, String message, String redirectUrl);
+
+    void sendBatch(List<NotificationRequest> requests);
 }
