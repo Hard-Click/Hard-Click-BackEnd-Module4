@@ -2,6 +2,7 @@ package com.wanted.backend.domain.community.application.service;
 
 import com.wanted.backend.domain.community.application.command.CreateReportCommand;
 import com.wanted.backend.domain.community.application.usecase.ReportCommandUseCase;
+import com.wanted.backend.domain.community.domain.event.ReportCreatedEvent;
 import com.wanted.backend.domain.community.domain.model.Report;
 import com.wanted.backend.domain.community.domain.model.TargetType;
 import com.wanted.backend.domain.community.domain.repository.CommentRepository;
@@ -11,6 +12,7 @@ import com.wanted.backend.domain.community.domain.repository.ReviewRepository;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,30 +27,29 @@ public class ReportCommandService implements ReportCommandUseCase {
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
     private final ReviewRepository reviewRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public ReportCommandService(ReportRepository reportRepository,
                                 PostRepository postRepository,
                                 CommentRepository commentRepository,
-                                ReviewRepository reviewRepository) {
+                                ReviewRepository reviewRepository,
+                                ApplicationEventPublisher eventPublisher) {
         this.reportRepository = reportRepository;
         this.postRepository = postRepository;
         this.commentRepository = commentRepository;
         this.reviewRepository = reviewRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
     public Long create(CreateReportCommand command) {
-
-        // 1. 중복 신고 체크
         if (reportRepository.existsByReporterIdAndTargetTypeAndTargetId(
                 command.reporterId(), command.targetType(), command.targetId())) {
             throw new BusinessException(ErrorCode.REPORT_ALREADY_EXISTS);
         }
 
-        // 2. 신고 대상 작성자 확인
         Long reportedMemberId = findReportedMemberId(command.targetType(), command.targetId());
 
-        // 3. 신고 저장
         Long reportId = reportRepository.save(Report.create(
                 command.reporterId(),
                 reportedMemberId,
@@ -58,13 +59,15 @@ public class ReportCommandService implements ReportCommandUseCase {
                 command.reason()
         ));
 
-        // 4. 누적 신고 5건 이상 시 로그 (추후 관리자 플래그 연동)
         int count = reportRepository.countByTargetTypeAndTargetId(
                 command.targetType(), command.targetId());
         if (count >= REPORT_FLAG_THRESHOLD) {
             log.warn("[Report Flag] targetType: {}, targetId: {}, count: {}",
                     command.targetType(), command.targetId(), count);
         }
+
+        eventPublisher.publishEvent(ReportCreatedEvent.of(
+                reportId, command.targetType().name(), command.targetId()));
 
         return reportId;
     }

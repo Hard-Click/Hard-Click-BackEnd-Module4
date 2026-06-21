@@ -7,6 +7,7 @@ import com.wanted.backend.domain.cource.application.command.UploadLessonVideoCom
 import com.wanted.backend.domain.cource.application.port.VideoStoragePort;
 import com.wanted.backend.domain.cource.application.usecase.CourseCommandUseCase;
 import com.wanted.backend.domain.cource.domain.dto.CourseAuthorInfo;
+import com.wanted.backend.domain.cource.domain.event.CourseCreatedEvent;
 import com.wanted.backend.domain.cource.domain.model.Course;
 import com.wanted.backend.domain.cource.domain.model.CourseSection;
 import com.wanted.backend.domain.cource.domain.model.CourseStatus;
@@ -69,6 +70,10 @@ public class CourseCommandService implements CourseCommandUseCase {
 
         Course saved = courseRepository.save(course);
         saved.pullDomainEvents().forEach(eventPublisher::publishEvent);
+
+        eventPublisher.publishEvent(CourseCreatedEvent.of(
+                saved.getId(), command.authorId(), saved.getTitle()));
+
         return saved.getId();
     }
 

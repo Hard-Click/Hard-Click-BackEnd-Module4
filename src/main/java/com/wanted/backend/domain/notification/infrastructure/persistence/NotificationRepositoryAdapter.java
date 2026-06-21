@@ -63,6 +63,16 @@ public class NotificationRepositoryAdapter implements NotificationRepository {
         return repository.existsByReceiverIdAndIdLessThan(receiverId, lastId);
     }
 
+    @Override
+    public List<Notification> saveAll(List<Notification> notifications) {
+        List<NotificationJpaEntity> entities = notifications.stream()
+                .map(n -> new NotificationJpaEntity(
+                        n.getReceiverId(), n.getType(), n.getMessage(),
+                        n.isRead(), n.getRedirectUrl(), n.getCreatedAt()))
+                .toList();
+        return repository.saveAll(entities).stream().map(this::toDomain).toList();
+    }
+
 
     private Notification toDomain(NotificationJpaEntity entity) {
         return Notification.restore(
