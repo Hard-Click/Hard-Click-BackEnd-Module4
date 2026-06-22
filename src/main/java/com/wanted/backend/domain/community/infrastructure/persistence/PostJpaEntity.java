@@ -80,4 +80,16 @@ public class PostJpaEntity {
         this.isAccepted = isAccepted;
         this.updatedAt = updatedAt;
     }
+    public boolean isAdminDeleted() {
+        return this.status == PostStatus.ADMIN_DELETED;
+    }
+
+    public boolean isActive() {
+        return this.status == PostStatus.ACTIVE;
+    }
+
+    public void softDeleteByAdmin(LocalDateTime updatedAt) {
+        this.status = PostStatus.ADMIN_DELETED;
+        this.updatedAt = updatedAt;
+    }
 }

@@ -86,18 +86,18 @@ public class AdminReportQueryAdapter implements AdminReportQueryPort {
             return Optional.empty();
         }
 
-        ReportJpaEntity latestReport = reports.get(0);
+        ReportJpaEntity representativeReport = reports.get(0);
         DetailTargetContent targetContent = findDetailTargetContent(
-                latestReport.getTargetType(),
-                latestReport.getTargetId(),
-                latestReport.getReportedMemberId()
+                requestedReport.getTargetType(),
+                requestedReport.getTargetId(),
+                requestedReport.getReportedMemberId()
         );
-        MemberInfo reporter = findMemberInfo(latestReport.getReporterId());
+        MemberInfo reporter = findMemberInfo(representativeReport.getReporterId());
 
         return Optional.of(new AdminReportDetailResult(
-                latestReport.getId(),
-                latestReport.getTargetType(),
-                latestReport.getTargetId(),
+                representativeReport.getId(),
+                requestedReport.getTargetType(),
+                requestedReport.getTargetId(),
                 targetContent.title(),
                 targetContent.content(),
                 targetContent.url(),
@@ -105,11 +105,11 @@ public class AdminReportQueryAdapter implements AdminReportQueryPort {
                 findMemberName(targetContent.authorId()),
                 reports.size(),
                 aggregateReasonCounts(reports),
-                latestReport.getReporterId(),
+                representativeReport.getReporterId(),
                 reporter.name(),
                 reporter.username(),
-                normalizeStatus(latestReport.getStatus()),
-                latestReport.getMemo()
+                normalizeStatus(representativeReport.getStatus()),
+                representativeReport.getMemo()
         ));
     }
 
@@ -122,12 +122,13 @@ public class AdminReportQueryAdapter implements AdminReportQueryPort {
                 continue;
             }
             for (String value : report.getReportTypes().split(",")) {
+                ReportType type;
                 try {
-                    ReportType type = ReportType.valueOf(value.trim());
-                    counts.merge(type, 1, Integer::sum);
+                    type = ReportType.valueOf(value.trim());
                 } catch (IllegalArgumentException ignored) {
-                    // Unknown legacy values cannot be represented by ReportType.
+                    type = ReportType.OTHER;
                 }
+                counts.merge(type, 1, Integer::sum);
             }
         }
 
@@ -159,9 +160,7 @@ public class AdminReportQueryAdapter implements AdminReportQueryPort {
                 }
                 yield new DetailTargetContent(
                         post.getTitle(),
-                        post.getStatus() == PostStatus.ACTIVE
-                                ? post.getContent()
-                                : DETAIL_DELETED_POST_CONTENT,
+                        postDetailContent(post),
                         "/posts/" + post.getId(),
                         post.getAuthorId()
                 );
@@ -264,7 +263,11 @@ public class AdminReportQueryAdapter implements AdminReportQueryPort {
             sql.append(" and latest.target_type = :targetType");
         }
         if (query.status() != null) {
-            sql.append(" and latest.status = :status");
+            if (query.status() == ReportStatus.PENDING) {
+                sql.append(" and (latest.status = :status or latest.status is null)");
+            } else {
+                sql.append(" and latest.status = :status");
+            }
         }
 
         Query countQuery = entityManager.createNativeQuery(sql.toString())
@@ -292,7 +295,11 @@ public class AdminReportQueryAdapter implements AdminReportQueryPort {
                 where report.targetType = latest.targetType
                   and report.targetId = latest.targetId
                   and (:targetType is null or latest.targetType = :targetType)
-                  and (:status is null or latest.status = :status)
+                  and (
+                      :status is null
+                      or latest.status = :status
+                      or (:status = com.wanted.backend.domain.community.domain.model.ReportStatus.PENDING and latest.status is null)
+                  )
                   and not exists (
                       select newer.id
                       from ReportJpaEntity newer
@@ -377,6 +384,18 @@ public class AdminReportQueryAdapter implements AdminReportQueryPort {
             return Comment.ADMIN_DELETED_MESSAGE;
         }
         return DELETED_COMMENT_CONTENT;
+    }
+
+    private String postDetailContent(PostJpaEntity post) {
+        if (post.getStatus() == PostStatus.ACTIVE) {
+            return post.getContent();
+        }
+
+        if (post.getStatus() == PostStatus.ADMIN_DELETED) {
+            return DETAIL_DELETED_POST_CONTENT;
+        }
+
+        return DELETED_POST_CONTENT;
     }
 
     private String findMemberName(Long memberId) {

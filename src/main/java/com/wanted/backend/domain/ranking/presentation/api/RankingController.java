@@ -2,10 +2,12 @@ package com.wanted.backend.domain.ranking.presentation.api;
 
 import com.wanted.backend.domain.ranking.application.query.GetAcceptedCommentRankingQuery;
 import com.wanted.backend.domain.ranking.application.query.GetLessonRankingQuery;
+import com.wanted.backend.domain.ranking.application.query.GetMyRankingDetailQuery;
 import com.wanted.backend.domain.ranking.application.query.GetMyRankingSummaryQuery;
 import com.wanted.backend.domain.ranking.application.query.GetStudyTimeRankingQuery;
 import com.wanted.backend.domain.ranking.application.usecase.GetAcceptedCommentRankingUseCase;
 import com.wanted.backend.domain.ranking.application.usecase.GetLessonRankingUseCase;
+import com.wanted.backend.domain.ranking.application.usecase.GetMyRankingDetailUseCase;
 import com.wanted.backend.domain.ranking.application.usecase.GetMyRankingSummaryUseCase;
 import com.wanted.backend.domain.ranking.application.usecase.GetStudyTimeRankingUseCase;
 import com.wanted.backend.global.common.ApiResponse;
@@ -28,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Ranking", description = "랭킹 API")
 public class RankingController {
 
+    private final GetMyRankingDetailUseCase getMyRankingDetailUseCase;
     private final GetMyRankingSummaryUseCase getMyRankingSummaryUseCase;
     private final GetStudyTimeRankingUseCase getStudyTimeRankingUseCase;
     private final GetLessonRankingUseCase getLessonRankingUseCase;
@@ -93,12 +96,31 @@ public class RankingController {
         return ApiResponse.success("댓글 채택 수 랭킹을 조회했습니다.", result);
     }
 
+    @GetMapping("/me/summary")
+    @Operation(
+            summary = "내 랭킹 요약 정보 조회",
+            description = "마이페이지 랭킹 요약 영역에서 사용할 순공시간, 수강량, 댓글 채택 수 순위와 상위 퍼센트를 조회합니다."
+    )
+    public ResponseEntity<ApiResponse<GetMyRankingSummaryUseCase.MyRankingSummaryView>> mySummary(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        Long memberId = userDetails != null ? userDetails.getMemberId() : null;
+        if (memberId == null) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+
+        GetMyRankingSummaryUseCase.MyRankingSummaryView result =
+                getMyRankingSummaryUseCase.handle(new GetMyRankingSummaryQuery(memberId));
+
+        return ApiResponse.success("내 랭킹 요약 정보를 조회했습니다.", result);
+    }
+
     @GetMapping("/me")
     @Operation(
             summary = "내 랭킹 상세 정보 조회",
             description = "랭킹 탭에서 사용할 선택 기준별 내 순위, 전체 사용자 수, 상위 퍼센트를 조회합니다."
     )
-    public ResponseEntity<ApiResponse<GetMyRankingSummaryUseCase.MyRankingSummaryView>> me(
+    public ResponseEntity<ApiResponse<GetMyRankingDetailUseCase.MyRankingDetailView>> me(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(required = false) String metric,
             @RequestParam(required = false) String period
@@ -108,8 +130,8 @@ public class RankingController {
             throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
 
-        GetMyRankingSummaryUseCase.MyRankingSummaryView result =
-                getMyRankingSummaryUseCase.handle(new GetMyRankingSummaryQuery(
+        GetMyRankingDetailUseCase.MyRankingDetailView result =
+                getMyRankingDetailUseCase.handle(new GetMyRankingDetailQuery(
                         memberId,
                         metric,
                         period
