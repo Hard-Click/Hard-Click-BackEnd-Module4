@@ -8,6 +8,7 @@ import com.wanted.backend.domain.ranking.domain.model.RankingMetric;
 import com.wanted.backend.domain.ranking.domain.model.RankingPeriod;
 import com.wanted.backend.domain.ranking.domain.policy.RankingTopPercentPolicy;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,11 +32,7 @@ public class GetMyRankingSummaryService implements GetMyRankingSummaryUseCase {
     }
 
     private RankingSummaryItem findSummaryItem(Long memberId, RankingMetric metric) {
-        RankingDetail detail = rankingDetailReader.findByMetricAndPeriodAndMemberId(
-                metric,
-                RankingPeriod.MONTHLY,
-                memberId
-        );
+        RankingDetail detail = findRankingDetail(memberId, metric);
 
         return new RankingSummaryItem(
                 detail.rank(),
@@ -44,7 +41,22 @@ public class GetMyRankingSummaryService implements GetMyRankingSummaryUseCase {
         );
     }
 
+    private RankingDetail findRankingDetail(Long memberId, RankingMetric metric) {
+        try {
+            return rankingDetailReader.findByMetricAndPeriodAndMemberId(
+                    metric,
+                    RankingPeriod.MONTHLY,
+                    memberId
+            );
+        } catch (DataAccessException exception) {
+            return RankingDetail.empty();
+        }
+    }
+
     private void validate(GetMyRankingSummaryQuery query) {
+        if (query == null) {
+            throw new IllegalArgumentException("요청은 필수입니다.");
+        }
         if (query.memberId() == null) {
             throw new IllegalArgumentException("회원 ID는 필수입니다.");
         }

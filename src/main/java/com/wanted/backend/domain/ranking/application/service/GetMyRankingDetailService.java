@@ -45,6 +45,9 @@ public class GetMyRankingDetailService implements GetMyRankingDetailUseCase {
     }
 
     private void validate(GetMyRankingDetailQuery query) {
+        if (query == null) {
+            throw new IllegalArgumentException("요청은 필수입니다.");
+        }
         if (query.memberId() == null) {
             throw new IllegalArgumentException("회원 ID는 필수입니다.");
         }

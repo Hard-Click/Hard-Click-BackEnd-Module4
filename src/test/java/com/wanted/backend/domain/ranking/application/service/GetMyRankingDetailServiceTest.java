@@ -102,6 +102,15 @@ class GetMyRankingDetailServiceTest {
     }
 
     @Test
+    void rejectsQueryWhenQueryIsNull() {
+        assertThatThrownBy(() -> service.handle(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("요청은 필수입니다.");
+
+        verifyNoInteractions(rankingDetailReader);
+    }
+
+    @Test
     void rejectsQueryWhenMemberIdIsNull() {
         assertThatThrownBy(() -> service.handle(new GetMyRankingDetailQuery(null, "study-time", "monthly")))
                 .isInstanceOf(IllegalArgumentException.class)

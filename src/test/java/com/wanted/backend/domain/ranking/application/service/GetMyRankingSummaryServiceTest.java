@@ -9,6 +9,7 @@ import com.wanted.backend.domain.ranking.domain.model.RankingPeriod;
 import com.wanted.backend.domain.ranking.domain.policy.RankingTopPercentPolicy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.DataAccessResourceFailureException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -80,6 +81,44 @@ class GetMyRankingSummaryServiceTest {
         assertThat(result.acceptedComment().rank()).isNull();
         assertThat(result.acceptedComment().totalUsers()).isZero();
         assertThat(result.acceptedComment().topPercent()).isEqualTo(0.0);
+    }
+
+    @Test
+    void returnsFallbackValueOnlyForFailedMetricWhenRankingReaderFails() {
+        when(rankingDetailReader.findByMetricAndPeriodAndMemberId(RankingMetric.STUDY_TIME, RankingPeriod.MONTHLY, 1L))
+                .thenThrow(new DataAccessResourceFailureException("Redis connection failed"));
+        when(rankingDetailReader.findByMetricAndPeriodAndMemberId(RankingMetric.LESSON, RankingPeriod.MONTHLY, 1L))
+                .thenReturn(new RankingDetail(38L, 380L));
+        when(rankingDetailReader.findByMetricAndPeriodAndMemberId(RankingMetric.ACCEPTED_COMMENT, RankingPeriod.MONTHLY, 1L))
+                .thenReturn(new RankingDetail(15L, 300L));
+
+        MyRankingSummaryView result = service.handle(new GetMyRankingSummaryQuery(1L));
+
+        assertThat(result.studyTime().rank()).isNull();
+        assertThat(result.studyTime().totalUsers()).isZero();
+        assertThat(result.studyTime().topPercent()).isEqualTo(0.0);
+        assertThat(result.lesson().rank()).isEqualTo(38L);
+        assertThat(result.lesson().totalUsers()).isEqualTo(380L);
+        assertThat(result.lesson().topPercent()).isEqualTo(10.0);
+        assertThat(result.acceptedComment().rank()).isEqualTo(15L);
+        assertThat(result.acceptedComment().totalUsers()).isEqualTo(300L);
+        assertThat(result.acceptedComment().topPercent()).isEqualTo(5.0);
+
+        verify(rankingDetailReader)
+                .findByMetricAndPeriodAndMemberId(RankingMetric.STUDY_TIME, RankingPeriod.MONTHLY, 1L);
+        verify(rankingDetailReader)
+                .findByMetricAndPeriodAndMemberId(RankingMetric.LESSON, RankingPeriod.MONTHLY, 1L);
+        verify(rankingDetailReader)
+                .findByMetricAndPeriodAndMemberId(RankingMetric.ACCEPTED_COMMENT, RankingPeriod.MONTHLY, 1L);
+    }
+
+    @Test
+    void rejectsQueryWhenQueryIsNull() {
+        assertThatThrownBy(() -> service.handle(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("요청은 필수입니다.");
+
+        verifyNoInteractions(rankingDetailReader);
     }
 
     @Test
