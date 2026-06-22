@@ -1,8 +1,10 @@
 package com.wanted.backend.domain.ranking.presentation.api;
 
+import com.wanted.backend.domain.ranking.application.query.GetAcceptedCommentRankingQuery;
 import com.wanted.backend.domain.ranking.application.query.GetLessonRankingQuery;
 import com.wanted.backend.domain.ranking.application.query.GetMyRankingSummaryQuery;
 import com.wanted.backend.domain.ranking.application.query.GetStudyTimeRankingQuery;
+import com.wanted.backend.domain.ranking.application.usecase.GetAcceptedCommentRankingUseCase;
 import com.wanted.backend.domain.ranking.application.usecase.GetLessonRankingUseCase;
 import com.wanted.backend.domain.ranking.application.usecase.GetMyRankingSummaryUseCase;
 import com.wanted.backend.domain.ranking.application.usecase.GetStudyTimeRankingUseCase;
@@ -40,6 +42,9 @@ class RankingControllerTest {
 
     @MockitoBean
     private GetLessonRankingUseCase getLessonRankingUseCase;
+
+    @MockitoBean
+    private GetAcceptedCommentRankingUseCase getAcceptedCommentRankingUseCase;
 
     @AfterEach
     void tearDown() {
@@ -196,6 +201,71 @@ class RankingControllerTest {
                 .thenThrow(new IllegalArgumentException("랭킹 기간은 daily, weekly, monthly 중 하나여야 합니다."));
 
         mockMvc.perform(get("/api/rankings/lessons")
+                        .param("period", "yearly"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("C001"));
+    }
+
+    @Test
+    void acceptedCommentsReturnsOkWithRankingList() throws Exception {
+        authenticateMember(1L);
+        when(getAcceptedCommentRankingUseCase.handle(new GetAcceptedCommentRankingQuery("daily")))
+                .thenReturn(new GetAcceptedCommentRankingUseCase.AcceptedCommentRankingView(
+                        "daily",
+                        2L,
+                        List.of(
+                                new GetAcceptedCommentRankingUseCase.AcceptedCommentRankingItem(1L, 1L, 7L),
+                                new GetAcceptedCommentRankingUseCase.AcceptedCommentRankingItem(2L, 2L, 4L)
+                        )
+                ));
+
+        mockMvc.perform(get("/api/rankings/accepted-comments")
+                        .param("period", "daily"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.httpStatus").value(200))
+                .andExpect(jsonPath("$.message").value("댓글 채택 수 랭킹을 조회했습니다."))
+                .andExpect(jsonPath("$.data.period").value("daily"))
+                .andExpect(jsonPath("$.data.totalUsers").value(2))
+                .andExpect(jsonPath("$.data.rankings[0].rank").value(1))
+                .andExpect(jsonPath("$.data.rankings[0].memberId").value(1))
+                .andExpect(jsonPath("$.data.rankings[0].acceptedCommentCount").value(7))
+                .andExpect(jsonPath("$.data.rankings[1].rank").value(2))
+                .andExpect(jsonPath("$.data.rankings[1].memberId").value(2))
+                .andExpect(jsonPath("$.data.rankings[1].acceptedCommentCount").value(4));
+    }
+
+    @Test
+    void acceptedCommentsReturnsMonthlyRankingWhenPeriodIsOmitted() throws Exception {
+        authenticateMember(1L);
+        when(getAcceptedCommentRankingUseCase.handle(new GetAcceptedCommentRankingQuery(null)))
+                .thenReturn(new GetAcceptedCommentRankingUseCase.AcceptedCommentRankingView(
+                        "monthly",
+                        0L,
+                        List.of()
+                ));
+
+        mockMvc.perform(get("/api/rankings/accepted-comments"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.httpStatus").value(200))
+                .andExpect(jsonPath("$.data.period").value("monthly"))
+                .andExpect(jsonPath("$.data.totalUsers").value(0))
+                .andExpect(jsonPath("$.data.rankings").isEmpty());
+    }
+
+    @Test
+    void acceptedCommentsReturnsUnauthorizedWhenUserIsNotAuthenticated() throws Exception {
+        mockMvc.perform(get("/api/rankings/accepted-comments"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("C003"));
+    }
+
+    @Test
+    void acceptedCommentsReturnsBadRequestWhenPeriodIsInvalid() throws Exception {
+        authenticateMember(1L);
+        when(getAcceptedCommentRankingUseCase.handle(new GetAcceptedCommentRankingQuery("yearly")))
+                .thenThrow(new IllegalArgumentException("랭킹 기간은 daily, weekly, monthly 중 하나여야 합니다."));
+
+        mockMvc.perform(get("/api/rankings/accepted-comments")
                         .param("period", "yearly"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorCode").value("C001"));
