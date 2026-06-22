@@ -10,6 +10,9 @@ import com.wanted.backend.global.exception.ErrorCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -54,6 +57,23 @@ class AdminContentCommandServiceTest {
         // given
         ChangeAdminContentStatusCommand command = new ChangeAdminContentStatusCommand(
                 TargetType.POST, 15L, "ACTIVE", "복구합니다.");
+
+        // when & then
+        assertThatThrownBy(() -> adminContentCommandService.changeStatus(command))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.INVALID_INPUT_VALUE.getMessage());
+
+        verify(adminContentCommandPort, never()).deleteByAdmin(any(), anyLong());
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" "})
+    @DisplayName("status가 null이거나 비어있으면 예외가 발생하고 삭제가 호출되지 않는다")
+    void changeStatus_fail_nullOrBlankStatus(String invalidStatus) {
+        // given
+        ChangeAdminContentStatusCommand command = new ChangeAdminContentStatusCommand(
+                TargetType.POST, 15L, invalidStatus, "메모");
 
         // when & then
         assertThatThrownBy(() -> adminContentCommandService.changeStatus(command))

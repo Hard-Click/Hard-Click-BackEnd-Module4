@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -57,6 +58,32 @@ class AdminContentCommandAdapterTest {
 
         // then
         verify(commentRepository).softDeleteByAdmin(eq(20L), any());
+    }
+
+    @Test
+    @DisplayName("게시글이 존재하지 않으면 저장소의 예외가 그대로 전파된다")
+    void deleteByAdmin_post_notFound() {
+        // given
+        willThrow(new BusinessException(ErrorCode.POST_NOT_FOUND))
+                .given(postRepository).adminDeleteById(15L);
+
+        // when & then
+        assertThatThrownBy(() -> adminContentCommandAdapter.deleteByAdmin(TargetType.POST, 15L))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.POST_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    @DisplayName("댓글이 존재하지 않으면 저장소의 예외가 그대로 전파된다")
+    void deleteByAdmin_comment_notFound() {
+        // given
+        willThrow(new BusinessException(ErrorCode.COMMENT_NOT_FOUND))
+                .given(commentRepository).softDeleteByAdmin(eq(20L), any());
+
+        // when & then
+        assertThatThrownBy(() -> adminContentCommandAdapter.deleteByAdmin(TargetType.COMMENT, 20L))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.COMMENT_NOT_FOUND.getMessage());
     }
 
     @Test

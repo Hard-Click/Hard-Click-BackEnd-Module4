@@ -5,6 +5,8 @@ import com.wanted.backend.domain.report_moderation.application.command.ChangeAdm
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import java.util.Locale;
+
 public record AdminContentStatusRequest(
         @NotBlank
         String status,
@@ -22,7 +24,7 @@ public record AdminContentStatusRequest(
     }
 
     private String normalizeStatus(String value) {
-        return value.trim().toUpperCase();
+        return value.trim().toUpperCase(Locale.ROOT);
     }
 
     private String normalizeMemo(String value) {
