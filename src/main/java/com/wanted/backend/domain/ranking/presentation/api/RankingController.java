@@ -1,8 +1,10 @@
 package com.wanted.backend.domain.ranking.presentation.api;
 
+import com.wanted.backend.domain.ranking.application.query.GetAcceptedCommentRankingQuery;
 import com.wanted.backend.domain.ranking.application.query.GetLessonRankingQuery;
 import com.wanted.backend.domain.ranking.application.query.GetMyRankingSummaryQuery;
 import com.wanted.backend.domain.ranking.application.query.GetStudyTimeRankingQuery;
+import com.wanted.backend.domain.ranking.application.usecase.GetAcceptedCommentRankingUseCase;
 import com.wanted.backend.domain.ranking.application.usecase.GetLessonRankingUseCase;
 import com.wanted.backend.domain.ranking.application.usecase.GetMyRankingSummaryUseCase;
 import com.wanted.backend.domain.ranking.application.usecase.GetStudyTimeRankingUseCase;
@@ -29,6 +31,7 @@ public class RankingController {
     private final GetMyRankingSummaryUseCase getMyRankingSummaryUseCase;
     private final GetStudyTimeRankingUseCase getStudyTimeRankingUseCase;
     private final GetLessonRankingUseCase getLessonRankingUseCase;
+    private final GetAcceptedCommentRankingUseCase getAcceptedCommentRankingUseCase;
 
     @GetMapping("/study-time")
     @Operation(
@@ -68,6 +71,26 @@ public class RankingController {
                 getLessonRankingUseCase.handle(new GetLessonRankingQuery(period));
 
         return ApiResponse.success("수강량 랭킹을 조회했습니다.", result);
+    }
+
+    @GetMapping("/accepted-comments")
+    @Operation(
+            summary = "댓글 채택 수 랭킹 조회",
+            description = "기간별 댓글 채택 수 랭킹 목록을 조회합니다."
+    )
+    public ResponseEntity<ApiResponse<GetAcceptedCommentRankingUseCase.AcceptedCommentRankingView>> acceptedComments(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(required = false) String period
+    ) {
+        Long memberId = userDetails != null ? userDetails.getMemberId() : null;
+        if (memberId == null) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+
+        GetAcceptedCommentRankingUseCase.AcceptedCommentRankingView result =
+                getAcceptedCommentRankingUseCase.handle(new GetAcceptedCommentRankingQuery(period));
+
+        return ApiResponse.success("댓글 채택 수 랭킹을 조회했습니다.", result);
     }
 
     @GetMapping("/me")
