@@ -104,6 +104,9 @@ import org.springframework.http.HttpStatus;
     COMMENT_ACCEPTED_CANNOT_MODIFY(HttpStatus.FORBIDDEN, "C008", "채택된 댓글은 수정할 수 없습니다."),
     COMMENT_ACCEPTED_CANNOT_DELETE(HttpStatus.FORBIDDEN, "C009", "채택된 댓글은 삭제할 수 없습니다."),
 
+    //커뮤니티 공통 접근 예외
+    COMMUNITY_ACCESS_DENIED(HttpStatus.FORBIDDEN, "C010", "커뮤니티 이용 권한이 없습니다."),
+
     //공지 예외
     NOTICE_NOT_AUTHORIZED(HttpStatus.FORBIDDEN, "N001", "해당 강의의 담당 강사가 아닙니다."),
     COURSE_NOT_FOUND2(HttpStatus.NOT_FOUND, "CO001", "존재하지 않는 강의입니다."),

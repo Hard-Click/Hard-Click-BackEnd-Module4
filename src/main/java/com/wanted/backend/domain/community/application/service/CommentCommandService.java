@@ -5,6 +5,7 @@ import com.wanted.backend.domain.community.application.command.CreateCommentComm
 import com.wanted.backend.domain.community.application.command.DeleteCommentCommand;
 import com.wanted.backend.domain.community.application.command.UpdateCommentCommand;
 import com.wanted.backend.domain.community.application.policy.CommentAcceptPolicy;
+import com.wanted.backend.domain.community.application.policy.CommunityAccessPolicy;
 import com.wanted.backend.domain.community.application.port.CommunityFileStoragePort;
 import com.wanted.backend.domain.community.application.usecase.CommentCommandUseCase;
 import com.wanted.backend.domain.community.domain.event.CommentAcceptedEvent;
@@ -32,22 +33,27 @@ public class CommentCommandService implements CommentCommandUseCase {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final CommentAcceptPolicy commentAcceptPolicy;
+    private final CommunityAccessPolicy communityAccessPolicy;
     private final ApplicationEventPublisher eventPublisher;
 
     public CommentCommandService(CommunityFileStoragePort storagePort,
                                  CommentRepository commentRepository,
                                  PostRepository postRepository,
                                  CommentAcceptPolicy commentAcceptPolicy,
+                                 CommunityAccessPolicy communityAccessPolicy,
                                  ApplicationEventPublisher eventPublisher) {
         this.storagePort = storagePort;
         this.commentRepository = commentRepository;
         this.postRepository = postRepository;
         this.commentAcceptPolicy = commentAcceptPolicy;
+        this.communityAccessPolicy = communityAccessPolicy;
         this.eventPublisher = eventPublisher;
     }
 
     @Override
     public Long create(CreateCommentCommand command) {
+        communityAccessPolicy.validateAccess(command.memberId());
+
         Post post = postRepository.findById(command.postId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
 
@@ -95,6 +101,8 @@ public class CommentCommandService implements CommentCommandUseCase {
 
     @Override
     public void accept(AcceptCommentCommand command) {
+        communityAccessPolicy.validateAccess(command.memberId());
+
         Comment comment = commentRepository.findById(command.commentId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
 
@@ -112,6 +120,8 @@ public class CommentCommandService implements CommentCommandUseCase {
 
     @Override
     public void update(UpdateCommentCommand command) {
+        communityAccessPolicy.validateAccess(command.memberId());
+
         Comment comment = commentRepository.findById(command.commentId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
 
@@ -132,6 +142,8 @@ public class CommentCommandService implements CommentCommandUseCase {
 
     @Override
     public void delete(DeleteCommentCommand command) {
+        communityAccessPolicy.validateAccess(command.memberId());
+
         Comment comment = commentRepository.findById(command.commentId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
 

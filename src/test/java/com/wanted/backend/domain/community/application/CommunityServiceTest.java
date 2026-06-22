@@ -2,6 +2,7 @@ package com.wanted.backend.domain.community.application;
 
 import com.wanted.backend.domain.community.application.command.CreateCommentCommand;
 import com.wanted.backend.domain.community.application.policy.CommentAcceptPolicy;
+import com.wanted.backend.domain.community.application.policy.CommunityAccessPolicy;
 import com.wanted.backend.domain.community.application.service.CommentCommandService;
 import com.wanted.backend.domain.community.domain.model.BoardType;
 import com.wanted.backend.domain.community.domain.model.Comment;
@@ -40,6 +41,9 @@ class CommunityServiceTest {
 
     @Mock
     private CommentAcceptPolicy commentAcceptPolicy;
+
+    @Mock
+    private CommunityAccessPolicy communityAccessPolicy;
 
     @Test
     @DisplayName("대댓글에 답글을 달면 예외가 발생하고 저장이 호출되지 않는다")
