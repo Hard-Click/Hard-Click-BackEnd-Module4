@@ -3,6 +3,8 @@ package com.wanted.backend.domain.study_timer.presentation.api;
 import com.wanted.backend.domain.study_timer.application.query.GetDailyStudyTimeQuery;
 import com.wanted.backend.domain.study_timer.application.usecase.GetDailyStudyTimeUseCase;
 import com.wanted.backend.global.common.ApiResponse;
+import com.wanted.backend.global.exception.BusinessException;
+import com.wanted.backend.global.exception.ErrorCode;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -42,22 +44,34 @@ public class StudyTimerStatsController {
         List<GetDailyStudyTimeUseCase.DailyStudyTimeItem> result =
                 getDailyStudyTimeUseCase.handle(new GetDailyStudyTimeQuery(
                         userDetails.getMemberId(),
-                        parseDate(startDate, "시작 날짜"),
-                        parseDate(endDate, "종료 날짜")
+                        parseDate(
+                                startDate,
+                                ErrorCode.STUDY_TIMER_DAILY_START_DATE_REQUIRED,
+                                ErrorCode.STUDY_TIMER_DAILY_START_DATE_FORMAT_INVALID
+                        ),
+                        parseDate(
+                                endDate,
+                                ErrorCode.STUDY_TIMER_DAILY_END_DATE_REQUIRED,
+                                ErrorCode.STUDY_TIMER_DAILY_END_DATE_FORMAT_INVALID
+                        )
                 ));
 
         return ApiResponse.success("일별 순공시간을 조회했습니다.", result);
     }
 
-    private LocalDate parseDate(String value, String fieldName) {
+    private LocalDate parseDate(
+            String value,
+            ErrorCode requiredErrorCode,
+            ErrorCode formatErrorCode
+    ) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(fieldName + "는 필수입니다.");
+            throw new BusinessException(requiredErrorCode);
         }
 
         try {
             return LocalDate.parse(value);
         } catch (DateTimeParseException exception) {
-            throw new IllegalArgumentException(fieldName + "는 yyyy-MM-dd 형식이어야 합니다.", exception);
+            throw new BusinessException(formatErrorCode, exception);
         }
     }
 }

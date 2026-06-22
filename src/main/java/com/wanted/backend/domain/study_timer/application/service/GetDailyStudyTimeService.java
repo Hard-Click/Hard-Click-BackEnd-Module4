@@ -4,6 +4,8 @@ import com.wanted.backend.domain.study_timer.application.query.GetDailyStudyTime
 import com.wanted.backend.domain.study_timer.application.usecase.GetDailyStudyTimeUseCase;
 import com.wanted.backend.domain.study_timer.domain.model.DailyStudyStat;
 import com.wanted.backend.domain.study_timer.domain.repository.DailyStudyStatsRepository;
+import com.wanted.backend.global.exception.BusinessException;
+import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,16 +53,16 @@ public class GetDailyStudyTimeService implements GetDailyStudyTimeUseCase {
 
     private void validate(GetDailyStudyTimeQuery query) {
         if (query.memberId() == null) {
-            throw new IllegalArgumentException("회원 ID는 필수입니다.");
+            throw new BusinessException(ErrorCode.STUDY_TIMER_MEMBER_ID_REQUIRED);
         }
         if (query.startDate() == null) {
-            throw new IllegalArgumentException("시작 날짜는 필수입니다.");
+            throw new BusinessException(ErrorCode.STUDY_TIMER_DAILY_START_DATE_REQUIRED);
         }
         if (query.endDate() == null) {
-            throw new IllegalArgumentException("종료 날짜는 필수입니다.");
+            throw new BusinessException(ErrorCode.STUDY_TIMER_DAILY_END_DATE_REQUIRED);
         }
         if (query.startDate().isAfter(query.endDate())) {
-            throw new IllegalArgumentException("시작 날짜는 종료 날짜 이후일 수 없습니다.");
+            throw new BusinessException(ErrorCode.STUDY_TIMER_DAILY_DATE_RANGE_INVALID);
         }
         validateDateRange(query.startDate(), query.endDate());
     }
@@ -69,7 +71,7 @@ public class GetDailyStudyTimeService implements GetDailyStudyTimeUseCase {
         LocalDate maxAllowedEndDate = startDate.plus(MAX_DAILY_STUDY_TIME_QUERY_PERIOD).minusDays(1);
 
         if (endDate.isAfter(maxAllowedEndDate)) {
-            throw new IllegalArgumentException("일별 학습 시간은 최대 1년치까지만 조회할 수 있습니다.");
+            throw new BusinessException(ErrorCode.STUDY_TIMER_DAILY_DATE_RANGE_TOO_LONG);
         }
     }
 }
