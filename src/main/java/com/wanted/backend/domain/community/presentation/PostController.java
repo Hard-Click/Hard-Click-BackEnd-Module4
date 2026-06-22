@@ -116,7 +116,7 @@ public class PostController {
             @RequestParam(defaultValue = "0") int page) {
 
         PostListResponse response = postQueryUseCase.getList(null, sort, keyword, page);
-        return ApiResponse.success("게시글 목록 조회 성공", response);
+        return ApiResponse.success  ("게시글 목록 조회 성공", response);
     }
 
     @GetMapping("/posts/{postId}")
