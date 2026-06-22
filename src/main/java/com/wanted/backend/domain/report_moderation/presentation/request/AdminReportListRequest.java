@@ -3,6 +3,8 @@ package com.wanted.backend.domain.report_moderation.presentation.request;
 import com.wanted.backend.domain.community.domain.model.ReportStatus;
 import com.wanted.backend.domain.community.domain.model.TargetType;
 import com.wanted.backend.domain.report_moderation.application.query.AdminReportListQuery;
+import com.wanted.backend.global.exception.BusinessException;
+import com.wanted.backend.global.exception.ErrorCode;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 
@@ -66,7 +68,7 @@ public class AdminReportListRequest {
         try {
             return ReportStatus.valueOf(value.trim().toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("신고 처리 상태는 PENDING, RESOLVED, REJECTED 중 하나여야 합니다.");
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, e);
         }
     }
 
@@ -77,7 +79,7 @@ public class AdminReportListRequest {
         try {
             return TargetType.valueOf(value.trim().toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("신고 대상 유형은 POST, COMMENT, REVIEW 중 하나여야 합니다.");
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, e);
         }
     }
 }

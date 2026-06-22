@@ -3,6 +3,8 @@ package com.wanted.backend.domain.identity.domain.model;
 import com.wanted.backend.domain.identity.domain.event.MemberLoggedInEvent;
 import com.wanted.backend.domain.identity.domain.policy.MemberStatusChangePolicy;
 import com.wanted.backend.global.domain.DomainEvent;
+import com.wanted.backend.global.exception.BusinessException;
+import com.wanted.backend.global.exception.ErrorCode;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -171,11 +173,11 @@ public class Member {
 
     public void changeCommunityStatus(MemberStatus status, LocalDateTime now) {
         if (this.status == MemberStatus.WITHDRAWN) {
-            throw new IllegalArgumentException("탈퇴한 회원의 상태는 변경할 수 없습니다.");
+            throw new BusinessException(ErrorCode.ALREADY_WITHDRAWN_MEMBER);
         }
 
         if (!MemberStatusChangePolicy.isCommunityStatusChangeAllowed(status)) {
-            throw new IllegalArgumentException("관리자가 변경할 수 없는 회원 상태입니다.");
+            throw new BusinessException(ErrorCode.INVALID_MEMBER_STATUS_CHANGE);
         }
 
         this.status = status;

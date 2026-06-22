@@ -11,7 +11,11 @@ import java.time.LocalDateTime;
 @Table(
         name = "reports",
         indexes = {
-                @Index(name = "idx_reports_reported_member_id", columnList = "reported_member_id")
+                @Index(name = "idx_reports_reported_member_id", columnList = "reported_member_id"),
+                @Index(
+                        name = "idx_reports_target_latest",
+                        columnList = "target_type, target_id, created_at, report_id"
+                )
         }
 )
 @Getter
@@ -63,5 +67,19 @@ public class ReportJpaEntity {
         this.reason = reason;
         this.status = ReportStatus.PENDING;
         this.createdAt = createdAt;
+    }
+    public boolean isProcessed() {
+        return this.status == ReportStatus.REJECTED
+                || this.status == ReportStatus.RESOLVED;
+    }
+
+    public void reject(String memo) {
+        this.status = ReportStatus.REJECTED;
+        this.memo = memo;
+    }
+
+    public void resolve(String memo) {
+        this.status = ReportStatus.RESOLVED;
+        this.memo = memo;
     }
 }

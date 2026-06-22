@@ -306,9 +306,10 @@ public class EmailVerificationRedisAdapter implements EmailVerificationRepositor
             int dailyLimit,
             LocalDateTime expiresAt
     ) {
+        LocalDate bucketDate = expiresAt.minusNanos(1).toLocalDate();
         Long acquired = redisTemplate.execute(
                 ACQUIRE_SEND_PERMISSION_SCRIPT,
-                List.of(sendCountKey(email, purpose, LocalDate.now(DAILY_LIMIT_ZONE))),
+                List.of(sendCountKey(email, purpose, bucketDate)),
                 String.valueOf(dailyLimit),
                 String.valueOf(toEpochMilli(expiresAt))
         );

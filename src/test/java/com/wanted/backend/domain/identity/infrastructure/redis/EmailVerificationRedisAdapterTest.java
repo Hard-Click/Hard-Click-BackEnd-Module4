@@ -216,6 +216,34 @@ class EmailVerificationRedisAdapterTest {
     }
 
     @Test
+    void dailySendLimitKeyUsesDateImmediatelyBeforeExpiration() {
+        LocalDateTime expiresAt = LocalDateTime.of(2026, 6, 20, 0, 0);
+        List<String> keys = List.of(
+                "email:{send-count}:PASSWORD_RESET:user@example.com:2026-06-19"
+        );
+        when(redisTemplate.execute(
+                org.mockito.ArgumentMatchers.<RedisScript<Long>>any(),
+                eq(keys),
+                any(Object[].class)
+        )).thenReturn(1L);
+
+        boolean acquired = adapter.tryAcquireSendPermission(
+                "USER@example.com",
+                EmailPurpose.PASSWORD_RESET,
+                3,
+                expiresAt
+        );
+
+        assertThat(acquired).isTrue();
+        verify(redisTemplate).execute(
+                org.mockito.ArgumentMatchers.<RedisScript<Long>>any(),
+                eq(keys),
+                eq("3"),
+                any(String.class)
+        );
+    }
+
+    @Test
     void luaScriptsNeverUseArgumentsAsRedisKeys() throws IllegalAccessException {
         for (Field field : EmailVerificationRedisAdapter.class.getDeclaredFields()) {
             if (!RedisScript.class.isAssignableFrom(field.getType())) {

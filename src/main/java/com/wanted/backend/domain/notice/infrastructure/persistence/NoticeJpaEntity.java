@@ -8,7 +8,15 @@ import java.time.LocalDateTime;
 
 
 @Entity
-@Table(name = "notices")
+@Table(
+        name = "notices",
+        indexes = {
+                @Index(
+                        name = "idx_notices_dashboard",
+                        columnList = "type, status, created_at, notice_id"
+                )
+        }
+)
 @Getter
 public class NoticeJpaEntity {
 
