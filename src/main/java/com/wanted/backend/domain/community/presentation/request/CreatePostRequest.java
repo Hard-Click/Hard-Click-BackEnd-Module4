@@ -3,6 +3,7 @@ package com.wanted.backend.domain.community.presentation.request;
 import com.wanted.backend.domain.community.domain.model.BoardType;
 import com.wanted.backend.global.domain.SubjectType;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -24,4 +25,12 @@ public record CreatePostRequest(
         @Schema(description = "게시글 내용", example = "JWT 필터 순서가 헷갈리는데 설명 부탁드립니다.")
         @NotBlank(message = "내용은 필수입니다.")
         String content
-) {}
+) {
+        @AssertTrue(message = "질문 게시판은 과목을 필수로 입력해야 합니다.")
+        private boolean isSubjectValid() {
+                if (boardType == BoardType.QUESTION) {
+                        return subject != null;
+                }
+                return true;
+        }
+}

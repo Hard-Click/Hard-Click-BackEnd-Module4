@@ -1,7 +1,9 @@
 package com.wanted.backend.domain.ranking.presentation.api;
 
+import com.wanted.backend.domain.ranking.application.query.GetLessonRankingQuery;
 import com.wanted.backend.domain.ranking.application.query.GetMyRankingSummaryQuery;
 import com.wanted.backend.domain.ranking.application.query.GetStudyTimeRankingQuery;
+import com.wanted.backend.domain.ranking.application.usecase.GetLessonRankingUseCase;
 import com.wanted.backend.domain.ranking.application.usecase.GetMyRankingSummaryUseCase;
 import com.wanted.backend.domain.ranking.application.usecase.GetStudyTimeRankingUseCase;
 import com.wanted.backend.global.common.ApiResponse;
@@ -26,6 +28,7 @@ public class RankingController {
 
     private final GetMyRankingSummaryUseCase getMyRankingSummaryUseCase;
     private final GetStudyTimeRankingUseCase getStudyTimeRankingUseCase;
+    private final GetLessonRankingUseCase getLessonRankingUseCase;
 
     @GetMapping("/study-time")
     @Operation(
@@ -45,6 +48,26 @@ public class RankingController {
                 getStudyTimeRankingUseCase.handle(new GetStudyTimeRankingQuery(period));
 
         return ApiResponse.success("순공시간 랭킹을 조회했습니다.", result);
+    }
+
+    @GetMapping("/lessons")
+    @Operation(
+            summary = "수강량 랭킹 조회",
+            description = "기간별 수강량 랭킹 목록을 조회합니다."
+    )
+    public ResponseEntity<ApiResponse<GetLessonRankingUseCase.LessonRankingView>> lessons(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(required = false) String period
+    ) {
+        Long memberId = userDetails != null ? userDetails.getMemberId() : null;
+        if (memberId == null) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+
+        GetLessonRankingUseCase.LessonRankingView result =
+                getLessonRankingUseCase.handle(new GetLessonRankingQuery(period));
+
+        return ApiResponse.success("수강량 랭킹을 조회했습니다.", result);
     }
 
     @GetMapping("/me")
