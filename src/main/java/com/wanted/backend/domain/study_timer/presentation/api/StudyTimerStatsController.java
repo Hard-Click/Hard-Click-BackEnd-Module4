@@ -37,9 +37,9 @@ public class StudyTimerStatsController {
     public ResponseEntity<ApiResponse<List<GetDailyStudyTimeUseCase.DailyStudyTimeItem>>> daily(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Parameter(description = "조회 시작 날짜(yyyy-MM-dd)", example = "2026-05-01")
-            @RequestParam String startDate,
+            @RequestParam(required = false) String startDate,
             @Parameter(description = "조회 종료 날짜(yyyy-MM-dd)", example = "2026-05-07")
-            @RequestParam String endDate
+            @RequestParam(required = false) String endDate
     ) {
         List<GetDailyStudyTimeUseCase.DailyStudyTimeItem> result =
                 getDailyStudyTimeUseCase.handle(new GetDailyStudyTimeQuery(
