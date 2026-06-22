@@ -6,10 +6,8 @@ import java.util.List;
 public record UpdatePostCommand(
         Long memberId,
         Long postId,
-        Long subjectId,
+        String subject,
         String title,
         String content,
         List<MultipartFile> files
-) {
-
-}
+) {}

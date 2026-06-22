@@ -16,7 +16,21 @@ import java.util.concurrent.ThreadLocalRandom;
 @Profile({"local", "test"})
 public class MockPgClient implements PgClient {
 
-    private static final double TIMEOUT_PROBABILITY = 0.05;
+    private static final double DEFAULT_TIMEOUT_PROBABILITY = 0.05;
+    private static final double TIMEOUT_PROBABILITY = resolveTimeoutProbability();
+
+    private static double resolveTimeoutProbability() {
+        String raw = System.getProperty("pg.mock.timeout-probability");
+        if (raw == null) {
+            return DEFAULT_TIMEOUT_PROBABILITY;
+        }
+        try {
+            double parsed = Double.parseDouble(raw);
+            return Math.max(0.0, Math.min(1.0, parsed));
+        } catch (NumberFormatException e) {
+            return DEFAULT_TIMEOUT_PROBABILITY;
+        }
+    }
 
     @Override
     public String confirm(Long memberId, Long courseId, Integer amount) {

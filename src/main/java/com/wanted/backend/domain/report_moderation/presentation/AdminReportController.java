@@ -4,6 +4,8 @@ import com.wanted.backend.domain.report_moderation.application.dto.AdminReportDe
 import com.wanted.backend.domain.report_moderation.application.dto.AdminReportDetailResult;
 import com.wanted.backend.domain.report_moderation.application.dto.AdminReportListResult;
 import com.wanted.backend.domain.report_moderation.application.usecase.DecideAdminReportUseCase;
+import com.wanted.backend.domain.report_moderation.application.dto.AdminReportDetailResult;
+import com.wanted.backend.domain.report_moderation.application.dto.AdminReportListResult;
 import com.wanted.backend.domain.report_moderation.application.usecase.GetAdminReportDetailUseCase;
 import com.wanted.backend.domain.report_moderation.application.usecase.GetAdminReportListUseCase;
 import com.wanted.backend.domain.report_moderation.domain.model.AdminReportDecision;
@@ -23,6 +25,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @Validated

@@ -14,7 +14,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Entity
-@Table(name = "course")
+@Table(name = "course", indexes = {
+        @Index(name = "idx_course_status_created_at", columnList = "status, created_at"),
+        @Index(name = "idx_course_author_id", columnList = "author_id")
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CourseJpaEntity {

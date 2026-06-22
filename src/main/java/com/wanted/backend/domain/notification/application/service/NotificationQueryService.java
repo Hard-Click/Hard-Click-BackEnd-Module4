@@ -5,6 +5,9 @@ import com.wanted.backend.domain.notification.domain.model.Notification;
 import com.wanted.backend.domain.notification.domain.repository.NotificationRepository;
 import com.wanted.backend.domain.notification.presentation.response.NotificationItemResponse;
 import com.wanted.backend.domain.notification.presentation.response.NotificationListResponse;
+import com.wanted.backend.domain.notification.presentation.response.NotificationReadResponse;
+import com.wanted.backend.global.exception.BusinessException;
+import com.wanted.backend.global.exception.ErrorCode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,5 +53,17 @@ public class NotificationQueryService implements NotificationQueryUseCase {
                 .toList();
 
         return new NotificationListResponse(content, hasNext);
+    }
+
+    @Override
+    @Transactional
+    public NotificationReadResponse markAsRead(Long memberId, Long notificationId) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOTIFICATION_NOT_FOUND));
+        if (!notification.getReceiverId().equals(memberId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+        notificationRepository.updateRead(notificationId);
+        return new NotificationReadResponse(notificationId, true);
     }
 }

@@ -7,7 +7,9 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "reviews")
+@Table(name = "reviews", indexes = {
+        @Index(name = "idx_reviews_course_id", columnList = "course_id")
+})
 @Getter
 public class ReviewJpaEntity {
 

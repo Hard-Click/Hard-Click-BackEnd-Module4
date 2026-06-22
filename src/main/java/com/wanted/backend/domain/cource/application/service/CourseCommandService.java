@@ -7,12 +7,14 @@ import com.wanted.backend.domain.cource.application.command.UploadLessonVideoCom
 import com.wanted.backend.domain.cource.application.port.VideoStoragePort;
 import com.wanted.backend.domain.cource.application.usecase.CourseCommandUseCase;
 import com.wanted.backend.domain.cource.domain.dto.CourseAuthorInfo;
+import com.wanted.backend.domain.cource.domain.event.CourseCreatedEvent;
 import com.wanted.backend.domain.cource.domain.model.Course;
 import com.wanted.backend.domain.cource.domain.model.CourseSection;
 import com.wanted.backend.domain.cource.domain.model.CourseStatus;
 import com.wanted.backend.domain.cource.domain.model.Lesson;
 import com.wanted.backend.domain.cource.domain.repository.CourseRepository;
 import com.wanted.backend.domain.cource.domain.repository.LessonRepository;
+import com.wanted.backend.domain.notification.domain.repository.NotificationRepository;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +39,7 @@ public class CourseCommandService implements CourseCommandUseCase {
     private final FileProcessingService fileProcessingService;
     private final ApplicationEventPublisher eventPublisher;
     private final Clock clock;
+    private final NotificationRepository notificationRepository;
 
     @Override
     public Long create(CreateCourseCommand command) {
@@ -69,6 +72,10 @@ public class CourseCommandService implements CourseCommandUseCase {
 
         Course saved = courseRepository.save(course);
         saved.pullDomainEvents().forEach(eventPublisher::publishEvent);
+
+        eventPublisher.publishEvent(CourseCreatedEvent.of(
+                saved.getId(), command.authorId(), saved.getTitle()));
+
         return saved.getId();
     }
 
@@ -119,6 +126,7 @@ public class CourseCommandService implements CourseCommandUseCase {
 
         course.softDelete();
         courseRepository.save(course);
+        notificationRepository.deleteByRedirectUrlStartingWith("/admin/courses/" + courseId);
     }
 
     @Override

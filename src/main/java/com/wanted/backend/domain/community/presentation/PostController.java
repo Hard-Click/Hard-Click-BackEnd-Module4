@@ -9,10 +9,7 @@ import com.wanted.backend.domain.community.domain.model.BoardType;
 import com.wanted.backend.domain.community.domain.model.PostSortType;
 import com.wanted.backend.domain.community.presentation.request.CreatePostRequest;
 import com.wanted.backend.domain.community.presentation.request.UpdatePostRequest;
-import com.wanted.backend.domain.community.presentation.response.CreatePostResponse;
-import com.wanted.backend.domain.community.presentation.response.PostDetailResponse;
-import com.wanted.backend.domain.community.presentation.response.PostListResponse;
-import com.wanted.backend.domain.community.presentation.response.UpdatePostResponse;
+import com.wanted.backend.domain.community.presentation.response.*;
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,6 +20,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -31,6 +30,11 @@ public class PostController {
 
     private final PostCommandUseCase postCommandUseCase;
     private final PostQueryUseCase postQueryUseCase;
+
+    private static final List<UnifiedBoardItemResponse> MOCK_STUDY_ITEMS = List.of(
+            new UnifiedBoardItemResponse("STUDY", null, 42L, "STUDY", "주말 수학 스터디", "이*연", null, null, "수학1", 3, 6, false, LocalDateTime.of(2026, 5, 18, 17, 0)),
+            new UnifiedBoardItemResponse("STUDY", null, 43L, "STUDY", "영어 독해 스터디", "김*민", null, null, "영어2", 5, 5, true, LocalDateTime.of(2026, 5, 17, 14, 30))
+    );
 
     public PostController(PostCommandUseCase postCommandUseCase,
                           PostQueryUseCase postQueryUseCase) {
@@ -60,7 +64,7 @@ public class PostController {
         Long postId = postCommandUseCase.create(new CreatePostCommand(
                 userDetails.getMemberId(),
                 request.boardType(),
-                request.subjectId(),
+                request.subject() != null ? request.subject().name() : null,
                 request.title(),
                 request.content(),
                 files
@@ -105,7 +109,7 @@ public class PostController {
                 - 페이지 기본값: 0
                 """
     )
-    public ResponseEntity<ApiResponse<PostListResponse>> getAllPostList(
+    public ResponseEntity<ApiResponse<UnifiedBoardListResponse>> getAllPostList(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(defaultValue = "latest") PostSortType sort,
             @RequestParam(required = false) String keyword,
@@ -114,7 +118,6 @@ public class PostController {
         PostListResponse response = postQueryUseCase.getList(null, sort, keyword, page);
         return ApiResponse.success("게시글 목록 조회 성공", response);
     }
-
 
     @GetMapping("/posts/{postId}")
     @Operation(
@@ -158,9 +161,8 @@ public class PostController {
             @RequestPart(value = "files", required = false) List<MultipartFile> files) {
 
         Long updatedPostId = postCommandUseCase.update(new UpdatePostCommand(
-                userDetails.getMemberId(),
-                postId,
-                request.subjectId(),
+                userDetails.getMemberId(), postId,
+                request.subject() != null ? request.subject().name() : null,
                 request.title(),
                 request.content(),
                 files

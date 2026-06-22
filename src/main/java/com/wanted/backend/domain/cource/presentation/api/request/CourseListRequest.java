@@ -2,6 +2,7 @@ package com.wanted.backend.domain.cource.presentation.api.request;
 
 import com.wanted.backend.domain.cource.application.query.CourseListQuery;
 import com.wanted.backend.domain.cource.domain.model.CourseSortType;
+import com.wanted.backend.global.domain.SubjectType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -12,8 +13,8 @@ public class CourseListRequest {
     @Schema(description = "검색 키워드 (강의명)", example = "수학")
     private String keyword;
 
-    @Schema(description = "과목명 필터", example = "수학Ⅱ")
-    private String subject;
+    @Schema(description = "과목명 필터", example = "MATH_1")
+    private SubjectType subject;
 
     @Schema(description = "강사명 필터", example = "박지훈")
     private String instructorName;
@@ -33,8 +34,8 @@ public class CourseListRequest {
     public String getKeyword() { return keyword; }
     public void setKeyword(String keyword) { this.keyword = keyword; }
 
-    public String getSubject() { return subject; }
-    public void setSubject(String subject) { this.subject = subject; }
+    public SubjectType getSubject() { return subject; }
+    public void setSubject(SubjectType subject) { this.subject = subject; }
 
     public String getInstructorName() { return instructorName; }
     public void setInstructorName(String instructorName) { this.instructorName = instructorName; }
@@ -49,6 +50,6 @@ public class CourseListRequest {
     public void setSize(int size) { this.size = size; }
 
     public CourseListQuery toQuery() {
-        return new CourseListQuery(keyword, subject, instructorName, sort, page, size);
+        return new CourseListQuery(keyword, subject != null ? subject.name() : null, instructorName, sort, page, size);
     }
 }
