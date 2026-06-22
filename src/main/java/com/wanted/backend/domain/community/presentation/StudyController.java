@@ -5,6 +5,7 @@ import com.wanted.backend.domain.community.presentation.response.CreateStudyResp
 import com.wanted.backend.domain.community.presentation.response.StudyDetailResponse;
 import com.wanted.backend.domain.community.presentation.response.StudyListResponse;
 import com.wanted.backend.global.common.ApiResponse;
+import com.wanted.backend.global.domain.SubjectType;
 import com.wanted.backend.global.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +22,7 @@ public class StudyController {
     @GetMapping
     public ResponseEntity<ApiResponse<StudyListResponse>> getStudyList(
             // SubjectType → String
-            @RequestParam(required = false) String subject,
+            @RequestParam(required = false) SubjectType subject,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 

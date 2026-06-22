@@ -64,7 +64,7 @@ public class PostController {
         Long postId = postCommandUseCase.create(new CreatePostCommand(
                 userDetails.getMemberId(),
                 request.boardType(),
-                request.subjectId(),
+                request.subject() != null ? request.subject().name() : null,
                 request.title(),
                 request.content(),
                 files
@@ -165,9 +165,8 @@ public class PostController {
             @RequestPart(value = "files", required = false) List<MultipartFile> files) {
 
         Long updatedPostId = postCommandUseCase.update(new UpdatePostCommand(
-                userDetails.getMemberId(),
-                postId,
-                request.subjectId(),
+                userDetails.getMemberId(), postId,
+                request.subject() != null ? request.subject().name() : null,
                 request.title(),
                 request.content(),
                 files

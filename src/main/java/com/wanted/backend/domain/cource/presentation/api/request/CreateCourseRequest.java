@@ -2,6 +2,7 @@ package com.wanted.backend.domain.cource.presentation.api.request;
 
 import com.wanted.backend.domain.cource.application.command.CreateCourseCommand;
 import com.wanted.backend.domain.cource.domain.model.PriceType;
+import com.wanted.backend.global.domain.SubjectType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -17,9 +18,9 @@ public record CreateCourseRequest(
         @NotBlank(message = "강의명은 필수입니다.")
         String title,
 
-        @Schema(description = "과목명", example = "수학Ⅱ")
-        @NotBlank(message = "과목은 필수입니다.")
-        String subject,
+        @Schema(description = "과목명", example = "MATH_1")
+        @NotNull(message = "과목은 필수입니다.")
+        SubjectType subject,
 
         @Schema(description = "강의 설명", example = "수능 수학Ⅱ 미적분 단원의 킬러 문제를 완전 정복하는 특강입니다.")
         @NotBlank(message = "강의 설명은 필수입니다.")
@@ -66,7 +67,7 @@ public record CreateCourseRequest(
                         })
                         .toList();
 
-        return new CreateCourseCommand(authorId, title, subject, description,
+        return new CreateCourseCommand(authorId, title, subject.name(), description,
                 thumbnailUrl, priceType, price, sectionCommands,
                 learningObjectives, targetAudience, techTags, level);
     }
