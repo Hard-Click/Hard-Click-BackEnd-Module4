@@ -115,8 +115,12 @@ public class PostController {
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "0") int page) {
 
-        PostListResponse response = postQueryUseCase.getList(null, sort, keyword, page);
-        return ApiResponse.success("게시글 목록 조회 성공", response);
+        PostListResponse postList = postQueryUseCase.getList(null, sort, keyword, page);
+        List<UnifiedBoardItemResponse> items = new ArrayList<>(
+                postList.posts().stream().map(UnifiedBoardItemResponse::fromPost).toList());
+        items.addAll(MOCK_STUDY_ITEMS);
+        return ApiResponse.success("게시글 목록 조회 성공",
+                new UnifiedBoardListResponse(items, postList.currentPage(), postList.totalPages(), postList.totalCount()));
     }
 
     @GetMapping("/posts/{postId}")
