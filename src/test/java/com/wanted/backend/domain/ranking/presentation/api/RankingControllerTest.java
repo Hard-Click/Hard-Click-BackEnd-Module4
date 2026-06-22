@@ -165,6 +165,24 @@ class RankingControllerTest {
     }
 
     @Test
+    void lessonsReturnsMonthlyRankingWhenPeriodIsOmitted() throws Exception {
+        authenticateMember(1L);
+        when(getLessonRankingUseCase.handle(new GetLessonRankingQuery(null)))
+                .thenReturn(new GetLessonRankingUseCase.LessonRankingView(
+                        "monthly",
+                        0L,
+                        List.of()
+                ));
+
+        mockMvc.perform(get("/api/rankings/lessons"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.httpStatus").value(200))
+                .andExpect(jsonPath("$.data.period").value("monthly"))
+                .andExpect(jsonPath("$.data.totalUsers").value(0))
+                .andExpect(jsonPath("$.data.rankings").isEmpty());
+    }
+
+    @Test
     void lessonsReturnsUnauthorizedWhenUserIsNotAuthenticated() throws Exception {
         mockMvc.perform(get("/api/rankings/lessons"))
                 .andExpect(status().isUnauthorized())
