@@ -17,4 +17,6 @@ public interface SpringDataNotificationRepository
             Long receiverId, Long cursorId, Pageable pageable);
 
     boolean existsByReceiverIdAndIdLessThan(Long receiverId, Long lastId);
+
+    void deleteByRedirectUrlStartingWith(String urlPrefix);
 }

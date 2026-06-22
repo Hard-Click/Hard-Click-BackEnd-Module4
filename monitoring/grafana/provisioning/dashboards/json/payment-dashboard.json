@@ -1,121 +1,1160 @@
 {
-  "title": "결제 모니터링 - 중복결제 차단",
-  "uid": "payment-dedup",
+  "title": "Hard-Click 결제 시스템 — SLO 대시보드",
+  "uid": "hard-click-payment-slo-v2",
+  "description": "결제 SLO 실시간 추이 · 중복결제 방어 · 에러 예산 소진율 · k6 부하테스트 연동",
+  "tags": ["payment", "slo", "k6", "hard-click", "fintech"],
   "timezone": "browser",
   "refresh": "5s",
   "schemaVersion": 39,
-  "version": 1,
-  "time": { "from": "now-15m", "to": "now" },
+  "version": 2,
+  "graphTooltip": 1,
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "time": { "from": "now-30m", "to": "now" },
+  "timepicker": {
+    "refresh_intervals": ["5s", "10s", "30s", "1m", "5m"]
+  },
+
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      },
+      {
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": false,
+        "iconColor": "#5794F2",
+        "name": "k6 부하테스트 구간",
+        "tags": ["k6"],
+        "type": "tags"
+      }
+    ]
+  },
+
+  "templating": {
+    "list": [
+      {
+        "name": "rate_interval",
+        "type": "interval",
+        "label": "집계 간격",
+        "hide": 0,
+        "auto": true,
+        "auto_count": 30,
+        "auto_min": "15s",
+        "current": { "selected": true, "text": "1m", "value": "1m" },
+        "options": [
+          { "selected": false, "text": "15s", "value": "15s" },
+          { "selected": true,  "text": "1m",  "value": "1m"  },
+          { "selected": false, "text": "5m",  "value": "5m"  }
+        ],
+        "query": "15s,1m,5m"
+      }
+    ]
+  },
+
+  "links": [
+    {
+      "title": "k6 부하테스트 스크립트",
+      "url": "https://github.com/WantedTeam/Hard-Click-BackEnd-Module4/blob/develop/k6/duplicate-payment.js",
+      "icon": "external link",
+      "targetBlank": true,
+      "includeVars": false,
+      "keepTime": true,
+      "type": "link"
+    }
+  ],
+
   "panels": [
+
+    {
+      "id": 100,
+      "type": "row",
+      "title": "🔑  핵심 KPI — 발표 시 첫눈에 들어오는 지표",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }
+    },
+
     {
       "id": 1,
-      "title": "결제 처리 결과 (status별 누적 건수)",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
-      "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
-      "targets": [
-        {
-          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
-          "expr": "sum by (status) (increase(payment_result_total[1m]))",
-          "legendFormat": "{{status}}"
-        }
-      ]
-    },
-    {
-      "id": 2,
-      "title": "중복결제 차단 건수 (DUPLICATE)",
+      "title": "결제 성공률",
+      "description": "SLO 목표: 99.5% 이상\nalert: PaymentSuccessRateDropped",
       "type": "stat",
-      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 0 },
+      "gridPos": { "h": 5, "w": 4, "x": 0, "y": 1 },
       "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
-          "expr": "sum(payment_result_total{status=\"DUPLICATE\"})"
+          "expr": "job:payment_success_rate:rate5m * 100",
+          "legendFormat": "성공률",
+          "instant": true
         }
       ],
       "fieldConfig": {
-        "defaults": { "color": { "mode": "thresholds" } }
+        "defaults": {
+          "unit": "percent",
+          "decimals": 2,
+          "min": 98,
+          "max": 100,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "#F2495C", "value": null },
+              { "color": "#FADE2A", "value": 99 },
+              { "color": "#73BF69", "value": 99.5 }
+            ]
+          },
+          "mappings": []
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "textMode": "value_and_name",
+        "graphMode": "area",
+        "colorMode": "background",
+        "text": { "valueSize": 48, "titleSize": 14 }
       }
     },
+
     {
-      "id": 3,
-      "title": "결제 성공 건수 (SUCCESS)",
+      "id": 2,
+      "title": "🚨 중복결제 감지",
+      "description": "분산락 우회 후 DB unique constraint 위반 건수\n0건 = 정상 / 1건 이상 = 즉시 장애 대응\nalert: DuplicatePaymentDetected",
       "type": "stat",
-      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 0 },
+      "gridPos": { "h": 5, "w": 4, "x": 4, "y": 1 },
       "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
-          "expr": "sum(payment_result_total{status=\"SUCCESS\"})"
-        }
-      ]
-    },
-    {
-      "id": 4,
-      "title": "결제 처리 시간 (P50/P95/P99, payment.processing.duration)",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
-      "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
-      "targets": [
-        {
-          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
-          "expr": "histogram_quantile(0.5, sum(rate(payment_processing_duration_seconds_bucket[1m])) by (le))",
-          "legendFormat": "p50"
-        },
-        {
-          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
-          "expr": "histogram_quantile(0.95, sum(rate(payment_processing_duration_seconds_bucket[1m])) by (le))",
-          "legendFormat": "p95"
-        },
-        {
-          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
-          "expr": "histogram_quantile(0.99, sum(rate(payment_processing_duration_seconds_bucket[1m])) by (le))",
-          "legendFormat": "p99"
+          "expr": "sum(increase(payment_result_total{status=\"DUPLICATE_CHARGED\"}[5m])) or vector(0)",
+          "legendFormat": "DUPLICATE_CHARGED",
+          "instant": true
         }
       ],
-      "fieldConfig": { "defaults": { "unit": "s" } }
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "#73BF69", "value": null },
+              { "color": "#F2495C", "value": 1 }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": { "text": "0건 ✅ 정상", "color": "green", "index": 0 }
+              }
+            }
+          ]
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "text": { "valueSize": 40, "titleSize": 12 }
+      }
     },
+
     {
-      "id": 5,
-      "title": "HTTP 요청 처리량 (req/s)",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "id": 3,
+      "title": "P95 응답시간",
+      "description": "SLO 목표: 2,000ms 미만\nalert: PaymentLatencyP95High",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 4, "x": 8, "y": 1 },
       "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
-          "expr": "sum by (uri, status) (rate(http_server_requests_seconds_count{uri=~\"/api/payments.*\"}[1m]))",
-          "legendFormat": "{{uri}} [{{status}}]"
+          "expr": "histogram_quantile(0.95, sum(rate(payment_processing_duration_seconds_bucket[$rate_interval])) by (le)) * 1000",
+          "legendFormat": "P95",
+          "instant": true
         }
-      ]
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 0,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "#73BF69", "value": null },
+              { "color": "#FADE2A", "value": 1500 },
+              { "color": "#F2495C", "value": 2000 }
+            ]
+          },
+          "mappings": []
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "background",
+        "graphMode": "area",
+        "textMode": "value_and_name",
+        "text": { "valueSize": 48, "titleSize": 14 }
+      }
     },
+
+    {
+      "id": 4,
+      "title": "에러 예산 소진율",
+      "description": "SLO 에러 예산 소진 배수\n1x = 7일 정상 소진\n3x = 2.3일 내 고갈 → P1 대응\n6x = 28시간 내 고갈 → 즉시 롤백",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 4, "x": 12, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "(1 - job:payment_success_rate:rate5m) / 0.005",
+          "legendFormat": "Burn Rate",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "x",
+          "decimals": 2,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "#73BF69", "value": null },
+              { "color": "#FADE2A", "value": 1 },
+              { "color": "#FF9830", "value": 3 },
+              { "color": "#F2495C", "value": 6 }
+            ]
+          },
+          "mappings": []
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "background",
+        "graphMode": "area",
+        "textMode": "value_and_name",
+        "text": { "valueSize": 48, "titleSize": 14 }
+      }
+    },
+
+    {
+      "id": 5,
+      "title": "현재 TPS",
+      "description": "초당 결제 요청 처리량 (전체)",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 4, "x": 16, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "sum(rate(payment_result_total[$rate_interval]))",
+          "legendFormat": "req/s",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "decimals": 1,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "text", "value": null }
+            ]
+          },
+          "mappings": []
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value_and_name",
+        "text": { "valueSize": 48, "titleSize": 14 }
+      }
+    },
+
     {
       "id": 6,
-      "title": "JVM 힙 메모리 사용량",
+      "title": "누적 결제 성공",
+      "description": "테스트 시작 이후 총 SUCCESS 건수",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 4, "x": 20, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "sum(increase(payment_result_total{status=\"SUCCESS\"}[$__range])) or vector(0)",
+          "legendFormat": "SUCCESS",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": { "mode": "fixed", "fixedColor": "#73BF69" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "#73BF69", "value": null }]
+          },
+          "mappings": []
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value_and_name",
+        "text": { "valueSize": 48, "titleSize": 14 }
+      }
+    },
+
+    {
+      "id": 200,
+      "type": "row",
+      "title": "📊  SLO 실시간 추이 — 99.5% 기준선",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 6 }
+    },
+
+    {
+      "id": 7,
+      "title": "결제 성공률 추이 (SLO 99.5% 기준선)",
+      "description": "빨간 점선 = SLO 목표(99.5%). 기준선 아래로 내려가면 PaymentSuccessRateDropped alert 발화",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "gridPos": { "h": 10, "w": 16, "x": 0, "y": 7 },
+      "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "job:payment_success_rate:rate5m * 100",
+          "legendFormat": "성공률 (5m avg)"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "rate(payment_result_total{status=\"SUCCESS\"}[$rate_interval]) / rate(payment_result_total[$rate_interval]) * 100",
+          "legendFormat": "성공률 (실시간)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 2,
+          "min": 95,
+          "max": 100,
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "lineInterpolation": "smooth",
+            "showPoints": "never",
+            "spanNulls": false,
+            "thresholdsStyle": { "mode": "line+area" }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "transparent", "value": null },
+              { "color": "rgba(242, 73, 92, 0.15)", "value": 95 },
+              { "color": "transparent", "value": 99.5 }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "성공률 (5m avg)" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "#73BF69", "mode": "fixed" } },
+              { "id": "custom.lineWidth", "value": 3 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "성공률 (실시간)" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "#8AB8FF", "mode": "fixed" } },
+              { "id": "custom.lineWidth", "value": 1 },
+              { "id": "custom.lineStyle", "value": { "dash": [4, 4], "fill": "dash" } }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "none" },
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "annotation": true
+      },
+      "transformations": []
+    },
+
+    {
+      "id": 8,
+      "title": "SLO 컴플라이언스",
+      "description": "현재 성공률이 SLO 99.5% 목표 대비 얼마나 달성되는지",
+      "type": "gauge",
+      "gridPos": { "h": 10, "w": 8, "x": 16, "y": 7 },
+      "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "job:payment_success_rate:rate5m * 100",
+          "legendFormat": "성공률",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 3,
+          "min": 98,
+          "max": 100,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "#F2495C", "value": null },
+              { "color": "#FADE2A", "value": 99 },
+              { "color": "#73BF69", "value": 99.5 }
+            ]
+          },
+          "mappings": []
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "showThresholdLabels": true,
+        "showThresholdMarkers": true,
+        "text": { "valueSize": 36, "titleSize": 14 }
+      }
+    },
+
+    {
+      "id": 300,
+      "type": "row",
+      "title": "⏱  응답시간 분석 — P50 / P95 / P99 / P99.9",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 17 }
+    },
+
+    {
+      "id": 9,
+      "title": "응답시간 퍼센타일 추이 (payment.processing.duration)",
+      "description": "서버 내부 처리시간 (PG 호출 포함, 네트워크 왕복 제외)\n빨간 점선 = P95 SLO (2s), 주황 점선 = P99 (3s)",
+      "type": "timeseries",
+      "gridPos": { "h": 9, "w": 16, "x": 0, "y": 18 },
+      "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "histogram_quantile(0.50, sum(rate(payment_processing_duration_seconds_bucket[$rate_interval])) by (le)) * 1000",
+          "legendFormat": "P50"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "histogram_quantile(0.90, sum(rate(payment_processing_duration_seconds_bucket[$rate_interval])) by (le)) * 1000",
+          "legendFormat": "P90"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "histogram_quantile(0.95, sum(rate(payment_processing_duration_seconds_bucket[$rate_interval])) by (le)) * 1000",
+          "legendFormat": "P95 (SLO 기준)"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "histogram_quantile(0.99, sum(rate(payment_processing_duration_seconds_bucket[$rate_interval])) by (le)) * 1000",
+          "legendFormat": "P99"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "histogram_quantile(0.999, sum(rate(payment_processing_duration_seconds_bucket[$rate_interval])) by (le)) * 1000",
+          "legendFormat": "P99.9 (핀테크 기준)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 0,
+          "min": 0,
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "lineInterpolation": "smooth",
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "transparent", "value": null }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "P50" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#73BF69", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "P90" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#8AB8FF", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "P95 (SLO 기준)" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "#FADE2A", "mode": "fixed" } },
+              { "id": "custom.lineWidth", "value": 3 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "P99" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "#FF9830", "mode": "fixed" } },
+              { "id": "custom.lineWidth", "value": 3 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "P99.9 (핀테크 기준)" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "#F2495C", "mode": "fixed" } },
+              { "id": "custom.lineWidth", "value": 2 },
+              { "id": "custom.lineStyle", "value": { "dash": [8, 4], "fill": "dash" } }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" },
+        "legend": { "displayMode": "table", "placement": "bottom", "showLegend": true,
+          "calcs": ["last", "max", "mean"] }
+      }
+    },
+
+    {
+      "id": 10,
+      "title": "응답코드 분포",
+      "description": "SUCCESS = 신규 결제 / DUPLICATE = 분산락 차단 / FAILED = PG 오류",
+      "type": "bargauge",
+      "gridPos": { "h": 9, "w": 8, "x": 16, "y": 18 },
+      "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "sum(increase(payment_result_total{status=\"SUCCESS\"}[$rate_interval]))",
+          "legendFormat": "SUCCESS (201)",
+          "instant": true
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "sum(increase(payment_result_total{status=\"DUPLICATE\"}[$rate_interval]))",
+          "legendFormat": "DUPLICATE (409)",
+          "instant": true
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "sum(increase(payment_result_total{status=\"FAILED\"}[$rate_interval]))",
+          "legendFormat": "FAILED (5xx)",
+          "instant": true
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "sum(increase(payment_result_total{status=\"DUPLICATE_CHARGED\"}[$rate_interval])) or vector(0)",
+          "legendFormat": "DUPLICATE_CHARGED 🚨",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "blue", "value": null }]
+          },
+          "mappings": []
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "SUCCESS (201)" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#73BF69", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "DUPLICATE (409)" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#8AB8FF", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "FAILED (5xx)" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#FF9830", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "DUPLICATE_CHARGED 🚨" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#F2495C", "mode": "fixed" } }]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "horizontal",
+        "displayMode": "lcd",
+        "showUnfilled": true,
+        "minVizWidth": 0,
+        "minVizHeight": 10,
+        "text": { "titleSize": 12, "valueSize": 18 }
+      }
+    },
+
+    {
+      "id": 400,
+      "type": "row",
+      "title": "🛡  중복결제 방어 — 분산락 + 멱등키 이중 방어 실시간",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 27 }
+    },
+
+    {
+      "id": 11,
+      "title": "DUPLICATE_CHARGED",
+      "description": "분산락 획득 후 DB unique constraint 위반\n이 값이 0이 아니면 즉시 장애 대응\n(alert: DuplicatePaymentDetected)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 4, "x": 0, "y": 28 },
+      "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "sum(increase(payment_result_total{status=\"DUPLICATE_CHARGED\"}[5m])) or vector(0)",
+          "legendFormat": "",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "#73BF69", "value": null },
+              { "color": "#F2495C", "value": 1 }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": { "text": "✅ 0건", "color": "green", "index": 0 }
+              }
+            }
+          ]
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "text": { "valueSize": 52, "titleSize": 11 }
+      }
+    },
+
+    {
+      "id": 12,
+      "title": "분산락 차단 건수",
+      "description": "Redis SETNX 실패로 차단된 중복 요청\n(정상: 부하테스트 시 수백~수천 건)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 4, "x": 4, "y": 28 },
+      "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "sum(increase(payment_result_total{status=\"DUPLICATE\"}[$rate_interval])) or vector(0)",
+          "legendFormat": "분산락 차단",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": { "mode": "fixed", "fixedColor": "#8AB8FF" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "#8AB8FF", "value": null }]
+          },
+          "mappings": []
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value_and_name",
+        "text": { "valueSize": 44, "titleSize": 12 }
+      }
+    },
+
+    {
+      "id": 13,
+      "title": "멱등키 캐시 히트율",
+      "description": "동일 멱등키 재요청 시 Redis 캐시가 응답한 비율\n(높을수록 DB 조회 절감 효과 큼)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 4, "x": 8, "y": 28 },
+      "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "sum(rate(http_server_requests_seconds_count{uri=\"/api/payments/confirm\", status=\"200\"}[$rate_interval])) / sum(rate(http_server_requests_seconds_count{uri=\"/api/payments/confirm\"}[$rate_interval])) * 100",
+          "legendFormat": "캐시 히트율",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "text", "value": null },
+              { "color": "#73BF69", "value": 50 }
+            ]
+          },
+          "mappings": []
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value_and_name",
+        "text": { "valueSize": 44, "titleSize": 12 }
+      }
+    },
+
+    {
+      "id": 14,
+      "title": "중복결제 방어 실시간 (방어 건수 = 분산락 + 멱등키)",
+      "description": "DUPLICATE_CHARGED(빨강)가 0인 상태에서 DUPLICATE(파랑)가 높을수록\n분산락이 중복을 성공적으로 막고 있음을 의미",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 28 },
+      "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "sum(rate(payment_result_total{status=\"SUCCESS\"}[$rate_interval]))",
+          "legendFormat": "SUCCESS (신규 결제)"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "sum(rate(payment_result_total{status=\"DUPLICATE\"}[$rate_interval]))",
+          "legendFormat": "DUPLICATE (분산락 차단)"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "sum(rate(payment_result_total{status=\"DUPLICATE_CHARGED\"}[$rate_interval])) or vector(0)",
+          "legendFormat": "DUPLICATE_CHARGED 🚨 (방어 실패)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "decimals": 2,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 20,
+            "lineInterpolation": "smooth",
+            "showPoints": "never"
+          },
+          "color": { "mode": "palette-classic" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "transparent", "value": null }]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "SUCCESS (신규 결제)" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#73BF69", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "DUPLICATE (분산락 차단)" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#8AB8FF", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "DUPLICATE_CHARGED 🚨 (방어 실패)" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "#F2495C", "mode": "fixed" } },
+              { "id": "custom.lineWidth", "value": 3 },
+              { "id": "custom.fillOpacity", "value": 50 }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "none" },
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }
+      }
+    },
+
+    {
+      "id": 500,
+      "type": "row",
+      "title": "🌊  부하 분석 — k6 시나리오별 처리량 & 응답시간 분포",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 34 }
+    },
+
+    {
+      "id": 15,
+      "title": "초당 처리량 (응답코드별 스택)",
+      "description": "k6 부하테스트 시 트래픽 형태 시각화\n초록(SUCCESS) 높이 = 실제 결제 처리량\n파랑(DUPLICATE) = 분산락 처리량",
+      "type": "timeseries",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 35 },
+      "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "sum(rate(payment_result_total{status=\"SUCCESS\"}[$rate_interval]))",
+          "legendFormat": "SUCCESS"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "sum(rate(payment_result_total{status=\"DUPLICATE\"}[$rate_interval]))",
+          "legendFormat": "DUPLICATE (락 차단)"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "sum(rate(payment_result_total{status=\"FAILED\"}[$rate_interval]))",
+          "legendFormat": "FAILED"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "decimals": 2,
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "lineInterpolation": "smooth",
+            "showPoints": "never",
+            "stacking": { "mode": "normal", "group": "A" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "transparent", "value": null }]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "SUCCESS" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#73BF69", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "DUPLICATE (락 차단)" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#5794F2", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "FAILED" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#F2495C", "mode": "fixed" } }]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "none" },
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true,
+          "calcs": ["mean", "max"] }
+      }
+    },
+
+    {
+      "id": 16,
+      "title": "응답시간 히트맵 (결제 처리 시간 분포)",
+      "description": "색이 진할수록 해당 응답시간 구간에 요청이 집중\n오렌지/빨강 구간이 2s 이상으로 번지면 SLO 위험",
+      "type": "heatmap",
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 35 },
+      "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "sum(rate(payment_processing_duration_seconds_bucket[$rate_interval])) by (le)",
+          "format": "heatmap",
+          "legendFormat": "{{le}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": { "hideFrom": { "legend": false, "tooltip": false, "viz": false } }
+        }
+      },
+      "options": {
+        "calculate": false,
+        "yAxis": {
+          "axisPlacement": "left",
+          "reverse": false,
+          "unit": "s",
+          "decimals": 3
+        },
+        "rowsFrame": { "layout": "auto" },
+        "color": {
+          "mode": "scheme",
+          "scheme": "Oranges",
+          "steps": 64,
+          "fill": "dark-orange",
+          "exponent": 0.5,
+          "min": 0,
+          "reverse": false
+        },
+        "cellGap": 1,
+        "cellRadius": 0,
+        "filterValues": { "le": 1e-9 },
+        "tooltip": { "show": true, "yHistogram": true },
+        "legend": { "show": true }
+      }
+    },
+
+    {
+      "id": 600,
+      "type": "row",
+      "title": "🏗  인프라 상태 — JVM · HikariCP · HTTP 처리량",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 44 }
+    },
+
+    {
+      "id": 17,
+      "title": "JVM 힙 메모리",
+      "description": "힙 사용량이 Max의 80% 이상 → GC 부하 증가 → 응답시간 지연 유발",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 45 },
       "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
           "expr": "sum(jvm_memory_used_bytes{area=\"heap\"})",
-          "legendFormat": "heap used"
+          "legendFormat": "Used"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "sum(jvm_memory_max_bytes{area=\"heap\"})",
+          "legendFormat": "Max"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "sum(jvm_memory_committed_bytes{area=\"heap\"})",
+          "legendFormat": "Committed"
         }
       ],
-      "fieldConfig": { "defaults": { "unit": "bytes" } }
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 20,
+            "lineInterpolation": "smooth",
+            "showPoints": "never"
+          },
+          "color": { "mode": "palette-classic" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "transparent", "value": null }]
+          },
+          "mappings": []
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Max" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "#F2495C", "mode": "fixed" } },
+              { "id": "custom.lineStyle", "value": { "dash": [8, 4], "fill": "dash" } },
+              { "id": "custom.fillOpacity", "value": 0 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Used" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "#FADE2A", "mode": "fixed" } }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" },
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true,
+          "calcs": ["last", "max"] }
+      }
     },
+
     {
-      "id": 7,
-      "title": "애플리케이션 로그 (Loki, com.wanted.backend)",
+      "id": 18,
+      "title": "HikariCP 커넥션 풀",
+      "description": "Pending이 0 이상 = 커넥션 대기 발생 → 응답지연\nActive가 Max에 근접 = 풀 고갈 위험",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 45 },
+      "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "hikaricp_connections_active",
+          "legendFormat": "Active"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "hikaricp_connections_idle",
+          "legendFormat": "Idle"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "hikaricp_connections_pending",
+          "legendFormat": "Pending (대기중)"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "hikaricp_connections_max",
+          "legendFormat": "Max (풀 한계)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 20,
+            "lineInterpolation": "smooth",
+            "showPoints": "never"
+          },
+          "color": { "mode": "palette-classic" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "transparent", "value": null }]
+          },
+          "mappings": []
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Active" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#73BF69", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Pending (대기중)" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "#F2495C", "mode": "fixed" } },
+              { "id": "custom.fillOpacity", "value": 50 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Max (풀 한계)" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "#F2495C", "mode": "fixed" } },
+              { "id": "custom.lineStyle", "value": { "dash": [8, 4], "fill": "dash" } },
+              { "id": "custom.fillOpacity", "value": 0 }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" },
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true,
+          "calcs": ["last", "max"] }
+      }
+    },
+
+    {
+      "id": 19,
+      "title": "HTTP 처리량 (결제 엔드포인트)",
+      "description": "/api/payments/confirm 엔드포인트의 HTTP 응답코드별 처리량",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 45 },
+      "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "sum by (status) (rate(http_server_requests_seconds_count{uri=\"/api/payments/confirm\"}[$rate_interval]))",
+          "legendFormat": "HTTP {{status}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "decimals": 2,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 20,
+            "lineInterpolation": "smooth",
+            "showPoints": "never"
+          },
+          "color": { "mode": "palette-classic" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "transparent", "value": null }]
+          },
+          "mappings": []
+        }
+      },
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" },
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true,
+          "calcs": ["mean", "max"] }
+      }
+    },
+
+    {
+      "id": 700,
+      "type": "row",
+      "title": "📋  애플리케이션 로그 — ERROR / WARN 실시간 (Loki)",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 53 }
+    },
+
+    {
+      "id": 20,
+      "title": "결제 도메인 로그 (ERROR / WARN)",
+      "description": "DUPLICATE_CHARGED 감지 시 로그: [DUPLICATE_CHARGED] 분산락 우회 중복결제 감지",
       "type": "logs",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 54 },
       "datasource": { "type": "loki", "uid": "loki_ds" },
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "loki_ds" },
-          "expr": "{job=\"hard-click-backend\"}"
+          "expr": "{job=\"hard-click-backend\"} |= \"payment\" | level =~ \"ERROR|WARN\"",
+          "legendFormat": ""
         }
-      ]
+      ],
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      }
     }
+
   ]
 }

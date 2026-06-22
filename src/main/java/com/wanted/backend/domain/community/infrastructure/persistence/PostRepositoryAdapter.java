@@ -34,7 +34,7 @@ public class PostRepositoryAdapter implements PostRepository {
     @Override
     public Post save(Post post) {
         PostJpaEntity entity = new PostJpaEntity(
-                post.getAuthorId(), post.getBoardType(), post.getSubjectId(),
+                post.getAuthorId(), post.getBoardType(), post.getSubject(),
                 post.getTitle(), post.getContent(), post.getViewCount(),
                 post.isAccepted(), post.getCreatedAt(), post.getUpdatedAt()
         );
@@ -119,7 +119,8 @@ public class PostRepositoryAdapter implements PostRepository {
     private Post toDomain(PostJpaEntity entity) {
         return Post.restore(
                 entity.getId(), entity.getAuthorId(), entity.getBoardType(),
-                entity.getSubjectId(), entity.getTitle(), entity.getContent(),
+                entity.getSubject(),
+                entity.getTitle(), entity.getContent(),
                 entity.getViewCount(), entity.getStatus(), entity.isAccepted(),
                 entity.getCreatedAt(), entity.getUpdatedAt()
         );
@@ -152,7 +153,7 @@ public class PostRepositoryAdapter implements PostRepository {
         post.softDeleteByAdmin(LocalDateTime.now());
 
         entity.update(
-                post.getSubjectId(), post.getTitle(), post.getContent(),
+                post.getSubject(), post.getTitle(), post.getContent(),
                 post.getViewCount(), post.getStatus(), post.isAccepted(), post.getUpdatedAt()
         );
         repository.save(entity);
