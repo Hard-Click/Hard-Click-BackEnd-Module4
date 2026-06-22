@@ -1,8 +1,8 @@
 package com.wanted.backend.domain.ranking.infrastructure.redis;
 
+import com.wanted.backend.domain.ranking.domain.model.RankingDetail;
 import com.wanted.backend.domain.ranking.domain.model.RankingMetric;
 import com.wanted.backend.domain.ranking.domain.model.RankingPeriod;
-import com.wanted.backend.domain.ranking.domain.model.RankingSummary;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,7 +20,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class RedisRankingSummaryAdapterTest {
+class RedisRankingAdapterTest {
 
     @Mock
     private StringRedisTemplate redisTemplate;
@@ -28,14 +28,14 @@ class RedisRankingSummaryAdapterTest {
     @Mock
     private ZSetOperations<String, String> zSetOperations;
 
-    private RedisRankingSummaryAdapter adapter;
+    private RedisRankingAdapter adapter;
 
     @BeforeEach
     void setUp() {
         RankingRedisProperties properties = new RankingRedisProperties();
         properties.setKeyPrefix("ranking");
         properties.setDefaultLimit(100);
-        adapter = new RedisRankingSummaryAdapter(redisTemplate, properties);
+        adapter = new RedisRankingAdapter(redisTemplate, properties);
         when(redisTemplate.opsForZSet()).thenReturn(zSetOperations);
     }
 
@@ -44,7 +44,7 @@ class RedisRankingSummaryAdapterTest {
         when(zSetOperations.zCard("ranking:study-time:monthly")).thenReturn(200L);
         when(zSetOperations.reverseRank("ranking:study-time:monthly", "1")).thenReturn(11L);
 
-        RankingSummary result = adapter.findByMetricAndPeriodAndMemberId(
+        RankingDetail result = adapter.findByMetricAndPeriodAndMemberId(
                 RankingMetric.STUDY_TIME,
                 RankingPeriod.MONTHLY,
                 1L
@@ -59,7 +59,7 @@ class RedisRankingSummaryAdapterTest {
         when(zSetOperations.zCard("ranking:lessons:weekly")).thenReturn(150L);
         when(zSetOperations.reverseRank("ranking:lessons:weekly", "1")).thenReturn(null);
 
-        RankingSummary result = adapter.findByMetricAndPeriodAndMemberId(
+        RankingDetail result = adapter.findByMetricAndPeriodAndMemberId(
                 RankingMetric.LESSON,
                 RankingPeriod.WEEKLY,
                 1L
@@ -75,7 +75,7 @@ class RedisRankingSummaryAdapterTest {
         when(zSetOperations.zCard("ranking:accepted-comments:monthly")).thenReturn(null);
         when(zSetOperations.reverseRank("ranking:accepted-comments:monthly", "1")).thenReturn(null);
 
-        RankingSummary result = adapter.findByMetricAndPeriodAndMemberId(
+        RankingDetail result = adapter.findByMetricAndPeriodAndMemberId(
                 RankingMetric.ACCEPTED_COMMENT,
                 RankingPeriod.MONTHLY,
                 1L
