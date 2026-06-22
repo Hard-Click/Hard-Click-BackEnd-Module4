@@ -7,8 +7,13 @@ public interface GetMyRankingSummaryUseCase {
     MyRankingSummaryView handle(GetMyRankingSummaryQuery query);
 
     record MyRankingSummaryView(
-            String metric,
-            String period,
+            RankingSummaryItem studyTime,
+            RankingSummaryItem lesson,
+            RankingSummaryItem acceptedComment
+    ) {
+    }
+
+    record RankingSummaryItem(
             Long rank,
             Long totalUsers,
             Double topPercent
