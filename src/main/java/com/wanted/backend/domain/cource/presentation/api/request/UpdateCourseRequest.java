@@ -2,6 +2,7 @@ package com.wanted.backend.domain.cource.presentation.api.request;
 
 import com.wanted.backend.domain.cource.application.command.UpdateCourseCommand;
 import com.wanted.backend.domain.cource.domain.model.PriceType;
+import com.wanted.backend.global.domain.SubjectType;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -14,8 +15,8 @@ public record UpdateCourseRequest(
         @NotBlank(message = "강의명은 필수입니다.")
         String title,
 
-        @NotBlank(message = "과목은 필수입니다.")
-        String subject,
+        @NotNull(message = "과목은 필수입니다.")
+        SubjectType subject,
 
         @NotBlank(message = "강의 설명은 필수입니다.")
         String description,
@@ -53,7 +54,7 @@ public record UpdateCourseRequest(
                         })
                         .toList();
 
-        return new UpdateCourseCommand(courseId, requesterId, title, subject, description,
+        return new UpdateCourseCommand(courseId, requesterId, title, subject.name(), description,
                 thumbnailUrl, priceType, price, sectionCommands,
                 learningObjectives, targetAudience, techTags, level);
     }

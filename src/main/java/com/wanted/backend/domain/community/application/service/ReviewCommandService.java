@@ -27,6 +27,7 @@ public class ReviewCommandService implements ReviewCommandUseCase {
 
     @Override
     public Long handle(CreateReviewCommand command) {
+        reviewPolicy.validateCompleted(command.memberId(), command.courseId());
         reviewPolicy.validateDuplicate(command.courseId(), command.memberId());
 
         Review saved = reviewRepository.save(

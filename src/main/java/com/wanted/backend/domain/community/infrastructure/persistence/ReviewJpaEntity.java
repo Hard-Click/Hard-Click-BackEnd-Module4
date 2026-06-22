@@ -7,7 +7,9 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "reviews")
+@Table(name = "reviews", indexes = {
+        @Index(name = "idx_reviews_course_id", columnList = "course_id")
+})
 @Getter
 public class ReviewJpaEntity {
 
@@ -67,6 +69,11 @@ public class ReviewJpaEntity {
 
     public void softDeleteByAdmin(LocalDateTime updatedAt) {
         this.status = ReviewStatus.ADMIN_DELETED;
+        this.updatedAt = updatedAt;
+    }
+
+    public void restoreByAdmin(LocalDateTime updatedAt) {
+        this.status = ReviewStatus.ACTIVE;
         this.updatedAt = updatedAt;
     }
 }

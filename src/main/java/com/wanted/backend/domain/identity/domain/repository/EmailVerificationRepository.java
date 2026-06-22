@@ -6,7 +6,7 @@ import com.wanted.backend.domain.identity.domain.model.EmailVerification;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-public interface EmailVerificationRepository {
+public interface pository {
     void save(EmailVerification verification);
 
     Optional<EmailVerification> findLatestPendingByEmailAndPurpose(String email, EmailPurpose purpose);

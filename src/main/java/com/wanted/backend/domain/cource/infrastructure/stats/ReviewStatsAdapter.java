@@ -3,7 +3,13 @@ package com.wanted.backend.domain.cource.infrastructure.stats;
 import com.wanted.backend.domain.cource.application.port.ReviewStatsPort;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Tuple;
 import org.springframework.stereotype.Component;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 public class ReviewStatsAdapter implements ReviewStatsPort {
@@ -29,5 +35,28 @@ public class ReviewStatsAdapter implements ReviewStatsPort {
                 .setParameter("courseId", courseId)
                 .getSingleResult();
         return count != null ? count.intValue() : 0;
+    }
+
+    @Override
+    public Map<Long, Stats> findStatsByCourseIds(Collection<Long> courseIds) {
+        if (courseIds.isEmpty()) {
+            return Map.of();
+        }
+
+        List<Tuple> rows = em.createQuery(
+                "SELECT r.courseId AS courseId, AVG(r.rating) AS avgRating, COUNT(r) AS reviewCount "
+                        + "FROM ReviewJpaEntity r WHERE r.courseId IN :courseIds GROUP BY r.courseId",
+                Tuple.class)
+                .setParameter("courseIds", courseIds)
+                .getResultList();
+
+        return rows.stream().collect(Collectors.toMap(
+                row -> row.get("courseId", Long.class),
+                row -> {
+                    double avg = row.get("avgRating", Double.class);
+                    long count = row.get("reviewCount", Long.class);
+                    return new Stats(Math.round(avg * 10.0) / 10.0, (int) count);
+                }
+        ));
     }
 }

@@ -113,6 +113,12 @@ public class CommentJpaEntity {
         this.updatedAt = updatedAt;
     }
 
+    public void restoreByAdmin(LocalDateTime updatedAt) {
+        this.isDeleted = false;
+        this.status = CommentStatus.ACTIVE;
+        this.updatedAt = updatedAt;
+    }
+
     private static CommentStatus legacyStatus(boolean isDeleted) {
         return isDeleted ? CommentStatus.DELETED : CommentStatus.ACTIVE;
     }

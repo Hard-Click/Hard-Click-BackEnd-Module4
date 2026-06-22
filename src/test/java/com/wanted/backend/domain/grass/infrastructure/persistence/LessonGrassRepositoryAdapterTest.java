@@ -17,12 +17,12 @@ import static org.mockito.Mockito.when;
 
 class LessonGrassRepositoryAdapterTest {
 
-    private SpringDataLessonGrassStatsRepository repository;
+    private SpringDataGrassDailyStudyStatsRepository repository;
     private LessonGrassRepositoryAdapter adapter;
 
     @BeforeEach
     void setUp() {
-        repository = mock(SpringDataLessonGrassStatsRepository.class);
+        repository = mock(SpringDataGrassDailyStudyStatsRepository.class);
         adapter = new LessonGrassRepositoryAdapter(repository);
     }
 

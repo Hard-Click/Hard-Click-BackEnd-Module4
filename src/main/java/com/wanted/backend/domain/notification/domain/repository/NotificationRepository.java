@@ -12,4 +12,5 @@ public interface NotificationRepository {
     void updateRead(Long notificationId);
     List<Notification> findByReceiverIdWithCursor(Long receiverId, Long cursorId, int size);
     boolean existsNextPage(Long receiverId, Long lastId);
+    List<Notification> saveAll(List<Notification> notifications);
 }

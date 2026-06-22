@@ -89,10 +89,17 @@ grass:
     max-level: ${GRASS_LESSON_MAX_LEVEL:4}
   study-time:
     level-threshold-seconds: ${GRASS_STUDY_TIME_LEVEL_THRESHOLD_SECONDS:1,1800,3600,7200}
+  streak:
+    query-page-size: ${GRASS_STREAK_QUERY_PAGE_SIZE:100}
 
 study-timer:
   member-lock:
     timeout-milliseconds: 3000
+
+ranking:
+  redis:
+    key-prefix: ${RANKING_REDIS_KEY_PREFIX:${spring.profiles.active:local}:ranking}
+    default-limit: ${RANKING_REDIS_DEFAULT_LIMIT:10}
 
 logging:
   config: classpath:logback-spring.xml
