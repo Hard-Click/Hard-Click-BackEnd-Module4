@@ -58,6 +58,34 @@ class GetLessonRankingServiceTest {
     }
 
     @Test
+    void usesMonthlyPeriodByDefaultWhenPeriodIsNull() {
+        when(rankingListReader.findByMetricAndPeriod(RankingMetric.LESSON, RankingPeriod.MONTHLY))
+                .thenReturn(RankingList.empty(0L));
+
+        GetLessonRankingUseCase.LessonRankingView result =
+                service.handle(new GetLessonRankingQuery(null));
+
+        assertThat(result.period()).isEqualTo("monthly");
+        assertThat(result.totalUsers()).isZero();
+        assertThat(result.rankings()).isEmpty();
+        verify(rankingListReader).findByMetricAndPeriod(RankingMetric.LESSON, RankingPeriod.MONTHLY);
+    }
+
+    @Test
+    void usesMonthlyPeriodByDefaultWhenPeriodIsBlank() {
+        when(rankingListReader.findByMetricAndPeriod(RankingMetric.LESSON, RankingPeriod.MONTHLY))
+                .thenReturn(RankingList.empty(0L));
+
+        GetLessonRankingUseCase.LessonRankingView result =
+                service.handle(new GetLessonRankingQuery(" "));
+
+        assertThat(result.period()).isEqualTo("monthly");
+        assertThat(result.totalUsers()).isZero();
+        assertThat(result.rankings()).isEmpty();
+        verify(rankingListReader).findByMetricAndPeriod(RankingMetric.LESSON, RankingPeriod.MONTHLY);
+    }
+
+    @Test
     void returnsEmptyRankingWhenDataDoesNotExist() {
         when(rankingListReader.findByMetricAndPeriod(RankingMetric.LESSON, RankingPeriod.WEEKLY))
                 .thenReturn(RankingList.empty(0L));
@@ -68,6 +96,18 @@ class GetLessonRankingServiceTest {
         assertThat(result.period()).isEqualTo("weekly");
         assertThat(result.totalUsers()).isZero();
         assertThat(result.rankings()).isEmpty();
+    }
+
+    @Test
+    void propagatesExceptionWhenRankingListReaderFails() {
+        IllegalStateException exception = new IllegalStateException("Redis connection failed");
+        when(rankingListReader.findByMetricAndPeriod(RankingMetric.LESSON, RankingPeriod.DAILY))
+                .thenThrow(exception);
+
+        assertThatThrownBy(() -> service.handle(new GetLessonRankingQuery("daily")))
+                .isSameAs(exception);
+
+        verify(rankingListReader).findByMetricAndPeriod(RankingMetric.LESSON, RankingPeriod.DAILY);
     }
 
     @Test
