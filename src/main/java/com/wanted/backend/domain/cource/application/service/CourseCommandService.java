@@ -14,6 +14,7 @@ import com.wanted.backend.domain.cource.domain.model.CourseStatus;
 import com.wanted.backend.domain.cource.domain.model.Lesson;
 import com.wanted.backend.domain.cource.domain.repository.CourseRepository;
 import com.wanted.backend.domain.cource.domain.repository.LessonRepository;
+import com.wanted.backend.domain.notification.domain.repository.NotificationRepository;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,7 @@ public class CourseCommandService implements CourseCommandUseCase {
     private final FileProcessingService fileProcessingService;
     private final ApplicationEventPublisher eventPublisher;
     private final Clock clock;
+    private final NotificationRepository notificationRepository;
 
     @Override
     public Long create(CreateCourseCommand command) {
@@ -124,6 +126,7 @@ public class CourseCommandService implements CourseCommandUseCase {
 
         course.softDelete();
         courseRepository.save(course);
+        notificationRepository.deleteByRedirectUrlStartingWith("/admin/courses/" + courseId);
     }
 
     @Override

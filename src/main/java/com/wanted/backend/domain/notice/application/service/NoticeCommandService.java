@@ -12,6 +12,7 @@ import com.wanted.backend.domain.notice.application.usecase.NoticeCommandUseCase
 import com.wanted.backend.domain.notice.domain.event.NoticeCreatedEvent;
 import com.wanted.backend.domain.notice.domain.model.Notice;
 import com.wanted.backend.domain.notice.domain.repository.NoticeRepository;
+import com.wanted.backend.domain.notification.domain.repository.NotificationRepository;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import org.springframework.context.ApplicationEventPublisher;
@@ -28,19 +29,21 @@ public class NoticeCommandService implements NoticeCommandUseCase {
     private final NoticeUpdatePolicy noticeUpdatePolicy;
     private final AdminValidationPort adminValidationPort;
     private final ApplicationEventPublisher eventPublisher;
+    private final NotificationRepository notificationRepository;
 
     public NoticeCommandService(NoticeRepository noticeRepository,
                                 NoticeCreatePolicy noticeCreatePolicy,
                                 GlobalNoticeCreatePolicy globalNoticeCreatePolicy,
                                 NoticeUpdatePolicy noticeUpdatePolicy,
                                 AdminValidationPort adminValidationPort,
-                                ApplicationEventPublisher eventPublisher) {
+                                ApplicationEventPublisher eventPublisher, NotificationRepository notificationRepository) {
         this.noticeRepository = noticeRepository;
         this.noticeCreatePolicy = noticeCreatePolicy;
         this.globalNoticeCreatePolicy = globalNoticeCreatePolicy;
         this.noticeUpdatePolicy = noticeUpdatePolicy;
         this.adminValidationPort = adminValidationPort;
         this.eventPublisher = eventPublisher;
+        this.notificationRepository = notificationRepository;
     }
 
     @Override
@@ -87,5 +90,6 @@ public class NoticeCommandService implements NoticeCommandUseCase {
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOTICE_NOT_FOUND));
         noticeUpdatePolicy.validate(command.memberId(), notice);
         noticeRepository.deleteById(command.noticeId());
+        notificationRepository.deleteByRedirectUrlStartingWith("/notices/" + command.noticeId());
     }
 }

@@ -9,6 +9,7 @@ import com.wanted.backend.domain.community.domain.model.Post;
 import com.wanted.backend.domain.community.domain.model.PostFile;
 import com.wanted.backend.domain.community.domain.repository.PostFileRepository;
 import com.wanted.backend.domain.community.domain.repository.PostRepository;
+import com.wanted.backend.domain.notification.domain.repository.NotificationRepository;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,13 +30,15 @@ public class PostCommandService implements PostCommandUseCase {
     private final CommunityFileStoragePort storagePort;
     private final PostRepository postRepository;
     private final PostFileRepository postFileRepository;
+    private final NotificationRepository notificationRepository;
 
     public PostCommandService(CommunityFileStoragePort storagePort,
                               PostRepository postRepository,
-                              PostFileRepository postFileRepository) {
+                              PostFileRepository postFileRepository, NotificationRepository notificationRepository) {
         this.storagePort = storagePort;
         this.postRepository = postRepository;
         this.postFileRepository = postFileRepository;
+        this.notificationRepository = notificationRepository;
     }
 
     @Override
@@ -83,6 +86,7 @@ public class PostCommandService implements PostCommandUseCase {
 
         postFileRepository.deleteByPostId(command.postId());
         postRepository.deleteById(command.postId());
+        notificationRepository.deleteByRedirectUrlStartingWith("/posts/" + command.postId());
     }
 
     @Override
