@@ -9,25 +9,44 @@ import com.wanted.backend.domain.identity.domain.repository.EmailVerificationRep
 import com.wanted.backend.domain.identity.domain.repository.MemberRepository;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-import java.time.LocalDate;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 
 @Service
-@RequiredArgsConstructor
 public class EmailVerificationService implements EmailVerificationUseCase {
+
+    private static final ZoneId DAILY_LIMIT_ZONE = ZoneId.of("Asia/Seoul");
 
     private final EmailVerificationRepository verificationRepository;
     private final EmailSendPort emailSendPort;
     private final MemberRepository memberRepository;
+    private final Duration codeTtl;
+    private final String allowedEmailDomain;
+    private final int passwordResetDailyLimit;
 
-    @Value("${identity.email.allowed-domain:gmail.com}")
-    private String allowedEmailDomain;
+    public EmailVerificationService(
+            EmailVerificationRepository verificationRepository,
+            EmailSendPort emailSendPort,
+            MemberRepository memberRepository,
+            @Value("${identity.email.code-ttl}") Duration codeTtl,
+            @Value("${identity.email.allowed-domain}") String allowedEmailDomain,
+            @Value("${identity.email.password-reset-daily-limit}") int passwordResetDailyLimit
+    ) {
+        this.verificationRepository = verificationRepository;
+        this.emailSendPort = emailSendPort;
+        this.memberRepository = memberRepository;
+        this.codeTtl = codeTtl;
+        this.allowedEmailDomain = allowedEmailDomain;
+        this.passwordResetDailyLimit = passwordResetDailyLimit;
+    }
 
     @Override
     @Transactional
@@ -37,9 +56,9 @@ public class EmailVerificationService implements EmailVerificationUseCase {
         }
         verificationRepository.revokeActiveByEmailAndPurpose(email, purpose);
 
-        EmailVerification verification = EmailVerification.create(email, purpose);
+        EmailVerification verification = EmailVerification.create(email, purpose, codeTtl);
         verificationRepository.save(verification);
-        emailSendPort.sendVerificationCode(email, verification.getCode());
+        sendVerificationCodeAfterCommit(email, verification.getCode());
     }
 
     @Override
@@ -49,12 +68,16 @@ public class EmailVerificationService implements EmailVerificationUseCase {
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
-        LocalDateTime startOfToday = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
-        long todayCount = verificationRepository.countByEmailAndPurposeAndCreatedAtAfter(
-                email, EmailPurpose.PASSWORD_RESET, startOfToday
+        LocalDateTime tomorrow = LocalDateTime.of(
+                LocalDateTime.now(DAILY_LIMIT_ZONE).toLocalDate().plusDays(1),
+                LocalTime.MIN
         );
-
-        if (todayCount >= 3) {
+        if (!verificationRepository.tryAcquireSendPermission(
+                email,
+                EmailPurpose.PASSWORD_RESET,
+                passwordResetDailyLimit,
+                tomorrow
+        )) {
             throw new BusinessException(ErrorCode.PASSWORD_RESET_LIMIT_EXCEEDED);
         }
 
@@ -64,13 +87,14 @@ public class EmailVerificationService implements EmailVerificationUseCase {
     @Override
     @Transactional
     public String verifyCode(String email, String code, EmailPurpose purpose) {
-        EmailVerification verification = verificationRepository.findLatestPendingByEmailAndPurpose(email, purpose)
+        EmailVerification verification = verificationRepository
+                .findLatestPendingByEmailAndPurpose(email, purpose)
                 .orElseThrow(() -> new BusinessException(ErrorCode.VERIFICATION_NOT_FOUND));
 
         try {
             verification.verify(code);
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("만료")) {
+        } catch (RuntimeException exception) {
+            if (exception.getMessage().contains("만료")) {
                 throw new BusinessException(ErrorCode.VERIFICATION_EXPIRED);
             }
             throw new BusinessException(ErrorCode.VERIFICATION_CODE_MISMATCH);
@@ -84,5 +108,19 @@ public class EmailVerificationService implements EmailVerificationUseCase {
     @Transactional
     public void sendAccountLockCode(String email) {
         sendVerificationCode(email, EmailPurpose.ACCOUNT_LOCK);
+    }
+
+    private void sendVerificationCodeAfterCommit(String email, String code) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            emailSendPort.sendVerificationCode(email, code);
+            return;
+        }
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                emailSendPort.sendVerificationCode(email, code);
+            }
+        });
     }
 }

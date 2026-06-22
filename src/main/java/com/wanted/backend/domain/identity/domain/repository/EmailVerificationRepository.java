@@ -9,15 +9,27 @@ import java.util.Optional;
 public interface EmailVerificationRepository {
     void save(EmailVerification verification);
 
-    Optional<EmailVerification> findLatestByEmailAndPurpose(String email, EmailPurpose purpose);
-
     Optional<EmailVerification> findLatestPendingByEmailAndPurpose(String email, EmailPurpose purpose);
 
     Optional<EmailVerification> findByVerificationTokenAndPurpose(String token, EmailPurpose purpose);
 
-    Optional<EmailVerification> findValidToken(String email, String token, EmailPurpose purpose, LocalDateTime now);
+    Optional<EmailVerification> reserveValidToken(
+            String email,
+            String token,
+            EmailPurpose purpose,
+            String reservationId
+    );
 
-    long countByEmailAndPurposeAndCreatedAtAfter(String email, EmailPurpose purpose, LocalDateTime after);
+    boolean completeTokenConsumption(String token, EmailPurpose purpose, String reservationId);
+
+    void releaseTokenReservation(String token, EmailPurpose purpose, String reservationId);
+
+    boolean tryAcquireSendPermission(
+            String email,
+            EmailPurpose purpose,
+            int dailyLimit,
+            LocalDateTime expiresAt
+    );
 
     void revokeActiveByEmailAndPurpose(String email, EmailPurpose purpose);
 }

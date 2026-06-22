@@ -12,6 +12,7 @@ public class CustomUserDetails implements UserDetails {
     private final String password;
     private final boolean isLocked;
     private final boolean isEnabled;
+    private final String role;
     private final Collection<? extends GrantedAuthority> authorities;
 
     public CustomUserDetails(
@@ -20,6 +21,7 @@ public class CustomUserDetails implements UserDetails {
             String password,
             boolean isLocked,
             boolean isEnabled,
+            String role,
             Collection<? extends GrantedAuthority> authorities
     ) {
         this.memberId = memberId;
@@ -27,12 +29,15 @@ public class CustomUserDetails implements UserDetails {
         this.password = password;
         this.isLocked = isLocked;
         this.isEnabled = isEnabled;
+        this.role = role;
         this.authorities = authorities;
     }
 
     public Long getMemberId() {
         return memberId;
     }
+
+    public String getRole(){return role; }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

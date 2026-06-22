@@ -98,6 +98,7 @@ public class NoticeController {
                 """
     )
     public ResponseEntity<ApiResponse<NoticeListResponse>> getNotices(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam String type,
             @RequestParam(required = false) Long courseId,
             @RequestParam(required = false) String keyword,
@@ -105,7 +106,8 @@ public class NoticeController {
             @RequestParam(defaultValue = "10") int size) {
 
         NoticeListResponse response = noticeQueryUseCase.getList(
-                new GetNoticeListCommand(type, courseId, keyword, page, size));
+                new GetNoticeListCommand(type, courseId, keyword, page, size,
+                        userDetails.getMemberId(), userDetails.getRole()));
 
         return ApiResponse.success("공지사항 목록 조회 성공", response);
     }

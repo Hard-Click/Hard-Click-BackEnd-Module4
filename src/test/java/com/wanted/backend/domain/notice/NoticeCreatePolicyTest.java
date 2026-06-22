@@ -31,7 +31,7 @@ class NoticeCreatePolicyTest {
     @BeforeEach
     void setUp() {
         // courseId=1 강의의 담당 강사는 instructorId=10
-        when(courseInstructorPort.getInstructorIdByCourseId(courseId))
+        lenient().when(courseInstructorPort.getInstructorIdByCourseId(courseId))
                 .thenReturn(instructorId);
     }
 
@@ -57,7 +57,7 @@ class NoticeCreatePolicyTest {
     void validate_fail_courseNotFound() {
         // given
         Long nonExistCourseId = 999L;
-        lenient().when(courseInstructorPort.getInstructorIdByCourseId(nonExistCourseId))
+        when(courseInstructorPort.getInstructorIdByCourseId(nonExistCourseId))
                 .thenThrow(new BusinessException(ErrorCode.COURSE_NOT_FOUND2));
 
         // when & then

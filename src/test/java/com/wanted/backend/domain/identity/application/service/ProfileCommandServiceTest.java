@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.identity.application.service;
 
 import com.wanted.backend.domain.identity.application.command.UpdateMyProfileCommand;
+import com.wanted.backend.domain.identity.application.command.WithdrawMemberCommand;
 import com.wanted.backend.domain.identity.application.port.ProfileImageStoragePort;
 import com.wanted.backend.domain.identity.application.usecase.ProfileCommandUseCase.MyProfileUpdateView;
 import com.wanted.backend.domain.identity.domain.model.Member;
@@ -12,6 +13,7 @@ import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -22,6 +24,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -173,6 +176,33 @@ class ProfileCommandServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.USER_NOT_FOUND);
+    }
+
+    @Test
+    void withdraw_anonymizes_member_personal_data() {
+        Member member = member();
+        when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
+        when(passwordEncoder.matches("currentPassword1!", "encoded-password")).thenReturn(true);
+        when(passwordEncoder.encode(anyString())).thenReturn("encoded-deleted-password");
+
+        service.withdraw(1L, new WithdrawMemberCommand("currentPassword1!"));
+
+        ArgumentCaptor<Member> memberCaptor = ArgumentCaptor.forClass(Member.class);
+        verify(memberRepository).save(memberCaptor.capture());
+        verify(refreshTokenRepository).deleteByMemberId(1L);
+
+        Member savedMember = memberCaptor.getValue();
+        assertThat(savedMember.getStatus()).isEqualTo(MemberStatus.WITHDRAWN);
+        assertThat(savedMember.getEmail())
+                .startsWith("withdrawn_1_")
+                .endsWith("@deleted.local");
+        assertThat(savedMember.getUsername()).startsWith("withdrawn_1_");
+        assertThat(savedMember.getName()).isEqualTo("탈퇴회원");
+        assertThat(savedMember.getPassword()).isEqualTo("encoded-deleted-password");
+        assertThat(savedMember.getPhoneNumber()).isNull();
+        assertThat(savedMember.getProfileImageUrl()).isNull();
+        assertThat(savedMember.getGender()).isNull();
+        assertThat(savedMember.getBirthDate()).isNull();
     }
 
     private Member member() {

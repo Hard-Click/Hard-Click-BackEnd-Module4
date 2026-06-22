@@ -66,7 +66,6 @@ public class AuthCommandService implements AuthCommandUseCase {
         String accessToken = jwtProvider.createAccessToken(member.getId(), member.getUsername(), role);
         String refreshToken = jwtProvider.createRefreshToken(member.getId());
 
-        refreshTokenRepository.deleteByMemberId(member.getId());
         saveRefreshToken(member.getId(), refreshToken);
 
         return new AuthToken(accessToken, refreshToken, member.getId(), role);
@@ -97,14 +96,15 @@ public class AuthCommandService implements AuthCommandUseCase {
             throw new BusinessException(ErrorCode.WITHDRAWN_MEMBER);
         }
 
+        if (member.isLocked()) {
+            refreshTokenRepository.deleteByMemberId(memberId);
+            throw new BusinessException(ErrorCode.ACCOUNT_LOCKED);
+        }
+
         String role = "ROLE_" + member.getRole().name();
         String newAccessToken = jwtProvider.createAccessToken(memberId, member.getUsername(), role);
-        String newRefreshToken = jwtProvider.createRefreshToken(memberId);
 
-        refreshTokenRepository.deleteByMemberId(memberId);
-        saveRefreshToken(memberId, newRefreshToken);
-
-        return new AuthToken(newAccessToken, newRefreshToken, memberId, role);
+        return new AuthToken(newAccessToken, refreshToken, memberId, role);
     }
 
     @Override
@@ -117,12 +117,13 @@ public class AuthCommandService implements AuthCommandUseCase {
     }
 
     private void saveRefreshToken(Long memberId, String token) {
+        LocalDateTime now = LocalDateTime.now();
         RefreshToken refreshTokenModel = new RefreshToken(
                 null,
                 memberId,
                 token,
-                LocalDateTime.now().plusDays(14),
-                LocalDateTime.now()
+                now.plus(jwtProvider.getRefreshTokenExpiration()),
+                now
         );
         refreshTokenRepository.save(refreshTokenModel);
     }

@@ -12,24 +12,26 @@ import org.hibernate.annotations.Immutable;
 @Entity
 @Getter
 @Immutable
-@Table(name = "lesson")
+@Table(name = "video")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CatalogVideoReferenceEntity {
 
     @Id
-    @Column(name = "id")
+    @Column(name = "video_id")
     private Long id;
 
-    // section_id = FK to course_section.id
-    @Column(name = "section_id", nullable = false)
+    @Column(name = "curriculum_id", nullable = false)
     private Long curriculumId;
 
     @Column(name = "video_url")
     private String streamingUrl;
 
+    @Column(name = "is_preview")
+    private Boolean preview;
+
     @Column(name = "duration_seconds")
     private Integer durationSeconds;
 
-    @Column(name = "order_index")
+    @Column(name = "sort_order")
     private Integer orderIndex;
 }

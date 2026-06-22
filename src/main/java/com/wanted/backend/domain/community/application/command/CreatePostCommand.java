@@ -7,7 +7,7 @@ import java.util.List;
 public record CreatePostCommand(
         Long authorId,
         BoardType boardType,
-        Long subjectId,
+        String subject,
         String title,
         String content,
         List<MultipartFile> files

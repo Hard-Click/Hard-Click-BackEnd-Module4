@@ -89,7 +89,7 @@
     <!-- ===================================================== -->
     <!-- 3. 개발 환경 설정 (dev) -->
     <!-- ===================================================== -->
-    <springProfile name="dev,default">
+    <springProfile name="local,dev,default">
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
             <appender-ref ref="FILE"/>

@@ -26,7 +26,7 @@ public class VideoCatalogAdapter implements VideoCatalogPort {
     }
 
     private Optional<VideoAccessInfo> toDomain(CatalogVideoReferenceEntity video) {
-        // videos -> course_curriculum -> courses 순서로 필요한 참조 정보를 조합합니다.
+        // videos -> course_curriculum -> course 순서로 필요한 참조 정보를 조합합니다.
         // 레포지토리는 단순 조회만 담당하고, 조합 로직은 어댑터에 둡니다.
         return curriculumRepository.findById(video.getCurriculumId())
                 .flatMap(curriculum -> courseRepository.findById(curriculum.getCourseId())
@@ -38,9 +38,7 @@ public class VideoCatalogAdapter implements VideoCatalogPort {
             CourseCurriculumReferenceEntity curriculum,
             CatalogCourseReferenceEntity course
     ) {
-        // 첫 번째 섹션(order_index=0)의 첫 번째 강의(order_index=0)를 무료 미리보기로 처리
-        boolean isPreview = Integer.valueOf(0).equals(video.getOrderIndex())
-                && Integer.valueOf(0).equals(curriculum.getOrderIndex());
+        boolean isPreview = Boolean.TRUE.equals(video.getPreview());
 
         return new VideoAccessInfo(
                 video.getId(),

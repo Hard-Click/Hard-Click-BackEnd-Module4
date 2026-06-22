@@ -38,6 +38,7 @@ out/
 
 ### .yaml ###
 application-secret.yaml
+
 ### Logs ###
 logs/
 *.log

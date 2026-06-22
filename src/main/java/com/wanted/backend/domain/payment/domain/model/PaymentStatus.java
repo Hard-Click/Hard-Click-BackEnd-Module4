@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.payment.domain.model;
 
 public enum PaymentStatus {
+    PENDING,
     PAID,
     REFUNDED,
     READY,

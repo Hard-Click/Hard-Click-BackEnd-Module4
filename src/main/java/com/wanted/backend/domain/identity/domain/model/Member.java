@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.identity.domain.model;
 
 import com.wanted.backend.domain.identity.domain.event.MemberLoggedInEvent;
+import com.wanted.backend.domain.identity.domain.policy.MemberStatusChangePolicy;
 import com.wanted.backend.global.domain.DomainEvent;
 
 import java.time.LocalDate;
@@ -17,7 +18,7 @@ public class Member {
     private String username;
     private String email;
     private String password;
-    private final String name;
+    private String name;
     private String gender;
     private LocalDate birthDate;
     private String phoneNumber;
@@ -149,7 +150,7 @@ public class Member {
         this.updatedAt = now;
     }
 
-    public void withdraw(LocalDateTime now) {
+    public void withdraw(String encodedDeletedPassword, LocalDateTime now) {
         if (this.status == MemberStatus.WITHDRAWN) {
             throw new IllegalStateException("이미 탈퇴한 회원입니다.");
         }
@@ -158,8 +159,26 @@ public class Member {
 
         this.status = MemberStatus.WITHDRAWN;
         this.email = "withdrawn_" + this.id + "_" + suffix + "@deleted.local";
-        this.username = "wd_" + this.id;
+        this.username = "withdrawn_" + this.id + "_" + suffix;
+        this.name = "탈퇴회원";
+        this.password = encodedDeletedPassword;
         this.phoneNumber = null;
+        this.profileImageUrl = null;
+        this.gender = null;
+        this.birthDate = null;
+        this.updatedAt = now;
+    }
+
+    public void changeCommunityStatus(MemberStatus status, LocalDateTime now) {
+        if (this.status == MemberStatus.WITHDRAWN) {
+            throw new IllegalArgumentException("탈퇴한 회원의 상태는 변경할 수 없습니다.");
+        }
+
+        if (!MemberStatusChangePolicy.isCommunityStatusChangeAllowed(status)) {
+            throw new IllegalArgumentException("관리자가 변경할 수 없는 회원 상태입니다.");
+        }
+
+        this.status = status;
         this.updatedAt = now;
     }
 

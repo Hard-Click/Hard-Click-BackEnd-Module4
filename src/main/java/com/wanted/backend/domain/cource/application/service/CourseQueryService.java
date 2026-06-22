@@ -55,16 +55,25 @@ public class CourseQueryService implements CourseQueryUseCase {
                 .collect(Collectors.toList());
         Map<Long, String> nameMap = ids.isEmpty() ? Map.of() : instructorQueryPort.findNamesByIds(ids);
 
+        List<Long> courseIds = pageResult.content().stream()
+                .map(CourseListItem::courseId)
+                .collect(Collectors.toList());
+        Map<Long, ReviewStatsPort.Stats> reviewStatsMap = reviewStatsPort.findStatsByCourseIds(courseIds);
+        Map<Long, Integer> enrollmentCountMap = enrollmentStatsPort.countByCourseIds(courseIds);
+
         List<CourseListResult.Item> items = pageResult.content().stream()
-                .map(item -> new CourseListResult.Item(
-                        item.courseId(), item.title(), item.subject(), item.thumbnailUrl(),
-                        item.priceType(), item.price(),
-                        nameMap.getOrDefault(item.authorId(), "알 수 없음"),
-                        reviewStatsPort.avgRating(item.courseId()),
-                        reviewStatsPort.reviewCount(item.courseId()),
-                        enrollmentStatsPort.enrollmentCount(item.courseId()),
-                        item.status(), item.createdAt()
-                ))
+                .map(item -> {
+                    ReviewStatsPort.Stats stats = reviewStatsMap.getOrDefault(item.courseId(), ReviewStatsPort.Stats.EMPTY);
+                    return new CourseListResult.Item(
+                            item.courseId(), item.title(), item.subject(), item.thumbnailUrl(),
+                            item.priceType(), item.price(),
+                            nameMap.getOrDefault(item.authorId(), "알 수 없음"),
+                            stats.avgRating(),
+                            stats.reviewCount(),
+                            enrollmentCountMap.getOrDefault(item.courseId(), 0),
+                            item.status(), item.createdAt()
+                    );
+                })
                 .collect(Collectors.toList());
 
         // POPULAR/RATING은 집계값 기반 인메모리 정렬
@@ -143,16 +152,25 @@ public class CourseQueryService implements CourseQueryUseCase {
                 .collect(Collectors.toList());
         Map<Long, String> nameMap = ids.isEmpty() ? Map.of() : instructorQueryPort.findNamesByIds(ids);
 
+        List<Long> courseIds = pageResult.content().stream()
+                .map(CourseListItem::courseId)
+                .collect(Collectors.toList());
+        Map<Long, ReviewStatsPort.Stats> reviewStatsMap = reviewStatsPort.findStatsByCourseIds(courseIds);
+        Map<Long, Integer> enrollmentCountMap = enrollmentStatsPort.countByCourseIds(courseIds);
+
         List<CourseListResult.Item> items = pageResult.content().stream()
-                .map(item -> new CourseListResult.Item(
-                        item.courseId(), item.title(), item.subject(), item.thumbnailUrl(),
-                        item.priceType(), item.price(),
-                        nameMap.getOrDefault(item.authorId(), "알 수 없음"),
-                        reviewStatsPort.avgRating(item.courseId()),
-                        reviewStatsPort.reviewCount(item.courseId()),
-                        enrollmentStatsPort.enrollmentCount(item.courseId()),
-                        item.status(), item.createdAt()
-                ))
+                .map(item -> {
+                    ReviewStatsPort.Stats stats = reviewStatsMap.getOrDefault(item.courseId(), ReviewStatsPort.Stats.EMPTY);
+                    return new CourseListResult.Item(
+                            item.courseId(), item.title(), item.subject(), item.thumbnailUrl(),
+                            item.priceType(), item.price(),
+                            nameMap.getOrDefault(item.authorId(), "알 수 없음"),
+                            stats.avgRating(),
+                            stats.reviewCount(),
+                            enrollmentCountMap.getOrDefault(item.courseId(), 0),
+                            item.status(), item.createdAt()
+                    );
+                })
                 .collect(Collectors.toList());
 
         return new CourseListResult(items, pageResult.currentPage(),

@@ -1,12 +1,15 @@
 package com.wanted.backend.domain.community.infrastructure.persistence;
 
+import com.wanted.backend.domain.community.domain.model.ReviewStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "reviews")
+@Table(name = "reviews", indexes = {
+        @Index(name = "idx_reviews_course_id", columnList = "course_id")
+})
 @Getter
 public class ReviewJpaEntity {
 
@@ -27,6 +30,10 @@ public class ReviewJpaEntity {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private ReviewStatus status = ReviewStatus.ACTIVE;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -41,13 +48,19 @@ public class ReviewJpaEntity {
         this.courseId = courseId;
         this.rating = rating;
         this.content = content;
+        this.status = ReviewStatus.ACTIVE;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
 
-    public void update(Integer rating, String content, LocalDateTime updatedAt) {
+    public void update(Integer rating, String content, ReviewStatus status, LocalDateTime updatedAt) {
         this.rating = rating;
         this.content = content;
+        this.status = status == null ? this.status : status;
         this.updatedAt = updatedAt;
+    }
+
+    public void update(Integer rating, String content, LocalDateTime updatedAt) {
+        update(rating, content, this.status, updatedAt);
     }
 }
