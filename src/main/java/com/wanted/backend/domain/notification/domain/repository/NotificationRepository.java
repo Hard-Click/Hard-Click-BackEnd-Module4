@@ -13,4 +13,5 @@ public interface NotificationRepository {
     List<Notification> findByReceiverIdWithCursor(Long receiverId, Long cursorId, int size);
     boolean existsNextPage(Long receiverId, Long lastId);
     List<Notification> saveAll(List<Notification> notifications);
+    void deleteByRedirectUrlStartingWith(String urlPrefix);
 }

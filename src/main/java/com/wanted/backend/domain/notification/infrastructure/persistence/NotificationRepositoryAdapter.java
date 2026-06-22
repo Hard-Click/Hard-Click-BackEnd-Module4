@@ -73,6 +73,11 @@ public class NotificationRepositoryAdapter implements NotificationRepository {
         return repository.saveAll(entities).stream().map(this::toDomain).toList();
     }
 
+    @Override
+    public void deleteByRedirectUrlStartingWith(String urlPrefix) {
+        repository.deleteByRedirectUrlStartingWith(urlPrefix);
+    }
+
 
     private Notification toDomain(NotificationJpaEntity entity) {
         return Notification.restore(
