@@ -23,9 +23,9 @@ INSERT INTO course_curriculum (
 );
 
 INSERT INTO video (
-    video_id, curriculum_id, title, video_url, is_preview, duration_seconds, sort_order
+    video_id, curriculum_id, title, video_url, s3_key, is_preview, duration_seconds, sort_order
 ) VALUES (
-    10, 30, 'Video 1', 'https://stream.example.com/video.m3u8', 1, 300, 1
+    10, 30, 'Video 1', 'https://stream.example.com/video.m3u8', 'videos/10.mp4', 1, 300, 1
 );
 
 INSERT INTO video_progress (

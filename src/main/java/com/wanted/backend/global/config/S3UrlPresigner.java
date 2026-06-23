@@ -35,6 +35,10 @@ public class S3UrlPresigner {
      * - 그 외(S3 key) → 새 Presigned GET URL 발급
      */
     public String presign(String key) {
+        return presign(key, PRESIGNED_URL_EXPIRY);
+    }
+
+    public String presign(String key, Duration expiration) {
         if (key == null || key.isBlank()) {
             return key;
         }
@@ -42,7 +46,7 @@ public class S3UrlPresigner {
             return key;
         }
         return s3Presigner.presignGetObject(GetObjectPresignRequest.builder()
-                        .signatureDuration(PRESIGNED_URL_EXPIRY)
+                        .signatureDuration(expiration)
                         .getObjectRequest(r -> r.bucket(bucket).key(key))
                         .build())
                 .url()
