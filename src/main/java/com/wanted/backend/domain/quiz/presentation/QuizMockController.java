@@ -24,6 +24,10 @@ import java.util.List;
 @Tag(name = "Quiz Mock", description = "학생/강사 퀴즈 Mock API")
 public class QuizMockController {
 
+    private static final int DEFAULT_PAGE = 0;
+    private static final int DEFAULT_PAGE_SIZE = 10;
+    private static final int MAX_PAGE_SIZE = 50;
+
     @GetMapping("/members/me/quizzes")
     @Operation(summary = "내 퀴즈 목록 조회", description = "현재 로그인한 회원의 퀴즈 목록을 조회합니다.")
     public ResponseEntity<ApiResponse<MyQuizListResponse>> getMyQuizzes(
@@ -31,13 +35,15 @@ public class QuizMockController {
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size
     ) {
+        int normalizedPage = normalizePage(page);
+        int normalizedSize = normalizeSize(size);
         List<MyQuizListResponse.MyQuizItem> quizzes = myQuizItems();
 
         MyQuizListResponse response = new MyQuizListResponse(
-                quizzes,
+                paginate(quizzes, normalizedPage, normalizedSize),
                 quizzes.size(),
-                page == null ? 0 : page,
-                size == null ? 10 : size
+                normalizedPage,
+                normalizedSize
         );
 
         return ApiResponse.success("내 퀴즈 목록을 조회했습니다.", response);
@@ -192,9 +198,44 @@ public class QuizMockController {
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size
     ) {
-        InstructorQuizStatisticsResponse response = instructorQuizStatistics();
+        int normalizedPage = normalizePage(page);
+        int normalizedSize = normalizeSize(size);
+        InstructorQuizStatisticsResponse statistics = instructorQuizStatistics();
+        InstructorQuizStatisticsResponse response = new InstructorQuizStatisticsResponse(
+                statistics.courseTitle(),
+                statistics.sectionTitle(),
+                statistics.quizTitle(),
+                statistics.summary(),
+                statistics.scoreDistribution(),
+                paginate(statistics.students(), normalizedPage, normalizedSize)
+        );
 
         return ApiResponse.success("퀴즈 점수 현황을 조회했습니다.", response);
+    }
+
+    private int normalizePage(Integer page) {
+        if (page == null || page < DEFAULT_PAGE) {
+            return DEFAULT_PAGE;
+        }
+        return page;
+    }
+
+    private int normalizeSize(Integer size) {
+        if (size == null || size <= 0) {
+            return DEFAULT_PAGE_SIZE;
+        }
+        return Math.min(size, MAX_PAGE_SIZE);
+    }
+
+    private <T> List<T> paginate(List<T> items, int page, int size) {
+        long offset = (long) page * size;
+        if (offset >= items.size()) {
+            return List.of();
+        }
+
+        int fromIndex = (int) offset;
+        int toIndex = Math.min(fromIndex + size, items.size());
+        return items.subList(fromIndex, toIndex);
     }
 
     private InstructorQuizDetailResponse instructorQuizDetail(Long quizId) {
