@@ -132,7 +132,19 @@ import org.springframework.http.HttpStatus;
     //알림 예외
     INVALID_NOTIFICATION(HttpStatus.BAD_REQUEST, "NT001", "알림 생성에 필요한 값이 누락되었습니다."),
     NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "NT002", "존재하지 않는 알림입니다."),
-    INVALID_NOTICE_TYPE(HttpStatus.BAD_REQUEST, "N005", "유효하지 않은 공지 타입입니다.");
+    INVALID_NOTICE_TYPE(HttpStatus.BAD_REQUEST, "N005", "유효하지 않은 공지 타입입니다."),
+
+    /* =========================================================================
+       장바구니 관련 예외 (CART000)
+       ========================================================================= */
+    CART_ITEM_ALREADY_EXISTS(HttpStatus.CONFLICT, "CART001", "이미 장바구니에 담긴 강의입니다."),
+    CART_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "CART002", "장바구니에 해당 강의가 없습니다."),
+
+    /* =========================================================================
+       찜하기 관련 예외 (WISH000)
+       ========================================================================= */
+    WISHLIST_ITEM_ALREADY_EXISTS(HttpStatus.CONFLICT, "WISH001", "이미 찜한 강의입니다."),
+    WISHLIST_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "WISH002", "찜 목록에 해당 강의가 없습니다.");
 
 
     private final HttpStatus status;
