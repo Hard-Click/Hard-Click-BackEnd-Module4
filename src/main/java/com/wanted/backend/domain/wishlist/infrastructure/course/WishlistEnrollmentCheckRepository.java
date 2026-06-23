@@ -10,4 +10,7 @@ public interface WishlistEnrollmentCheckRepository extends JpaRepository<Wishlis
 
     @Query("SELECT e.courseId FROM WishlistEnrollment e WHERE e.memberId = :memberId AND e.courseId IN :courseIds")
     List<Long> findEnrolledCourseIds(@Param("memberId") Long memberId, @Param("courseIds") List<Long> courseIds);
+
+    @Query("SELECT e.courseId, COUNT(e.id) FROM WishlistEnrollment e WHERE e.courseId IN :courseIds GROUP BY e.courseId")
+    List<Object[]> countEnrollmentsByCourseIds(@Param("courseIds") List<Long> courseIds);
 }

@@ -20,6 +20,15 @@ public class WishlistCourseJpaEntity {
     @Column(name = "title")
     private String title;
 
+    @Column(name = "subject")
+    private String subject;
+
+    @Column(name = "thumbnail_url")
+    private String thumbnailUrl;
+
+    @Column(name = "price_type")
+    private String priceType;
+
     @Column(name = "price")
     private Integer price;
 
