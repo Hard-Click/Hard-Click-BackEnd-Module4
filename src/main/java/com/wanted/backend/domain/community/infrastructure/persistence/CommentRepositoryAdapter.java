@@ -94,7 +94,7 @@ public class CommentRepositoryAdapter implements CommentRepository {
 
     @Override
     public List<Comment> findByPostIdAndParentIdIsNull(Long postId) {
-        return repository.findByPostIdAndParentIdIsNullOrderByCreatedAtDesc(postId)
+        return repository.findByPostIdAndParentIdIsNullOrderByIsAcceptedDescCreatedAtAsc(postId)
                 .stream()
                 .map(this::toDomain)
                 .toList();

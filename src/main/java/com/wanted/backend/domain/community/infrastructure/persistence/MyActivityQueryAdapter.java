@@ -21,7 +21,7 @@ public class MyActivityQueryAdapter implements MyActivityQueryPort {
                 postRepository.findByAuthorIdAndStatusOrderByCreatedAtDesc(memberId, PostStatus.ACTIVE).stream()
                         .map(this::toPostActivity)
                         .toList(),
-                commentRepository.findByAuthorIdAndIsDeletedFalseOrderByCreatedAtDesc(memberId).stream()
+                commentRepository.findByPostIdAndParentIdIsNullOrderByIsAcceptedDescCreatedAtAsc(memberId).stream()
                         .map(this::toCommentActivity)
                         .toList(),
                 reviewRepository.findByMemberIdOrderByCreatedAtDesc(memberId).stream()

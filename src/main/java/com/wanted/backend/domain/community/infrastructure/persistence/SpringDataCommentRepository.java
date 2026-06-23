@@ -20,7 +20,7 @@ public interface SpringDataCommentRepository
     // 대댓글 존재 여부
     boolean existsByParentId(Long commentId);
 
-    List<CommentJpaEntity> findByAuthorIdAndIsDeletedFalseOrderByCreatedAtDesc(Long authorId);
+    List<CommentJpaEntity> findByPostIdAndParentIdIsNullOrderByIsAcceptedDescCreatedAtAsc(Long authorId);
 
     //댓글 수 조회
     int countByPostId(Long postId);
