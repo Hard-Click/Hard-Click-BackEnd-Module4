@@ -24,7 +24,8 @@ public class Member {
     private String gender;
     private LocalDate birthDate;
     private String phoneNumber;
-    private String profileImageUrl;
+    private String profileImageUrl; // 레거시, 신규 업로드는 더 이상 갱신하지 않음
+    private String profileImageS3Key;
     private final Role role;
     private MemberStatus status;
     private boolean isPasswordChangeRequired;
@@ -40,7 +41,7 @@ public class Member {
     private final List<DomainEvent> domainEvents = new ArrayList<>();
 
     private Member(Long id, String username, String email, String password, String name, String gender,
-                   LocalDate birthDate, String phoneNumber, String profileImageUrl, Role role, MemberStatus status,
+                   LocalDate birthDate, String phoneNumber, String profileImageUrl, String profileImageS3Key, Role role, MemberStatus status,
                    boolean isPasswordChangeRequired, int loginFailCount, boolean isLocked,
                    LocalDateTime lockedAt, LocalDateTime lastLoginAt, LocalDateTime createdAt, LocalDateTime updatedAt,boolean optionalTermsAgreed) {
         this.id = id;
@@ -52,6 +53,7 @@ public class Member {
         this.birthDate = birthDate;
         this.phoneNumber = phoneNumber;
         this.profileImageUrl = profileImageUrl;
+        this.profileImageS3Key = profileImageS3Key;
         this.role = role;
         this.status = status;
         this.isPasswordChangeRequired = isPasswordChangeRequired;
@@ -66,11 +68,11 @@ public class Member {
 
     public static Member create(String username, String email, String password, String name,
                                 String gender, LocalDate birthDate, String phoneNumber,
-                                String profileImageUrl, Role role,boolean optionalTermsAgreed) {
+                                String profileImageUrl, String profileImageS3Key, Role role, boolean optionalTermsAgreed) {
         LocalDateTime now = LocalDateTime.now();
         return new Member(
                 null, username, email, password, name, gender, birthDate, phoneNumber,
-                profileImageUrl, role, MemberStatus.ACTIVE, false, 0, false, null, null,
+                profileImageUrl, profileImageS3Key, role, MemberStatus.ACTIVE, false, 0, false, null, null,
                 now, now,optionalTermsAgreed
         );
     }
@@ -82,12 +84,12 @@ public class Member {
 
 
     public static Member restore(Long id, String username, String email, String password, String name, String gender,
-                                 LocalDate birthDate, String phoneNumber, String profileImageUrl, Role role,
+                                 LocalDate birthDate, String phoneNumber, String profileImageUrl, String profileImageS3Key, Role role,
                                  MemberStatus status, boolean isPasswordChangeRequired, int loginFailCount,
                                  boolean isLocked, LocalDateTime lockedAt, LocalDateTime lastLoginAt,
                                  LocalDateTime createdAt, LocalDateTime updatedAt, boolean optionalTermsAgreed) {
         return new Member(id, username, email, password, name, gender, birthDate, phoneNumber,
-                profileImageUrl, role, status, isPasswordChangeRequired, loginFailCount,
+                profileImageUrl, profileImageS3Key, role, status, isPasswordChangeRequired, loginFailCount,
                 isLocked, lockedAt, lastLoginAt, createdAt, updatedAt, optionalTermsAgreed);
     }
     public boolean isOptionalTermsAgreed() {
@@ -121,9 +123,9 @@ public class Member {
 
 
     // UI에서 수정 가능한 프로필 이미지와 비밀번호만 변경합니다.
-    public void updateProfile(String profileImageUrl, String encodedPassword, LocalDateTime now) {
-        if (profileImageUrl != null) {
-            this.profileImageUrl = profileImageUrl;
+    public void updateProfile(String profileImageS3Key, String encodedPassword, LocalDateTime now) {
+        if (profileImageS3Key != null) {
+            this.profileImageS3Key = profileImageS3Key;
         }
         if (encodedPassword != null) {
             this.password = encodedPassword;
@@ -166,6 +168,7 @@ public class Member {
         this.password = encodedDeletedPassword;
         this.phoneNumber = null;
         this.profileImageUrl = null;
+        this.profileImageS3Key = null;
         this.gender = null;
         this.birthDate = null;
         this.updatedAt = now;
@@ -193,6 +196,7 @@ public class Member {
     public LocalDate getBirthDate() { return birthDate; }
     public String getPhoneNumber() { return phoneNumber; }
     public String getProfileImageUrl() { return profileImageUrl; }
+    public String getProfileImageS3Key() { return profileImageS3Key; }
     public Role getRole() { return role; }
     public MemberStatus getStatus() { return status; }
     public boolean isPasswordChangeRequired() { return isPasswordChangeRequired; }

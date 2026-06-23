@@ -42,6 +42,9 @@ public class MemberJpaEntity {
 
     private String profileImageUrl;
 
+    @Column(name = "profile_image_s3_key", length = 1024)
+    private String profileImageS3Key;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Role role;
@@ -66,7 +69,7 @@ public class MemberJpaEntity {
 
     // 신규 생성을 위한 생성자
     public MemberJpaEntity(String username, String email, String password, String name,
-                           String gender, LocalDate birthDate, String phoneNumber, String profileImageUrl,
+                           String gender, LocalDate birthDate, String phoneNumber, String profileImageUrl, String profileImageS3Key,
                            Role role, MemberStatus status, boolean isPasswordChangeRequired,
                            int loginFailCount, boolean isLocked, LocalDateTime lockedAt,
                            LocalDateTime lastLoginAt, LocalDateTime createdAt, LocalDateTime updatedAt,boolean optionalTermsAgreed) {
@@ -78,6 +81,7 @@ public class MemberJpaEntity {
         this.birthDate = birthDate;
         this.phoneNumber = phoneNumber;
         this.profileImageUrl = profileImageUrl;
+        this.profileImageS3Key = profileImageS3Key;
         this.role = role;
         this.status = status != null ? status : MemberStatus.ACTIVE;
         this.isPasswordChangeRequired = isPasswordChangeRequired;
@@ -99,6 +103,7 @@ public class MemberJpaEntity {
         this.birthDate = domain.getBirthDate();
         this.phoneNumber = domain.getPhoneNumber();
         this.profileImageUrl = domain.getProfileImageUrl();
+        this.profileImageS3Key = domain.getProfileImageS3Key();
         this.role = domain.getRole();
         this.status = domain.getStatus();
         this.isPasswordChangeRequired = domain.isPasswordChangeRequired();
@@ -131,6 +136,7 @@ public class MemberJpaEntity {
     public LocalDate getBirthDate() { return birthDate; }
     public String getPhoneNumber() { return phoneNumber; }
     public String getProfileImageUrl() { return profileImageUrl; }
+    public String getProfileImageS3Key() { return profileImageS3Key; }
     public Role getRole() { return role; }
     public MemberStatus getStatus() { return status; }
     public boolean isPasswordChangeRequired() { return isPasswordChangeRequired; }

@@ -47,6 +47,7 @@ public class SignupCommandService implements SignupCommandUseCase {
                 command.birthDate(),
                 command.phoneNumber(),
                 command.profileImageUrl(),
+                null,
                 Role.STUDENT,
                 Boolean.TRUE.equals(command.optionalTermsAgreed())
         );

@@ -38,17 +38,17 @@ public class ProfileCommandService implements ProfileCommandUseCase {
 
         validateHasUpdatableValue(command);
 
-        String profileImageUrl = storeProfileImage(command.profileImage());
+        String s3Key = storeProfileImage(command.profileImage());
         String encodedPassword = resolveEncodedPassword(command, member);
 
-        member.updateProfile(profileImageUrl, encodedPassword, LocalDateTime.now());
+        member.updateProfile(s3Key, encodedPassword, LocalDateTime.now());
         Member saved = memberRepository.save(member);
 
         return new MyProfileUpdateView(
                 saved.getId(),
                 saved.getName(),
                 saved.getEmail(),
-                saved.getProfileImageUrl()
+                resolveProfileImageUrl(saved)
         );
     }
 
@@ -76,7 +76,14 @@ public class ProfileCommandService implements ProfileCommandUseCase {
         if (profileImage == null || profileImage.isEmpty()) {
             return null;
         }
-        return profileImageStoragePort.store(profileImage);
+        return profileImageStoragePort.upload(profileImage);
+    }
+
+    private String resolveProfileImageUrl(Member member) {
+        if (member.getProfileImageS3Key() != null) {
+            return profileImageStoragePort.generatePresignedUrl(member.getProfileImageS3Key());
+        }
+        return member.getProfileImageUrl();
     }
 
     private void validateHasUpdatableValue(UpdateMyProfileCommand command) {

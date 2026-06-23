@@ -21,13 +21,15 @@ import java.util.UUID;
 public class S3ProfileImageStorageAdapter implements ProfileImageStoragePort {
 
     private static final List<String> ALLOWED_EXTENSIONS = List.of("jpg", "jpeg", "png");
-    private static final Duration PRESIGNED_URL_EXPIRY = Duration.ofDays(7);
 
     @Value("${aws.s3.bucket}")
     private String bucket;
 
     @Value("${identity.profile-image.max-size}")
     private long maxFileSize;
+
+    @Value("${aws.s3.presigned-url.profile-minutes}")
+    private long presignedUrlExpiryMinutes;
 
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
@@ -38,7 +40,7 @@ public class S3ProfileImageStorageAdapter implements ProfileImageStoragePort {
     }
 
     @Override
-    public String store(MultipartFile file) {
+    public String upload(MultipartFile file) {
         validate(file);
 
         String extension = getExtension(file.getOriginalFilename());
@@ -58,10 +60,15 @@ public class S3ProfileImageStorageAdapter implements ProfileImageStoragePort {
             throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED, e);
         }
 
+        return key;
+    }
+
+    @Override
+    public String generatePresignedUrl(String s3Key) {
         return s3Presigner.presignGetObject(GetObjectPresignRequest.builder()
-                .signatureDuration(PRESIGNED_URL_EXPIRY)
-                .getObjectRequest(r -> r.bucket(bucket).key(key))
-                .build())
+                        .signatureDuration(Duration.ofMinutes(presignedUrlExpiryMinutes))
+                        .getObjectRequest(r -> r.bucket(bucket).key(s3Key))
+                        .build())
                 .url()
                 .toString();
     }

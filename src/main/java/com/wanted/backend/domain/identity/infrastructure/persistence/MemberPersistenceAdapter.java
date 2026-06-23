@@ -39,7 +39,7 @@ public class MemberPersistenceAdapter implements MemberRepository {
             entity = new MemberJpaEntity(
                     member.getUsername(), member.getEmail(), member.getPassword(),
                     member.getName(), member.getGender(), member.getBirthDate(),
-                    member.getPhoneNumber(), member.getProfileImageUrl(), member.getRole(),
+                    member.getPhoneNumber(), member.getProfileImageUrl(), member.getProfileImageS3Key(), member.getRole(),
                     member.getStatus(), member.isPasswordChangeRequired(), member.getLoginFailCount(),
                     member.isLocked(), member.getLockedAt(), member.getLastLoginAt(),
                     member.getCreatedAt(), member.getUpdatedAt(),member.isOptionalTermsAgreed()
@@ -73,7 +73,7 @@ public class MemberPersistenceAdapter implements MemberRepository {
         return Member.restore(
                 entity.getId(), entity.getUsername(), entity.getEmail(), entity.getPassword(),
                 entity.getName(), entity.getGender(), entity.getBirthDate(), entity.getPhoneNumber(),
-                entity.getProfileImageUrl(), entity.getRole(), entity.getStatus(),
+                entity.getProfileImageUrl(), entity.getProfileImageS3Key(), entity.getRole(), entity.getStatus(),
                 entity.isPasswordChangeRequired(), entity.getLoginFailCount(), entity.isLocked(),
                 entity.getLockedAt(), entity.getLastLoginAt(), entity.getCreatedAt(), entity.getUpdatedAt(),entity.isOptionalTermsAgreed()
         );
