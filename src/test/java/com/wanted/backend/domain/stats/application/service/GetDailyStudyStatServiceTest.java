@@ -4,6 +4,8 @@ import com.wanted.backend.domain.stats.application.query.GetDailyStudyStatQuery;
 import com.wanted.backend.domain.stats.application.usecase.GetDailyStudyStatUseCase;
 import com.wanted.backend.domain.stats.domain.model.DailyStudyStat;
 import com.wanted.backend.domain.stats.domain.repository.DailyStudyStatsRepository;
+import com.wanted.backend.global.exception.BusinessException;
+import com.wanted.backend.global.exception.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -70,8 +72,9 @@ class GetDailyStudyStatServiceTest {
         LocalDate date = LocalDate.parse("2026-06-18");
 
         assertThatThrownBy(() -> service.handle(new GetDailyStudyStatQuery(null, date)))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("회원 ID는 필수입니다.");
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.DAILY_STATS_MEMBER_ID_REQUIRED);
 
         verifyNoInteractions(repository);
     }
@@ -79,8 +82,9 @@ class GetDailyStudyStatServiceTest {
     @Test
     void rejectsNullDate() {
         assertThatThrownBy(() -> service.handle(new GetDailyStudyStatQuery(1L, null)))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("조회 날짜는 필수입니다.");
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.DAILY_STATS_DATE_REQUIRED);
 
         verifyNoInteractions(repository);
     }
