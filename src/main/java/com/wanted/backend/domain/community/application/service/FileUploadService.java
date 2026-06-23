@@ -37,21 +37,22 @@ public class FileUploadService implements FileUploadUseCase {
         communityAccessPolicy.validateAccess(command.uploaderId());
 
         String prefix = "POST".equals(command.fileType()) ? "posts" : "comments";
-        String fileUrl = storagePort.store(command.file(), prefix, maxFileSize);
+        String fileKey = storagePort.store(command.file(), prefix, maxFileSize);
 
         try {
             UploadedFile saved = uploadedFileRepository.save(
                     UploadedFile.create(
                             command.uploaderId(),
                             command.file().getOriginalFilename(),
-                            fileUrl,
+                            fileKey,
                             command.fileType(),
                             command.file().getSize()
                     )
             );
-            return new FileUploadResponse(saved.getId(), saved.getFileUrl());
+            // DB엔 key가 저장되고, 응답에는 즉시 사용 가능한 Presigned URL을 내려준다.
+            return new FileUploadResponse(saved.getId(), storagePort.presignUrl(saved.getFileUrl()));
         } catch (Exception e) {
-            storagePort.delete(fileUrl);
+            storagePort.delete(fileKey);
             throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED, e);
         }
     }

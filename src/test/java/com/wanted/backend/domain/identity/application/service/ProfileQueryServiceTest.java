@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.identity.application.service;
 
+import com.wanted.backend.domain.identity.application.port.ProfileImageStoragePort;
 import com.wanted.backend.domain.identity.application.usecase.ProfileQueryUseCase.MyProfileView;
 import com.wanted.backend.domain.identity.domain.model.Member;
 import com.wanted.backend.domain.identity.domain.model.MemberStatus;
@@ -16,18 +17,24 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class ProfileQueryServiceTest {
 
     private MemberRepository memberRepository;
+    private ProfileImageStoragePort profileImageStoragePort;
     private ProfileQueryService service;
 
     @BeforeEach
     void setUp() {
         memberRepository = mock(MemberRepository.class);
-        service = new ProfileQueryService(memberRepository);
+        profileImageStoragePort = mock(ProfileImageStoragePort.class);
+        // presignUrl은 입력 key를 그대로 반환하도록 스텁(프리사이닝 로직은 어댑터 단위 테스트 영역)
+        when(profileImageStoragePort.presignUrl(anyString()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        service = new ProfileQueryService(memberRepository, profileImageStoragePort);
     }
 
     @Test

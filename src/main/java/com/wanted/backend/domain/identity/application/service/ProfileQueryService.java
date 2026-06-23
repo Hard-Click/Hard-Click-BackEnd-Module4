@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.identity.application.service;
 
+import com.wanted.backend.domain.identity.application.port.ProfileImageStoragePort;
 import com.wanted.backend.domain.identity.application.usecase.ProfileQueryUseCase;
 import com.wanted.backend.domain.identity.domain.model.Member;
 import com.wanted.backend.domain.identity.domain.repository.MemberRepository;
@@ -17,6 +18,7 @@ public class ProfileQueryService implements ProfileQueryUseCase {
     private static final String DEFAULT_PROFILE_IMAGE_URL = "/images/default-profile.png";
 
     private final MemberRepository memberRepository;
+    private final ProfileImageStoragePort profileImageStoragePort;
 
     @Override
     public MyProfileView handle(Long memberId) {
@@ -31,9 +33,9 @@ public class ProfileQueryService implements ProfileQueryUseCase {
         );
     }
 
-    private String resolveProfileImageUrl(String profileImageUrl) {
-        return profileImageUrl == null || profileImageUrl.isBlank()
+    private String resolveProfileImageUrl(String profileImageKey) {
+        return profileImageKey == null || profileImageKey.isBlank()
                 ? DEFAULT_PROFILE_IMAGE_URL
-                : profileImageUrl;
+                : profileImageStoragePort.presignUrl(profileImageKey);
     }
 }
