@@ -19,15 +19,17 @@ class StudyTimerSessionTest {
                 null,
                 OffsetDateTime.parse("2026-05-11T15:00:00+09:00")
         ))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("회원 ID는 필수입니다.");
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_TIMER_MEMBER_ID_REQUIRED);
     }
 
     @Test
     void startRejectsNullStartedAt() {
         assertThatThrownBy(() -> StudyTimerSession.start(1L, null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("세션 시작 시각은 필수입니다.");
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_TIMER_STARTED_AT_REQUIRED);
     }
 
     @Test
@@ -42,8 +44,9 @@ class StudyTimerSessionTest {
                 -1,
                 StudyTimerSessionStatus.RUNNING
         ))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("경과 시간은 0 이상이어야 합니다.");
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_TIMER_SESSION_INVALID);
     }
 
     @Test
@@ -94,8 +97,9 @@ class StudyTimerSessionTest {
                 OffsetDateTime.parse("2026-05-11T14:59:59+09:00"),
                 SERVER_NOW
         ))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("하트비트 시각은 세션 시작 시각 이후여야 합니다.");
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_TIMER_HEARTBEAT_AT_BEFORE_STARTED_AT);
     }
 
     @Test
@@ -109,8 +113,9 @@ class StudyTimerSessionTest {
                 OffsetDateTime.parse("2026-05-11T15:05:01+09:00"),
                 SERVER_NOW
         ))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("하트비트 시각은 현재 시각 이후일 수 없습니다.");
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_TIMER_HEARTBEAT_AT_IN_FUTURE);
     }
 
     @Test
@@ -183,8 +188,9 @@ class StudyTimerSessionTest {
                 OffsetDateTime.parse("2026-05-11T14:59:59+09:00"),
                 SERVER_NOW
         ))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("세션 종료 시각은 세션 시작 시각 이후여야 합니다.");
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_TIMER_ENDED_AT_BEFORE_STARTED_AT);
     }
 
     @Test
@@ -198,8 +204,9 @@ class StudyTimerSessionTest {
                 OffsetDateTime.parse("2026-05-11T15:05:01+09:00"),
                 SERVER_NOW
         ))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("세션 종료 시각은 현재 시각 이후일 수 없습니다.");
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_TIMER_ENDED_AT_IN_FUTURE);
     }
 
     @Test
@@ -210,7 +217,9 @@ class StudyTimerSessionTest {
         );
 
         assertThatThrownBy(() -> session.end(null, SERVER_NOW))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_TIMER_ENDED_AT_REQUIRED);
     }
 
     @Test
