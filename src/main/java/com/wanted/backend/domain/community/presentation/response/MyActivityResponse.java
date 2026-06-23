@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.community.presentation.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.wanted.backend.domain.community.application.usecase.GetMyActivityUseCase;
 import com.wanted.backend.domain.community.domain.model.BoardType;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -37,6 +38,7 @@ public record MyActivityResponse(
             Integer viewCount,
             @Schema(description = "채택 여부", example = "false")
             Boolean accepted,
+            @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss+09:00")
             @Schema(description = "작성일시", example = "2026-05-28T10:30:00")
             LocalDateTime createdAt
     ) {
@@ -63,6 +65,7 @@ public record MyActivityResponse(
             String content,
             @Schema(description = "채택 여부", example = "true")
             Boolean accepted,
+            @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss+09:00")
             @Schema(description = "작성일시", example = "2026-05-28T11:00:00")
             LocalDateTime createdAt
     ) {

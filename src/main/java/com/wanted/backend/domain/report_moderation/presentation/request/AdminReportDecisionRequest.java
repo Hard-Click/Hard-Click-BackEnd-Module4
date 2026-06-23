@@ -4,17 +4,21 @@ import com.wanted.backend.domain.report_moderation.application.command.AdminRepo
 import com.wanted.backend.domain.report_moderation.domain.model.AdminReportDecision;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record AdminReportDecisionRequest(
+        @Schema(description = "처리 결정 (REJECT: 반려, DELETE: 삭제)", example = "DELETE")
         @NotBlank
         String decision,
 
+        @Schema(description = "처리 메모", example = "스팸 광고로 신고 누적되어 삭제 처리")
         @Size(max = 500)
         String memo,
 
+        @Schema(description = "신고 대상 콘텐츠 삭제 여부", example = "true")
         @NotNull
         Boolean deleteTarget
 ) {

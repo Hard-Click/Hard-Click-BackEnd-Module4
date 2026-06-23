@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.notification.presentation.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.wanted.backend.domain.notification.domain.model.NotificationType;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -22,6 +23,7 @@ public record NotificationItemResponse(
         @Schema(description = "클릭 시 이동할 URL", example = "/notices/1")
         String redirectUrl,
 
+        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss+09:00")
         @Schema(description = "수신 일시", example = "2026-05-10T16:00:00")
         LocalDateTime createdAt
 ) {}

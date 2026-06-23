@@ -60,6 +60,15 @@ public class MemberJpaEntity {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    @Column(length = 100)
+    private String oneLineIntro;
+
+    @Column(columnDefinition = "TEXT")
+    private String introduction;
+
+    @Column(columnDefinition = "TEXT")
+    private String career;
+
     // JPA가 리플렉션을 통해 엔티티를 생성할 때 사용하는 기본 생성자
     protected MemberJpaEntity() {
     }
@@ -143,4 +152,7 @@ public class MemberJpaEntity {
     public boolean isOptionalTermsAgreed() {
         return optionalTermsAgreed;
     }
+    public String getOneLineIntro() { return oneLineIntro; }
+    public String getIntroduction() { return introduction; }
+    public String getCareer() { return career; }
 }

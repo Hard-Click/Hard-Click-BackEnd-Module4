@@ -104,6 +104,7 @@ public class CourseQueryService implements CourseQueryUseCase {
 
         Map<Long, String> nameMap = instructorQueryPort.findNamesByIds(List.of(course.getAuthorId()));
         String instructorName = nameMap.getOrDefault(course.getAuthorId(), "알 수 없음");
+        InstructorQueryPort.InstructorProfile instructorProfile = instructorQueryPort.findProfileById(course.getAuthorId());
 
         List<CourseDetailResult.SectionResult> sections = course.getSections().stream()
                 .sorted(Comparator.comparingInt(s -> s.getOrderIndex()))
@@ -136,6 +137,9 @@ public class CourseQueryService implements CourseQueryUseCase {
                 instructorStatsPort.totalStudents(course.getAuthorId()),
                 instructorStatsPort.totalCourses(course.getAuthorId()),
                 instructorStatsPort.avgRating(course.getAuthorId()),
+                instructorProfile.oneLineIntro(),
+                instructorProfile.introduction(),
+                instructorProfile.career(),
                 sections,
                 course.getLearningObjectives(), course.getTargetAudience(),
                 course.getTechTags(), course.getLevel()

@@ -3,6 +3,7 @@ package com.wanted.backend.domain.community.application.service;
 import com.wanted.backend.domain.community.application.command.CreateReviewCommand;
 import com.wanted.backend.domain.community.application.command.DeleteReviewCommand;
 import com.wanted.backend.domain.community.application.command.UpdateReviewCommand;
+import com.wanted.backend.domain.community.application.policy.CommunityAccessPolicy;
 import com.wanted.backend.domain.community.application.policy.ReviewPolicy;
 import com.wanted.backend.domain.community.application.usecase.ReviewCommandUseCase;
 import com.wanted.backend.domain.community.domain.model.Review;
@@ -18,15 +19,20 @@ public class ReviewCommandService implements ReviewCommandUseCase {
 
     private final ReviewRepository reviewRepository;
     private final ReviewPolicy reviewPolicy;
+    private final CommunityAccessPolicy communityAccessPolicy;
 
     public ReviewCommandService(ReviewRepository reviewRepository,
-                                ReviewPolicy reviewPolicy) {
+                                ReviewPolicy reviewPolicy,
+                                CommunityAccessPolicy communityAccessPolicy) {
         this.reviewRepository = reviewRepository;
         this.reviewPolicy = reviewPolicy;
+        this.communityAccessPolicy = communityAccessPolicy;
     }
 
     @Override
     public Long handle(CreateReviewCommand command) {
+        communityAccessPolicy.validateAccess(command.memberId());
+
         reviewPolicy.validateCompleted(command.memberId(), command.courseId());
         reviewPolicy.validateDuplicate(command.courseId(), command.memberId());
 
@@ -39,6 +45,7 @@ public class ReviewCommandService implements ReviewCommandUseCase {
 
     @Override
     public Long update(UpdateReviewCommand command) {
+        communityAccessPolicy.validateAccess(command.memberId());
 
         Review review = reviewRepository.findById(command.reviewId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
@@ -56,6 +63,7 @@ public class ReviewCommandService implements ReviewCommandUseCase {
 
     @Override
     public void delete(DeleteReviewCommand command) {
+        communityAccessPolicy.validateAccess(command.memberId());
 
         Review review = reviewRepository.findById(command.reviewId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_NOT_FOUND));

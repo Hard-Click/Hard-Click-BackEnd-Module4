@@ -2,6 +2,7 @@ package com.wanted.backend.domain.community.application;
 
 import com.wanted.backend.domain.community.application.command.CreateCommentCommand;
 import com.wanted.backend.domain.community.application.policy.CommentAcceptPolicy;
+import com.wanted.backend.domain.community.application.policy.CommunityAccessPolicy;
 import com.wanted.backend.domain.community.application.service.CommentCommandService;
 import com.wanted.backend.domain.community.domain.model.BoardType;
 import com.wanted.backend.domain.community.domain.model.Comment;
@@ -23,6 +24,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -40,6 +42,9 @@ class CommunityServiceTest {
 
     @Mock
     private CommentAcceptPolicy commentAcceptPolicy;
+
+    @Mock
+    private CommunityAccessPolicy communityAccessPolicy;
 
     @Test
     @DisplayName("대댓글에 답글을 달면 예외가 발생하고 저장이 호출되지 않는다")
@@ -59,6 +64,23 @@ class CommunityServiceTest {
         assertThatThrownBy(() -> commentCommandService.create(command))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(ErrorCode.REPLY_DEPTH_EXCEEDED.getMessage());
+
+        verify(commentRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("정지/탈퇴 회원이 댓글을 작성하면 차단되고 저장이 호출되지 않는다")
+    void createComment_fail_whenAccessDenied() {
+        // given
+        CreateCommentCommand command = new CreateCommentCommand(1L, 1L, null, "내용", null);
+
+        willThrow(new BusinessException(ErrorCode.COMMUNITY_ACCESS_DENIED))
+                .given(communityAccessPolicy).validateAccess(1L);
+
+        // when & then
+        assertThatThrownBy(() -> commentCommandService.create(command))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.COMMUNITY_ACCESS_DENIED.getMessage());
 
         verify(commentRepository, never()).save(any());
     }

@@ -51,10 +51,10 @@ public class SaveStudyTimerHeartbeatService implements SaveStudyTimerHeartbeatUs
 
     private void validateHeartbeatAt(OffsetDateTime heartbeatAt, OffsetDateTime serverNow) {
         if (heartbeatAt == null) {
-            throw new IllegalArgumentException("하트비트 시각은 필수입니다.");
+            throw new BusinessException(ErrorCode.STUDY_TIMER_HEARTBEAT_AT_REQUIRED);
         }
         if (heartbeatAt.toInstant().isAfter(serverNow.toInstant())) {
-            throw new IllegalArgumentException("하트비트 시각은 현재 시각 이후일 수 없습니다.");
+            throw new BusinessException(ErrorCode.STUDY_TIMER_HEARTBEAT_AT_IN_FUTURE);
         }
     }
 }
