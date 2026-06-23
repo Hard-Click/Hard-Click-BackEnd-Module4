@@ -110,7 +110,8 @@ public class PostQueryService implements PostQueryUseCase {
                 post.isAdminDeleted() ? ADMIN_DELETED_MESSAGE : post.getContent(),
                 post.isOwner(memberId),   // Post 도메인 모델에 위임
                 post.isAccepted(),
-                fileUrls
+                fileUrls,
+                post.getSubject()
         );
     }
 

@@ -4,6 +4,7 @@ import com.wanted.backend.domain.cource.application.command.UpdateCourseCommand;
 import com.wanted.backend.domain.cource.domain.model.CourseLevel;
 import com.wanted.backend.domain.cource.domain.model.PriceType;
 import com.wanted.backend.global.domain.SubjectType;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -16,6 +17,7 @@ public record UpdateCourseRequest(
         @NotBlank(message = "강의명은 필수입니다.")
         String title,
 
+        @Schema(description = "과목명 (SubjectType enum 값)", example = "MATH_1")
         @NotNull(message = "과목은 필수입니다.")
         SubjectType subject,
 
