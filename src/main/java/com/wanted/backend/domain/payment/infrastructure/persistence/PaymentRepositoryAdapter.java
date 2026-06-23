@@ -72,6 +72,18 @@ public class PaymentRepositoryAdapter implements PaymentRepository {
         return toDomain(entity);
     }
 
+    @Override
+    @Transactional
+    public Payment refundPayment(Long paymentId) {
+        PaymentJpaEntity entity = repository.findById(paymentId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
+        if (!"PAID".equals(entity.getStatus())) {
+            throw new BusinessException(ErrorCode.PAYMENT_NOT_REFUNDABLE);
+        }
+        entity.refund();
+        return toDomain(entity);
+    }
+
     private Payment toDomain(PaymentJpaEntity entity) {
         return Payment.reconstruct(
                 entity.getId(),
