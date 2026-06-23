@@ -91,6 +91,20 @@ class VideoPlayServiceTest {
     }
 
     @Test
+    void playback_url을_생성할_수_없으면_예외를_전파한다() {
+        VideoAccessInfo accessInfo = accessInfoWithoutPlaybackUrl();
+        when(videoCatalogPort.findByVideoId(10L)).thenReturn(Optional.of(accessInfo));
+        when(videoProgressRepository.findByMemberIdAndVideoId(2L, 10L)).thenReturn(Optional.empty());
+        when(videoPlaybackUrlPort.generatePlaybackUrl(accessInfo))
+                .thenThrow(new BusinessException(ErrorCode.VIDEO_PLAYBACK_URL_NOT_FOUND));
+
+        assertThatThrownBy(() -> service.handle(new MemberVideoCommand(2L, 10L)))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.VIDEO_PLAYBACK_URL_NOT_FOUND);
+    }
+
+    @Test
     void 영상_접근_정보가_없으면_예외가_발생한다() {
         when(videoCatalogPort.findByVideoId(10L)).thenReturn(Optional.empty());
 
@@ -110,6 +124,19 @@ class VideoPlayServiceTest {
                 false,
                 "videos/10.mp4",
                 "https://stream.example.com/video.m3u8",
+                300
+        );
+    }
+
+    private VideoAccessInfo accessInfoWithoutPlaybackUrl() {
+        return new VideoAccessInfo(
+                10L,
+                20L,
+                "PUBLISHED",
+                10000,
+                false,
+                null,
+                null,
                 300
         );
     }

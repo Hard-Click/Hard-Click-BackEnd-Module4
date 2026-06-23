@@ -5,20 +5,24 @@ import com.wanted.backend.domain.learning_activity.domain.model.VideoAccessInfo;
 import com.wanted.backend.global.config.S3UrlPresigner;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 
 @Component
-@RequiredArgsConstructor
 public class S3VideoPlaybackUrlAdapter implements VideoPlaybackUrlPort {
 
-    @Value("${aws.s3.presigned-url.video-minutes:10}")
-    private long videoPresignedUrlMinutes;
-
+    private final long videoPresignedUrlMinutes;
     private final S3UrlPresigner s3UrlPresigner;
+
+    public S3VideoPlaybackUrlAdapter(
+            @Value("${aws.s3.presigned-url.video-minutes:10}") long videoPresignedUrlMinutes,
+            S3UrlPresigner s3UrlPresigner
+    ) {
+        this.videoPresignedUrlMinutes = videoPresignedUrlMinutes;
+        this.s3UrlPresigner = s3UrlPresigner;
+    }
 
     @Override
     public String generatePlaybackUrl(VideoAccessInfo accessInfo) {

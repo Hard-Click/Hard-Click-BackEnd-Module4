@@ -26,7 +26,7 @@ public class CatalogVideoReferenceEntity {
     @Column(name = "video_url")
     private String streamingUrl;
 
-    @Column(name = "s3_key")
+    @Column(name = "s3_key", nullable = true)
     private String s3Key;
 
     @Column(name = "is_preview")

@@ -31,8 +31,7 @@ class S3VideoPlaybackUrlAdapterTest {
                 .build();
         S3UrlPresigner s3UrlPresigner = new S3UrlPresigner(s3Presigner);
         ReflectionTestUtils.setField(s3UrlPresigner, "bucket", "test-bucket");
-        adapter = new S3VideoPlaybackUrlAdapter(s3UrlPresigner);
-        ReflectionTestUtils.setField(adapter, "videoPresignedUrlMinutes", 10L);
+        adapter = new S3VideoPlaybackUrlAdapter(10L, s3UrlPresigner);
     }
 
     @AfterEach
