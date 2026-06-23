@@ -2,6 +2,7 @@ package com.wanted.backend.domain.community.application.service;
 
 import com.wanted.backend.domain.community.application.command.CreateReportCommand;
 import com.wanted.backend.domain.community.application.policy.CommunityAccessPolicy;
+import com.wanted.backend.domain.community.application.port.MemberAutoSuspendPort;
 import com.wanted.backend.domain.community.application.usecase.ReportCommandUseCase;
 import com.wanted.backend.domain.community.domain.event.ReportCreatedEvent;
 import com.wanted.backend.domain.community.domain.model.Report;
@@ -22,7 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class ReportCommandService implements ReportCommandUseCase {
 
-    private static final int REPORT_FLAG_THRESHOLD = 5;
+    private static final int REPORT_FLAG_THRESHOLD = 3;
+    private static final int AUTO_SUSPEND_REPORT_THRESHOLD = 50;
 
     private final ReportRepository reportRepository;
     private final PostRepository postRepository;
@@ -30,19 +32,22 @@ public class ReportCommandService implements ReportCommandUseCase {
     private final ReviewRepository reviewRepository;
     private final CommunityAccessPolicy communityAccessPolicy;
     private final ApplicationEventPublisher eventPublisher;
+    private final MemberAutoSuspendPort memberAutoSuspendPort;
 
     public ReportCommandService(ReportRepository reportRepository,
                                 PostRepository postRepository,
                                 CommentRepository commentRepository,
                                 ReviewRepository reviewRepository,
                                 CommunityAccessPolicy communityAccessPolicy,
-                                ApplicationEventPublisher eventPublisher) {
+                                ApplicationEventPublisher eventPublisher,
+                                MemberAutoSuspendPort memberAutoSuspendPort) {
         this.reportRepository = reportRepository;
         this.postRepository = postRepository;
         this.commentRepository = commentRepository;
         this.reviewRepository = reviewRepository;
         this.communityAccessPolicy = communityAccessPolicy;
         this.eventPublisher = eventPublisher;
+        this.memberAutoSuspendPort = memberAutoSuspendPort;
     }
 
     @Override
@@ -70,6 +75,11 @@ public class ReportCommandService implements ReportCommandUseCase {
         if (count >= REPORT_FLAG_THRESHOLD) {
             log.warn("[Report Flag] targetType: {}, targetId: {}, count: {}",
                     command.targetType(), command.targetId(), count);
+        }
+        // 회원 단위 자동 차단 로직
+        int totalReportCount = reportRepository.countByReportedMemberId(reportedMemberId);
+        if (totalReportCount >= AUTO_SUSPEND_REPORT_THRESHOLD) {
+            memberAutoSuspendPort.suspendForReportThreshold(reportedMemberId);
         }
 
         eventPublisher.publishEvent(ReportCreatedEvent.of(
