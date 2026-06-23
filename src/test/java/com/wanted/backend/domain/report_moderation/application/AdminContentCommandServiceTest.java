@@ -38,7 +38,7 @@ class AdminContentCommandServiceTest {
     void changeStatus_success_adminDeleted() {
         // given
         ChangeAdminContentStatusCommand command = new ChangeAdminContentStatusCommand(
-                TargetType.POST, 15L, "ADMIN_DELETED", "운영 정책 위반으로 삭제합니다.");
+                TargetType.POST, 15L, "ADMIN_DELETED");
 
         // when
         AdminContentStatusResult result = adminContentCommandService.changeStatus(command);
@@ -48,7 +48,6 @@ class AdminContentCommandServiceTest {
         assertThat(result.contentType()).isEqualTo(TargetType.POST);
         assertThat(result.contentId()).isEqualTo(15L);
         assertThat(result.status()).isEqualTo("ADMIN_DELETED");
-        assertThat(result.memo()).isEqualTo("운영 정책 위반으로 삭제합니다.");
     }
 
     @Test
@@ -56,7 +55,7 @@ class AdminContentCommandServiceTest {
     void changeStatus_fail_invalidStatus() {
         // given
         ChangeAdminContentStatusCommand command = new ChangeAdminContentStatusCommand(
-                TargetType.POST, 15L, "ACTIVE", "복구합니다.");
+                TargetType.POST, 15L, "ACTIVE");
 
         // when & then
         assertThatThrownBy(() -> adminContentCommandService.changeStatus(command))
@@ -73,7 +72,7 @@ class AdminContentCommandServiceTest {
     void changeStatus_fail_nullOrBlankStatus(String invalidStatus) {
         // given
         ChangeAdminContentStatusCommand command = new ChangeAdminContentStatusCommand(
-                TargetType.POST, 15L, invalidStatus, "메모");
+                TargetType.POST, 15L, invalidStatus);
 
         // when & then
         assertThatThrownBy(() -> adminContentCommandService.changeStatus(command))
