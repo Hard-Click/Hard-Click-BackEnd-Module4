@@ -2,6 +2,7 @@ package com.wanted.backend.domain.cource.application.service;
 
 import com.wanted.backend.domain.cource.application.dto.CourseDetailResult;
 import com.wanted.backend.domain.cource.application.dto.CourseListResult;
+import com.wanted.backend.domain.cource.application.dto.InstructorDashboardResult;
 import com.wanted.backend.domain.cource.application.port.EnrollmentStatsPort;
 import com.wanted.backend.domain.cource.application.port.InstructorQueryPort;
 import com.wanted.backend.domain.cource.application.port.InstructorStatsPort;
@@ -29,6 +30,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class CourseQueryService implements CourseQueryUseCase {
+
+    // 강사 대시보드 "퀴즈 수" 카드 - quiz 도메인이 Mock API라 임시 고정값 사용
+    private static final int MOCK_QUIZ_COUNT = 36;
 
     private final CourseRepository courseRepository;
     private final InstructorQueryPort instructorQueryPort;
@@ -179,5 +183,16 @@ public class CourseQueryService implements CourseQueryUseCase {
 
         return new CourseListResult(items, pageResult.currentPage(),
                 pageResult.totalPages(), pageResult.totalCount());
+    }
+
+    @Override
+    public InstructorDashboardResult getInstructorDashboard(Long instructorId) {
+        InstructorStatsPort.CourseCounts counts = instructorStatsPort.courseCounts(instructorId);
+        int totalStudents = instructorStatsPort.totalStudents(instructorId);
+
+        return new InstructorDashboardResult(
+                counts.total(), counts.published(), counts.hidden(),
+                totalStudents, MOCK_QUIZ_COUNT
+        );
     }
 }
