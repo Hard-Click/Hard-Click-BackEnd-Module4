@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.identity.infrastructure.storage;
 
 import com.wanted.backend.domain.identity.application.port.ProfileImageStoragePort;
+import com.wanted.backend.global.config.S3UrlPresigner;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,11 +10,8 @@ import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,13 +30,16 @@ public class S3ProfileImageStorageAdapter implements ProfileImageStoragePort {
     private long presignedUrlExpiryMinutes;
 
     private final S3Client s3Client;
-    private final S3Presigner s3Presigner;
+    private final S3UrlPresigner s3UrlPresigner;
 
-    public S3ProfileImageStorageAdapter(S3Client s3Client, S3Presigner s3Presigner) {
+    public S3ProfileImageStorageAdapter(S3Client s3Client, S3UrlPresigner s3UrlPresigner) {
         this.s3Client = s3Client;
-        this.s3Presigner = s3Presigner;
+        this.s3UrlPresigner = s3UrlPresigner;
     }
 
+    /**
+     * S3에 업로드하고 DB 저장용 key를 반환한다(만료되는 URL 저장 금지).
+     */
     @Override
     public String upload(MultipartFile file) {
         validate(file);

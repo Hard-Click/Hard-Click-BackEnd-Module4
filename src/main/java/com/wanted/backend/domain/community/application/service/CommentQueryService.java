@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.community.application.service;
 
+import com.wanted.backend.domain.community.application.port.CommunityFileStoragePort;
 import com.wanted.backend.domain.community.application.port.MemberNamePort;
 import com.wanted.backend.domain.community.application.usecase.CommentQueryUseCase;
 import com.wanted.backend.domain.community.domain.model.Comment;
@@ -20,11 +21,14 @@ public class CommentQueryService implements CommentQueryUseCase {
 
     private final CommentRepository commentRepository;
     private final MemberNamePort memberNamePort;
+    private final CommunityFileStoragePort fileStoragePort;
 
     public CommentQueryService(CommentRepository commentRepository,
-                               MemberNamePort memberNamePort) {
+                               MemberNamePort memberNamePort,
+                               CommunityFileStoragePort fileStoragePort) {
         this.commentRepository = commentRepository;
         this.memberNamePort = memberNamePort;
+        this.fileStoragePort = fileStoragePort;
     }
 
     @Override
@@ -70,7 +74,7 @@ public class CommentQueryService implements CommentQueryUseCase {
                 comment.isAccepted(),
                 comment.getAuthorId().equals(currentMemberId),  // 본인 댓글 여부
                 comment.isDeleted(),
-                comment.getImageUrl(),
+                fileStoragePort.presignUrl(comment.getImageUrl()),
                 replies
         );
     }
