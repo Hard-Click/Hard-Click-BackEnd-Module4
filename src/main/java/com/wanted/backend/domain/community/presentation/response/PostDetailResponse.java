@@ -37,7 +37,10 @@ public record PostDetailResponse(
         boolean isAccepted,
 
         @Schema(description = "첨부 파일 URL 목록(2개까지만)", example = "[\"http://localhost:8080/files/post/abc123.jpg\"]")
-        List<String> fileUrls
+        List<String> fileUrls,
+
+        @Schema(description = "과목 — QUESTION 게시판일 경우 SubjectType enum 값 반환, FREE 게시판은 null", example = "MATH_1")
+        String subject
 
 
 ) {}
