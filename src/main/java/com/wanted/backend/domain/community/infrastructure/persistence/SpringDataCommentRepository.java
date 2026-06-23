@@ -14,9 +14,6 @@ public interface SpringDataCommentRepository
     //원댓글 목록(최신순)
     List<CommentJpaEntity> findByParentIdOrderByCreatedAtAsc(Long parentId);
 
-    //대댓글 목록(오래된 순)
-    List<CommentJpaEntity> findByPostIdAndParentIdIsNullOrderByCreatedAtDesc(Long postId);
-
     // 대댓글 존재 여부
     boolean existsByParentId(Long commentId);
 
@@ -25,4 +22,5 @@ public interface SpringDataCommentRepository
     //댓글 수 조회
     int countByPostId(Long postId);
 
+    List<CommentJpaEntity> findByAuthorIdAndIsDeletedFalseOrderByCreatedAtDesc(Long authorId);
 }

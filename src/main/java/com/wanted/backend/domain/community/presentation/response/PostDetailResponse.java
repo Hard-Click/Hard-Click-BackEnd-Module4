@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.community.presentation.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.wanted.backend.domain.community.domain.model.BoardType;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -21,6 +22,7 @@ public record PostDetailResponse(
         @Schema(description = "작성자 이름", example = "홍길동")
         String authorName,
 
+        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss+09:00")
         @Schema(description = "작성일시", example = "2025-03-15T14:30:00")
         LocalDateTime createdAt,
 
