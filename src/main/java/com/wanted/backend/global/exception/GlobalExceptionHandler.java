@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
@@ -34,6 +35,24 @@ public class GlobalExceptionHandler {
         );
 
         log.warn("[Validation Error] Path: {}, Message: 클라이언트 입력값 오류", request.getRequestURI());
+
+        ErrorResponse response = ErrorResponse.create()
+                .errorCode(ErrorCode.INVALID_INPUT_VALUE.getCode())
+                .message(ErrorCode.INVALID_INPUT_VALUE.getMessage())
+                .path(request.getRequestURI())
+                .details(details);
+
+        return ResponseEntity.status(ErrorCode.INVALID_INPUT_VALUE.getStatus()).body(response);
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponse> handleMissingRequestParameterException(
+            MissingServletRequestParameterException e,
+            HttpServletRequest request) {
+
+        Map<String, Object> details = Map.of(e.getParameterName(), "필수 요청 파라미터입니다.");
+
+        log.warn("[Missing Request Parameter] Path: {}, Parameter: {}", request.getRequestURI(), e.getParameterName());
 
         ErrorResponse response = ErrorResponse.create()
                 .errorCode(ErrorCode.INVALID_INPUT_VALUE.getCode())

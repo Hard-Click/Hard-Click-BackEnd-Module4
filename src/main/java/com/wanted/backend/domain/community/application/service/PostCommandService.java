@@ -3,6 +3,7 @@ package com.wanted.backend.domain.community.application.service;
 import com.wanted.backend.domain.community.application.command.CreatePostCommand;
 import com.wanted.backend.domain.community.application.command.DeletePostCommand;
 import com.wanted.backend.domain.community.application.command.UpdatePostCommand;
+import com.wanted.backend.domain.community.application.policy.CommunityAccessPolicy;
 import com.wanted.backend.domain.community.application.port.CommunityFileStoragePort;
 import com.wanted.backend.domain.community.application.usecase.PostCommandUseCase;
 import com.wanted.backend.domain.community.domain.model.Post;
@@ -31,18 +32,23 @@ public class PostCommandService implements PostCommandUseCase {
     private final PostRepository postRepository;
     private final PostFileRepository postFileRepository;
     private final NotificationRepository notificationRepository;
+    private final CommunityAccessPolicy communityAccessPolicy;
 
     public PostCommandService(CommunityFileStoragePort storagePort,
                               PostRepository postRepository,
-                              PostFileRepository postFileRepository, NotificationRepository notificationRepository) {
+                              PostFileRepository postFileRepository, NotificationRepository notificationRepository,
+                              CommunityAccessPolicy communityAccessPolicy) {
         this.storagePort = storagePort;
         this.postRepository = postRepository;
         this.postFileRepository = postFileRepository;
         this.notificationRepository = notificationRepository;
+        this.communityAccessPolicy = communityAccessPolicy;
     }
 
     @Override
     public Long create(CreatePostCommand command) {
+        communityAccessPolicy.validateAccess(command.authorId());
+
         int fileCount = command.files() != null ? command.files().size() : 0;
 
         Post post = Post.create(
@@ -76,6 +82,8 @@ public class PostCommandService implements PostCommandUseCase {
 
     @Override
     public void delete(DeletePostCommand command) {
+        communityAccessPolicy.validateAccess(command.memberId());
+
         Post post = postRepository.findById(command.postId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
 
@@ -91,6 +99,8 @@ public class PostCommandService implements PostCommandUseCase {
 
     @Override
     public Long update(UpdatePostCommand command) {
+        communityAccessPolicy.validateAccess(command.memberId());
+
         // [1단계] 게시글 존재 여부 확인
         Post post = postRepository.findById(command.postId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));

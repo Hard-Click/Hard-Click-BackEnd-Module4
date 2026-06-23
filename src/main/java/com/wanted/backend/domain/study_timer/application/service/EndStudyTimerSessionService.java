@@ -49,10 +49,10 @@ public class EndStudyTimerSessionService implements EndStudyTimerSessionUseCase 
 
     private void validateEndedAt(OffsetDateTime endedAt, OffsetDateTime serverNow) {
         if (endedAt == null) {
-            throw new IllegalArgumentException("세션 종료 시각은 필수입니다.");
+            throw new BusinessException(ErrorCode.STUDY_TIMER_ENDED_AT_REQUIRED);
         }
         if (endedAt.toInstant().isAfter(serverNow.toInstant())) {
-            throw new IllegalArgumentException("세션 종료 시각은 현재 시각 이후일 수 없습니다.");
+            throw new BusinessException(ErrorCode.STUDY_TIMER_ENDED_AT_IN_FUTURE);
         }
     }
 }

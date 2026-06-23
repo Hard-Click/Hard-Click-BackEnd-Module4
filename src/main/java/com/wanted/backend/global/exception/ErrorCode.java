@@ -78,6 +78,13 @@ import org.springframework.http.HttpStatus;
     COURSE_NOT_PUBLISHED(HttpStatus.FORBIDDEN, "L002", "공개되지 않은 강의입니다."),
     ENROLLMENT_REQUIRED(HttpStatus.FORBIDDEN, "L003", "수강권 또는 구독권이 필요합니다."),
     VIDEO_COMPLETION_CONDITION_NOT_MET(HttpStatus.BAD_REQUEST, "L004", "영상 시청 비율이 완료 기준을 충족하지 않습니다."),
+
+    // 학습 통계 예외
+    DAILY_STATS_MEMBER_ID_REQUIRED(HttpStatus.BAD_REQUEST, "DS001", "회원 ID는 필수입니다."),
+    DAILY_STATS_DATE_REQUIRED(HttpStatus.BAD_REQUEST, "DS002", "조회 날짜는 필수입니다."),
+    DAILY_STATS_DATE_FORMAT_INVALID(HttpStatus.BAD_REQUEST, "DS003", "조회 날짜는 yyyy-MM-dd 형식이어야 합니다."),
+    DAILY_STATS_INVALID(HttpStatus.BAD_REQUEST, "DS004", "일별 학습 통계 정보가 올바르지 않습니다."),
+
     //게시글 예외
     SUBJECT_REQUIRED(HttpStatus.BAD_REQUEST, "P001", "과목을 선택하세요"),
     POST_NOT_FOUND(HttpStatus.NOT_FOUND, "P003", "존재하지 않는 게시글입니다."),
@@ -104,6 +111,9 @@ import org.springframework.http.HttpStatus;
     COMMENT_ACCEPTED_CANNOT_MODIFY(HttpStatus.FORBIDDEN, "C008", "채택된 댓글은 수정할 수 없습니다."),
     COMMENT_ACCEPTED_CANNOT_DELETE(HttpStatus.FORBIDDEN, "C009", "채택된 댓글은 삭제할 수 없습니다."),
 
+    //커뮤니티 공통 접근 예외
+    COMMUNITY_ACCESS_DENIED(HttpStatus.FORBIDDEN, "C010", "커뮤니티 이용 권한이 없습니다."),
+
     //공지 예외
     NOTICE_NOT_AUTHORIZED(HttpStatus.FORBIDDEN, "N001", "해당 강의의 담당 강사가 아닙니다."),
     COURSE_NOT_FOUND2(HttpStatus.NOT_FOUND, "CO001", "존재하지 않는 강의입니다."),
@@ -122,6 +132,22 @@ import org.springframework.http.HttpStatus;
     STUDY_TIMER_SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "ST002", "존재하지 않는 순공시간 세션입니다."),
     STUDY_TIMER_SESSION_NOT_RUNNING(HttpStatus.CONFLICT, "ST003", "실행 중인 순공시간 세션만 처리할 수 있습니다."),
     STUDY_TIMER_LOCK_TIMEOUT(HttpStatus.CONFLICT, "ST004", "순공시간 세션 처리 중입니다. 잠시 후 다시 시도해주세요."),
+    STUDY_TIMER_MEMBER_ID_REQUIRED(HttpStatus.BAD_REQUEST, "ST005", "회원 ID는 필수입니다."),
+    STUDY_TIMER_STARTED_AT_REQUIRED(HttpStatus.BAD_REQUEST, "ST006", "세션 시작 시각은 필수입니다."),
+    STUDY_TIMER_SESSION_INVALID(HttpStatus.BAD_REQUEST, "ST007", "순공시간 세션 정보가 올바르지 않습니다."),
+    STUDY_TIMER_HEARTBEAT_AT_REQUIRED(HttpStatus.BAD_REQUEST, "ST008", "하트비트 시각은 필수입니다."),
+    STUDY_TIMER_HEARTBEAT_AT_IN_FUTURE(HttpStatus.BAD_REQUEST, "ST009", "하트비트 시각은 현재 시각 이후일 수 없습니다."),
+    STUDY_TIMER_HEARTBEAT_AT_BEFORE_STARTED_AT(HttpStatus.BAD_REQUEST, "ST010", "하트비트 시각은 세션 시작 시각 이후여야 합니다."),
+    STUDY_TIMER_ENDED_AT_REQUIRED(HttpStatus.BAD_REQUEST, "ST011", "세션 종료 시각은 필수입니다."),
+    STUDY_TIMER_ENDED_AT_IN_FUTURE(HttpStatus.BAD_REQUEST, "ST012", "세션 종료 시각은 현재 시각 이후일 수 없습니다."),
+    STUDY_TIMER_ENDED_AT_BEFORE_STARTED_AT(HttpStatus.BAD_REQUEST, "ST013", "세션 종료 시각은 세션 시작 시각 이후여야 합니다."),
+    STUDY_TIMER_DAILY_STAT_INVALID(HttpStatus.BAD_REQUEST, "ST014", "일별 순공시간 통계 정보가 올바르지 않습니다."),
+    STUDY_TIMER_DAILY_START_DATE_REQUIRED(HttpStatus.BAD_REQUEST, "ST015", "시작 날짜는 필수입니다."),
+    STUDY_TIMER_DAILY_END_DATE_REQUIRED(HttpStatus.BAD_REQUEST, "ST016", "종료 날짜는 필수입니다."),
+    STUDY_TIMER_DAILY_DATE_RANGE_INVALID(HttpStatus.BAD_REQUEST, "ST017", "시작 날짜는 종료 날짜 이후일 수 없습니다."),
+    STUDY_TIMER_DAILY_DATE_RANGE_TOO_LONG(HttpStatus.BAD_REQUEST, "ST018", "일별 학습 시간은 최대 1년치까지만 조회할 수 있습니다."),
+    STUDY_TIMER_DAILY_START_DATE_FORMAT_INVALID(HttpStatus.BAD_REQUEST, "ST019", "시작 날짜는 yyyy-MM-dd 형식이어야 합니다."),
+    STUDY_TIMER_DAILY_END_DATE_FORMAT_INVALID(HttpStatus.BAD_REQUEST, "ST020", "종료 날짜는 yyyy-MM-dd 형식이어야 합니다."),
     // 신고 예외
     REPORT_ALREADY_EXISTS(HttpStatus.CONFLICT, "RP001", "이미 신고한 대상입니다."),
     REPORT_TARGET_NOT_FOUND(HttpStatus.NOT_FOUND, "RP002", "존재하지 않거나 이미 삭제된 대상입니다."),

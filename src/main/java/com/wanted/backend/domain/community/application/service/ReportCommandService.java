@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.community.application.service;
 
 import com.wanted.backend.domain.community.application.command.CreateReportCommand;
+import com.wanted.backend.domain.community.application.policy.CommunityAccessPolicy;
 import com.wanted.backend.domain.community.application.usecase.ReportCommandUseCase;
 import com.wanted.backend.domain.community.domain.event.ReportCreatedEvent;
 import com.wanted.backend.domain.community.domain.model.Report;
@@ -27,22 +28,27 @@ public class ReportCommandService implements ReportCommandUseCase {
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
     private final ReviewRepository reviewRepository;
+    private final CommunityAccessPolicy communityAccessPolicy;
     private final ApplicationEventPublisher eventPublisher;
 
     public ReportCommandService(ReportRepository reportRepository,
                                 PostRepository postRepository,
                                 CommentRepository commentRepository,
                                 ReviewRepository reviewRepository,
+                                CommunityAccessPolicy communityAccessPolicy,
                                 ApplicationEventPublisher eventPublisher) {
         this.reportRepository = reportRepository;
         this.postRepository = postRepository;
         this.commentRepository = commentRepository;
         this.reviewRepository = reviewRepository;
+        this.communityAccessPolicy = communityAccessPolicy;
         this.eventPublisher = eventPublisher;
     }
 
     @Override
     public Long create(CreateReportCommand command) {
+        communityAccessPolicy.validateAccess(command.reporterId());
+
         if (reportRepository.existsByReporterIdAndTargetTypeAndTargetId(
                 command.reporterId(), command.targetType(), command.targetId())) {
             throw new BusinessException(ErrorCode.REPORT_ALREADY_EXISTS);

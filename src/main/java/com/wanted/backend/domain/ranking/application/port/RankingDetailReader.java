@@ -1,12 +1,12 @@
 package com.wanted.backend.domain.ranking.application.port;
 
+import com.wanted.backend.domain.ranking.domain.model.RankingDetail;
 import com.wanted.backend.domain.ranking.domain.model.RankingMetric;
 import com.wanted.backend.domain.ranking.domain.model.RankingPeriod;
-import com.wanted.backend.domain.ranking.domain.model.RankingSummary;
 
-public interface RankingSummaryReader {
+public interface RankingDetailReader {
 
-    RankingSummary findByMetricAndPeriodAndMemberId(
+    RankingDetail findByMetricAndPeriodAndMemberId(
             RankingMetric metric,
             RankingPeriod period,
             Long memberId
