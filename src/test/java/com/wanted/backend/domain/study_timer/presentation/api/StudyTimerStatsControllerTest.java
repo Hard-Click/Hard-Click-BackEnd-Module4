@@ -72,8 +72,8 @@ class StudyTimerStatsControllerTest {
         mockMvc.perform(get("/api/study-timers/stats/daily")
                         .param("endDate", "2026-05-02"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value(ErrorCode.STUDY_TIMER_DAILY_START_DATE_REQUIRED.getCode()))
-                .andExpect(jsonPath("$.message").value(ErrorCode.STUDY_TIMER_DAILY_START_DATE_REQUIRED.getMessage()));
+                .andExpect(jsonPath("$.errorCode").value(ErrorCode.INVALID_INPUT_VALUE.getCode()))
+                .andExpect(jsonPath("$.details.startDate").value("필수 요청 파라미터입니다."));
 
         verify(getDailyStudyTimeUseCase, never()).handle(any());
     }
@@ -85,8 +85,8 @@ class StudyTimerStatsControllerTest {
         mockMvc.perform(get("/api/study-timers/stats/daily")
                         .param("startDate", "2026-05-01"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value(ErrorCode.STUDY_TIMER_DAILY_END_DATE_REQUIRED.getCode()))
-                .andExpect(jsonPath("$.message").value(ErrorCode.STUDY_TIMER_DAILY_END_DATE_REQUIRED.getMessage()));
+                .andExpect(jsonPath("$.errorCode").value(ErrorCode.INVALID_INPUT_VALUE.getCode()))
+                .andExpect(jsonPath("$.details.endDate").value("필수 요청 파라미터입니다."));
 
         verify(getDailyStudyTimeUseCase, never()).handle(any());
     }
@@ -99,7 +99,7 @@ class StudyTimerStatsControllerTest {
                         .param("startDate", "not-a-date")
                         .param("endDate", "2026-05-02"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value(ErrorCode.STUDY_TIMER_DAILY_START_DATE_FORMAT_INVALID.getCode()));
+                .andExpect(jsonPath("$.errorCode").value(ErrorCode.INVALID_INPUT_VALUE.getCode()));
 
         verify(getDailyStudyTimeUseCase, never()).handle(any());
     }
