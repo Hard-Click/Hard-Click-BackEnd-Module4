@@ -11,6 +11,8 @@ import com.wanted.backend.domain.identity.domain.repository.RefreshTokenReposito
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import com.wanted.backend.global.security.jwt.JwtProvider;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,18 +31,24 @@ public class AuthCommandService implements AuthCommandUseCase {
     private final JwtProvider jwtProvider;
     private final ApplicationEventPublisher eventPublisher;
     private final EmailVerificationUseCase emailVerificationUseCase;
+    private final MeterRegistry meterRegistry;
 
     @Override
     @Transactional(noRollbackFor = BusinessException.class)
     public AuthToken login(String username, String rawPassword) {
         Member member = memberRepository.findByUsername(username)
-                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_LOGIN_INFO));
+                .orElseGet(() -> {
+                    recordLoginResult("fail");
+                    throw new BusinessException(ErrorCode.INVALID_LOGIN_INFO);
+                });
 
         if (member.getStatus() == MemberStatus.WITHDRAWN) {
+            recordLoginResult("fail");
             throw new BusinessException(ErrorCode.WITHDRAWN_MEMBER);
         }
 
         if (member.isLocked()) {
+            recordLoginResult("fail");
             throw new BusinessException(ErrorCode.ACCOUNT_LOCKED);
         }
 
@@ -49,6 +57,8 @@ public class AuthCommandService implements AuthCommandUseCase {
         if (!passwordMatched) {
             member.loginFailed(LocalDateTime.now());
             memberRepository.save(member);
+
+            recordLoginResult("fail");
 
             if (member.isLocked()) {
                 emailVerificationUseCase.sendAccountLockCode(member.getEmail());
@@ -68,6 +78,8 @@ public class AuthCommandService implements AuthCommandUseCase {
 
         saveRefreshToken(member.getId(), refreshToken);
 
+        recordLoginResult("success");
+
         return new AuthToken(accessToken, refreshToken, member.getId(), role);
     }
 
@@ -76,33 +88,45 @@ public class AuthCommandService implements AuthCommandUseCase {
     public AuthToken refresh(String refreshToken) {
         if (refreshToken == null || !jwtProvider.validateToken(refreshToken) ||
                 !"refresh".equals(jwtProvider.getTokenType(refreshToken))) {
+            recordReissueResult("fail");
             throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
 
         RefreshToken storedToken = refreshTokenRepository.findByToken(refreshToken)
-                .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED));
+                .orElseGet(() -> {
+                    recordReissueResult("fail");
+                    throw new BusinessException(ErrorCode.UNAUTHORIZED);
+                });
 
         if (storedToken.isExpired()) {
             refreshTokenRepository.deleteByMemberId(storedToken.getMemberId());
+            recordReissueResult("fail");
             throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
 
         Long memberId = storedToken.getMemberId();
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+                .orElseGet(() -> {
+                    recordReissueResult("fail");
+                    throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+                });
 
         if (member.getStatus() == MemberStatus.WITHDRAWN) {
             refreshTokenRepository.deleteByMemberId(memberId);
+            recordReissueResult("fail");
             throw new BusinessException(ErrorCode.WITHDRAWN_MEMBER);
         }
 
         if (member.isLocked()) {
             refreshTokenRepository.deleteByMemberId(memberId);
+            recordReissueResult("fail");
             throw new BusinessException(ErrorCode.ACCOUNT_LOCKED);
         }
 
         String role = "ROLE_" + member.getRole().name();
         String newAccessToken = jwtProvider.createAccessToken(memberId, member.getUsername(), role);
+
+        recordReissueResult("success");
 
         return new AuthToken(newAccessToken, refreshToken, memberId, role);
     }
@@ -126,5 +150,19 @@ public class AuthCommandService implements AuthCommandUseCase {
                 now
         );
         refreshTokenRepository.save(refreshTokenModel);
+    }
+
+    private void recordLoginResult(String result) {
+        Counter.builder("auth.login.count")
+                .tag("result", result)
+                .register(meterRegistry)
+                .increment();
+    }
+
+    private void recordReissueResult(String result) {
+        Counter.builder("auth.token.reissue.count")
+                .tag("result", result)
+                .register(meterRegistry)
+                .increment();
     }
 }
