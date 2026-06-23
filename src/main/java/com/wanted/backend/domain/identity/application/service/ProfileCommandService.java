@@ -38,17 +38,19 @@ public class ProfileCommandService implements ProfileCommandUseCase {
 
         validateHasUpdatableValue(command);
 
-        String profileImageUrl = storeProfileImage(command.profileImage());
+        String profileImageKey = storeProfileImage(command.profileImage());
         String encodedPassword = resolveEncodedPassword(command, member);
 
-        member.updateProfile(profileImageUrl, encodedPassword, LocalDateTime.now());
+        member.updateProfile(profileImageKey, encodedPassword, LocalDateTime.now());
         Member saved = memberRepository.save(member);
 
         return new MyProfileUpdateView(
                 saved.getId(),
                 saved.getName(),
                 saved.getEmail(),
-                saved.getProfileImageUrl()
+                saved.getProfileImageUrl() == null
+                        ? null
+                        : profileImageStoragePort.presignUrl(saved.getProfileImageUrl())
         );
     }
 
