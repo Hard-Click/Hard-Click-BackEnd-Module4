@@ -11,17 +11,13 @@ public record AdminContentStatusResponse(
         Long contentId,
 
         @Schema(description = "변경된 콘텐츠 상태", example = "ADMIN_DELETED")
-        String status,
-
-        @Schema(description = "처리 메모", example = "스팸 광고로 신고 누적되어 삭제 처리")
-        String memo
+        String status
 ) {
     public static AdminContentStatusResponse from(AdminContentStatusResult result) {
         return new AdminContentStatusResponse(
                 result.contentType().name(),
                 result.contentId(),
-                result.status(),
-                result.memo()
+                result.status()
         );
     }
 }

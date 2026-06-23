@@ -25,14 +25,7 @@ public class AdminContentCommandAdapter implements AdminContentCommandPort {
         switch (contentType) {
             case POST -> postRepository.adminDeleteById(contentId);
             case COMMENT -> commentRepository.softDeleteByAdmin(contentId, LocalDateTime.now());
-            case REVIEW -> deleteReview(contentId);
+            case REVIEW -> reviewRepository.adminDeleteById(contentId);
         }
-    }
-
-    private void deleteReview(Long contentId) {
-        if (reviewRepository.findById(contentId).isEmpty()) {
-            throw new BusinessException(ErrorCode.REVIEW_NOT_FOUND);
-        }
-        reviewRepository.adminDeleteById(contentId);
     }
 }

@@ -1,6 +1,5 @@
 package com.wanted.backend.domain.report_moderation.infrastructure;
 
-import com.wanted.backend.domain.community.domain.model.Review;
 import com.wanted.backend.domain.community.domain.repository.CommentRepository;
 import com.wanted.backend.domain.community.domain.repository.PostRepository;
 import com.wanted.backend.domain.community.domain.repository.ReviewRepository;
@@ -15,14 +14,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -87,11 +82,8 @@ class AdminContentCommandAdapterTest {
     }
 
     @Test
-    @DisplayName("리뷰가 존재하면 ReviewRepository.adminDeleteById가 호출된다")
-    void deleteByAdmin_review_success() {
-        // given
-        given(reviewRepository.findById(30L)).willReturn(Optional.of(mock()));
-
+    @DisplayName("리뷰 삭제 시 ReviewRepository.adminDeleteById가 호출된다")
+    void deleteByAdmin_review() {
         // when
         adminContentCommandAdapter.deleteByAdmin(TargetType.REVIEW, 30L);
 
@@ -100,21 +92,15 @@ class AdminContentCommandAdapterTest {
     }
 
     @Test
-    @DisplayName("리뷰가 존재하지 않으면 예외가 발생하고 삭제가 호출되지 않는다")
+    @DisplayName("리뷰가 존재하지 않으면 저장소의 예외가 그대로 전파된다")
     void deleteByAdmin_review_notFound() {
         // given
-        given(reviewRepository.findById(30L)).willReturn(Optional.empty());
+        willThrow(new BusinessException(ErrorCode.REVIEW_NOT_FOUND))
+                .given(reviewRepository).adminDeleteById(30L);
 
         // when & then
         assertThatThrownBy(() -> adminContentCommandAdapter.deleteByAdmin(TargetType.REVIEW, 30L))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(ErrorCode.REVIEW_NOT_FOUND.getMessage());
-
-        verify(reviewRepository, never()).adminDeleteById(any());
-    }
-
-    private Review mock() {
-        return Review.restore(30L, 1L, 1L, 5, "리뷰 내용", null,
-                java.time.LocalDateTime.now(), java.time.LocalDateTime.now());
     }
 }
