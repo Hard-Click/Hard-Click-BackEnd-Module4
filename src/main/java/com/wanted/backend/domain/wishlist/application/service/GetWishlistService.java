@@ -29,8 +29,9 @@ public class GetWishlistService implements GetWishlistUseCase {
 
         return details.stream()
                 .map(d -> new Item(
-                        d.courseId(), d.title(), d.instructorName(), d.price(),
-                        d.averageRating(), d.reviewCount(), d.enrolled(), d.inCart()
+                        d.courseId(), d.title(), d.subject(), d.thumbnailUrl(), d.priceType(),
+                        d.instructorName(), d.price(),
+                        d.averageRating(), d.reviewCount(), d.enrollmentCount(), d.enrolled(), d.inCart()
                 ))
                 .toList();
     }

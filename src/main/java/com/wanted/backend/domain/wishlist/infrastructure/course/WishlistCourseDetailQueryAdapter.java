@@ -34,6 +34,7 @@ public class WishlistCourseDetailQueryAdapter implements WishlistCourseDetailQue
                 .collect(Collectors.toMap(WishlistMemberJpaEntity::getId, WishlistMemberJpaEntity::getName));
 
         Map<Long, double[]> ratingMap = buildRatingMap(courseIds);
+        Map<Long, Integer> enrollmentCountMap = buildEnrollmentCountMap(courseIds);
 
         Set<Long> enrolledCourseIds = Set.copyOf(enrollmentRepository.findEnrolledCourseIds(memberId, courseIds));
         Set<Long> inCartCourseIds = Set.copyOf(cartRepository.findInCartCourseIds(memberId, courseIds));
@@ -41,13 +42,25 @@ public class WishlistCourseDetailQueryAdapter implements WishlistCourseDetailQue
         return courses.stream().map(course -> new CourseDetail(
                 course.getId(),
                 course.getTitle(),
+                course.getSubject(),
+                course.getThumbnailUrl(),
+                course.getPriceType(),
                 authorNameMap.getOrDefault(course.getAuthorId(), ""),
                 course.getPrice(),
                 ratingMap.getOrDefault(course.getId(), new double[]{0.0, 0})[0],
                 (int) ratingMap.getOrDefault(course.getId(), new double[]{0.0, 0})[1],
+                enrollmentCountMap.getOrDefault(course.getId(), 0),
                 enrolledCourseIds.contains(course.getId()),
                 inCartCourseIds.contains(course.getId())
         )).toList();
+    }
+
+    private Map<Long, Integer> buildEnrollmentCountMap(List<Long> courseIds) {
+        return enrollmentRepository.countEnrollmentsByCourseIds(courseIds).stream()
+                .collect(Collectors.toMap(
+                        row -> ((Number) row[0]).longValue(),
+                        row -> ((Number) row[1]).intValue()
+                ));
     }
 
     private Map<Long, double[]> buildRatingMap(List<Long> courseIds) {

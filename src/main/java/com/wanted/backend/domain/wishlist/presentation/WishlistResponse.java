@@ -18,6 +18,12 @@ public record WishlistResponse(
             Long courseId,
             @Schema(description = "강의명", example = "수능 영어 독해 완성")
             String title,
+            @Schema(description = "과목명", example = "수학Ⅱ")
+            String subject,
+            @Schema(description = "썸네일 URL", example = "https://example.com/thumbnail.png")
+            String thumbnailUrl,
+            @Schema(description = "가격 유형 (FREE / PAID)", example = "PAID")
+            String priceType,
             @Schema(description = "강사명", example = "김강사")
             String instructorName,
             @Schema(description = "강의 가격", example = "29000")
@@ -26,6 +32,8 @@ public record WishlistResponse(
             Double averageRating,
             @Schema(description = "리뷰 개수", example = "12")
             Integer reviewCount,
+            @Schema(description = "수강생 수", example = "1234")
+            Integer enrollmentCount,
             @Schema(description = "수강 여부", example = "false")
             boolean enrolled,
             @Schema(description = "장바구니 포함 여부", example = "true")
@@ -37,10 +45,14 @@ public record WishlistResponse(
                 .map(i -> new Item(
                         i.courseId(),
                         i.title(),
+                        i.subject(),
+                        i.thumbnailUrl(),
+                        i.priceType(),
                         i.instructorName(),
                         i.price(),
                         i.averageRating(),
                         i.reviewCount(),
+                        i.enrollmentCount(),
                         i.enrolled(),
                         i.inCart()
                 ))

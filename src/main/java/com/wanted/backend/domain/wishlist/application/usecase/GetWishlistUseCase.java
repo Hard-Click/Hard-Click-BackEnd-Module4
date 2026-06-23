@@ -9,10 +9,14 @@ public interface GetWishlistUseCase {
     record Item(
             Long courseId,
             String title,
+            String subject,
+            String thumbnailUrl,
+            String priceType,
             String instructorName,
             Integer price,
             Double averageRating,
             Integer reviewCount,
+            Integer enrollmentCount,
             boolean enrolled,
             boolean inCart
     ) {}
