@@ -3,6 +3,7 @@ package com.wanted.backend.domain.community.application.service;
 import com.wanted.backend.domain.community.application.command.CreateReportCommand;
 import com.wanted.backend.domain.community.application.policy.CommunityAccessPolicy;
 import com.wanted.backend.domain.community.application.usecase.ReportCommandUseCase;
+import com.wanted.backend.domain.community.domain.event.MemberSuspendedEvent;
 import com.wanted.backend.domain.community.domain.event.ReportCreatedEvent;
 import com.wanted.backend.domain.community.domain.model.Report;
 import com.wanted.backend.domain.community.domain.model.TargetType;
@@ -22,7 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class ReportCommandService implements ReportCommandUseCase {
 
-    private static final int REPORT_FLAG_THRESHOLD = 5;
+    private static final int REPORT_FLAG_THRESHOLD = 3;    // 관리자 대시보드 플래그
+    private static final int SUSPEND_THRESHOLD = 50;       // 자동 커뮤니티 제한
 
     private final ReportRepository reportRepository;
     private final PostRepository postRepository;
@@ -65,11 +67,18 @@ public class ReportCommandService implements ReportCommandUseCase {
                 command.reason()
         ));
 
-        int count = reportRepository.countByTargetTypeAndTargetId(
+        // 동일 타겟 누적 신고 수 — 관리자 대시보드 플래그
+        int targetReportCount = reportRepository.countByTargetTypeAndTargetId(
                 command.targetType(), command.targetId());
-        if (count >= REPORT_FLAG_THRESHOLD) {
+        if (targetReportCount >= REPORT_FLAG_THRESHOLD) {
             log.warn("[Report Flag] targetType: {}, targetId: {}, count: {}",
-                    command.targetType(), command.targetId(), count);
+                    command.targetType(), command.targetId(), targetReportCount);
+        }
+
+        // 피신고자 기준 distinct 신고자 수 — 50명 도달 시 자동 커뮤니티 제한
+        int distinctReporterCount = reportRepository.countDistinctReportersByReportedMemberId(reportedMemberId);
+        if (distinctReporterCount >= SUSPEND_THRESHOLD) {
+            eventPublisher.publishEvent(MemberSuspendedEvent.of(reportedMemberId));
         }
 
         eventPublisher.publishEvent(ReportCreatedEvent.of(

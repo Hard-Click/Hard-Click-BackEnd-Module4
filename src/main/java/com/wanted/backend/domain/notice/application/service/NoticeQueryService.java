@@ -60,6 +60,7 @@ public class NoticeQueryService implements NoticeQueryUseCase {
             if (command.courseId() == null) {
                 throw new BusinessException(ErrorCode.COURSE_ID_REQUIRED);
             }
+            courseInfoPort.getCourseNameByCourseId(command.courseId());
 
             String role = command.role();
 
