@@ -166,8 +166,9 @@ class SaveStudyTimerHeartbeatServiceTest {
                 55L,
                 OffsetDateTime.parse("2026-05-11T15:05:01+09:00")
         )))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("하트비트 시각은 현재 시각 이후일 수 없습니다.");
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_TIMER_HEARTBEAT_AT_IN_FUTURE);
 
         verify(memberLockPort, never()).lock(any());
         verify(repository, never()).findById(any());

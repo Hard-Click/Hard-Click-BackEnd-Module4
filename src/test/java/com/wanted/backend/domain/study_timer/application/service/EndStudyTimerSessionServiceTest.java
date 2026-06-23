@@ -167,8 +167,9 @@ class EndStudyTimerSessionServiceTest {
                 55L,
                 OffsetDateTime.parse("2026-05-11T15:10:01+09:00")
         )))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("세션 종료 시각은 현재 시각 이후일 수 없습니다.");
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_TIMER_ENDED_AT_IN_FUTURE);
 
         verify(memberLockPort, never()).lock(any());
         verify(repository, never()).findById(any());
@@ -182,7 +183,9 @@ class EndStudyTimerSessionServiceTest {
                 55L,
                 null
         )))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_TIMER_ENDED_AT_REQUIRED);
 
         verify(memberLockPort, never()).lock(any());
         verify(repository, never()).findById(any());
