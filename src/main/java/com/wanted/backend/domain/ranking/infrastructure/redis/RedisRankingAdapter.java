@@ -2,23 +2,27 @@ package com.wanted.backend.domain.ranking.infrastructure.redis;
 
 import com.wanted.backend.domain.ranking.application.port.RankingDetailReader;
 import com.wanted.backend.domain.ranking.application.port.RankingListReader;
+import com.wanted.backend.domain.ranking.application.port.RankingScoreWriter;
 import com.wanted.backend.domain.ranking.domain.model.RankingDetail;
 import com.wanted.backend.domain.ranking.domain.model.RankingEntry;
 import com.wanted.backend.domain.ranking.domain.model.RankingList;
 import com.wanted.backend.domain.ranking.domain.model.RankingMetric;
 import com.wanted.backend.domain.ranking.domain.model.RankingPeriod;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.DefaultTypedTuple;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
-public class RedisRankingAdapter implements RankingDetailReader, RankingListReader {
+public class RedisRankingAdapter implements RankingDetailReader, RankingListReader, RankingScoreWriter {
 
     private final StringRedisTemplate redisTemplate;
     private final RankingRedisProperties rankingRedisProperties;
@@ -76,6 +80,48 @@ public class RedisRankingAdapter implements RankingDetailReader, RankingListRead
         }
 
         return new RankingList(totalUsers == null ? 0L : totalUsers, entries);
+    }
+
+    @Override
+    public void incrementScore(
+            RankingMetric metric,
+            RankingPeriod period,
+            Long memberId,
+            long scoreDelta
+    ) {
+        if (scoreDelta <= 0) {
+            return;
+        }
+
+        redisTemplate.opsForZSet().incrementScore(
+                key(metric, period),
+                String.valueOf(memberId),
+                scoreDelta
+        );
+    }
+
+    @Override
+    public void replaceScores(
+            RankingMetric metric,
+            RankingPeriod period,
+            Map<Long, Long> scores
+    ) {
+        String key = key(metric, period);
+        redisTemplate.delete(key);
+        if (scores == null || scores.isEmpty()) {
+            return;
+        }
+
+        Set<ZSetOperations.TypedTuple<String>> tuples = scores.entrySet().stream()
+                .filter(entry -> entry.getKey() != null && entry.getValue() != null && entry.getValue() > 0)
+                .map(entry -> new DefaultTypedTuple<>(
+                        String.valueOf(entry.getKey()),
+                        entry.getValue().doubleValue()
+                ))
+                .collect(Collectors.toSet());
+        if (!tuples.isEmpty()) {
+            redisTemplate.opsForZSet().add(key, tuples);
+        }
     }
 
     private String key(RankingMetric metric, RankingPeriod period) {

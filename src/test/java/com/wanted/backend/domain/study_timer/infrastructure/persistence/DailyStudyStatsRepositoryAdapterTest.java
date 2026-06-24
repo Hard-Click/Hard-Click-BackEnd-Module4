@@ -6,9 +6,14 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -21,7 +26,41 @@ class DailyStudyStatsRepositoryAdapterTest {
     @BeforeEach
     void setUp() {
         repository = mock(SpringDataDailyStudyStatsRepository.class);
-        adapter = new DailyStudyStatsRepositoryAdapter(repository);
+        Clock clock = Clock.fixed(Instant.parse("2026-05-11T06:10:00Z"), ZoneId.of("Asia/Seoul"));
+        adapter = new DailyStudyStatsRepositoryAdapter(repository, clock);
+    }
+
+    @Test
+    void createsDailyStatsWhenUpsertingFirstStudySeconds() {
+        LocalDate studyDate = LocalDate.parse("2026-05-11");
+        when(repository.findByMemberIdAndStatDate(1L, studyDate)).thenReturn(Optional.empty());
+        when(repository.saveAndFlush(any(DailyStudyStatsJpaEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        DailyStudyStat result = adapter.upsertStudySeconds(1L, studyDate, 300);
+
+        assertThat(result.memberId()).isEqualTo(1L);
+        assertThat(result.studyDate()).isEqualTo(studyDate);
+        assertThat(result.studySeconds()).isEqualTo(300);
+        verify(repository).findByMemberIdAndStatDate(1L, studyDate);
+        verify(repository).saveAndFlush(any(DailyStudyStatsJpaEntity.class));
+    }
+
+    @Test
+    void increasesDailyStatsWhenRowAlreadyExists() {
+        LocalDate studyDate = LocalDate.parse("2026-05-11");
+        LocalDateTime now = LocalDateTime.parse("2026-05-11T15:00:00");
+        DailyStudyStatsJpaEntity entity = new DailyStudyStatsJpaEntity(1L, studyDate, 120, now, now);
+        when(repository.findByMemberIdAndStatDate(1L, studyDate)).thenReturn(Optional.of(entity));
+        when(repository.saveAndFlush(entity)).thenReturn(entity);
+
+        DailyStudyStat result = adapter.upsertStudySeconds(1L, studyDate, 80);
+
+        assertThat(result.memberId()).isEqualTo(1L);
+        assertThat(result.studyDate()).isEqualTo(studyDate);
+        assertThat(result.studySeconds()).isEqualTo(200);
+        verify(repository).findByMemberIdAndStatDate(1L, studyDate);
+        verify(repository).saveAndFlush(entity);
     }
 
     @Test
