@@ -47,6 +47,13 @@ public class OrderRepositoryAdapter implements OrderRepository {
     }
 
     @Override
+    @Transactional
+    public Optional<Order> findByIdForUpdate(Long orderId) {
+        return orderRepository.findByIdForUpdate(orderId)
+                .map(e -> toDomain(e, orderItemRepository.findByOrderId(e.getId())));
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Optional<Order> findByOrderNo(String orderNo) {
         return orderRepository.findByOrderNo(orderNo)
@@ -66,10 +73,13 @@ public class OrderRepositoryAdapter implements OrderRepository {
     public void refundItem(Long orderId, Long courseId, OrderStatus newOrderStatus) {
         OrderEntity orderEntity = orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
-        orderEntity.updateStatus(newOrderStatus.name());
+        orderEntity.updateStatus(newOrderStatus);
 
         OrderItemEntity itemEntity = orderItemRepository.findByOrderIdAndCourseId(orderId, courseId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_ITEM_NOT_FOUND));
+        if (itemEntity.isRefunded()) {
+            throw new BusinessException(ErrorCode.ORDER_ITEM_ALREADY_REFUNDED);
+        }
         itemEntity.markRefunded();
     }
 

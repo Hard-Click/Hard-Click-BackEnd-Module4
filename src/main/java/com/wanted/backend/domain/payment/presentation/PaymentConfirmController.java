@@ -40,8 +40,9 @@ public class PaymentConfirmController {
         if (idempotencyKey == null || idempotencyKey.isBlank()) {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
+        String normalizedIdempotencyKey = idempotencyKey.trim();
         try {
-            UUID.fromString(idempotencyKey.trim());
+            UUID.fromString(normalizedIdempotencyKey);
         } catch (IllegalArgumentException e) {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
@@ -51,7 +52,7 @@ public class PaymentConfirmController {
                 request.orderId(),
                 request.paymentKey(),
                 request.amount(),
-                idempotencyKey
+                normalizedIdempotencyKey
         );
 
         PaymentConfirmResponse response = PaymentConfirmResponse.from(result);

@@ -12,6 +12,8 @@ public interface OrderRepository {
 
     Optional<Order> findById(Long orderId);
 
+    Optional<Order> findByIdForUpdate(Long orderId);
+
     Optional<Order> findByOrderNo(String orderNo);
 
     void markPaid(String orderNo, LocalDateTime paidAt, String paymentKey);

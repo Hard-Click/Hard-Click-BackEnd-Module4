@@ -110,7 +110,11 @@ public class ConfirmOrderPaymentService implements ConfirmOrderPaymentUseCase {
 
             return new Result(orderNo, OrderStatus.PAID, pgTransactionId, false);
         } finally {
-            releaseLockSafely(lockKey, lockValue);
+            try {
+                releaseLockSafely(lockKey, lockValue);
+            } catch (RuntimeException e) {
+                log.error("[PAYMENT_LOCK_RELEASE_FAILED] orderNo: {}, lockKey: {}", orderNo, lockKey, e);
+            }
         }
     }
 
@@ -134,7 +138,7 @@ public class ConfirmOrderPaymentService implements ConfirmOrderPaymentUseCase {
                     grantEnrollment(order.getMemberId(), item.getCourseId());
                 }
             }
-        } catch (BusinessException e) {
+        } catch (RuntimeException e) {
             log.error("[ACCESS_GRANT_FAILED] 결제는 완료됐지만 수강권/구독권 지급 실패 — orderNo: {}, type: {}",
                     order.getOrderNo(), order.getType(), e);
         }

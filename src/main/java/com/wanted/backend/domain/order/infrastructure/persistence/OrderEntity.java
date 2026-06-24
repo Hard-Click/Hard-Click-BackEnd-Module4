@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.order.infrastructure.persistence;
 
+import com.wanted.backend.domain.order.domain.model.OrderStatus;
 import com.wanted.backend.domain.order.domain.model.OrderType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -86,12 +87,12 @@ public class OrderEntity {
     }
 
     public void markPaid(LocalDateTime paidAt, String paymentKey) {
-        this.status = "PAID";
+        this.status = OrderStatus.PAID.name();
         this.paidAt = paidAt;
         this.paymentKey = paymentKey;
     }
 
-    public void updateStatus(String status) {
-        this.status = status;
+    public void updateStatus(OrderStatus status) {
+        this.status = status.name();
     }
 }

@@ -1,6 +1,8 @@
 package com.wanted.backend.domain.order.infrastructure.enrollment;
 
 import com.wanted.backend.domain.order.application.port.OrderEnrollmentRevocationPort;
+import com.wanted.backend.global.exception.BusinessException;
+import com.wanted.backend.global.exception.ErrorCode;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Component;
@@ -19,10 +21,14 @@ public class OrderEnrollmentRevocationAdapter implements OrderEnrollmentRevocati
     @Override
     @Transactional
     public void revoke(Long memberId, Long courseId) {
-        em.createNativeQuery(
-                        "UPDATE enrollment SET status = 'REFUNDED' WHERE member_id = :memberId AND course_id = :courseId")
+        int updated = em.createNativeQuery(
+                        "UPDATE enrollment SET status = 'REFUNDED' " +
+                                "WHERE member_id = :memberId AND course_id = :courseId AND status <> 'REFUNDED'")
                 .setParameter("memberId", memberId)
                 .setParameter("courseId", courseId)
                 .executeUpdate();
+        if (updated != 1) {
+            throw new BusinessException(ErrorCode.ORDER_ENROLLMENT_REVOKE_FAILED);
+        }
     }
 }
