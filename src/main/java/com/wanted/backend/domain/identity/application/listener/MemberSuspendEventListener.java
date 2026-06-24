@@ -29,7 +29,8 @@ public class MemberSuspendEventListener {
         Member member = memberRepository.findById(event.memberId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
-        if (member.getStatus() == MemberStatus.SUSPENDED) {
+        if (member.getStatus() == MemberStatus.SUSPENDED
+                || member.getStatus() == MemberStatus.WITHDRAWN) {
             return;
         }
 
