@@ -89,6 +89,34 @@ class PauseStudyTimerSessionServiceTest {
     }
 
     @Test
+    void returnsExistingPausedSessionWhenPauseRequestIsRetried() {
+        OffsetDateTime startedAt = OffsetDateTime.parse("2026-05-11T15:00:00+09:00");
+        OffsetDateTime pausedAt = OffsetDateTime.parse("2026-05-11T15:03:20+09:00");
+        when(repository.findById(55L)).thenReturn(Optional.of(new StudyTimerSession(
+                55L,
+                1L,
+                null,
+                null,
+                startedAt,
+                null,
+                200,
+                StudyTimerSessionStatus.PAUSED
+        )));
+
+        PauseStudyTimerSessionUseCase.StudyTimerSessionPauseView result = service.handle(
+                new PauseStudyTimerSessionCommand(1L, 55L, pausedAt)
+        );
+
+        verify(memberLockPort).lock(1L);
+        verify(repository).findById(55L);
+        verify(repository, never()).save(any());
+        assertThat(result.sessionId()).isEqualTo(55L);
+        assertThat(result.status()).isEqualTo("PAUSED");
+        assertThat(result.accumulatedStudySeconds()).isEqualTo(200);
+        assertThat(result.pausedAt()).isEqualTo(pausedAt);
+    }
+
+    @Test
     void throwsNotFoundWhenSessionDoesNotExist() {
         when(repository.findById(55L)).thenReturn(Optional.empty());
 
@@ -154,6 +182,34 @@ class PauseStudyTimerSessionServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.STUDY_TIMER_SESSION_NOT_RUNNING);
+
+        verify(memberLockPort).lock(1L);
+        verify(repository).findById(55L);
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void throwsInvalidInputWhenPausedAtIsBeforeStartedAt() {
+        OffsetDateTime startedAt = OffsetDateTime.parse("2026-05-11T15:00:00+09:00");
+        when(repository.findById(55L)).thenReturn(Optional.of(new StudyTimerSession(
+                55L,
+                1L,
+                null,
+                null,
+                startedAt,
+                null,
+                120,
+                StudyTimerSessionStatus.RUNNING
+        )));
+
+        assertThatThrownBy(() -> service.handle(new PauseStudyTimerSessionCommand(
+                1L,
+                55L,
+                OffsetDateTime.parse("2026-05-11T14:59:59+09:00")
+        )))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_TIMER_PAUSED_AT_BEFORE_STARTED_AT);
 
         verify(memberLockPort).lock(1L);
         verify(repository).findById(55L);

@@ -4,6 +4,7 @@ import com.wanted.backend.domain.study_timer.application.command.PauseStudyTimer
 import com.wanted.backend.domain.study_timer.application.port.MemberLockPort;
 import com.wanted.backend.domain.study_timer.application.usecase.PauseStudyTimerSessionUseCase;
 import com.wanted.backend.domain.study_timer.domain.model.StudyTimerSession;
+import com.wanted.backend.domain.study_timer.domain.model.StudyTimerSessionStatus;
 import com.wanted.backend.domain.study_timer.domain.repository.StudyTimerSessionRepository;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
@@ -38,13 +39,21 @@ public class PauseStudyTimerSessionService implements PauseStudyTimerSessionUseC
             throw new BusinessException(ErrorCode.FORBIDDEN);
         }
 
+        if (session.status() == StudyTimerSessionStatus.PAUSED) {
+            return toView(session, command.pausedAt());
+        }
+
         StudyTimerSession saved = studyTimerSessionRepository.save(session.pause(command.pausedAt(), serverNow));
 
+        return toView(saved, command.pausedAt());
+    }
+
+    private StudyTimerSessionPauseView toView(StudyTimerSession session, OffsetDateTime pausedAt) {
         return new StudyTimerSessionPauseView(
-                saved.id(),
-                saved.status().name(),
-                saved.accumulatedStudySeconds(),
-                command.pausedAt()
+                session.id(),
+                session.status().name(),
+                session.accumulatedStudySeconds(),
+                pausedAt
         );
     }
 

@@ -46,7 +46,7 @@ public class StudyTimerSessionRepositoryAdapter implements StudyTimerSessionRepo
 
     @Override
     public Optional<StudyTimerSession> findActiveByMemberId(Long memberId) {
-        return repository.findFirstByMemberIdAndStatusIn(memberId, ACTIVE_STATUSES)
+        return repository.findFirstByMemberIdAndStatusInOrderByStartedAtDescIdDesc(memberId, ACTIVE_STATUSES)
                 .map(this::toDomain);
     }
 

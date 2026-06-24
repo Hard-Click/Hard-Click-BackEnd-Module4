@@ -14,5 +14,8 @@ public interface SpringDataStudyTimerSessionRepository extends JpaRepository<Stu
 
     Optional<StudyTimerSessionJpaEntity> findByMemberIdAndStatus(Long memberId, StudyTimerSessionStatus status);
 
-    Optional<StudyTimerSessionJpaEntity> findFirstByMemberIdAndStatusIn(Long memberId, Collection<StudyTimerSessionStatus> statuses);
+    Optional<StudyTimerSessionJpaEntity> findFirstByMemberIdAndStatusInOrderByStartedAtDescIdDesc(
+            Long memberId,
+            Collection<StudyTimerSessionStatus> statuses
+    );
 }

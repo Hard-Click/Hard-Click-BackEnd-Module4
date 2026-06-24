@@ -269,6 +269,28 @@ class StudyTimerSessionTest {
     }
 
     @Test
+    void pauseRejectsPausedSession() {
+        StudyTimerSession session = new StudyTimerSession(
+                55L,
+                1L,
+                null,
+                null,
+                OffsetDateTime.parse("2026-05-11T15:00:00+09:00"),
+                null,
+                200,
+                StudyTimerSessionStatus.PAUSED
+        );
+
+        assertThatThrownBy(() -> session.pause(
+                OffsetDateTime.parse("2026-05-11T15:03:20+09:00"),
+                SERVER_NOW
+        ))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_TIMER_SESSION_NOT_RUNNING);
+    }
+
+    @Test
     void endUpdatesStatusEndedAndAccumulatedStudySeconds() {
         StudyTimerSession session = StudyTimerSession.start(
                 1L,

@@ -91,7 +91,7 @@ class StudyTimerSessionRepositoryAdapterTest {
         );
         ReflectionTestUtils.setField(entity, "id", 55L);
 
-        when(repository.findFirstByMemberIdAndStatusIn(eq(1L), argThat(this::containsRunningAndPaused)))
+        when(repository.findFirstByMemberIdAndStatusInOrderByStartedAtDescIdDesc(eq(1L), argThat(this::containsRunningAndPaused)))
                 .thenReturn(Optional.of(entity));
 
         Optional<StudyTimerSession> found = adapter.findActiveByMemberId(1L);
