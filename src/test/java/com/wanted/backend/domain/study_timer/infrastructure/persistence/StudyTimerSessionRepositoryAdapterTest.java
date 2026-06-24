@@ -10,10 +10,13 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.Collection;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -34,6 +37,14 @@ class StudyTimerSessionRepositoryAdapterTest {
         when(repository.existsByMemberIdAndStatus(1L, StudyTimerSessionStatus.RUNNING)).thenReturn(true);
 
         assertThat(adapter.existsRunningByMemberId(1L)).isTrue();
+    }
+
+    @Test
+    void delegatesActiveSessionLookup() {
+        when(repository.existsByMemberIdAndStatusIn(eq(1L), argThat(this::containsRunningAndPaused)))
+                .thenReturn(true);
+
+        assertThat(adapter.existsActiveByMemberId(1L)).isTrue();
     }
 
     @Test
@@ -61,6 +72,34 @@ class StudyTimerSessionRepositoryAdapterTest {
         assertThat(found.orElseThrow().id()).isEqualTo(55L);
         assertThat(found.orElseThrow().memberId()).isEqualTo(1L);
         assertThat(found.orElseThrow().status()).isEqualTo(StudyTimerSessionStatus.RUNNING);
+        assertThat(found.orElseThrow().accumulatedStudySeconds()).isEqualTo(200);
+    }
+
+    @Test
+    void findsActiveSessionByMemberId() {
+        OffsetDateTime startedAt = OffsetDateTime.parse("2026-05-11T15:00:00+09:00");
+        StudyTimerSessionJpaEntity entity = new StudyTimerSessionJpaEntity(
+                1L,
+                null,
+                null,
+                startedAt.toLocalDateTime(),
+                null,
+                200,
+                StudyTimerSessionStatus.PAUSED,
+                startedAt.toLocalDateTime(),
+                startedAt.toLocalDateTime()
+        );
+        ReflectionTestUtils.setField(entity, "id", 55L);
+
+        when(repository.findFirstByMemberIdAndStatusIn(eq(1L), argThat(this::containsRunningAndPaused)))
+                .thenReturn(Optional.of(entity));
+
+        Optional<StudyTimerSession> found = adapter.findActiveByMemberId(1L);
+
+        assertThat(found).isPresent();
+        assertThat(found.orElseThrow().id()).isEqualTo(55L);
+        assertThat(found.orElseThrow().memberId()).isEqualTo(1L);
+        assertThat(found.orElseThrow().status()).isEqualTo(StudyTimerSessionStatus.PAUSED);
         assertThat(found.orElseThrow().accumulatedStudySeconds()).isEqualTo(200);
     }
 
@@ -151,6 +190,41 @@ class StudyTimerSessionRepositoryAdapterTest {
     }
 
     @Test
+    void updatesExistingSessionWhenPauseIsSaved() {
+        OffsetDateTime startedAt = OffsetDateTime.parse("2026-05-11T15:00:00+09:00");
+        StudyTimerSessionJpaEntity entity = new StudyTimerSessionJpaEntity(
+                1L,
+                null,
+                null,
+                startedAt.toLocalDateTime(),
+                null,
+                120,
+                StudyTimerSessionStatus.RUNNING,
+                startedAt.toLocalDateTime(),
+                startedAt.toLocalDateTime()
+        );
+        ReflectionTestUtils.setField(entity, "id", 55L);
+
+        when(repository.findById(55L)).thenReturn(Optional.of(entity));
+        when(repository.saveAndFlush(entity)).thenReturn(entity);
+
+        StudyTimerSession saved = adapter.save(new StudyTimerSession(
+                55L,
+                1L,
+                null,
+                null,
+                startedAt,
+                null,
+                200,
+                StudyTimerSessionStatus.PAUSED
+        ));
+
+        assertThat(saved.id()).isEqualTo(55L);
+        assertThat(saved.accumulatedStudySeconds()).isEqualTo(200);
+        assertThat(saved.status()).isEqualTo(StudyTimerSessionStatus.PAUSED);
+    }
+
+    @Test
     void updatesExistingSessionWhenEndIsSaved() {
         OffsetDateTime startedAt = OffsetDateTime.parse("2026-05-11T15:00:00+09:00");
         OffsetDateTime endedAt = OffsetDateTime.parse("2026-05-11T15:08:20+09:00");
@@ -185,5 +259,11 @@ class StudyTimerSessionRepositoryAdapterTest {
         assertThat(saved.endedAt()).isEqualTo(endedAt);
         assertThat(saved.accumulatedStudySeconds()).isEqualTo(500);
         assertThat(saved.status()).isEqualTo(StudyTimerSessionStatus.ENDED);
+    }
+
+    private boolean containsRunningAndPaused(Collection<StudyTimerSessionStatus> statuses) {
+        return statuses.size() == 2
+                && statuses.contains(StudyTimerSessionStatus.RUNNING)
+                && statuses.contains(StudyTimerSessionStatus.PAUSED);
     }
 }

@@ -141,6 +141,134 @@ class StudyTimerSessionTest {
     }
 
     @Test
+    void heartbeatRejectsPausedSession() {
+        StudyTimerSession session = new StudyTimerSession(
+                55L,
+                1L,
+                null,
+                null,
+                OffsetDateTime.parse("2026-05-11T15:00:00+09:00"),
+                null,
+                200,
+                StudyTimerSessionStatus.PAUSED
+        );
+
+        assertThatThrownBy(() -> session.heartbeat(
+                OffsetDateTime.parse("2026-05-11T15:03:20+09:00"),
+                SERVER_NOW
+        ))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_TIMER_SESSION_NOT_RUNNING);
+    }
+
+    @Test
+    void pauseUpdatesStatusPausedAndAccumulatedStudySeconds() {
+        StudyTimerSession session = StudyTimerSession.start(
+                1L,
+                OffsetDateTime.parse("2026-05-11T15:00:00+09:00")
+        );
+
+        StudyTimerSession paused = session.pause(
+                OffsetDateTime.parse("2026-05-11T15:03:20+09:00"),
+                SERVER_NOW
+        );
+
+        assertThat(paused.status()).isEqualTo(StudyTimerSessionStatus.PAUSED);
+        assertThat(paused.accumulatedStudySeconds()).isEqualTo(200);
+        assertThat(paused.endedAt()).isNull();
+    }
+
+    @Test
+    void pauseDoesNotDecreaseAccumulatedStudySecondsWhenOlderRequestArrives() {
+        StudyTimerSession session = new StudyTimerSession(
+                55L,
+                1L,
+                null,
+                null,
+                OffsetDateTime.parse("2026-05-11T15:00:00+09:00"),
+                null,
+                200,
+                StudyTimerSessionStatus.RUNNING
+        );
+
+        StudyTimerSession paused = session.pause(
+                OffsetDateTime.parse("2026-05-11T15:02:30+09:00"),
+                SERVER_NOW
+        );
+
+        assertThat(paused.accumulatedStudySeconds()).isEqualTo(200);
+        assertThat(paused.status()).isEqualTo(StudyTimerSessionStatus.PAUSED);
+    }
+
+    @Test
+    void pauseRejectsEarlierThanStartedAt() {
+        StudyTimerSession session = StudyTimerSession.start(
+                1L,
+                OffsetDateTime.parse("2026-05-11T15:00:00+09:00")
+        );
+
+        assertThatThrownBy(() -> session.pause(
+                OffsetDateTime.parse("2026-05-11T14:59:59+09:00"),
+                SERVER_NOW
+        ))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_TIMER_PAUSED_AT_BEFORE_STARTED_AT);
+    }
+
+    @Test
+    void pauseRejectsFuturePausedAt() {
+        StudyTimerSession session = StudyTimerSession.start(
+                1L,
+                OffsetDateTime.parse("2026-05-11T15:00:00+09:00")
+        );
+
+        assertThatThrownBy(() -> session.pause(
+                OffsetDateTime.parse("2026-05-11T15:05:01+09:00"),
+                SERVER_NOW
+        ))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_TIMER_PAUSED_AT_IN_FUTURE);
+    }
+
+    @Test
+    void pauseRejectsNullPausedAt() {
+        StudyTimerSession session = StudyTimerSession.start(
+                1L,
+                OffsetDateTime.parse("2026-05-11T15:00:00+09:00")
+        );
+
+        assertThatThrownBy(() -> session.pause(null, SERVER_NOW))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_TIMER_PAUSED_AT_REQUIRED);
+    }
+
+    @Test
+    void pauseRejectsEndedSession() {
+        StudyTimerSession session = new StudyTimerSession(
+                55L,
+                1L,
+                null,
+                null,
+                OffsetDateTime.parse("2026-05-11T15:00:00+09:00"),
+                OffsetDateTime.parse("2026-05-11T15:10:00+09:00"),
+                600,
+                StudyTimerSessionStatus.ENDED
+        );
+
+        assertThatThrownBy(() -> session.pause(
+                OffsetDateTime.parse("2026-05-11T15:03:20+09:00"),
+                SERVER_NOW
+        ))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_TIMER_SESSION_NOT_RUNNING);
+    }
+
+    @Test
     void endUpdatesStatusEndedAndAccumulatedStudySeconds() {
         StudyTimerSession session = StudyTimerSession.start(
                 1L,

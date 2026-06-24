@@ -72,6 +72,27 @@ public class StudyTimerSession {
         );
     }
 
+    public StudyTimerSession pause(OffsetDateTime pausedAt, OffsetDateTime serverNow) {
+        long calculatedAccumulatedStudySeconds = calculateAccumulatedStudySeconds(
+                pausedAt,
+                serverNow,
+                ErrorCode.STUDY_TIMER_PAUSED_AT_REQUIRED,
+                ErrorCode.STUDY_TIMER_PAUSED_AT_IN_FUTURE,
+                ErrorCode.STUDY_TIMER_PAUSED_AT_BEFORE_STARTED_AT
+        );
+
+        return new StudyTimerSession(
+                id,
+                memberId,
+                courseId,
+                lessonId,
+                startedAt,
+                endedAt,
+                Math.max(accumulatedStudySeconds, (int) calculatedAccumulatedStudySeconds),
+                StudyTimerSessionStatus.PAUSED
+        );
+    }
+
     public StudyTimerSession end(OffsetDateTime endedAt, OffsetDateTime serverNow) {
         long calculatedAccumulatedStudySeconds = calculateAccumulatedStudySeconds(
                 endedAt,

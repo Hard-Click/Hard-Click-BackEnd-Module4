@@ -38,11 +38,11 @@ class StartStudyTimerSessionServiceTest {
     }
 
     @Test
-    void startsSessionAfterAcquiringLockAndCheckingExistingRunningSession() {
+    void startsSessionAfterAcquiringLockAndCheckingExistingActiveSession() {
         OffsetDateTime startedAt = OffsetDateTime.parse("2026-05-11T15:00:00+09:00");
         StartStudyTimerSessionCommand command = new StartStudyTimerSessionCommand(1L, startedAt);
 
-        when(repository.existsRunningByMemberId(1L)).thenReturn(false);
+        when(repository.existsActiveByMemberId(1L)).thenReturn(false);
         when(repository.save(any(StudyTimerSession.class)))
                 .thenReturn(new StudyTimerSession(
                         55L,
@@ -60,7 +60,7 @@ class StartStudyTimerSessionServiceTest {
         ArgumentCaptor<StudyTimerSession> captor = ArgumentCaptor.forClass(StudyTimerSession.class);
         InOrder inOrder = inOrder(memberLockPort, repository);
         inOrder.verify(memberLockPort).lock(1L);
-        inOrder.verify(repository).existsRunningByMemberId(1L);
+        inOrder.verify(repository).existsActiveByMemberId(1L);
         inOrder.verify(repository).save(captor.capture());
 
         assertThat(captor.getValue().memberId()).isEqualTo(1L);
@@ -72,8 +72,8 @@ class StartStudyTimerSessionServiceTest {
     }
 
     @Test
-    void throwsConflictWhenRunningSessionAlreadyExistsAfterLocking() {
-        when(repository.existsRunningByMemberId(1L)).thenReturn(true);
+    void throwsConflictWhenActiveSessionAlreadyExistsAfterLocking() {
+        when(repository.existsActiveByMemberId(1L)).thenReturn(true);
 
         assertThatThrownBy(() -> service.handle(new StartStudyTimerSessionCommand(
                 1L,
@@ -84,7 +84,7 @@ class StartStudyTimerSessionServiceTest {
                 .isEqualTo(ErrorCode.STUDY_TIMER_SESSION_ALREADY_RUNNING);
 
         verify(memberLockPort).lock(1L);
-        verify(repository).existsRunningByMemberId(1L);
+        verify(repository).existsActiveByMemberId(1L);
         verify(repository, never()).save(any());
     }
 }
