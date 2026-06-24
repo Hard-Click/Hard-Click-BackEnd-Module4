@@ -83,6 +83,24 @@ public class TossPaymentClient implements PgClient {
         }
     }
 
+    @Override
+    public void cancel(String paymentKey, Integer cancelAmount, String cancelReason) {
+        try {
+            restClient.post()
+                    .uri("/v1/payments/{paymentKey}/cancel", paymentKey)
+                    .body(Map.of(
+                            "cancelReason", cancelReason,
+                            "cancelAmount", cancelAmount
+                    ))
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (RestClientResponseException e) {
+            HttpStatusCode status = e.getStatusCode();
+            log.error("Toss cancel 실패 (paymentKey={}, status={}): {}", paymentKey, status, e.getResponseBodyAsString());
+            throw new TossPaymentException("Toss cancel 실패: " + e.getResponseBodyAsString(), e);
+        }
+    }
+
     public static class TossPaymentException extends RuntimeException {
         public TossPaymentException(String message) {
             super(message);
