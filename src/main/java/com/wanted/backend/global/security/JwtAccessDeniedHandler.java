@@ -3,6 +3,8 @@ package com.wanted.backend.global.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wanted.backend.global.exception.ErrorCode;
 import com.wanted.backend.global.exception.ErrorResponse;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -18,10 +20,13 @@ import java.io.IOException;
 public class JwtAccessDeniedHandler implements AccessDeniedHandler {
 
     private final ObjectMapper objectMapper;
+    private final MeterRegistry meterRegistry;
 
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response,
                        AccessDeniedException accessDeniedException) throws IOException {
+
+        recordPermissionDenied();
 
         ErrorCode errorCode = ErrorCode.FORBIDDEN;
 
@@ -36,5 +41,11 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler {
                 .path(request.getRequestURI());
 
         objectMapper.writeValue(response.getWriter(), errorResponse);
+    }
+
+    private void recordPermissionDenied() {
+        Counter.builder("auth.permission.denied.count")
+                .register(meterRegistry)
+                .increment();
     }
 }

@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.community.application.service;
 
 import com.wanted.backend.domain.community.application.policy.CommunityAccessPolicy;
+import com.wanted.backend.domain.community.application.port.CommunityFileStoragePort;
 import com.wanted.backend.domain.community.application.port.MemberNamePort;
 import com.wanted.backend.domain.community.application.usecase.PostQueryUseCase;
 import com.wanted.backend.domain.community.domain.model.*;
@@ -34,17 +35,20 @@ public class PostQueryService implements PostQueryUseCase {
     private final MemberNamePort memberNamePort;
     private final CommentRepository commentRepository;
     private final CommunityAccessPolicy communityAccessPolicy;
+    private final CommunityFileStoragePort fileStoragePort;
 
     public PostQueryService(PostRepository postRepository,
                             PostFileRepository postFileRepository,
                             ViewLogRepository viewLogRepository,
-                            MemberNamePort memberNamePort, CommentRepository commentRepository, CommunityAccessPolicy communityAccessPolicy) {
+                            MemberNamePort memberNamePort, CommentRepository commentRepository, CommunityAccessPolicy communityAccessPolicy, CommunityFileStoragePort fileStoragePort) {
+                          
         this.postRepository = postRepository;
         this.postFileRepository = postFileRepository;
         this.viewLogRepository = viewLogRepository;
         this.memberNamePort = memberNamePort;
         this.commentRepository = commentRepository;
         this.communityAccessPolicy = communityAccessPolicy;
+        this.fileStoragePort = fileStoragePort;
     }
 
     @Override
@@ -104,6 +108,7 @@ public class PostQueryService implements PostQueryUseCase {
                 : postFileRepository.findByPostId(postId)
                 .stream()
                 .map(PostFile::getFileUrl)
+                .map(fileStoragePort::presignUrl)
                 .toList();
 
         return new PostDetailResponse(

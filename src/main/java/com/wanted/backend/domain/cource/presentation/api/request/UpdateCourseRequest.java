@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.cource.presentation.api.request;
 
 import com.wanted.backend.domain.cource.application.command.UpdateCourseCommand;
+import com.wanted.backend.domain.cource.domain.model.CourseLevel;
 import com.wanted.backend.domain.cource.domain.model.PriceType;
 import com.wanted.backend.global.domain.SubjectType;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -38,7 +39,9 @@ public record UpdateCourseRequest(
         List<String> learningObjectives,
         List<String> targetAudience,
         List<String> techTags,
-        String level
+
+        @NotNull(message = "난이도는 필수입니다.")
+        CourseLevel level
 ) {
     public UpdateCourseCommand toCommand(Long courseId, Long requesterId) {
         List<UpdateCourseCommand.SectionCommand> sectionCommands = sections == null
@@ -58,6 +61,6 @@ public record UpdateCourseRequest(
 
         return new UpdateCourseCommand(courseId, requesterId, title, subject.name(), description,
                 thumbnailUrl, priceType, price, sectionCommands,
-                learningObjectives, targetAudience, techTags, level);
+                learningObjectives, targetAudience, techTags, level.getLabel());
     }
 }

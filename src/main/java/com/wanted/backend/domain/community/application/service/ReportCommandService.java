@@ -2,6 +2,7 @@ package com.wanted.backend.domain.community.application.service;
 
 import com.wanted.backend.domain.community.application.command.CreateReportCommand;
 import com.wanted.backend.domain.community.application.policy.CommunityAccessPolicy;
+import com.wanted.backend.domain.community.application.port.MemberAutoSuspendPort;
 import com.wanted.backend.domain.community.application.usecase.ReportCommandUseCase;
 import com.wanted.backend.domain.community.domain.event.MemberSuspendedEvent;
 import com.wanted.backend.domain.community.domain.event.ReportCreatedEvent;
@@ -32,19 +33,22 @@ public class ReportCommandService implements ReportCommandUseCase {
     private final ReviewRepository reviewRepository;
     private final CommunityAccessPolicy communityAccessPolicy;
     private final ApplicationEventPublisher eventPublisher;
+    private final MemberAutoSuspendPort memberAutoSuspendPort;
 
     public ReportCommandService(ReportRepository reportRepository,
                                 PostRepository postRepository,
                                 CommentRepository commentRepository,
                                 ReviewRepository reviewRepository,
                                 CommunityAccessPolicy communityAccessPolicy,
-                                ApplicationEventPublisher eventPublisher) {
+                                ApplicationEventPublisher eventPublisher,
+                                MemberAutoSuspendPort memberAutoSuspendPort) {
         this.reportRepository = reportRepository;
         this.postRepository = postRepository;
         this.commentRepository = commentRepository;
         this.reviewRepository = reviewRepository;
         this.communityAccessPolicy = communityAccessPolicy;
         this.eventPublisher = eventPublisher;
+        this.memberAutoSuspendPort = memberAutoSuspendPort;
     }
 
     @Override
@@ -79,6 +83,11 @@ public class ReportCommandService implements ReportCommandUseCase {
         int distinctReporterCount = reportRepository.countDistinctReportersByReportedMemberId(reportedMemberId);
         if (distinctReporterCount >= SUSPEND_THRESHOLD) {
             eventPublisher.publishEvent(MemberSuspendedEvent.of(reportedMemberId));
+        }
+        // 회원 단위 자동 차단 로직
+        int totalReportCount = reportRepository.countByReportedMemberId(reportedMemberId);
+        if (totalReportCount >= AUTO_SUSPEND_REPORT_THRESHOLD) {
+            memberAutoSuspendPort.suspendForReportThreshold(reportedMemberId);
         }
 
         eventPublisher.publishEvent(ReportCreatedEvent.of(

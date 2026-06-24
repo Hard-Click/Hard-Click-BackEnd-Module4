@@ -2,6 +2,7 @@ package com.wanted.backend.domain.report_moderation.application.service;
 
 import com.wanted.backend.domain.report_moderation.application.command.ChangeAdminContentStatusCommand;
 import com.wanted.backend.domain.report_moderation.application.dto.AdminContentStatusResult;
+import com.wanted.backend.domain.report_moderation.application.policy.AdminContentStatus;
 import com.wanted.backend.domain.report_moderation.application.port.AdminContentCommandPort;
 import com.wanted.backend.domain.report_moderation.application.usecase.ChangeAdminContentStatusUseCase;
 import com.wanted.backend.global.exception.BusinessException;
@@ -21,7 +22,7 @@ public class AdminContentCommandService implements ChangeAdminContentStatusUseCa
 
     @Override
     public AdminContentStatusResult changeStatus(ChangeAdminContentStatusCommand command) {
-        if (!ADMIN_DELETED.equals(command.status())) {
+        if (!AdminContentStatus.ADMIN_DELETED.equals(command.status())) {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
 
@@ -30,8 +31,7 @@ public class AdminContentCommandService implements ChangeAdminContentStatusUseCa
         return new AdminContentStatusResult(
                 command.contentType(),
                 command.contentId(),
-                ADMIN_DELETED,
-                command.memo()
+                AdminContentStatus.ADMIN_DELETED
         );
     }
 }

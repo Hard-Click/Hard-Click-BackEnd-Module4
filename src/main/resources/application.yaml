@@ -55,6 +55,13 @@ jwt:
   access-token-expiration-ms: ${JWT_ACCESS_EXPIRATION:1800000}
   refresh-token-expiration-ms: ${JWT_REFRESH_EXPIRATION:1209600000}
 
+aws:
+  s3:
+    bucket: ${S3_BUCKET}
+    region: ${AWS_REGION:ap-northeast-2}
+    presigned-url:
+      video-minutes: ${S3_VIDEO_PRESIGNED_URL_MINUTES:10}
+
 server:
   port: 8080
   tomcat:

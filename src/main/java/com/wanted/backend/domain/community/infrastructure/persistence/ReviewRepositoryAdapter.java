@@ -4,6 +4,8 @@ import com.wanted.backend.domain.community.domain.model.Review;
 import com.wanted.backend.domain.community.domain.model.ReviewSortType;
 import com.wanted.backend.domain.community.domain.model.ReviewStatus;
 import com.wanted.backend.domain.community.domain.repository.ReviewRepository;
+import com.wanted.backend.global.exception.BusinessException;
+import com.wanted.backend.global.exception.ErrorCode;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.data.domain.PageRequest;
@@ -151,10 +153,10 @@ public class ReviewRepositoryAdapter implements ReviewRepository {
 
     @Override
     public void adminDeleteById(Long reviewId) {
-        repository.findById(reviewId).ifPresent(entity -> {
-            entity.update(entity.getRating(), entity.getContent(), ReviewStatus.ADMIN_DELETED, java.time.LocalDateTime.now());
-            repository.save(entity);
-        });
+        ReviewJpaEntity entity = repository.findById(reviewId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
+        entity.update(entity.getRating(), entity.getContent(), ReviewStatus.ADMIN_DELETED, java.time.LocalDateTime.now());
+        repository.save(entity);
     }
 
 }

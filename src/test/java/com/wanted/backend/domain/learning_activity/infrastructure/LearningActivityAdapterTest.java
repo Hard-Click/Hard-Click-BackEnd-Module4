@@ -96,6 +96,7 @@ class LearningActivityAdapterTest {
         assertThat(accessInfo.courseStatus()).isEqualTo("PUBLISHED");
         assertThat(accessInfo.coursePrice()).isEqualTo(10000);
         assertThat(accessInfo.preview()).isTrue();
+        assertThat(accessInfo.s3Key()).isEqualTo("videos/10.mp4");
         assertThat(accessInfo.streamingUrl()).isEqualTo("https://stream.example.com/video.m3u8");
         assertThat(accessInfo.durationSeconds()).isEqualTo(300);
     }
