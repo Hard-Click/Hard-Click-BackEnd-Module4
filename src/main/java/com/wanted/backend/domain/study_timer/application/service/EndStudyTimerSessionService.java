@@ -62,7 +62,8 @@ public class EndStudyTimerSessionService implements EndStudyTimerSessionUseCase 
         return new StudyTimerSessionEndView(
                 saved.id(),
                 saved.accumulatedStudySeconds(),
-                saved.status().name()
+                saved.status().name(),
+                command.endedAt()
         );
     }
 
