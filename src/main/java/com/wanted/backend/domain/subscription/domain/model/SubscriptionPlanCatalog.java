@@ -13,7 +13,7 @@ public final class SubscriptionPlanCatalog {
     public static final String ANNUAL_PASS_NAME = "FLOWN 연간 패스";
     public static final int ANNUAL_PASS_PRICE = 1_580_000;
     public static final int ANNUAL_PASS_DURATION_DAYS = 365;
-    public static final String DEFAULT_PAYMENT_METHOD = "카드";
+    public static final String DEFAULT_PAYMENT_METHOD = "card";
 
     public static final List<String> ANNUAL_PASS_BENEFITS = List.of(
             "모든 유료 강의 수강 가능",

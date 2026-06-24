@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.subscription.domain.model;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 public class Subscription {
 
@@ -52,10 +53,12 @@ public class Subscription {
     }
 
     public long remainingDays(LocalDateTime now) {
-        if (status != SubscriptionStatus.ACTIVE || expiredAt.isBefore(now)) {
+        if (status != SubscriptionStatus.ACTIVE) {
             return 0;
         }
-        return java.time.Duration.between(now, expiredAt).toDays();
+        // 일 단위 상품이므로 시간 절삭을 피하기 위해 날짜 기준으로 계산
+        long days = ChronoUnit.DAYS.between(now.toLocalDate(), expiredAt.toLocalDate());
+        return Math.max(days, 0);
     }
 
     public Long getId() { return id; }

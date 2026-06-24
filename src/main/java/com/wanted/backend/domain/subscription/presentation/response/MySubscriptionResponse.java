@@ -16,7 +16,7 @@ public record MySubscriptionResponse(
         @Schema(description = "플랜 ID (미구독 시 null)", example = "1")
         Long planId,
 
-        @Schema(description = "결제 수단 (미구독 시 null)", example = "카드")
+        @Schema(description = "결제 수단 (미구독 시 null)", example = "card")
         String paymentMethod,
 
         @Schema(description = "결제 금액 (미구독 시 null)", example = "1580000")

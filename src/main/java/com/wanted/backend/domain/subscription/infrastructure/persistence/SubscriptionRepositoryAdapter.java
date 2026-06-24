@@ -6,6 +6,7 @@ import com.wanted.backend.domain.subscription.domain.repository.SubscriptionRepo
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,7 +32,13 @@ public class SubscriptionRepositoryAdapter implements SubscriptionRepository {
                 subscription.getExpiredAt(),
                 subscription.getCreatedAt()
         );
-        return toDomain(repository.save(entity));
+        try {
+            // active_member_id 유니크 제약을 즉시 검증하기 위해 flush까지 강제
+            return toDomain(repository.saveAndFlush(entity));
+        } catch (DataIntegrityViolationException e) {
+            // 동시 구독 요청으로 활성 구독 중복 생성이 차단된 경우
+            throw new BusinessException(ErrorCode.SUBSCRIPTION_ALREADY_ACTIVE);
+        }
     }
 
     @Override
