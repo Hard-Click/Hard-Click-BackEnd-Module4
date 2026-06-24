@@ -33,11 +33,11 @@ public class MockPgClient implements PgClient {
     }
 
     @Override
-    public String confirm(Long memberId, Long courseId, Integer amount) {
+    public String confirm(String paymentKey, String orderId, Integer amount) {
         if (ThreadLocalRandom.current().nextDouble() < TIMEOUT_PROBABILITY) {
-            throw new PgTimeoutException("Mock PG 타임아웃 (memberId=" + memberId + ", courseId=" + courseId + ")");
+            throw new PgTimeoutException("Mock PG 타임아웃 (orderId=" + orderId + ")");
         }
-        return UUID.randomUUID().toString();
+        return paymentKey != null ? paymentKey : UUID.randomUUID().toString();
     }
 
     public static class PgTimeoutException extends RuntimeException {

@@ -45,11 +45,11 @@ public class PaymentFacade {
     private final PgClient pgClient;
     private final MeterRegistry meterRegistry;
 
-    public Result confirm(Long memberId, Long courseId, Integer amount, String idempotencyKey) {
+    public Result confirm(Long memberId, Long courseId, Integer amount, String paymentKey, String orderId, String idempotencyKey) {
         Timer.Sample sample = Timer.start(meterRegistry);
         String outcome = "FAILED";
         try {
-            Result result = doConfirm(memberId, courseId, amount, idempotencyKey);
+            Result result = doConfirm(memberId, courseId, amount, paymentKey, orderId, idempotencyKey);
             outcome = result.duplicate() ? "DUPLICATE" : "SUCCESS";
             return result;
         } catch (BusinessException e) {
@@ -61,7 +61,7 @@ public class PaymentFacade {
         }
     }
 
-    private Result doConfirm(Long memberId, Long courseId, Integer amount, String idempotencyKey) {
+    private Result doConfirm(Long memberId, Long courseId, Integer amount, String paymentKey, String orderId, String idempotencyKey) {
         // 1. Redis 멱등키 캐시 먼저 확인 — 이미 처리 완료된 요청이면 DB 조회 없이 즉시 반환
         String cachedPaymentId = redisTemplate.opsForValue().get(IDEMPOTENCY_KEY_PREFIX + idempotencyKey);
         if (cachedPaymentId != null) {
@@ -95,7 +95,7 @@ public class PaymentFacade {
                 return Result.from(racedExisting, true);
             }
 
-            return processPayment(memberId, courseId, amount, idempotencyKey);
+            return processPayment(memberId, courseId, amount, paymentKey, orderId, idempotencyKey);
         } finally {
             releaseLockSafely(lockKey, lockValue);
         }
@@ -107,7 +107,7 @@ public class PaymentFacade {
         }
     }
 
-    private Result processPayment(Long memberId, Long courseId, Integer amount, String idempotencyKey) {
+    private Result processPayment(Long memberId, Long courseId, Integer amount, String paymentKey, String orderId, String idempotencyKey) {
         Payment created;
         try {
             created = createPending(memberId, courseId, amount, idempotencyKey);
@@ -125,7 +125,7 @@ public class PaymentFacade {
 
         String pgTransactionId;
         try {
-            pgTransactionId = pgClient.confirm(memberId, courseId, amount);
+            pgTransactionId = pgClient.confirm(paymentKey, orderId, amount);
         } catch (RuntimeException e) {
             failPayment(created.getId());
             throw new BusinessException(ErrorCode.PG_TIMEOUT, e);
