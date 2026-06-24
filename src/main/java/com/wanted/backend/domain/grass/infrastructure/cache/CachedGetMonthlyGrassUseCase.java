@@ -20,7 +20,7 @@ public class CachedGetMonthlyGrassUseCase implements GetMonthlyGrassUseCase {
     }
 
     @Override
-    @Cacheable(cacheNames = "grassMonthly", key = "#query.memberId() + ':' + #query.year() + ':' + #query.month() + ':' + T(java.time.LocalDate).now(@clock)")
+    @Cacheable(cacheNames = "grassMonthly:v2", key = "#query.memberId() + ':' + #query.year() + ':' + #query.month() + ':' + T(java.time.LocalDate).now(@clock)")
     public MonthlyGrassView handle(GetMonthlyGrassQuery query) {
         return delegate.handle(query);
     }
