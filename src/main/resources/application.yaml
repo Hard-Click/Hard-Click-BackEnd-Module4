@@ -65,7 +65,7 @@ aws:
 toss:
   payments:
     base-url: ${TOSS_API_BASE_URL:https://api.tosspayments.com}
-    secret-key: ${TOSS_SECRET_KEY:}
+    secret-key: ${TOSS_SECRET_KEY}
 
 server:
   port: 8080
