@@ -172,7 +172,13 @@ import org.springframework.http.HttpStatus;
        찜하기 관련 예외 (WISH000)
        ========================================================================= */
     WISHLIST_ITEM_ALREADY_EXISTS(HttpStatus.CONFLICT, "WISH001", "이미 찜한 강의입니다."),
-    WISHLIST_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "WISH002", "찜 목록에 해당 강의가 없습니다.");
+    WISHLIST_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "WISH002", "찜 목록에 해당 강의가 없습니다."),
+
+    /* =========================================================================
+       구독(연간 패스) 관련 예외 (SUB000)
+       ========================================================================= */
+    SUBSCRIPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "SUB001", "구독 정보를 찾을 수 없습니다."),
+    SUBSCRIPTION_ALREADY_ACTIVE(HttpStatus.CONFLICT, "SUB002", "이미 구독 중입니다.");
 
 
     private final HttpStatus status;
