@@ -4,5 +4,5 @@ import com.wanted.backend.domain.community.presentation.response.CommentListResp
 
 
 public interface CommentQueryUseCase {
-    CommentListResponse getComments(Long postId, Long memberId);
+    CommentListResponse getComments(Long postId, Long memberId, boolean isAdmin);
 }
