@@ -32,7 +32,7 @@ STUDENT_LIMIT=10
 INSTRUCTOR_LIMIT=5
 
 mysql_exec() {
-    docker exec -i hard-click-mysql mysql -uroot -p"$DB_PASSWORD" -D "$DB_SCHEMA" -N -B "$@"
+    docker exec -i hard-click-mysql mysql --default-character-set=utf8mb4 -uroot -p"$DB_PASSWORD" -D "$DB_SCHEMA" -N -B "$@"
 }
 
 redis_exec() {
@@ -94,16 +94,20 @@ else
     # members 테이블에 강사 소개 컬럼이 아직 없을 수 있어 안전하게 추가 (이미 있으면 무시)
     mysql_exec -e "
         SET @col := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='$DB_SCHEMA' AND TABLE_NAME='members' AND COLUMN_NAME='one_line_intro');
-        SET @ddl := IF(@col=0, 'ALTER TABLE members ADD COLUMN one_line_intro VARCHAR(100)', 'SELECT 1');
+        SET @ddl := IF(@col=0, 'ALTER TABLE members ADD COLUMN one_line_intro VARCHAR(100) CHARACTER SET utf8mb4', 'SELECT 1');
         PREPARE stmt FROM @ddl; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
         SET @col := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='$DB_SCHEMA' AND TABLE_NAME='members' AND COLUMN_NAME='introduction');
-        SET @ddl := IF(@col=0, 'ALTER TABLE members ADD COLUMN introduction TEXT', 'SELECT 1');
+        SET @ddl := IF(@col=0, 'ALTER TABLE members ADD COLUMN introduction TEXT CHARACTER SET utf8mb4', 'SELECT 1');
         PREPARE stmt FROM @ddl; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
         SET @col := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='$DB_SCHEMA' AND TABLE_NAME='members' AND COLUMN_NAME='career');
-        SET @ddl := IF(@col=0, 'ALTER TABLE members ADD COLUMN career TEXT', 'SELECT 1');
+        SET @ddl := IF(@col=0, 'ALTER TABLE members ADD COLUMN career TEXT CHARACTER SET utf8mb4', 'SELECT 1');
         PREPARE stmt FROM @ddl; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+        ALTER TABLE members MODIFY COLUMN one_line_intro VARCHAR(100) CHARACTER SET utf8mb4;
+        ALTER TABLE members MODIFY COLUMN introduction TEXT CHARACTER SET utf8mb4;
+        ALTER TABLE members MODIFY COLUMN career TEXT CHARACTER SET utf8mb4;
     "
 
     ONE_LINERS=(
