@@ -99,8 +99,9 @@ class EndStudyTimerSessionServiceTest {
         assertThat(captor.getValue().endedAt()).isEqualTo(endedAt);
         assertThat(captor.getValue().accumulatedStudySeconds()).isEqualTo(500);
         assertThat(result.sessionId()).isEqualTo(55L);
-        assertThat(result.studySeconds()).isEqualTo(500);
+        assertThat(result.accumulatedStudySeconds()).isEqualTo(500);
         assertThat(result.status()).isEqualTo("ENDED");
+        assertThat(result.endedAt()).isEqualTo(endedAt);
         verify(dailyStudyStatsRepository).upsertStudySeconds(1L, LocalDate.parse("2026-05-11"), 300);
         verify(eventPublisher).publishEvent(eventCaptor.capture());
         assertThat(eventCaptor.getValue().memberId()).isEqualTo(1L);
