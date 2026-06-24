@@ -8,7 +8,11 @@ public interface StudyTimerSessionRepository {
 
     boolean existsRunningByMemberId(Long memberId);
 
+    boolean existsActiveByMemberId(Long memberId);
+
     Optional<StudyTimerSession> findRunningByMemberId(Long memberId);
+
+    Optional<StudyTimerSession> findActiveByMemberId(Long memberId);
 
     Optional<StudyTimerSession> findById(Long sessionId);
 

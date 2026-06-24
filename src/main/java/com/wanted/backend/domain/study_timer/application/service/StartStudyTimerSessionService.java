@@ -24,7 +24,7 @@ public class StartStudyTimerSessionService implements StartStudyTimerSessionUseC
     public StudyTimerSessionStartView handle(StartStudyTimerSessionCommand command) {
         memberLockPort.lock(command.memberId());
 
-        if (studyTimerSessionRepository.existsRunningByMemberId(command.memberId())) {
+        if (studyTimerSessionRepository.existsActiveByMemberId(command.memberId())) {
             throw new BusinessException(ErrorCode.STUDY_TIMER_SESSION_ALREADY_RUNNING);
         }
 
