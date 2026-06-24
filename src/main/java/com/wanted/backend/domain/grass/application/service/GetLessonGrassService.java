@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.Month;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -56,6 +57,6 @@ public class GetLessonGrassService implements GetLessonGrassUseCase {
                             date.isAfter(today)
                     );
                 })
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 }

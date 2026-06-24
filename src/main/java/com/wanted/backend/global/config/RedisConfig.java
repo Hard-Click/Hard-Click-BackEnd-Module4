@@ -30,11 +30,14 @@ public class RedisConfig {
             ObjectMapper objectMapper
     ) {
         ObjectMapper cacheObjectMapper = objectMapper.copy();
+        // NON_FINAL은 record(=final) 루트 타입에 타입 메타데이터를 안 붙이는데,
+        // GenericJackson2JsonRedisSerializer.deserialize(byte[])는 항상 Object.class를 기대해서
+        // 캐시 HIT마다 역직렬화가 실패한다(WRAPPER_ARRAY 타입 정보 누락). EVERYTHING으로 모든 타입에 메타데이터를 강제한다.
         cacheObjectMapper.activateDefaultTyping(
                 BasicPolymorphicTypeValidator.builder()
                         .allowIfBaseType(Object.class)
                         .build(),
-                ObjectMapper.DefaultTyping.NON_FINAL
+                ObjectMapper.DefaultTyping.EVERYTHING
         );
 
         RedisCacheConfiguration configuration = RedisCacheConfiguration.defaultCacheConfig()
