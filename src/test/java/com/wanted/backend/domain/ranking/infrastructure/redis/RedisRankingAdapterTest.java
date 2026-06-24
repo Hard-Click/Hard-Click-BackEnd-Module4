@@ -6,6 +6,7 @@ import com.wanted.backend.domain.ranking.domain.model.RankingPeriod;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -13,9 +14,15 @@ import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.data.redis.core.DefaultTypedTuple;
 
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -36,7 +43,7 @@ class RedisRankingAdapterTest {
         properties.setKeyPrefix("ranking");
         properties.setDefaultLimit(100);
         adapter = new RedisRankingAdapter(redisTemplate, properties);
-        when(redisTemplate.opsForZSet()).thenReturn(zSetOperations);
+        lenient().when(redisTemplate.opsForZSet()).thenReturn(zSetOperations);
     }
 
     @Test
@@ -144,5 +151,68 @@ class RedisRankingAdapterTest {
 
         assertThat(result.totalUsers()).isZero();
         assertThat(result.entries()).isEmpty();
+    }
+
+    @Test
+    void incrementsRankingScore() {
+        adapter.incrementScore(
+                RankingMetric.STUDY_TIME,
+                RankingPeriod.DAILY,
+                1L,
+                300
+        );
+
+        verify(zSetOperations).incrementScore("ranking:study-time:daily", "1", 300.0);
+    }
+
+    @Test
+    void skipsIncrementWhenScoreDeltaIsNotPositive() {
+        adapter.incrementScore(
+                RankingMetric.STUDY_TIME,
+                RankingPeriod.DAILY,
+                1L,
+                0
+        );
+
+        verify(zSetOperations, never()).incrementScore(anyString(), anyString(), anyDouble());
+    }
+
+    @Test
+    void replacesRankingScoresAtomicallyViaTempKeyRename() {
+        adapter.replaceScores(
+                RankingMetric.STUDY_TIME,
+                RankingPeriod.MONTHLY,
+                Map.of(1L, 300L, 2L, 600L)
+        );
+
+        ArgumentCaptor<String> tempKeyCaptor = ArgumentCaptor.forClass(String.class);
+        verify(zSetOperations).add(
+                tempKeyCaptor.capture(),
+                argThat(tuples -> tuples.size() == 2
+                        && containsTuple(tuples, "1", 300.0)
+                        && containsTuple(tuples, "2", 600.0))
+        );
+        String tempKey = tempKeyCaptor.getValue();
+        assertThat(tempKey).startsWith("ranking:study-time:monthly:rebuild:");
+        verify(redisTemplate).rename(tempKey, "ranking:study-time:monthly");
+        verify(redisTemplate, never()).delete(anyString());
+    }
+
+    @Test
+    void deletesRankingKeyWhenReplacingWithEmptyScores() {
+        adapter.replaceScores(
+                RankingMetric.STUDY_TIME,
+                RankingPeriod.MONTHLY,
+                Map.of()
+        );
+
+        verify(redisTemplate).delete("ranking:study-time:monthly");
+        verify(zSetOperations, never()).add(anyString(), argThat(tuples -> true));
+        verify(redisTemplate, never()).rename(anyString(), anyString());
+    }
+
+    private boolean containsTuple(Set<ZSetOperations.TypedTuple<String>> tuples, String memberId, double score) {
+        return tuples.stream()
+                .anyMatch(tuple -> memberId.equals(tuple.getValue()) && Double.valueOf(score).equals(tuple.getScore()));
     }
 }
