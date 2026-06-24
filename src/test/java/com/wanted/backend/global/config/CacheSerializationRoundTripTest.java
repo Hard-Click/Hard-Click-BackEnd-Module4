@@ -3,10 +3,6 @@ package com.wanted.backend.global.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.wanted.backend.domain.admin_dashboard.application.dto.AdminDashboardResult;
-import com.wanted.backend.domain.community.domain.model.ReportStatus;
-import com.wanted.backend.domain.community.domain.model.ReportType;
-import com.wanted.backend.domain.community.domain.model.TargetType;
 import com.wanted.backend.domain.grass.application.mapper.MonthlyGrassViewMapper;
 import com.wanted.backend.domain.grass.application.mapper.YearlyGrassViewMapper;
 import com.wanted.backend.domain.grass.application.query.GetGrassViewQuery;
@@ -36,9 +32,7 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -64,7 +58,10 @@ class CacheSerializationRoundTripTest {
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.activateDefaultTyping(
                 BasicPolymorphicTypeValidator.builder()
-                        .allowIfBaseType(Object.class)
+                        .allowIfSubType("com.wanted.backend")
+                        .allowIfSubType("java.util")
+                        .allowIfSubType("java.time")
+                        .allowIfSubType("java.lang")
                         .build(),
                 ObjectMapper.DefaultTyping.EVERYTHING
         );
@@ -132,23 +129,9 @@ class CacheSerializationRoundTripTest {
         assertRoundTrips(original);
     }
 
-    @Test
-    void roundTripsAdminDashboardResult() {
-        AdminDashboardResult original = new AdminDashboardResult(
-                10L,
-                2L,
-                5L,
-                3L,
-                new ArrayList<>(List.of(new AdminDashboardResult.RecentReport(
-                        1L, TargetType.POST, "제목", ReportType.SPAM, ReportStatus.PENDING, LocalDateTime.parse("2026-06-01T10:00:00")
-                ))),
-                new ArrayList<>(List.of(new AdminDashboardResult.RecentNotice(
-                        2L, "공지", true, LocalDateTime.parse("2026-06-02T10:00:00")
-                )))
-        );
-
-        assertRoundTrips(original);
-    }
+    // AdminDashboardResult는 AdminDashboardQueryAdapter(JPA 쿼리)를 실제로 거쳐야
+    // findRecentReports()/findRecentNotices()의 ArrayList 수집 로직까지 검증되므로,
+    // AdminDashboardQueryAdapterCacheSerializationTest(@DataJpaTest)에서 다룬다.
 
     private void assertRoundTrips(Object original) {
         byte[] serialized = serializer.serialize(original);

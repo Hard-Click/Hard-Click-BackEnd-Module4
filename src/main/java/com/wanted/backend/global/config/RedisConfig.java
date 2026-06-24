@@ -33,9 +33,14 @@ public class RedisConfig {
         // NON_FINAL은 record(=final) 루트 타입에 타입 메타데이터를 안 붙이는데,
         // GenericJackson2JsonRedisSerializer.deserialize(byte[])는 항상 Object.class를 기대해서
         // 캐시 HIT마다 역직렬화가 실패한다(WRAPPER_ARRAY 타입 정보 누락). EVERYTHING으로 모든 타입에 메타데이터를 강제한다.
+        // allowIfBaseType(Object.class)는 모든 타입을 허용해 역직렬화 공격면을 키우므로,
+        // 캐시에 실제로 들어가는 자체 DTO/record와 JDK 컬렉션·시간 타입으로 범위를 좁힌다.
         cacheObjectMapper.activateDefaultTyping(
                 BasicPolymorphicTypeValidator.builder()
-                        .allowIfBaseType(Object.class)
+                        .allowIfSubType("com.wanted.backend")
+                        .allowIfSubType("java.util")
+                        .allowIfSubType("java.time")
+                        .allowIfSubType("java.lang")
                         .build(),
                 ObjectMapper.DefaultTyping.EVERYTHING
         );

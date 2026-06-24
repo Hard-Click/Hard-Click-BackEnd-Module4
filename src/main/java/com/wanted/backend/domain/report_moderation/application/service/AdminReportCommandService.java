@@ -16,7 +16,7 @@ public class AdminReportCommandService implements DecideAdminReportUseCase {
 
     @Override
     @Transactional
-    @CacheEvict(cacheNames = "adminDashboard", key = "'summary'")
+    @CacheEvict(cacheNames = "adminDashboard:v2", key = "'summary'")
     public AdminReportDecisionResult decide(AdminReportDecisionCommand command){
         return adminReportCommandPort.decide(command);
     }
