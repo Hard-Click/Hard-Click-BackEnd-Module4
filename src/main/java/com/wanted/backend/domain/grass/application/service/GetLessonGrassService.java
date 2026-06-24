@@ -27,7 +27,7 @@ public class GetLessonGrassService implements GetLessonGrassUseCase {
     private final Clock clock;
 
     @Override
-    @Cacheable(cacheNames = "grassLessons", key = "#query.memberId() + ':' + T(java.time.LocalDate).now(@clock)")
+    @Cacheable(cacheNames = "grassLessonsV2", key = "#query.memberId() + ':' + T(java.time.LocalDate).now(@clock)")
     public List<LessonGrassView> handle(GetLessonGrassQuery query) {
         LocalDate today = LocalDate.now(clock);
         LocalDate startDate = LocalDate.of(today.getYear(), Month.JANUARY, 1);

@@ -20,7 +20,7 @@ public class CachedGetYearlyGrassUseCase implements GetYearlyGrassUseCase {
     }
 
     @Override
-    @Cacheable(cacheNames = "grassYearly", key = "#query.memberId() + ':' + #query.year() + ':' + T(java.time.LocalDate).now(@clock)")
+    @Cacheable(cacheNames = "grassYearlyV2", key = "#query.memberId() + ':' + #query.year() + ':' + T(java.time.LocalDate).now(@clock)")
     public YearlyGrassView handle(GetYearlyGrassQuery query) {
         return delegate.handle(query);
     }
