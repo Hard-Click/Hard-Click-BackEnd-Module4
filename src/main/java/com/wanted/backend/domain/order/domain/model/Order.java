@@ -14,11 +14,12 @@ public class Order {
     private final int finalAmount;
     private final LocalDateTime orderedAt;
     private LocalDateTime paidAt;
+    private String paymentKey;
     private final List<OrderItem> items;
 
     private Order(Long id, String orderNo, Long memberId, OrderType type, OrderStatus status,
                   int totalAmount, int finalAmount, LocalDateTime orderedAt, LocalDateTime paidAt,
-                  List<OrderItem> items) {
+                  String paymentKey, List<OrderItem> items) {
         this.id = id;
         this.orderNo = orderNo;
         this.memberId = memberId;
@@ -28,6 +29,7 @@ public class Order {
         this.finalAmount = finalAmount;
         this.orderedAt = orderedAt;
         this.paidAt = paidAt;
+        this.paymentKey = paymentKey;
         this.items = items;
     }
 
@@ -35,14 +37,14 @@ public class Order {
                                int totalAmount, int finalAmount, LocalDateTime orderedAt,
                                List<OrderItem> items) {
         return new Order(null, orderNo, memberId, type, OrderStatus.READY,
-                totalAmount, finalAmount, orderedAt, null, items);
+                totalAmount, finalAmount, orderedAt, null, null, items);
     }
 
     public static Order restore(Long id, String orderNo, Long memberId, OrderType type, OrderStatus status,
                                 int totalAmount, int finalAmount, LocalDateTime orderedAt, LocalDateTime paidAt,
-                                List<OrderItem> items) {
+                                String paymentKey, List<OrderItem> items) {
         return new Order(id, orderNo, memberId, type, status,
-                totalAmount, finalAmount, orderedAt, paidAt, items);
+                totalAmount, finalAmount, orderedAt, paidAt, paymentKey, items);
     }
 
     public Long getId() { return id; }
@@ -54,5 +56,6 @@ public class Order {
     public int getFinalAmount() { return finalAmount; }
     public LocalDateTime getOrderedAt() { return orderedAt; }
     public LocalDateTime getPaidAt() { return paidAt; }
+    public String getPaymentKey() { return paymentKey; }
     public List<OrderItem> getItems() { return items; }
 }

@@ -6,6 +6,7 @@ import com.wanted.backend.domain.order.domain.model.Order;
 import com.wanted.backend.domain.order.domain.model.OrderItem;
 import com.wanted.backend.domain.order.domain.model.OrderStatus;
 import com.wanted.backend.domain.order.domain.repository.OrderRepository;
+import com.wanted.backend.domain.payment.application.port.PgClient;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -13,16 +14,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * 주문 항목 단위 환불. 실제 PG(Toss) 결제취소 API 연동은 별도 단계(Stage 3)로 분리되어 있어
- * 이 단계에서는 수강 권한 박탈 + 주문/항목 상태 갱신까지만 처리한다.
+ * 주문 항목 단위 환불. 실제 Toss 결제취소(/v1/payments/{paymentKey}/cancel) 호출 후
+ * 수강 권한 박탈 + 주문/항목 상태 갱신을 처리한다.
  */
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class RefundOrderItemService implements RefundOrderItemUseCase {
 
+    private static final String CANCEL_REASON = "학생 요청에 의한 강의 환불";
+
     private final OrderRepository orderRepository;
     private final OrderEnrollmentRevocationPort enrollmentRevocationPort;
+    private final PgClient pgClient;
 
     @Override
     public void refund(Long memberId, Long orderId, Long courseId) {
@@ -50,6 +54,12 @@ public class RefundOrderItemService implements RefundOrderItemUseCase {
                 .filter(i -> !courseId.equals(i.getCourseId()))
                 .allMatch(OrderItem::isRefunded);
         OrderStatus newStatus = allOthersAlreadyRefunded ? OrderStatus.REFUNDED : OrderStatus.PARTIAL_REFUNDED;
+
+        try {
+            pgClient.cancel(order.getPaymentKey(), item.getPrice(), CANCEL_REASON);
+        } catch (RuntimeException e) {
+            throw new BusinessException(ErrorCode.PG_TIMEOUT, e);
+        }
 
         orderRepository.refundItem(orderId, courseId, newStatus);
         enrollmentRevocationPort.revoke(memberId, courseId);

@@ -66,8 +66,8 @@ public class OrderController {
     @PostMapping("/{orderId}/items/{courseId}/refund")
     @Operation(
             summary = "주문 항목 환불",
-            description = "결제 완료된 주문의 특정 강의 항목을 환불합니다. 본인 주문만 가능하며 수강 권한이 즉시 박탈됩니다. " +
-                    "실제 PG(토스) 결제취소 호출은 별도 단계에서 처리되며, 이 API는 수강 권한 박탈과 주문/항목 상태 갱신까지만 수행합니다."
+            description = "결제 완료된 주문의 특정 강의 항목을 환불합니다. 본인 주문만 가능하며 " +
+                    "Toss 결제취소 API 호출 후 수강 권한이 즉시 박탈되고 주문/항목 상태가 갱신됩니다."
     )
     public ResponseEntity<ApiResponse<Void>> refundOrderItem(
             @AuthenticationPrincipal CustomUserDetails userDetails,

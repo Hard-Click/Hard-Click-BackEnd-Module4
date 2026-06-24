@@ -70,6 +70,9 @@ public class OrderEntity {
     @Column(name = "paid_at")
     private LocalDateTime paidAt;
 
+    @Column(name = "payment_key")
+    private String paymentKey;
+
     public OrderEntity(String orderNo, Long memberId, OrderType type, String status,
                        Integer totalAmount, Integer finalAmount, LocalDateTime orderedAt, LocalDateTime paidAt) {
         this.orderNo = orderNo;
@@ -82,9 +85,10 @@ public class OrderEntity {
         this.paidAt = paidAt;
     }
 
-    public void markPaid(LocalDateTime paidAt) {
+    public void markPaid(LocalDateTime paidAt, String paymentKey) {
         this.status = "PAID";
         this.paidAt = paidAt;
+        this.paymentKey = paymentKey;
     }
 
     public void updateStatus(String status) {

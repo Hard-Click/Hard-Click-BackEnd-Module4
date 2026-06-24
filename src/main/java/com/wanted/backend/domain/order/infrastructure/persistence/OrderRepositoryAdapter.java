@@ -55,10 +55,10 @@ public class OrderRepositoryAdapter implements OrderRepository {
 
     @Override
     @Transactional
-    public void markPaid(String orderNo, LocalDateTime paidAt) {
+    public void markPaid(String orderNo, LocalDateTime paidAt, String paymentKey) {
         OrderEntity entity = orderRepository.findByOrderNo(orderNo)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
-        entity.markPaid(paidAt);
+        entity.markPaid(paidAt, paymentKey);
     }
 
     @Override
@@ -80,6 +80,7 @@ public class OrderRepositoryAdapter implements OrderRepository {
         return Order.restore(
                 e.getId(), e.getOrderNo(), e.getMemberId(), e.getType(),
                 OrderStatus.valueOf(e.getStatus()),
-                e.getTotalAmount(), e.getFinalAmount(), e.getOrderedAt(), e.getPaidAt(), items);
+                e.getTotalAmount(), e.getFinalAmount(), e.getOrderedAt(), e.getPaidAt(),
+                e.getPaymentKey(), items);
     }
 }

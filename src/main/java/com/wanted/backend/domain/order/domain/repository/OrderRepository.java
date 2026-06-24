@@ -14,7 +14,7 @@ public interface OrderRepository {
 
     Optional<Order> findByOrderNo(String orderNo);
 
-    void markPaid(String orderNo, LocalDateTime paidAt);
+    void markPaid(String orderNo, LocalDateTime paidAt, String paymentKey);
 
     void refundItem(Long orderId, Long courseId, OrderStatus newOrderStatus);
 }

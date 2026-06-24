@@ -104,7 +104,7 @@ public class ConfirmOrderPaymentService implements ConfirmOrderPaymentUseCase {
             }
 
             LocalDateTime paidAt = LocalDateTime.now(clock);
-            orderRepository.markPaid(orderNo, paidAt);
+            orderRepository.markPaid(orderNo, paidAt, pgTransactionId);
 
             dispatchAccessGrant(raced);
 
