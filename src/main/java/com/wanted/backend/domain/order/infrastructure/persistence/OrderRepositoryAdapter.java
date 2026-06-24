@@ -4,10 +4,13 @@ import com.wanted.backend.domain.order.domain.model.Order;
 import com.wanted.backend.domain.order.domain.model.OrderItem;
 import com.wanted.backend.domain.order.domain.model.OrderStatus;
 import com.wanted.backend.domain.order.domain.repository.OrderRepository;
+import com.wanted.backend.global.exception.BusinessException;
+import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,6 +51,26 @@ public class OrderRepositoryAdapter implements OrderRepository {
     public Optional<Order> findByOrderNo(String orderNo) {
         return orderRepository.findByOrderNo(orderNo)
                 .map(e -> toDomain(e, orderItemRepository.findByOrderId(e.getId())));
+    }
+
+    @Override
+    @Transactional
+    public void markPaid(String orderNo, LocalDateTime paidAt) {
+        OrderEntity entity = orderRepository.findByOrderNo(orderNo)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+        entity.markPaid(paidAt);
+    }
+
+    @Override
+    @Transactional
+    public void refundItem(Long orderId, Long courseId, OrderStatus newOrderStatus) {
+        OrderEntity orderEntity = orderRepository.findById(orderId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+        orderEntity.updateStatus(newOrderStatus.name());
+
+        OrderItemEntity itemEntity = orderItemRepository.findByOrderIdAndCourseId(orderId, courseId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_ITEM_NOT_FOUND));
+        itemEntity.markRefunded();
     }
 
     private Order toDomain(OrderEntity e, List<OrderItemEntity> itemEntities) {

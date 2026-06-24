@@ -81,4 +81,13 @@ public class OrderEntity {
         this.orderedAt = orderedAt;
         this.paidAt = paidAt;
     }
+
+    public void markPaid(LocalDateTime paidAt) {
+        this.status = "PAID";
+        this.paidAt = paidAt;
+    }
+
+    public void updateStatus(String status) {
+        this.status = status;
+    }
 }

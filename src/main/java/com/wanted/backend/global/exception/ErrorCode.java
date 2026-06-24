@@ -136,6 +136,11 @@ import org.springframework.http.HttpStatus;
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORD001", "주문을 찾을 수 없습니다."),
     ORDER_ACCESS_DENIED(HttpStatus.FORBIDDEN, "ORD002", "본인의 주문만 조회할 수 있습니다."),
     EMPTY_CHECKOUT(HttpStatus.BAD_REQUEST, "ORD003", "결제할 대상이 없습니다."),
+    ORDER_ALREADY_PROCESSED(HttpStatus.CONFLICT, "ORD004", "이미 처리된 주문입니다."),
+    ORDER_AMOUNT_MISMATCH(HttpStatus.BAD_REQUEST, "ORD005", "결제 금액이 주문 금액과 일치하지 않습니다."),
+    ORDER_NOT_REFUNDABLE(HttpStatus.CONFLICT, "ORD006", "환불 가능한 상태의 주문이 아닙니다."),
+    ORDER_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "ORD007", "주문 항목을 찾을 수 없습니다."),
+    ORDER_ITEM_ALREADY_REFUNDED(HttpStatus.CONFLICT, "ORD008", "이미 환불된 주문 항목입니다."),
     // 순공 세션 관련 예외
     STUDY_TIMER_SESSION_ALREADY_RUNNING(HttpStatus.CONFLICT, "ST001", "이미 실행 중인 순공시간 세션이 있습니다."),
     STUDY_TIMER_SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "ST002", "존재하지 않는 순공시간 세션입니다."),
