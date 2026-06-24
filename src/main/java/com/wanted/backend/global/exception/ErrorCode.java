@@ -78,6 +78,7 @@ import org.springframework.http.HttpStatus;
     COURSE_NOT_PUBLISHED(HttpStatus.FORBIDDEN, "L002", "공개되지 않은 강의입니다."),
     ENROLLMENT_REQUIRED(HttpStatus.FORBIDDEN, "L003", "수강권 또는 구독권이 필요합니다."),
     VIDEO_COMPLETION_CONDITION_NOT_MET(HttpStatus.BAD_REQUEST, "L004", "영상 시청 비율이 완료 기준을 충족하지 않습니다."),
+    VIDEO_PLAYBACK_URL_NOT_FOUND(HttpStatus.NOT_FOUND, "L005", "영상 재생 URL을 찾을 수 없습니다."),
 
     // 학습 통계 예외
     DAILY_STATS_MEMBER_ID_REQUIRED(HttpStatus.BAD_REQUEST, "DS001", "회원 ID는 필수입니다."),
@@ -127,6 +128,7 @@ import org.springframework.http.HttpStatus;
     DUPLICATE_PAYMENT_REQUEST(HttpStatus.CONFLICT, "P001", "이미 처리 중인 결제 요청입니다."),
     PG_TIMEOUT(HttpStatus.INTERNAL_SERVER_ERROR, "P002", "PG사 응답이 지연되어 결제에 실패했습니다."),
     PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "P003", "결제 내역을 찾을 수 없습니다."),
+    PAYMENT_NOT_REFUNDABLE(HttpStatus.CONFLICT, "P004", "결제완료 상태의 결제만 환불할 수 있습니다."),
     // 순공 세션 관련 예외
     STUDY_TIMER_SESSION_ALREADY_RUNNING(HttpStatus.CONFLICT, "ST001", "이미 실행 중인 순공시간 세션이 있습니다."),
     STUDY_TIMER_SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "ST002", "존재하지 않는 순공시간 세션입니다."),
@@ -170,7 +172,13 @@ import org.springframework.http.HttpStatus;
        찜하기 관련 예외 (WISH000)
        ========================================================================= */
     WISHLIST_ITEM_ALREADY_EXISTS(HttpStatus.CONFLICT, "WISH001", "이미 찜한 강의입니다."),
-    WISHLIST_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "WISH002", "찜 목록에 해당 강의가 없습니다.");
+    WISHLIST_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "WISH002", "찜 목록에 해당 강의가 없습니다."),
+
+    /* =========================================================================
+       구독(연간 패스) 관련 예외 (SUB000)
+       ========================================================================= */
+    SUBSCRIPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "SUB001", "구독 정보를 찾을 수 없습니다."),
+    SUBSCRIPTION_ALREADY_ACTIVE(HttpStatus.CONFLICT, "SUB002", "이미 구독 중입니다.");
 
 
     private final HttpStatus status;
