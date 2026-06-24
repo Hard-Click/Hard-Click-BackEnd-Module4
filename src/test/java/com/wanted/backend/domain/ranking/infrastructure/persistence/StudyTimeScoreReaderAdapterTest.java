@@ -1,12 +1,11 @@
 package com.wanted.backend.domain.ranking.infrastructure.persistence;
 
-import com.wanted.backend.domain.study_timer.infrastructure.persistence.DailyStudyStatsJpaEntity;
+import com.wanted.backend.domain.study_timer.infrastructure.persistence.MemberStudySecondsSum;
 import com.wanted.backend.domain.study_timer.infrastructure.persistence.SpringDataDailyStudyStatsRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -30,18 +29,41 @@ class StudyTimeScoreReaderAdapterTest {
     void sumsStudySecondsByMemberWithinDateRange() {
         LocalDate startDate = LocalDate.parse("2026-05-01");
         LocalDate endDate = LocalDate.parse("2026-05-03");
-        LocalDateTime now = LocalDateTime.parse("2026-05-04T00:00:00");
-        when(repository.findByStatDateBetween(startDate, endDate))
+        when(repository.sumStudySecondsByDateBetween(startDate, endDate))
                 .thenReturn(List.of(
-                        new DailyStudyStatsJpaEntity(1L, LocalDate.parse("2026-05-01"), 120, now, now),
-                        new DailyStudyStatsJpaEntity(1L, LocalDate.parse("2026-05-03"), 300, now, now),
-                        new DailyStudyStatsJpaEntity(2L, LocalDate.parse("2026-05-03"), 600, now, now)
+                        sum(1L, 420L),
+                        sum(2L, 600L)
                 ));
 
         Map<Long, Long> result = adapter.sumStudySecondsByDateBetween(startDate, endDate);
 
         assertThat(result).containsEntry(1L, 420L);
         assertThat(result).containsEntry(2L, 600L);
-        verify(repository).findByStatDateBetween(startDate, endDate);
+        verify(repository).sumStudySecondsByDateBetween(startDate, endDate);
+    }
+
+    @Test
+    void returnsEmptyMapWhenNoRowsMatchDateRange() {
+        LocalDate startDate = LocalDate.parse("2026-05-01");
+        LocalDate endDate = LocalDate.parse("2026-05-03");
+        when(repository.sumStudySecondsByDateBetween(startDate, endDate)).thenReturn(List.of());
+
+        Map<Long, Long> result = adapter.sumStudySecondsByDateBetween(startDate, endDate);
+
+        assertThat(result).isEmpty();
+    }
+
+    private MemberStudySecondsSum sum(Long memberId, Long totalSeconds) {
+        return new MemberStudySecondsSum() {
+            @Override
+            public Long getMemberId() {
+                return memberId;
+            }
+
+            @Override
+            public Long getTotalSeconds() {
+                return totalSeconds;
+            }
+        };
     }
 }

@@ -69,4 +69,26 @@ class RankingRebuildSchedulerTest {
         verify(rankingScoreWriter).replaceScores(RankingMetric.STUDY_TIME, RankingPeriod.WEEKLY, weeklyScores);
         verify(rankingScoreWriter).replaceScores(RankingMetric.STUDY_TIME, RankingPeriod.MONTHLY, monthlyScores);
     }
+
+    @Test
+    void keepsRebuildingOtherPeriodsWhenReplaceScoresFailsForOnePeriod() {
+        LocalDate today = LocalDate.parse("2026-05-13");
+        LocalDate weekStart = LocalDate.parse("2026-05-11");
+        LocalDate monthStart = LocalDate.parse("2026-05-01");
+        Map<Long, Long> dailyScores = Map.of(1L, 300L);
+        Map<Long, Long> weeklyScores = Map.of(1L, 300L);
+        Map<Long, Long> monthlyScores = Map.of(1L, 900L);
+        when(studyTimeScoreReader.sumStudySecondsByDateBetween(today, today)).thenReturn(dailyScores);
+        when(studyTimeScoreReader.sumStudySecondsByDateBetween(weekStart, today)).thenReturn(weeklyScores);
+        when(studyTimeScoreReader.sumStudySecondsByDateBetween(monthStart, today)).thenReturn(monthlyScores);
+        doThrow(new RuntimeException("redis down"))
+                .when(rankingScoreWriter)
+                .replaceScores(RankingMetric.STUDY_TIME, RankingPeriod.DAILY, dailyScores);
+
+        scheduler.rebuildStudyTimeScores();
+
+        verify(rankingScoreWriter).replaceScores(RankingMetric.STUDY_TIME, RankingPeriod.DAILY, dailyScores);
+        verify(rankingScoreWriter).replaceScores(RankingMetric.STUDY_TIME, RankingPeriod.WEEKLY, weeklyScores);
+        verify(rankingScoreWriter).replaceScores(RankingMetric.STUDY_TIME, RankingPeriod.MONTHLY, monthlyScores);
+    }
 }

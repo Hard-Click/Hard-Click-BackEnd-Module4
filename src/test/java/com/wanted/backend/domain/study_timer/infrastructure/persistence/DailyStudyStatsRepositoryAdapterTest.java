@@ -1,6 +1,8 @@
 package com.wanted.backend.domain.study_timer.infrastructure.persistence;
 
 import com.wanted.backend.domain.study_timer.domain.model.DailyStudyStat;
+import com.wanted.backend.global.exception.BusinessException;
+import com.wanted.backend.global.exception.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -13,8 +15,10 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -61,6 +65,21 @@ class DailyStudyStatsRepositoryAdapterTest {
         assertThat(result.studySeconds()).isEqualTo(200);
         verify(repository).findByMemberIdAndStatDate(1L, studyDate);
         verify(repository).saveAndFlush(entity);
+    }
+
+    @Test
+    void throwsWhenAccumulatedStudySecondsWouldOverflow() {
+        LocalDate studyDate = LocalDate.parse("2026-05-11");
+        LocalDateTime now = LocalDateTime.parse("2026-05-11T15:00:00");
+        DailyStudyStatsJpaEntity entity = new DailyStudyStatsJpaEntity(1L, studyDate, Integer.MAX_VALUE - 10, now, now);
+        when(repository.findByMemberIdAndStatDate(1L, studyDate)).thenReturn(Optional.of(entity));
+
+        assertThatThrownBy(() -> adapter.upsertStudySeconds(1L, studyDate, 20))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_TIMER_DAILY_STAT_INVALID);
+
+        verify(repository, never()).saveAndFlush(any(DailyStudyStatsJpaEntity.class));
     }
 
     @Test

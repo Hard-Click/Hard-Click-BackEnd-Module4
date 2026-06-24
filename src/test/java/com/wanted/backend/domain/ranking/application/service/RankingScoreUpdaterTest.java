@@ -12,8 +12,8 @@ import java.time.OffsetDateTime;
 
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 class RankingScoreUpdaterTest {
 
@@ -72,11 +72,20 @@ class RankingScoreUpdaterTest {
 
         updater.handle(event);
 
-        verify(rankingScoreWriter, never()).incrementScore(
-                RankingMetric.STUDY_TIME,
-                RankingPeriod.DAILY,
+        verifyNoInteractions(rankingScoreWriter);
+    }
+
+    @Test
+    void ignoresNullDelta() {
+        StudySessionEndedEvent event = StudySessionEndedEvent.of(
                 1L,
-                0
+                LocalDate.parse("2026-05-11"),
+                null,
+                OffsetDateTime.parse("2026-05-11T15:05:00+09:00")
         );
+
+        updater.handle(event);
+
+        verifyNoInteractions(rankingScoreWriter);
     }
 }

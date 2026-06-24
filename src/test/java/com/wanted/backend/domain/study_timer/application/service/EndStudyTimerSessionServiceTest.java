@@ -110,7 +110,7 @@ class EndStudyTimerSessionServiceTest {
     }
 
     @Test
-    void publishesEventWithoutDailyStatsUpsertWhenDeltaIsZero() {
+    void skipsDailyStatsUpsertAndEventWhenDeltaIsZero() {
         OffsetDateTime startedAt = OffsetDateTime.parse("2026-05-11T15:00:00+09:00");
         OffsetDateTime endedAt = OffsetDateTime.parse("2026-05-11T15:02:00+09:00");
         StudyTimerSession runningSession = new StudyTimerSession(
@@ -139,10 +139,46 @@ class EndStudyTimerSessionServiceTest {
 
         service.handle(new EndStudyTimerSessionCommand(1L, 55L, endedAt));
 
-        ArgumentCaptor<StudySessionEndedEvent> eventCaptor = ArgumentCaptor.forClass(StudySessionEndedEvent.class);
         verify(dailyStudyStatsRepository, never()).upsertStudySeconds(any(), any(), any());
-        verify(eventPublisher).publishEvent(eventCaptor.capture());
-        assertThat(eventCaptor.getValue().deltaStudySeconds()).isZero();
+        verify(eventPublisher, never()).publishEvent(any(Object.class));
+    }
+
+    @Test
+    void doesNotPublishEventWhenDailyStatsUpsertFails() {
+        OffsetDateTime startedAt = OffsetDateTime.parse("2026-05-11T15:00:00+09:00");
+        OffsetDateTime endedAt = OffsetDateTime.parse("2026-05-11T15:08:20+09:00");
+        EndStudyTimerSessionCommand command = new EndStudyTimerSessionCommand(1L, 55L, endedAt);
+        StudyTimerSession runningSession = new StudyTimerSession(
+                55L,
+                1L,
+                null,
+                null,
+                startedAt,
+                null,
+                200,
+                StudyTimerSessionStatus.RUNNING
+        );
+
+        when(repository.findById(55L)).thenReturn(Optional.of(runningSession));
+        when(repository.save(any(StudyTimerSession.class)))
+                .thenReturn(new StudyTimerSession(
+                        55L,
+                        1L,
+                        null,
+                        null,
+                        startedAt,
+                        endedAt,
+                        500,
+                        StudyTimerSessionStatus.ENDED
+                ));
+        when(dailyStudyStatsRepository.upsertStudySeconds(1L, LocalDate.parse("2026-05-11"), 300))
+                .thenThrow(new RuntimeException("db down"));
+
+        assertThatThrownBy(() -> service.handle(command))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("db down");
+
+        verify(eventPublisher, never()).publishEvent(any(Object.class));
     }
 
     @Test

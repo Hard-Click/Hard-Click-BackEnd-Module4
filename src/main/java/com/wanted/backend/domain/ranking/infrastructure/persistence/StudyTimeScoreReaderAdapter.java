@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.ranking.infrastructure.persistence;
 
 import com.wanted.backend.domain.ranking.application.port.StudyTimeScoreReader;
+import com.wanted.backend.domain.study_timer.infrastructure.persistence.MemberStudySecondsSum;
 import com.wanted.backend.domain.study_timer.infrastructure.persistence.SpringDataDailyStudyStatsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -19,10 +20,10 @@ public class StudyTimeScoreReaderAdapter implements StudyTimeScoreReader {
 
     @Override
     public Map<Long, Long> sumStudySecondsByDateBetween(LocalDate startDate, LocalDate endDate) {
-        return repository.findByStatDateBetween(startDate, endDate).stream()
-                .collect(Collectors.groupingBy(
-                        entity -> entity.getMemberId(),
-                        Collectors.summingLong(entity -> entity.getStudySeconds())
+        return repository.sumStudySecondsByDateBetween(startDate, endDate).stream()
+                .collect(Collectors.toMap(
+                        MemberStudySecondsSum::getMemberId,
+                        MemberStudySecondsSum::getTotalSeconds
                 ));
     }
 }

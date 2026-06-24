@@ -6,6 +6,7 @@ import com.wanted.backend.domain.ranking.domain.model.RankingPeriod;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -20,7 +21,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -178,20 +178,24 @@ class RedisRankingAdapterTest {
     }
 
     @Test
-    void replacesRankingScores() {
+    void replacesRankingScoresAtomicallyViaTempKeyRename() {
         adapter.replaceScores(
                 RankingMetric.STUDY_TIME,
                 RankingPeriod.MONTHLY,
                 Map.of(1L, 300L, 2L, 600L)
         );
 
-        verify(redisTemplate).delete("ranking:study-time:monthly");
+        ArgumentCaptor<String> tempKeyCaptor = ArgumentCaptor.forClass(String.class);
         verify(zSetOperations).add(
-                eq("ranking:study-time:monthly"),
+                tempKeyCaptor.capture(),
                 argThat(tuples -> tuples.size() == 2
                         && containsTuple(tuples, "1", 300.0)
                         && containsTuple(tuples, "2", 600.0))
         );
+        String tempKey = tempKeyCaptor.getValue();
+        assertThat(tempKey).startsWith("ranking:study-time:monthly:rebuild:");
+        verify(redisTemplate).rename(tempKey, "ranking:study-time:monthly");
+        verify(redisTemplate, never()).delete(anyString());
     }
 
     @Test
@@ -203,7 +207,8 @@ class RedisRankingAdapterTest {
         );
 
         verify(redisTemplate).delete("ranking:study-time:monthly");
-        verify(zSetOperations, never()).add(eq("ranking:study-time:monthly"), argThat(tuples -> true));
+        verify(zSetOperations, never()).add(anyString(), argThat(tuples -> true));
+        verify(redisTemplate, never()).rename(anyString(), anyString());
     }
 
     private boolean containsTuple(Set<ZSetOperations.TypedTuple<String>> tuples, String memberId, double score) {

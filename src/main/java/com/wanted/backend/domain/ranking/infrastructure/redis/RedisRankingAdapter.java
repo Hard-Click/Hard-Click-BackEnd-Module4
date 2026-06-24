@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Repository
@@ -107,21 +108,25 @@ public class RedisRankingAdapter implements RankingDetailReader, RankingListRead
             Map<Long, Long> scores
     ) {
         String key = key(metric, period);
-        redisTemplate.delete(key);
-        if (scores == null || scores.isEmpty()) {
+        Set<ZSetOperations.TypedTuple<String>> tuples = scores == null
+                ? Set.of()
+                : scores.entrySet().stream()
+                        .filter(entry -> entry.getKey() != null && entry.getValue() != null && entry.getValue() > 0)
+                        .map(entry -> new DefaultTypedTuple<>(
+                                String.valueOf(entry.getKey()),
+                                entry.getValue().doubleValue()
+                        ))
+                        .collect(Collectors.toSet());
+
+        if (tuples.isEmpty()) {
+            redisTemplate.delete(key);
             return;
         }
 
-        Set<ZSetOperations.TypedTuple<String>> tuples = scores.entrySet().stream()
-                .filter(entry -> entry.getKey() != null && entry.getValue() != null && entry.getValue() > 0)
-                .map(entry -> new DefaultTypedTuple<>(
-                        String.valueOf(entry.getKey()),
-                        entry.getValue().doubleValue()
-                ))
-                .collect(Collectors.toSet());
-        if (!tuples.isEmpty()) {
-            redisTemplate.opsForZSet().add(key, tuples);
-        }
+        // 임시 키에 적재 후 RENAME으로 교체해 조회 공백 및 add 실패 시 기존 랭킹 소실을 방지한다.
+        String tempKey = key + ":rebuild:" + UUID.randomUUID();
+        redisTemplate.opsForZSet().add(tempKey, tuples);
+        redisTemplate.rename(tempKey, key);
     }
 
     private String key(RankingMetric metric, RankingPeriod period) {

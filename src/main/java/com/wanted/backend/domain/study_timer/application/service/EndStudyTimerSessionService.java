@@ -51,13 +51,13 @@ public class EndStudyTimerSessionService implements EndStudyTimerSessionUseCase 
         StudyTimerSession saved = studyTimerSessionRepository.save(endedSession);
         if (deltaStudySeconds > 0) {
             dailyStudyStatsRepository.upsertStudySeconds(command.memberId(), studyDate, deltaStudySeconds);
+            eventPublisher.publishEvent(StudySessionEndedEvent.of(
+                    command.memberId(),
+                    studyDate,
+                    deltaStudySeconds,
+                    command.endedAt()
+            ));
         }
-        eventPublisher.publishEvent(StudySessionEndedEvent.of(
-                command.memberId(),
-                studyDate,
-                deltaStudySeconds,
-                command.endedAt()
-        ));
 
         return new StudyTimerSessionEndView(
                 saved.id(),
