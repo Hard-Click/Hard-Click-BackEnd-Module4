@@ -14,7 +14,10 @@ public record CreatePostRequest(
         @NotNull(message = "게시판 타입은 필수입니다.")
         BoardType boardType,
 
-        @Schema(description = "과목 (QUESTION 게시판일 경우 필수)", example = "MATH_1")
+        @Schema(
+                description = "과목 — QUESTION 게시판일 경우 필수. SubjectType enum 값 사용 (예: MATH_1, ENG_1, KOR_HISTORY 등)",
+                example = "MATH_1"
+        )
         SubjectType subject,
 
         @Schema(description = "게시글 제목 (300자 이하)", example = "Spring Security 질문드립니다.")

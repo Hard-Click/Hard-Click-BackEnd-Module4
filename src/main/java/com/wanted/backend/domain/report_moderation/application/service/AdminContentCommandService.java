@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class AdminContentCommandService implements ChangeAdminContentStatusUseCase {
 
+    private static final String ADMIN_DELETED = "ADMIN_DELETED";
+
     private final AdminContentCommandPort adminContentCommandPort;
 
     @Override

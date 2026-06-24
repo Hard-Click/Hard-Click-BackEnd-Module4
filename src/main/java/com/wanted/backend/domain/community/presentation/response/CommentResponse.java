@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.community.presentation.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
@@ -20,6 +21,7 @@ public record CommentResponse(
         @Schema(description = "댓글 내용", example = "JWT 필터는 OncePerRequestFilter를 상속받아 구현합니다.")
         String content,
 
+        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss+09:00")
         @Schema(description = "작성일시", example = "2025-03-15T14:30:00")
         LocalDateTime createdAt,
 

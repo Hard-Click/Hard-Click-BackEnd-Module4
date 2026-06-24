@@ -19,6 +19,7 @@ services:
       - ./monitoring/recording-rules:/etc/prometheus/rules/recording-rules:ro
     depends_on:
       - alertmanager
+      -
     extra_hosts:
       - "host.docker.internal:host-gateway"
 

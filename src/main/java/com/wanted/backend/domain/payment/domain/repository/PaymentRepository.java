@@ -16,4 +16,6 @@ public interface PaymentRepository {
     Payment confirmPayment(Long paymentId, String pgTransactionId, LocalDateTime paidAt);
 
     Payment failPayment(Long paymentId);
+
+    Payment refundPayment(Long paymentId);
 }

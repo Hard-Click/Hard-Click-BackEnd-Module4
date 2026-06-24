@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.report_moderation.infrastructure;
 
+import com.wanted.backend.domain.community.domain.model.Review;
 import com.wanted.backend.domain.community.domain.repository.CommentRepository;
 import com.wanted.backend.domain.community.domain.repository.PostRepository;
 import com.wanted.backend.domain.community.domain.repository.ReviewRepository;

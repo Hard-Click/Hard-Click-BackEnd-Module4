@@ -70,7 +70,16 @@ public record CourseDetailResponse(
         int instructorCourseCount,
 
         @Schema(description = "강사 평균 평점", example = "4.9")
-        double instructorRating
+        double instructorRating,
+
+        @Schema(description = "강사 한줄소개", example = "수능 수학 전문 강사")
+        String instructorOneLineIntro,
+
+        @Schema(description = "강사 자기소개", example = "서울대학교 수학교육과 출신으로 15년간 수능 수학을 지도해온 베테랑 강사입니다.")
+        String instructorIntroduction,
+
+        @Schema(description = "강사 경력", example = "전 대성마이맥 수학 강사\n전 메가스터디 인기 강사\n현 FLOWN 수학 대표 강사")
+        String instructorCareer
 ) {
     @Schema(description = "섹션(챕터) 응답")
     public record SectionResponse(
@@ -152,7 +161,10 @@ public record CourseDetailResponse(
                 result.level(),
                 result.instructorStudentCount(),
                 result.instructorCourseCount(),
-                result.instructorRating()
+                result.instructorRating(),
+                result.instructorOneLineIntro(),
+                result.instructorIntroduction(),
+                result.instructorCareer()
         );
     }
 }
