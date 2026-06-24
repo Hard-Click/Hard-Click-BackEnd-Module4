@@ -32,7 +32,7 @@ public class CommentQueryService implements CommentQueryUseCase {
     }
 
     @Override
-    public CommentListResponse getComments(Long postId, Long memberId) {
+    public CommentListResponse getComments(Long postId, Long memberId, boolean isAdmin) {
 
         // 1. 원댓글 목록 조회
         List<Comment> parentComments = commentRepository
@@ -43,26 +43,26 @@ public class CommentQueryService implements CommentQueryUseCase {
                 .sorted(Comparator
                         .comparing(Comment::isAccepted).reversed()
                         .thenComparing(Comparator.comparing(Comment::getCreatedAt).reversed()))
-                .map(comment -> toResponse(comment, memberId))
+                .map(comment -> toResponse(comment, memberId, isAdmin))
                 .toList();
 
         return new CommentListResponse(comments.size(), comments);
     }
 
-    private CommentResponse toResponse(Comment comment, Long currentMemberId) {
+    private CommentResponse toResponse(Comment comment, Long currentMemberId, boolean isAdmin) {
 
         // 삭제된 댓글은 작성자 정보 마스킹
         String rawName = comment.isDeleted()
                 ? null
                 : memberNamePort.getNameByMemberId(comment.getAuthorId()); // 딱 1번만
 
-        String authorName    = rawName == null ? "" : Review.maskName(rawName);
+        String authorName = rawName == null ? "" : (isAdmin ? rawName : Review.maskName(rawName));
         String authorInitial = rawName == null ? "" : rawName.substring(0, 1);
 
         // 대댓글 목록 조회 (최신순)
         List<CommentResponse> replies = commentRepository.findByParentId(comment.getId())
                 .stream()
-                .map(reply -> toResponse(reply, currentMemberId))
+                .map(reply -> toResponse(reply, currentMemberId, isAdmin))
                 .toList();
 
         return new CommentResponse(

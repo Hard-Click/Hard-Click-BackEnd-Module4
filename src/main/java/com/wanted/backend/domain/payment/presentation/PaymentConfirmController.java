@@ -50,6 +50,8 @@ public class PaymentConfirmController {
                 userDetails.getMemberId(),
                 request.courseId(),
                 request.amount(),
+                request.paymentKey(),
+                request.orderId(),
                 idempotencyKey
         );
 

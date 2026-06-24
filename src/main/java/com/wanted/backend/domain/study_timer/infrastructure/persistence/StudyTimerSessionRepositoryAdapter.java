@@ -12,12 +12,18 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class StudyTimerSessionRepositoryAdapter implements StudyTimerSessionRepository {
+
+    private static final List<StudyTimerSessionStatus> ACTIVE_STATUSES = List.of(
+            StudyTimerSessionStatus.RUNNING,
+            StudyTimerSessionStatus.PAUSED
+    );
 
     private final SpringDataStudyTimerSessionRepository repository;
     private final Clock clock;
@@ -28,8 +34,19 @@ public class StudyTimerSessionRepositoryAdapter implements StudyTimerSessionRepo
     }
 
     @Override
+    public boolean existsActiveByMemberId(Long memberId) {
+        return repository.existsByMemberIdAndStatusIn(memberId, ACTIVE_STATUSES);
+    }
+
+    @Override
     public Optional<StudyTimerSession> findRunningByMemberId(Long memberId) {
         return repository.findByMemberIdAndStatus(memberId, StudyTimerSessionStatus.RUNNING)
+                .map(this::toDomain);
+    }
+
+    @Override
+    public Optional<StudyTimerSession> findActiveByMemberId(Long memberId) {
+        return repository.findFirstByMemberIdAndStatusInOrderByStartedAtDescIdDesc(memberId, ACTIVE_STATUSES)
                 .map(this::toDomain);
     }
 

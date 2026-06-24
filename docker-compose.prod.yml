@@ -17,6 +17,7 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
       - S3_BUCKET=${S3_BUCKET}
       - AWS_REGION=${AWS_REGION:-ap-northeast-2}
+      - TOSS_SECRET_KEY=${TOSS_SECRET_KEY}
     depends_on:
       mysql:
         condition: service_healthy
