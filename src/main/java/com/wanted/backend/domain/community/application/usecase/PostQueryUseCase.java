@@ -9,7 +9,7 @@ public interface PostQueryUseCase {
 
     // 게시글 목록 조회
     PostListResponse getList(BoardType boardType, PostSortType sort,
-                             String keyword, int page);
+                             String keyword, int page, Long memberId);
 
     // 게시글 상세 조회
     PostDetailResponse getDetail(Long postId, Long memberId);

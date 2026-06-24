@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.community.application.service;
 
+import com.wanted.backend.domain.community.application.policy.CommunityAccessPolicy;
 import com.wanted.backend.domain.community.application.port.MemberNamePort;
 import com.wanted.backend.domain.community.application.usecase.CommentQueryUseCase;
 import com.wanted.backend.domain.community.domain.model.Comment;
@@ -20,16 +21,19 @@ public class CommentQueryService implements CommentQueryUseCase {
 
     private final CommentRepository commentRepository;
     private final MemberNamePort memberNamePort;
+    private final CommunityAccessPolicy communityAccessPolicy;
 
     public CommentQueryService(CommentRepository commentRepository,
-                               MemberNamePort memberNamePort) {
+                               MemberNamePort memberNamePort, CommunityAccessPolicy communityAccessPolicy) {
         this.commentRepository = commentRepository;
         this.memberNamePort = memberNamePort;
+        this.communityAccessPolicy = communityAccessPolicy;
     }
 
     @Override
     public CommentListResponse getComments(Long postId, Long memberId) {
 
+        communityAccessPolicy.validateAccess(memberId);
         // 1. 원댓글 목록 조회
         List<Comment> parentComments = commentRepository
                 .findByPostIdAndParentIdIsNull(postId);

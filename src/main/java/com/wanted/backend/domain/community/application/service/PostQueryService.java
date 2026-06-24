@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.community.application.service;
 
+import com.wanted.backend.domain.community.application.policy.CommunityAccessPolicy;
 import com.wanted.backend.domain.community.application.port.MemberNamePort;
 import com.wanted.backend.domain.community.application.usecase.PostQueryUseCase;
 import com.wanted.backend.domain.community.domain.model.*;
@@ -32,21 +33,24 @@ public class PostQueryService implements PostQueryUseCase {
     private final ViewLogRepository viewLogRepository;
     private final MemberNamePort memberNamePort;
     private final CommentRepository commentRepository;
+    private final CommunityAccessPolicy communityAccessPolicy;
 
     public PostQueryService(PostRepository postRepository,
                             PostFileRepository postFileRepository,
                             ViewLogRepository viewLogRepository,
-                            MemberNamePort memberNamePort, CommentRepository commentRepository) {
+                            MemberNamePort memberNamePort, CommentRepository commentRepository, CommunityAccessPolicy communityAccessPolicy) {
         this.postRepository = postRepository;
         this.postFileRepository = postFileRepository;
         this.viewLogRepository = viewLogRepository;
         this.memberNamePort = memberNamePort;
         this.commentRepository = commentRepository;
+        this.communityAccessPolicy = communityAccessPolicy;
     }
 
     @Override
     public PostListResponse getList(BoardType boardType, PostSortType sort,
-                                    String keyword, int page) {
+                                    String keyword, int page, Long memberId) {
+        if (memberId != null) communityAccessPolicy.validateAccess(memberId);
         List<Post> posts = boardType != null
                 ? postRepository.findByBoardType(boardType, sort, keyword, page, PAGE_SIZE)
                 : postRepository.findAll(sort, keyword, page, PAGE_SIZE);
@@ -70,6 +74,8 @@ public class PostQueryService implements PostQueryUseCase {
     @Override
     @Transactional
     public PostDetailResponse getDetail(Long postId, Long memberId) {
+
+        if (memberId != null) communityAccessPolicy.validateAccess(memberId);
 
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
