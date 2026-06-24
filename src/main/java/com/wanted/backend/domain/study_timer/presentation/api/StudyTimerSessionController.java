@@ -2,16 +2,19 @@ package com.wanted.backend.domain.study_timer.presentation.api;
 
 import com.wanted.backend.domain.study_timer.application.command.EndStudyTimerSessionCommand;
 import com.wanted.backend.domain.study_timer.application.command.PauseStudyTimerSessionCommand;
+import com.wanted.backend.domain.study_timer.application.command.ResumeStudyTimerSessionCommand;
 import com.wanted.backend.domain.study_timer.application.command.SaveStudyTimerHeartbeatCommand;
 import com.wanted.backend.domain.study_timer.application.command.StartStudyTimerSessionCommand;
 import com.wanted.backend.domain.study_timer.application.query.GetCurrentStudyTimerSessionQuery;
 import com.wanted.backend.domain.study_timer.application.usecase.EndStudyTimerSessionUseCase;
 import com.wanted.backend.domain.study_timer.application.usecase.GetCurrentStudyTimerSessionUseCase;
 import com.wanted.backend.domain.study_timer.application.usecase.PauseStudyTimerSessionUseCase;
+import com.wanted.backend.domain.study_timer.application.usecase.ResumeStudyTimerSessionUseCase;
 import com.wanted.backend.domain.study_timer.application.usecase.SaveStudyTimerHeartbeatUseCase;
 import com.wanted.backend.domain.study_timer.application.usecase.StartStudyTimerSessionUseCase;
 import com.wanted.backend.domain.study_timer.presentation.api.request.EndStudyTimerSessionRequest;
 import com.wanted.backend.domain.study_timer.presentation.api.request.PauseStudyTimerSessionRequest;
+import com.wanted.backend.domain.study_timer.presentation.api.request.ResumeStudyTimerSessionRequest;
 import com.wanted.backend.domain.study_timer.presentation.api.request.SaveStudyTimerHeartbeatRequest;
 import com.wanted.backend.domain.study_timer.presentation.api.request.StartStudyTimerSessionRequest;
 import com.wanted.backend.global.common.ApiResponse;
@@ -43,6 +46,7 @@ public class StudyTimerSessionController {
     private final StartStudyTimerSessionUseCase startStudyTimerSessionUseCase;
     private final SaveStudyTimerHeartbeatUseCase saveStudyTimerHeartbeatUseCase;
     private final PauseStudyTimerSessionUseCase pauseStudyTimerSessionUseCase;
+    private final ResumeStudyTimerSessionUseCase resumeStudyTimerSessionUseCase;
     private final EndStudyTimerSessionUseCase endStudyTimerSessionUseCase;
     private final GetCurrentStudyTimerSessionUseCase getCurrentStudyTimerSessionUseCase;
 
@@ -122,6 +126,28 @@ public class StudyTimerSessionController {
                 ));
 
         return ApiResponse.success("순공시간 측정을 일시정지했습니다.", result);
+    }
+
+    @PatchMapping("/{sessionId}/resume")
+    @Operation(
+            summary = "순공시간 세션 재개",
+            description = "일시정지된 순공시간 세션을 다시 실행 중 상태로 전환합니다."
+    )
+    public ResponseEntity<ApiResponse<ResumeStudyTimerSessionUseCase.StudyTimerSessionResumeView>> resume(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "재개할 세션 ID", example = "55")
+            @Positive
+            @PathVariable Long sessionId,
+            @Valid @RequestBody ResumeStudyTimerSessionRequest request
+    ) {
+        ResumeStudyTimerSessionUseCase.StudyTimerSessionResumeView result =
+                resumeStudyTimerSessionUseCase.handle(new ResumeStudyTimerSessionCommand(
+                        userDetails.getMemberId(),
+                        sessionId,
+                        request.resumedAt()
+                ));
+
+        return ApiResponse.success("순공시간 측정을 재개했습니다.", result);
     }
 
     @PatchMapping("/{sessionId}/end")
