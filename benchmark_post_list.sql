@@ -12,16 +12,45 @@
 SET FOREIGN_KEY_CHECKS = 0;
 SET cte_max_recursion_depth = 200000;
 
--- A-1. members 1,000건
-INSERT INTO members
-    (username, email, password, name, gender, birth_date, phone_number,
-     role, status, is_password_change_required, login_fail_count,
-     is_locked, optional_terms_agreed, created_at, updated_at)
+-- 이전 실행에서 남은 벤치마크 데이터 정리 (재실행해도 항상 깨끗하게 시작하도록)
+DELETE FROM comments WHERE content LIKE '벤치마크 댓글 %';
+DELETE FROM posts WHERE title LIKE '벤치마크 게시글 %';
+DELETE FROM members WHERE username LIKE 'bench_user_%';
+
+-- 시퀀스 생성용 임시테이블 (INSERT...WITH RECURSIVE 조합은 MySQL 8.0.19 이전 버전에서 문법 에러가 나서
+-- 임시테이블로 분리 — CREATE TABLE...AS WITH RECURSIVE는 모든 8.0 버전에서 동작함)
+DROP TEMPORARY TABLE IF EXISTS seq_1000;
+CREATE TEMPORARY TABLE seq_1000 AS
 WITH RECURSIVE seq AS (
     SELECT 1 AS n
     UNION ALL
     SELECT n + 1 FROM seq WHERE n < 1000
 )
+SELECT n FROM seq;
+
+DROP TEMPORARY TABLE IF EXISTS seq_10000;
+CREATE TEMPORARY TABLE seq_10000 AS
+WITH RECURSIVE seq AS (
+    SELECT 1 AS n
+    UNION ALL
+    SELECT n + 1 FROM seq WHERE n < 10000
+)
+SELECT n FROM seq;
+
+DROP TEMPORARY TABLE IF EXISTS seq_100000;
+CREATE TEMPORARY TABLE seq_100000 AS
+WITH RECURSIVE seq AS (
+    SELECT 1 AS n
+    UNION ALL
+    SELECT n + 1 FROM seq WHERE n < 100000
+)
+SELECT n FROM seq;
+
+-- A-1. members 1,000건
+INSERT INTO members
+    (username, email, password, name, gender, birth_date, phone_number,
+     role, status, is_password_change_required, login_fail_count,
+     is_locked, optional_terms_agreed, created_at, updated_at)
 SELECT
     CONCAT('bench_user_', n),
     CONCAT('bench_user_', n, '@test.com'),
@@ -34,16 +63,11 @@ SELECT
     'ACTIVE',
     0, 0, 0, 1,
     NOW(), NOW()
-FROM seq;
+FROM seq_1000;
 
 -- A-2. posts 10,000건 — board_type/status 분산, author는 위 members 중에서 순환 배정
 INSERT INTO posts
     (author_id, board_type, title, content, view_count, status, is_accepted, created_at, updated_at)
-WITH RECURSIVE seq AS (
-    SELECT 1 AS n
-    UNION ALL
-    SELECT n + 1 FROM seq WHERE n < 10000
-)
 SELECT
     ((n - 1) % 1000) + (SELECT MIN(member_id) FROM members WHERE username LIKE 'bench_user_%'),
     IF(n % 2 = 0, 'FREE', 'QUESTION'),
@@ -54,17 +78,12 @@ SELECT
     0,
     NOW() - INTERVAL (10000 - n) MINUTE,
     NOW() - INTERVAL (10000 - n) MINUTE
-FROM seq;
+FROM seq_10000;
 
 -- A-3. comments 100,000건 — 일부 게시글(상위 10%)에 댓글이 편중되게 분포
 --      편중 없이 균등 분포만 만들면 "정렬 병목"이 과소평가되므로 인기글 패턴을 재현한다.
 INSERT INTO comments
-    (post_id, author_id, parent_id, content, is_accepted, is_deleted, status, created_at, updated_at)
-WITH RECURSIVE seq AS (
-    SELECT 1 AS n
-    UNION ALL
-    SELECT n + 1 FROM seq WHERE n < 100000
-)
+    (post_id, author_id, parent_id, content, is_accepted, is_deleted, status, accept_count, created_at, updated_at)
 SELECT
     CASE
         -- 70%의 댓글은 인기글 1,000건(전체 게시글의 상위 10%)에 집중
@@ -75,29 +94,19 @@ SELECT
     (SELECT MIN(member_id) FROM members WHERE username LIKE 'bench_user_%') + (n % 1000),
     NULL,
     CONCAT('벤치마크 댓글 ', n),
-    0, 0, 'ACTIVE',
+    0, 0, 'ACTIVE', 0,
     NOW() - INTERVAL (100000 - n) SECOND,
     NOW() - INTERVAL (100000 - n) SECOND
-FROM seq;
+FROM seq_100000;
 
+DROP TEMPORARY TABLE IF EXISTS seq_1000, seq_10000, seq_100000;
 SET FOREIGN_KEY_CHECKS = 1;
 ANALYZE TABLE members, posts, comments;
 
 
--- ================================================================
--- [B] BEFORE — 인덱스 없는 상태에서 현재 쿼리 구조 측정
---     (목록 필터 + 댓글수 정렬 상관 서브쿼리)
--- ================================================================
-EXPLAIN ANALYZE
-SELECT p.post_id, p.title, p.author_id, p.created_at,
-       (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.post_id) AS comment_count
-FROM posts p
-WHERE p.board_type = 'FREE' AND p.status = 'ACTIVE'
-ORDER BY (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.post_id) DESC
-LIMIT 20 OFFSET 0;
 
 -- 댓글수 카운트 단건 패턴 (N+1 재현용)
-EXPLAIN ANALYZE
+EXPLAIN
 SELECT COUNT(*) FROM comments WHERE post_id = (SELECT MIN(post_id) FROM posts);
 
 
