@@ -16,6 +16,7 @@ public class StudyTimerSession {
     private final OffsetDateTime endedAt;
     private final Integer accumulatedStudySeconds;
     private final StudyTimerSessionStatus status;
+    private final OffsetDateTime pausedAt;
 
     public StudyTimerSession(
             Long id,
@@ -27,6 +28,20 @@ public class StudyTimerSession {
             Integer accumulatedStudySeconds,
             StudyTimerSessionStatus status
     ) {
+        this(id, memberId, courseId, lessonId, startedAt, endedAt, accumulatedStudySeconds, status, null);
+    }
+
+    public StudyTimerSession(
+            Long id,
+            Long memberId,
+            Long courseId,
+            Long lessonId,
+            OffsetDateTime startedAt,
+            OffsetDateTime endedAt,
+            Integer accumulatedStudySeconds,
+            StudyTimerSessionStatus status,
+            OffsetDateTime pausedAt
+    ) {
         validate(memberId, startedAt, accumulatedStudySeconds, status);
         this.id = id;
         this.memberId = memberId;
@@ -36,6 +51,7 @@ public class StudyTimerSession {
         this.endedAt = endedAt;
         this.accumulatedStudySeconds = accumulatedStudySeconds;
         this.status = status;
+        this.pausedAt = pausedAt;
     }
 
     public static StudyTimerSession start(Long memberId, OffsetDateTime startedAt) {
@@ -89,7 +105,47 @@ public class StudyTimerSession {
                 startedAt,
                 endedAt,
                 Math.max(accumulatedStudySeconds, (int) calculatedAccumulatedStudySeconds),
-                StudyTimerSessionStatus.PAUSED
+                StudyTimerSessionStatus.PAUSED,
+                pausedAt
+        );
+    }
+
+    public StudyTimerSession resume(OffsetDateTime resumedAt, OffsetDateTime serverNow) {
+        if (status != StudyTimerSessionStatus.PAUSED) {
+            throw new BusinessException(ErrorCode.STUDY_TIMER_SESSION_NOT_PAUSED);
+        }
+        if (pausedAt == null) {
+            throw new BusinessException(ErrorCode.STUDY_TIMER_SESSION_INVALID);
+        }
+        if (resumedAt == null) {
+            throw new BusinessException(ErrorCode.STUDY_TIMER_RESUMED_AT_REQUIRED);
+        }
+        if (serverNow == null) {
+            throw new BusinessException(ErrorCode.STUDY_TIMER_SESSION_INVALID);
+        }
+        if (resumedAt.toInstant().isAfter(serverNow.toInstant())) {
+            throw new BusinessException(ErrorCode.STUDY_TIMER_RESUMED_AT_IN_FUTURE);
+        }
+        if (resumedAt.toInstant().isBefore(pausedAt.toInstant())) {
+            throw new BusinessException(ErrorCode.STUDY_TIMER_RESUMED_AT_BEFORE_PAUSED_AT);
+        }
+
+        // 일시정지 구간(pausedAt~resumedAt)을 startedAt에 더해서 밀어내면,
+        // 이후 heartbeat/end의 Duration.between(startedAt, 측정시각) 계산에서
+        // 정지 시간이 자동으로 제외된다.
+        Duration pausedDuration = Duration.between(pausedAt.toInstant(), resumedAt.toInstant());
+        OffsetDateTime adjustedStartedAt = startedAt.plus(pausedDuration);
+
+        return new StudyTimerSession(
+                id,
+                memberId,
+                courseId,
+                lessonId,
+                adjustedStartedAt,
+                endedAt,
+                accumulatedStudySeconds,
+                StudyTimerSessionStatus.RUNNING,
+                null
         );
     }
 
@@ -209,5 +265,9 @@ public class StudyTimerSession {
 
     public StudyTimerSessionStatus status() {
         return status;
+    }
+
+    public OffsetDateTime pausedAt() {
+        return pausedAt;
     }
 }

@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.Month;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -27,7 +28,7 @@ public class GetLessonGrassService implements GetLessonGrassUseCase {
     private final Clock clock;
 
     @Override
-    @Cacheable(cacheNames = "grassLessons", key = "#query.memberId() + ':' + T(java.time.LocalDate).now(@clock)")
+    @Cacheable(cacheNames = "grassLessons:v2", key = "#query.memberId() + ':' + T(java.time.LocalDate).now(@clock)")
     public List<LessonGrassView> handle(GetLessonGrassQuery query) {
         LocalDate today = LocalDate.now(clock);
         LocalDate startDate = LocalDate.of(today.getYear(), Month.JANUARY, 1);
@@ -56,6 +57,6 @@ public class GetLessonGrassService implements GetLessonGrassUseCase {
                             date.isAfter(today)
                     );
                 })
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 }

@@ -54,6 +54,7 @@ jobs:
             REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
             S3_BUCKET=${{ secrets.S3_BUCKET }}
             MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
+            TOSS_SECRET_KEY=${{ secrets.TOSS_SECRET_KEY }}
             ENVEOF
 
             cd ~/hard-click

@@ -81,4 +81,9 @@ public class DailyStudyStatsJpaEntity {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
+
+    public void updateStudySeconds(Integer studySeconds, LocalDateTime updatedAt) {
+        this.studySeconds = studySeconds;
+        this.updatedAt = updatedAt;
+    }
 }

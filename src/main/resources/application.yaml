@@ -62,6 +62,11 @@ aws:
     presigned-url:
       video-minutes: ${S3_VIDEO_PRESIGNED_URL_MINUTES:10}
 
+toss:
+  payments:
+    base-url: ${TOSS_API_BASE_URL:https://api.tosspayments.com}
+    secret-key: ${TOSS_SECRET_KEY}
+
 server:
   port: 8080
   tomcat:

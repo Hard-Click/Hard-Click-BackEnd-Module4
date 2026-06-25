@@ -32,14 +32,16 @@ class PauseStudyTimerSessionServiceTest {
 
     private MemberLockPort memberLockPort;
     private StudyTimerSessionRepository repository;
+    private StudyTimerSessionMetricRecorder metricRecorder;
     private PauseStudyTimerSessionService service;
 
     @BeforeEach
     void setUp() {
         memberLockPort = mock(MemberLockPort.class);
         repository = mock(StudyTimerSessionRepository.class);
+        metricRecorder = mock(StudyTimerSessionMetricRecorder.class);
         Clock clock = Clock.fixed(Instant.parse("2026-05-11T06:05:00Z"), ZoneId.of("Asia/Seoul"));
-        service = new PauseStudyTimerSessionService(memberLockPort, repository, clock);
+        service = new PauseStudyTimerSessionService(memberLockPort, repository, metricRecorder, clock);
     }
 
     @Test
@@ -86,6 +88,36 @@ class PauseStudyTimerSessionServiceTest {
         assertThat(result.status()).isEqualTo("PAUSED");
         assertThat(result.accumulatedStudySeconds()).isEqualTo(200);
         assertThat(result.pausedAt()).isEqualTo(pausedAt);
+        verify(metricRecorder).recordSuccess("pause");
+    }
+
+    @Test
+    void doesNotRecordSuccessWhenSaveFailsWithNonBusinessException() {
+        // 회귀 테스트: errorCode = null이 save() 호출 전에 설정되면, save가 BusinessException이
+        // 아닌 예외(예: DataAccessException)로 실패해도 catch(BusinessException)에 안 걸려서
+        // 실패가 성공으로 집계되는 버그가 있었다. 이걸 잡는다.
+        OffsetDateTime startedAt = OffsetDateTime.parse("2026-05-11T15:00:00+09:00");
+        OffsetDateTime pausedAt = OffsetDateTime.parse("2026-05-11T15:03:20+09:00");
+        StudyTimerSession runningSession = new StudyTimerSession(
+                55L,
+                1L,
+                null,
+                null,
+                startedAt,
+                null,
+                120,
+                StudyTimerSessionStatus.RUNNING
+        );
+
+        when(repository.findById(55L)).thenReturn(Optional.of(runningSession));
+        when(repository.save(any(StudyTimerSession.class))).thenThrow(new RuntimeException("db down"));
+
+        assertThatThrownBy(() -> service.handle(new PauseStudyTimerSessionCommand(1L, 55L, pausedAt)))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("db down");
+
+        verify(metricRecorder, never()).recordSuccess(any());
+        verify(metricRecorder).recordFailure("pause", "UNKNOWN");
     }
 
     @Test
@@ -114,6 +146,7 @@ class PauseStudyTimerSessionServiceTest {
         assertThat(result.status()).isEqualTo("PAUSED");
         assertThat(result.accumulatedStudySeconds()).isEqualTo(200);
         assertThat(result.pausedAt()).isEqualTo(pausedAt);
+        verify(metricRecorder).recordSuccess("pause");
     }
 
     @Test
@@ -186,6 +219,7 @@ class PauseStudyTimerSessionServiceTest {
         verify(memberLockPort).lock(1L);
         verify(repository).findById(55L);
         verify(repository, never()).save(any());
+        verify(metricRecorder).recordFailure("pause", "STUDY_TIMER_SESSION_NOT_RUNNING");
     }
 
     @Test

@@ -1,0 +1,29 @@
+package com.wanted.backend.domain.order.infrastructure.course;
+
+import com.wanted.backend.domain.order.application.port.OrderCourseQueryPort;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Component
+@RequiredArgsConstructor
+public class OrderCourseQueryAdapter implements OrderCourseQueryPort {
+
+    private final OrderCourseRefRepository courseRepository;
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CourseInfo> findAllByIds(List<Long> courseIds) {
+        if (courseIds.isEmpty()) {
+            return List.of();
+        }
+        return courseRepository.findByIdIn(courseIds).stream()
+                .map(c -> new CourseInfo(
+                        c.getId(),
+                        c.getTitle(),
+                        c.getPrice() != null ? c.getPrice() : 0))
+                .toList();
+    }
+}

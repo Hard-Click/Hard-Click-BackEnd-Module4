@@ -7,6 +7,12 @@ import java.util.List;
 
 public interface DailyStudyStatsRepository {
 
+    DailyStudyStat upsertStudySeconds(
+            Long memberId,
+            LocalDate studyDate,
+            Integer additionalStudySeconds
+    );
+
     List<DailyStudyStat> findByMemberIdAndDateBetween(
             Long memberId,
             LocalDate startDate,
