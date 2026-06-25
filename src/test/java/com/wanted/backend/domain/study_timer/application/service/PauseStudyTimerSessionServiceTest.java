@@ -32,14 +32,16 @@ class PauseStudyTimerSessionServiceTest {
 
     private MemberLockPort memberLockPort;
     private StudyTimerSessionRepository repository;
+    private StudyTimerSessionMetricRecorder metricRecorder;
     private PauseStudyTimerSessionService service;
 
     @BeforeEach
     void setUp() {
         memberLockPort = mock(MemberLockPort.class);
         repository = mock(StudyTimerSessionRepository.class);
+        metricRecorder = mock(StudyTimerSessionMetricRecorder.class);
         Clock clock = Clock.fixed(Instant.parse("2026-05-11T06:05:00Z"), ZoneId.of("Asia/Seoul"));
-        service = new PauseStudyTimerSessionService(memberLockPort, repository, clock);
+        service = new PauseStudyTimerSessionService(memberLockPort, repository, metricRecorder, clock);
     }
 
     @Test
@@ -86,6 +88,7 @@ class PauseStudyTimerSessionServiceTest {
         assertThat(result.status()).isEqualTo("PAUSED");
         assertThat(result.accumulatedStudySeconds()).isEqualTo(200);
         assertThat(result.pausedAt()).isEqualTo(pausedAt);
+        verify(metricRecorder).recordSuccess("pause");
     }
 
     @Test
@@ -114,6 +117,7 @@ class PauseStudyTimerSessionServiceTest {
         assertThat(result.status()).isEqualTo("PAUSED");
         assertThat(result.accumulatedStudySeconds()).isEqualTo(200);
         assertThat(result.pausedAt()).isEqualTo(pausedAt);
+        verify(metricRecorder).recordSuccess("pause");
     }
 
     @Test
@@ -186,6 +190,7 @@ class PauseStudyTimerSessionServiceTest {
         verify(memberLockPort).lock(1L);
         verify(repository).findById(55L);
         verify(repository, never()).save(any());
+        verify(metricRecorder).recordFailure("pause", "STUDY_TIMER_SESSION_NOT_RUNNING");
     }
 
     @Test

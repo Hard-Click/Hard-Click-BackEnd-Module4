@@ -23,48 +23,68 @@ import java.time.OffsetDateTime;
 @Transactional(readOnly = true)
 public class EndStudyTimerSessionService implements EndStudyTimerSessionUseCase {
 
+    private static final String ACTION = "end";
+
     private final MemberLockPort memberLockPort;
     private final StudyTimerSessionRepository studyTimerSessionRepository;
     private final DailyStudyStatsRepository dailyStudyStatsRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final StudyTimerSessionMetricRecorder metricRecorder;
     private final Clock clock;
 
     @Override
     @Transactional
     public StudyTimerSessionEndView handle(EndStudyTimerSessionCommand command) {
-        OffsetDateTime serverNow = OffsetDateTime.now(clock);
-        validateEndedAt(command.endedAt(), serverNow);
+        String errorCode = "UNKNOWN";
+        try {
+            OffsetDateTime serverNow = OffsetDateTime.now(clock);
+            validateEndedAt(command.endedAt(), serverNow);
 
-        memberLockPort.lock(command.memberId());
+            memberLockPort.lock(command.memberId());
 
-        StudyTimerSession session = studyTimerSessionRepository.findById(command.sessionId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_TIMER_SESSION_NOT_FOUND));
+            StudyTimerSession session = studyTimerSessionRepository.findById(command.sessionId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_TIMER_SESSION_NOT_FOUND));
 
-        if (!session.isOwnedBy(command.memberId())) {
-            throw new BusinessException(ErrorCode.FORBIDDEN);
-        }
+            if (!session.isOwnedBy(command.memberId())) {
+                throw new BusinessException(ErrorCode.FORBIDDEN);
+            }
 
-        StudyTimerSession endedSession = session.end(command.endedAt(), serverNow);
-        int deltaStudySeconds = calculateDeltaStudySeconds(session, endedSession);
-        LocalDate studyDate = command.endedAt().atZoneSameInstant(clock.getZone()).toLocalDate();
+            StudyTimerSession endedSession = session.end(command.endedAt(), serverNow);
+            int deltaStudySeconds = calculateDeltaStudySeconds(session, endedSession);
+            LocalDate studyDate = command.endedAt().atZoneSameInstant(clock.getZone()).toLocalDate();
 
-        StudyTimerSession saved = studyTimerSessionRepository.save(endedSession);
-        if (deltaStudySeconds > 0) {
-            dailyStudyStatsRepository.upsertStudySeconds(command.memberId(), studyDate, deltaStudySeconds);
-            eventPublisher.publishEvent(StudySessionEndedEvent.of(
-                    command.memberId(),
-                    studyDate,
-                    deltaStudySeconds,
+            StudyTimerSession saved = studyTimerSessionRepository.save(endedSession);
+            if (deltaStudySeconds > 0) {
+                dailyStudyStatsRepository.upsertStudySeconds(command.memberId(), studyDate, deltaStudySeconds);
+                eventPublisher.publishEvent(StudySessionEndedEvent.of(
+                        command.memberId(),
+                        studyDate,
+                        deltaStudySeconds,
+                        command.endedAt()
+                ));
+            }
+
+            errorCode = null;
+            return new StudyTimerSessionEndView(
+                    saved.id(),
+                    saved.accumulatedStudySeconds(),
+                    saved.status().name(),
                     command.endedAt()
-            ));
+            );
+        } catch (BusinessException e) {
+            errorCode = e.getErrorCode().name();
+            throw e;
+        } finally {
+            recordMetric(errorCode);
         }
+    }
 
-        return new StudyTimerSessionEndView(
-                saved.id(),
-                saved.accumulatedStudySeconds(),
-                saved.status().name(),
-                command.endedAt()
-        );
+    private void recordMetric(String errorCode) {
+        if (errorCode == null) {
+            metricRecorder.recordSuccess(ACTION);
+        } else {
+            metricRecorder.recordFailure(ACTION, errorCode);
+        }
     }
 
     private void validateEndedAt(OffsetDateTime endedAt, OffsetDateTime serverNow) {

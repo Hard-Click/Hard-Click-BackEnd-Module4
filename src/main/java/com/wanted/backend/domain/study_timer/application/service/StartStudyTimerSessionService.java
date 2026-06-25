@@ -16,27 +16,47 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class StartStudyTimerSessionService implements StartStudyTimerSessionUseCase {
 
+    private static final String ACTION = "start";
+
     private final MemberLockPort memberLockPort;
     private final StudyTimerSessionRepository studyTimerSessionRepository;
+    private final StudyTimerSessionMetricRecorder metricRecorder;
 
     @Override
     @Transactional
     public StudyTimerSessionStartView handle(StartStudyTimerSessionCommand command) {
-        memberLockPort.lock(command.memberId());
+        String errorCode = "UNKNOWN";
+        try {
+            memberLockPort.lock(command.memberId());
 
-        if (studyTimerSessionRepository.existsActiveByMemberId(command.memberId())) {
-            throw new BusinessException(ErrorCode.STUDY_TIMER_SESSION_ALREADY_RUNNING);
+            if (studyTimerSessionRepository.existsActiveByMemberId(command.memberId())) {
+                throw new BusinessException(ErrorCode.STUDY_TIMER_SESSION_ALREADY_RUNNING);
+            }
+
+            StudyTimerSession saved = studyTimerSessionRepository.save(StudyTimerSession.start(
+                    command.memberId(),
+                    command.startedAt()
+            ));
+
+            errorCode = null;
+            return new StudyTimerSessionStartView(
+                    saved.id(),
+                    saved.status().name(),
+                    saved.startedAt()
+            );
+        } catch (BusinessException e) {
+            errorCode = e.getErrorCode().name();
+            throw e;
+        } finally {
+            recordMetric(errorCode);
         }
+    }
 
-        StudyTimerSession saved = studyTimerSessionRepository.save(StudyTimerSession.start(
-                command.memberId(),
-                command.startedAt()
-        ));
-
-        return new StudyTimerSessionStartView(
-                saved.id(),
-                saved.status().name(),
-                saved.startedAt()
-        );
+    private void recordMetric(String errorCode) {
+        if (errorCode == null) {
+            metricRecorder.recordSuccess(ACTION);
+        } else {
+            metricRecorder.recordFailure(ACTION, errorCode);
+        }
     }
 }

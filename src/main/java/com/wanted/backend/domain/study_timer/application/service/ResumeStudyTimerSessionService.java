@@ -19,33 +19,53 @@ import java.time.OffsetDateTime;
 @Transactional(readOnly = true)
 public class ResumeStudyTimerSessionService implements ResumeStudyTimerSessionUseCase {
 
+    private static final String ACTION = "resume";
+
     private final MemberLockPort memberLockPort;
     private final StudyTimerSessionRepository studyTimerSessionRepository;
+    private final StudyTimerSessionMetricRecorder metricRecorder;
     private final Clock clock;
 
     @Override
     @Transactional
     public StudyTimerSessionResumeView handle(ResumeStudyTimerSessionCommand command) {
-        OffsetDateTime serverNow = OffsetDateTime.now(clock);
-        validateResumedAt(command.resumedAt(), serverNow);
+        String errorCode = "UNKNOWN";
+        try {
+            OffsetDateTime serverNow = OffsetDateTime.now(clock);
+            validateResumedAt(command.resumedAt(), serverNow);
 
-        memberLockPort.lock(command.memberId());
+            memberLockPort.lock(command.memberId());
 
-        StudyTimerSession session = studyTimerSessionRepository.findById(command.sessionId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_TIMER_SESSION_NOT_FOUND));
+            StudyTimerSession session = studyTimerSessionRepository.findById(command.sessionId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_TIMER_SESSION_NOT_FOUND));
 
-        if (!session.isOwnedBy(command.memberId())) {
-            throw new BusinessException(ErrorCode.FORBIDDEN);
+            if (!session.isOwnedBy(command.memberId())) {
+                throw new BusinessException(ErrorCode.FORBIDDEN);
+            }
+
+            StudyTimerSession saved = studyTimerSessionRepository.save(session.resume(command.resumedAt(), serverNow));
+
+            errorCode = null;
+            return new StudyTimerSessionResumeView(
+                    saved.id(),
+                    saved.status().name(),
+                    saved.accumulatedStudySeconds(),
+                    command.resumedAt()
+            );
+        } catch (BusinessException e) {
+            errorCode = e.getErrorCode().name();
+            throw e;
+        } finally {
+            recordMetric(errorCode);
         }
+    }
 
-        StudyTimerSession saved = studyTimerSessionRepository.save(session.resume(command.resumedAt(), serverNow));
-
-        return new StudyTimerSessionResumeView(
-                saved.id(),
-                saved.status().name(),
-                saved.accumulatedStudySeconds(),
-                command.resumedAt()
-        );
+    private void recordMetric(String errorCode) {
+        if (errorCode == null) {
+            metricRecorder.recordSuccess(ACTION);
+        } else {
+            metricRecorder.recordFailure(ACTION, errorCode);
+        }
     }
 
     private void validateResumedAt(OffsetDateTime resumedAt, OffsetDateTime serverNow) {

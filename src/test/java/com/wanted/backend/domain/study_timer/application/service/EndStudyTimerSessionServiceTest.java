@@ -38,6 +38,7 @@ class EndStudyTimerSessionServiceTest {
     private StudyTimerSessionRepository repository;
     private DailyStudyStatsRepository dailyStudyStatsRepository;
     private ApplicationEventPublisher eventPublisher;
+    private StudyTimerSessionMetricRecorder metricRecorder;
     private EndStudyTimerSessionService service;
 
     @BeforeEach
@@ -46,12 +47,14 @@ class EndStudyTimerSessionServiceTest {
         repository = mock(StudyTimerSessionRepository.class);
         dailyStudyStatsRepository = mock(DailyStudyStatsRepository.class);
         eventPublisher = mock(ApplicationEventPublisher.class);
+        metricRecorder = mock(StudyTimerSessionMetricRecorder.class);
         Clock clock = Clock.fixed(Instant.parse("2026-05-11T06:10:00Z"), ZoneId.of("Asia/Seoul"));
         service = new EndStudyTimerSessionService(
                 memberLockPort,
                 repository,
                 dailyStudyStatsRepository,
                 eventPublisher,
+                metricRecorder,
                 clock
         );
     }
@@ -108,6 +111,7 @@ class EndStudyTimerSessionServiceTest {
         assertThat(eventCaptor.getValue().studyDate()).isEqualTo(LocalDate.parse("2026-05-11"));
         assertThat(eventCaptor.getValue().deltaStudySeconds()).isEqualTo(300);
         assertThat(eventCaptor.getValue().endedAt()).isEqualTo(endedAt);
+        verify(metricRecorder).recordSuccess("end");
     }
 
     @Test
@@ -180,6 +184,7 @@ class EndStudyTimerSessionServiceTest {
                 .hasMessage("db down");
 
         verify(eventPublisher, never()).publishEvent(any(Object.class));
+        verify(metricRecorder).recordFailure("end", "UNKNOWN");
     }
 
     @Test
@@ -258,6 +263,7 @@ class EndStudyTimerSessionServiceTest {
         verify(repository, never()).save(any());
         verify(dailyStudyStatsRepository, never()).upsertStudySeconds(any(), any(), any());
         verify(eventPublisher, never()).publishEvent(any(Object.class));
+        verify(metricRecorder).recordFailure("end", "STUDY_TIMER_SESSION_NOT_RUNNING");
     }
 
     @Test
