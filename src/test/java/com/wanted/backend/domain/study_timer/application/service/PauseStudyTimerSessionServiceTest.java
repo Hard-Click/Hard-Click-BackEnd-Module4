@@ -88,7 +88,7 @@ class PauseStudyTimerSessionServiceTest {
         assertThat(result.status()).isEqualTo("PAUSED");
         assertThat(result.accumulatedStudySeconds()).isEqualTo(200);
         assertThat(result.pausedAt()).isEqualTo(pausedAt);
-        verify(metricRecorder).recordSuccess("pause");
+        verify(metricRecorder).recordSuccess(StudyTimerAction.PAUSE);
     }
 
     @Test
@@ -117,7 +117,7 @@ class PauseStudyTimerSessionServiceTest {
                 .hasMessage("db down");
 
         verify(metricRecorder, never()).recordSuccess(any());
-        verify(metricRecorder).recordFailure("pause", "UNKNOWN");
+        verify(metricRecorder).recordFailure(StudyTimerAction.PAUSE, "UNKNOWN");
     }
 
     @Test
@@ -146,7 +146,7 @@ class PauseStudyTimerSessionServiceTest {
         assertThat(result.status()).isEqualTo("PAUSED");
         assertThat(result.accumulatedStudySeconds()).isEqualTo(200);
         assertThat(result.pausedAt()).isEqualTo(pausedAt);
-        verify(metricRecorder).recordSuccess("pause");
+        verify(metricRecorder).recordSuccess(StudyTimerAction.PAUSE);
     }
 
     @Test
@@ -219,7 +219,7 @@ class PauseStudyTimerSessionServiceTest {
         verify(memberLockPort).lock(1L);
         verify(repository).findById(55L);
         verify(repository, never()).save(any());
-        verify(metricRecorder).recordFailure("pause", "STUDY_TIMER_SESSION_NOT_RUNNING");
+        verify(metricRecorder).recordFailure(StudyTimerAction.PAUSE, "STUDY_TIMER_SESSION_NOT_RUNNING");
     }
 
     @Test

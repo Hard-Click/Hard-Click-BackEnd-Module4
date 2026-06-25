@@ -23,7 +23,7 @@ import java.time.OffsetDateTime;
 @Transactional(readOnly = true)
 public class EndStudyTimerSessionService implements EndStudyTimerSessionUseCase {
 
-    private static final String ACTION = "end";
+    private static final StudyTimerAction ACTION = StudyTimerAction.END;
 
     private final MemberLockPort memberLockPort;
     private final StudyTimerSessionRepository studyTimerSessionRepository;

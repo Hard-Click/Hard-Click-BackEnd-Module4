@@ -19,7 +19,7 @@ import java.time.OffsetDateTime;
 @Transactional(readOnly = true)
 public class SaveStudyTimerHeartbeatService implements SaveStudyTimerHeartbeatUseCase {
 
-    private static final String ACTION = "heartbeat";
+    private static final StudyTimerAction ACTION = StudyTimerAction.HEARTBEAT;
 
     private final MemberLockPort memberLockPort;
     private final StudyTimerSessionRepository studyTimerSessionRepository;

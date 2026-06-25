@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class StartStudyTimerSessionService implements StartStudyTimerSessionUseCase {
 
-    private static final String ACTION = "start";
+    private static final StudyTimerAction ACTION = StudyTimerAction.START;
 
     private final MemberLockPort memberLockPort;
     private final StudyTimerSessionRepository studyTimerSessionRepository;

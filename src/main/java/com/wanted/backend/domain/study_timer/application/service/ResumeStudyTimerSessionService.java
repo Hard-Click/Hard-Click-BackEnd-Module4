@@ -19,7 +19,7 @@ import java.time.OffsetDateTime;
 @Transactional(readOnly = true)
 public class ResumeStudyTimerSessionService implements ResumeStudyTimerSessionUseCase {
 
-    private static final String ACTION = "resume";
+    private static final StudyTimerAction ACTION = StudyTimerAction.RESUME;
 
     private final MemberLockPort memberLockPort;
     private final StudyTimerSessionRepository studyTimerSessionRepository;

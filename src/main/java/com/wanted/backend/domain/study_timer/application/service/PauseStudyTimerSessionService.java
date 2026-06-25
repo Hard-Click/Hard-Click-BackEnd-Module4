@@ -20,7 +20,7 @@ import java.time.OffsetDateTime;
 @Transactional(readOnly = true)
 public class PauseStudyTimerSessionService implements PauseStudyTimerSessionUseCase {
 
-    private static final String ACTION = "pause";
+    private static final StudyTimerAction ACTION = StudyTimerAction.PAUSE;
 
     private final MemberLockPort memberLockPort;
     private final StudyTimerSessionRepository studyTimerSessionRepository;
