@@ -15,19 +15,22 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class GetCourseProgressServiceTest {
 
     private CourseProgressQueryPort courseProgressQueryPort;
     private EnrollmentAccessPort enrollmentAccessPort;
+    private LearningActivityMetricRecorder metricRecorder;
     private GetCourseProgressService service;
 
     @BeforeEach
     void setUp() {
         courseProgressQueryPort = mock(CourseProgressQueryPort.class);
         enrollmentAccessPort = mock(EnrollmentAccessPort.class);
-        service = new GetCourseProgressService(courseProgressQueryPort, enrollmentAccessPort);
+        metricRecorder = mock(LearningActivityMetricRecorder.class);
+        service = new GetCourseProgressService(courseProgressQueryPort, enrollmentAccessPort, metricRecorder);
     }
 
     @Test
@@ -52,6 +55,7 @@ class GetCourseProgressServiceTest {
         assertThat(result.lessons().get(0).videoId()).isEqualTo(10L);
         assertThat(result.lessons().get(0).completed()).isTrue();
         assertThat(result.lessons().get(0).lastPositionSeconds()).isEqualTo(300);
+        verify(metricRecorder).recordSuccess(LearningActivityAction.COURSE_PROGRESS);
     }
 
     @Test
@@ -76,5 +80,7 @@ class GetCourseProgressServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.ENROLLMENT_REQUIRED);
+
+        verify(metricRecorder).recordFailure(LearningActivityAction.COURSE_PROGRESS, "ENROLLMENT_REQUIRED");
     }
 }
