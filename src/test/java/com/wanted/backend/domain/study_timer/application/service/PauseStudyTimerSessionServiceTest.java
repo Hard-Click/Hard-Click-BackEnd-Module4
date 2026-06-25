@@ -92,6 +92,35 @@ class PauseStudyTimerSessionServiceTest {
     }
 
     @Test
+    void doesNotRecordSuccessWhenSaveFailsWithNonBusinessException() {
+        // 회귀 테스트: errorCode = null이 save() 호출 전에 설정되면, save가 BusinessException이
+        // 아닌 예외(예: DataAccessException)로 실패해도 catch(BusinessException)에 안 걸려서
+        // 실패가 성공으로 집계되는 버그가 있었다. 이걸 잡는다.
+        OffsetDateTime startedAt = OffsetDateTime.parse("2026-05-11T15:00:00+09:00");
+        OffsetDateTime pausedAt = OffsetDateTime.parse("2026-05-11T15:03:20+09:00");
+        StudyTimerSession runningSession = new StudyTimerSession(
+                55L,
+                1L,
+                null,
+                null,
+                startedAt,
+                null,
+                120,
+                StudyTimerSessionStatus.RUNNING
+        );
+
+        when(repository.findById(55L)).thenReturn(Optional.of(runningSession));
+        when(repository.save(any(StudyTimerSession.class))).thenThrow(new RuntimeException("db down"));
+
+        assertThatThrownBy(() -> service.handle(new PauseStudyTimerSessionCommand(1L, 55L, pausedAt)))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("db down");
+
+        verify(metricRecorder, never()).recordSuccess(any());
+        verify(metricRecorder).recordFailure("pause", "UNKNOWN");
+    }
+
+    @Test
     void returnsExistingPausedSessionWhenPauseRequestIsRetried() {
         OffsetDateTime startedAt = OffsetDateTime.parse("2026-05-11T15:00:00+09:00");
         OffsetDateTime pausedAt = OffsetDateTime.parse("2026-05-11T15:03:20+09:00");

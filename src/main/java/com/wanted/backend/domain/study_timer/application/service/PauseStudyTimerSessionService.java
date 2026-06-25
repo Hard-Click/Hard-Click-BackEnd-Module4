@@ -44,13 +44,14 @@ public class PauseStudyTimerSessionService implements PauseStudyTimerSessionUseC
                 throw new BusinessException(ErrorCode.FORBIDDEN);
             }
 
-            errorCode = null;
             if (session.status() == StudyTimerSessionStatus.PAUSED) {
+                errorCode = null;
                 return toView(session, command.pausedAt());
             }
 
             StudyTimerSession saved = studyTimerSessionRepository.save(session.pause(command.pausedAt(), serverNow));
 
+            errorCode = null;
             return toView(saved, command.pausedAt());
         } catch (BusinessException e) {
             errorCode = e.getErrorCode().name();

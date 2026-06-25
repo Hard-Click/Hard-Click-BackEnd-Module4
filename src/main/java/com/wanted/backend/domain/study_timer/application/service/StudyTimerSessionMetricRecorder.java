@@ -28,7 +28,7 @@ public class StudyTimerSessionMetricRecorder {
         try {
             Counter.builder("study_timer.session.result")
                     .tag("action", action)
-                    .tag("status", errorCode.equals(SUCCESS_ERROR_CODE) ? "SUCCESS" : "FAILED")
+                    .tag("status", SUCCESS_ERROR_CODE.equals(errorCode) ? "SUCCESS" : "FAILED")
                     .tag("errorCode", errorCode)
                     .register(meterRegistry)
                     .increment();
