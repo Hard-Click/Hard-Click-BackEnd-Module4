@@ -32,14 +32,16 @@ class ResumeStudyTimerSessionServiceTest {
 
     private MemberLockPort memberLockPort;
     private StudyTimerSessionRepository repository;
+    private StudyTimerSessionMetricRecorder metricRecorder;
     private ResumeStudyTimerSessionService service;
 
     @BeforeEach
     void setUp() {
         memberLockPort = mock(MemberLockPort.class);
         repository = mock(StudyTimerSessionRepository.class);
+        metricRecorder = mock(StudyTimerSessionMetricRecorder.class);
         Clock clock = Clock.fixed(Instant.parse("2026-05-11T06:05:00Z"), ZoneId.of("Asia/Seoul"));
-        service = new ResumeStudyTimerSessionService(memberLockPort, repository, clock);
+        service = new ResumeStudyTimerSessionService(memberLockPort, repository, metricRecorder, clock);
     }
 
     @Test
@@ -88,6 +90,7 @@ class ResumeStudyTimerSessionServiceTest {
         assertThat(result.status()).isEqualTo("RUNNING");
         assertThat(result.accumulatedStudySeconds()).isEqualTo(200);
         assertThat(result.resumedAt()).isEqualTo(resumedAt);
+        verify(metricRecorder).recordSuccess("resume");
     }
 
     @Test
@@ -161,6 +164,7 @@ class ResumeStudyTimerSessionServiceTest {
         verify(memberLockPort).lock(1L);
         verify(repository).findById(55L);
         verify(repository, never()).save(any());
+        verify(metricRecorder).recordFailure("resume", "STUDY_TIMER_SESSION_NOT_PAUSED");
     }
 
     @Test

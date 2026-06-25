@@ -20,32 +20,53 @@ import java.time.OffsetDateTime;
 @Transactional(readOnly = true)
 public class PauseStudyTimerSessionService implements PauseStudyTimerSessionUseCase {
 
+    private static final String ACTION = "pause";
+
     private final MemberLockPort memberLockPort;
     private final StudyTimerSessionRepository studyTimerSessionRepository;
+    private final StudyTimerSessionMetricRecorder metricRecorder;
     private final Clock clock;
 
     @Override
     @Transactional
     public StudyTimerSessionPauseView handle(PauseStudyTimerSessionCommand command) {
-        OffsetDateTime serverNow = OffsetDateTime.now(clock);
-        validatePausedAt(command.pausedAt(), serverNow);
+        String errorCode = "UNKNOWN";
+        try {
+            OffsetDateTime serverNow = OffsetDateTime.now(clock);
+            validatePausedAt(command.pausedAt(), serverNow);
 
-        memberLockPort.lock(command.memberId());
+            memberLockPort.lock(command.memberId());
 
-        StudyTimerSession session = studyTimerSessionRepository.findById(command.sessionId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_TIMER_SESSION_NOT_FOUND));
+            StudyTimerSession session = studyTimerSessionRepository.findById(command.sessionId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_TIMER_SESSION_NOT_FOUND));
 
-        if (!session.isOwnedBy(command.memberId())) {
-            throw new BusinessException(ErrorCode.FORBIDDEN);
+            if (!session.isOwnedBy(command.memberId())) {
+                throw new BusinessException(ErrorCode.FORBIDDEN);
+            }
+
+            if (session.status() == StudyTimerSessionStatus.PAUSED) {
+                errorCode = null;
+                return toView(session, command.pausedAt());
+            }
+
+            StudyTimerSession saved = studyTimerSessionRepository.save(session.pause(command.pausedAt(), serverNow));
+
+            errorCode = null;
+            return toView(saved, command.pausedAt());
+        } catch (BusinessException e) {
+            errorCode = e.getErrorCode().name();
+            throw e;
+        } finally {
+            recordMetric(errorCode);
         }
+    }
 
-        if (session.status() == StudyTimerSessionStatus.PAUSED) {
-            return toView(session, command.pausedAt());
+    private void recordMetric(String errorCode) {
+        if (errorCode == null) {
+            metricRecorder.recordSuccess(ACTION);
+        } else {
+            metricRecorder.recordFailure(ACTION, errorCode);
         }
-
-        StudyTimerSession saved = studyTimerSessionRepository.save(session.pause(command.pausedAt(), serverNow));
-
-        return toView(saved, command.pausedAt());
     }
 
     private StudyTimerSessionPauseView toView(StudyTimerSession session, OffsetDateTime pausedAt) {
