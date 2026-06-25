@@ -225,6 +225,46 @@ class StudyTimerSessionRepositoryAdapterTest {
     }
 
     @Test
+    void updatesExistingSessionWhenResumeIsSaved() {
+        OffsetDateTime startedAt = OffsetDateTime.parse("2026-05-11T15:00:00+09:00");
+        OffsetDateTime pausedAt = OffsetDateTime.parse("2026-05-11T15:03:20+09:00");
+        StudyTimerSessionJpaEntity entity = new StudyTimerSessionJpaEntity(
+                1L,
+                null,
+                null,
+                startedAt.toLocalDateTime(),
+                null,
+                200,
+                StudyTimerSessionStatus.PAUSED,
+                startedAt.toLocalDateTime(),
+                startedAt.toLocalDateTime()
+        );
+        ReflectionTestUtils.setField(entity, "id", 55L);
+        ReflectionTestUtils.setField(entity, "pausedAt", pausedAt.toLocalDateTime());
+
+        when(repository.findById(55L)).thenReturn(Optional.of(entity));
+        when(repository.saveAndFlush(entity)).thenReturn(entity);
+
+        OffsetDateTime adjustedStartedAt = startedAt.plusSeconds(50);
+        StudyTimerSession saved = adapter.save(new StudyTimerSession(
+                55L,
+                1L,
+                null,
+                null,
+                adjustedStartedAt,
+                null,
+                200,
+                StudyTimerSessionStatus.RUNNING,
+                null
+        ));
+
+        assertThat(saved.id()).isEqualTo(55L);
+        assertThat(saved.status()).isEqualTo(StudyTimerSessionStatus.RUNNING);
+        assertThat(saved.startedAt()).isEqualTo(adjustedStartedAt);
+        assertThat(saved.pausedAt()).isNull();
+    }
+
+    @Test
     void updatesExistingSessionWhenEndIsSaved() {
         OffsetDateTime startedAt = OffsetDateTime.parse("2026-05-11T15:00:00+09:00");
         OffsetDateTime endedAt = OffsetDateTime.parse("2026-05-11T15:08:20+09:00");

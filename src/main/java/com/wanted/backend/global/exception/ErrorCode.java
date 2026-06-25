@@ -166,6 +166,10 @@ import org.springframework.http.HttpStatus;
     STUDY_TIMER_PAUSED_AT_REQUIRED(HttpStatus.BAD_REQUEST, "ST021", "세션 일시정지 시각은 필수입니다."),
     STUDY_TIMER_PAUSED_AT_IN_FUTURE(HttpStatus.BAD_REQUEST, "ST022", "세션 일시정지 시각은 현재 시각 이후일 수 없습니다."),
     STUDY_TIMER_PAUSED_AT_BEFORE_STARTED_AT(HttpStatus.BAD_REQUEST, "ST023", "세션 일시정지 시각은 세션 시작 시각 이후여야 합니다."),
+    STUDY_TIMER_SESSION_NOT_PAUSED(HttpStatus.CONFLICT, "ST024", "일시정지된 순공시간 세션만 재개할 수 있습니다."),
+    STUDY_TIMER_RESUMED_AT_REQUIRED(HttpStatus.BAD_REQUEST, "ST025", "세션 재개 시각은 필수입니다."),
+    STUDY_TIMER_RESUMED_AT_IN_FUTURE(HttpStatus.BAD_REQUEST, "ST026", "세션 재개 시각은 현재 시각 이후일 수 없습니다."),
+    STUDY_TIMER_RESUMED_AT_BEFORE_PAUSED_AT(HttpStatus.BAD_REQUEST, "ST027", "세션 재개 시각은 세션 일시정지 시각 이후여야 합니다."),
     // 신고 예외
     REPORT_ALREADY_EXISTS(HttpStatus.CONFLICT, "RP001", "이미 신고한 대상입니다."),
     REPORT_TARGET_NOT_FOUND(HttpStatus.NOT_FOUND, "RP002", "존재하지 않거나 이미 삭제된 대상입니다."),
