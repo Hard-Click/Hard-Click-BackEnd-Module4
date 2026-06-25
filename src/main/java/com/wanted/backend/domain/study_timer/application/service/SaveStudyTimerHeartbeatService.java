@@ -19,34 +19,54 @@ import java.time.OffsetDateTime;
 @Transactional(readOnly = true)
 public class SaveStudyTimerHeartbeatService implements SaveStudyTimerHeartbeatUseCase {
 
+    private static final String ACTION = "heartbeat";
+
     private final MemberLockPort memberLockPort;
     private final StudyTimerSessionRepository studyTimerSessionRepository;
+    private final StudyTimerSessionMetricRecorder metricRecorder;
     private final Clock clock;
 
     @Override
     @Transactional
     public StudyTimerHeartbeatView handle(SaveStudyTimerHeartbeatCommand command) {
-        OffsetDateTime serverNow = OffsetDateTime.now(clock);
-        validateHeartbeatAt(command.heartbeatAt(), serverNow);
+        String errorCode = "UNKNOWN";
+        try {
+            OffsetDateTime serverNow = OffsetDateTime.now(clock);
+            validateHeartbeatAt(command.heartbeatAt(), serverNow);
 
-        memberLockPort.lock(command.memberId());
+            memberLockPort.lock(command.memberId());
 
-        StudyTimerSession session = studyTimerSessionRepository.findById(command.sessionId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_TIMER_SESSION_NOT_FOUND));
+            StudyTimerSession session = studyTimerSessionRepository.findById(command.sessionId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_TIMER_SESSION_NOT_FOUND));
 
-        if (!session.isOwnedBy(command.memberId())) {
-            throw new BusinessException(ErrorCode.FORBIDDEN);
+            if (!session.isOwnedBy(command.memberId())) {
+                throw new BusinessException(ErrorCode.FORBIDDEN);
+            }
+
+            StudyTimerSession saved = studyTimerSessionRepository.save(session.heartbeat(command.heartbeatAt(), serverNow));
+            Integer accumulatedStudySeconds = saved.accumulatedStudySeconds();
+
+            errorCode = null;
+            return new StudyTimerHeartbeatView(
+                    saved.id(),
+                    saved.status().name(),
+                    accumulatedStudySeconds,
+                    command.heartbeatAt()
+            );
+        } catch (BusinessException e) {
+            errorCode = e.getErrorCode().name();
+            throw e;
+        } finally {
+            recordMetric(errorCode);
         }
+    }
 
-        StudyTimerSession saved = studyTimerSessionRepository.save(session.heartbeat(command.heartbeatAt(), serverNow));
-        Integer accumulatedStudySeconds = saved.accumulatedStudySeconds();
-
-        return new StudyTimerHeartbeatView(
-                saved.id(),
-                saved.status().name(),
-                accumulatedStudySeconds,
-                command.heartbeatAt()
-        );
+    private void recordMetric(String errorCode) {
+        if (errorCode == null) {
+            metricRecorder.recordSuccess(ACTION);
+        } else {
+            metricRecorder.recordFailure(ACTION, errorCode);
+        }
     }
 
     private void validateHeartbeatAt(OffsetDateTime heartbeatAt, OffsetDateTime serverNow) {

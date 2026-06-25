@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.order.infrastructure.persistence;
 
+import com.wanted.backend.domain.order.domain.model.OrderStatus;
 import com.wanted.backend.domain.order.domain.model.OrderType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -70,6 +71,9 @@ public class OrderEntity {
     @Column(name = "paid_at")
     private LocalDateTime paidAt;
 
+    @Column(name = "payment_key")
+    private String paymentKey;
+
     public OrderEntity(String orderNo, Long memberId, OrderType type, String status,
                        Integer totalAmount, Integer finalAmount, LocalDateTime orderedAt, LocalDateTime paidAt) {
         this.orderNo = orderNo;
@@ -80,5 +84,15 @@ public class OrderEntity {
         this.finalAmount = finalAmount;
         this.orderedAt = orderedAt;
         this.paidAt = paidAt;
+    }
+
+    public void markPaid(LocalDateTime paidAt, String paymentKey) {
+        this.status = OrderStatus.PAID.name();
+        this.paidAt = paidAt;
+        this.paymentKey = paymentKey;
+    }
+
+    public void updateStatus(OrderStatus status) {
+        this.status = status.name();
     }
 }

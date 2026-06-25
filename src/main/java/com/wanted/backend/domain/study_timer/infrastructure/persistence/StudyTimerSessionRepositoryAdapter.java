@@ -77,9 +77,11 @@ public class StudyTimerSessionRepositoryAdapter implements StudyTimerSessionRepo
         entity.updateSession(
                 session.courseId(),
                 session.lessonId(),
+                toLocalDateTime(session.startedAt()),
                 toLocalDateTime(session.endedAt()),
                 session.accumulatedStudySeconds(),
                 session.status(),
+                toLocalDateTime(session.pausedAt()),
                 now
         );
 
@@ -95,7 +97,8 @@ public class StudyTimerSessionRepositoryAdapter implements StudyTimerSessionRepo
                 toOffsetDateTime(entity.getStartedAt()),
                 toOffsetDateTime(entity.getEndedAt()),
                 entity.getAccumulatedStudySeconds(),
-                entity.getStatus()
+                entity.getStatus(),
+                toOffsetDateTime(entity.getPausedAt())
         );
     }
 

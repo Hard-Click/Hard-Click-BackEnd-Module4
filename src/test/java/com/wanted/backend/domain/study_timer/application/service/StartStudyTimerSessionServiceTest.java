@@ -28,13 +28,15 @@ class StartStudyTimerSessionServiceTest {
 
     private MemberLockPort memberLockPort;
     private StudyTimerSessionRepository repository;
+    private StudyTimerSessionMetricRecorder metricRecorder;
     private StartStudyTimerSessionService service;
 
     @BeforeEach
     void setUp() {
         memberLockPort = mock(MemberLockPort.class);
         repository = mock(StudyTimerSessionRepository.class);
-        service = new StartStudyTimerSessionService(memberLockPort, repository);
+        metricRecorder = mock(StudyTimerSessionMetricRecorder.class);
+        service = new StartStudyTimerSessionService(memberLockPort, repository, metricRecorder);
     }
 
     @Test
@@ -69,6 +71,7 @@ class StartStudyTimerSessionServiceTest {
         assertThat(result.sessionId()).isEqualTo(55L);
         assertThat(result.status()).isEqualTo("RUNNING");
         assertThat(result.startedAt()).isEqualTo(startedAt);
+        verify(metricRecorder).recordSuccess("start");
     }
 
     @Test
@@ -86,5 +89,6 @@ class StartStudyTimerSessionServiceTest {
         verify(memberLockPort).lock(1L);
         verify(repository).existsActiveByMemberId(1L);
         verify(repository, never()).save(any());
+        verify(metricRecorder).recordFailure("start", "STUDY_TIMER_SESSION_ALREADY_RUNNING");
     }
 }

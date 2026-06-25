@@ -8,8 +8,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -26,7 +28,7 @@ public class MonthlyGrassViewMapper {
     ) {
         List<MonthlyGrassDayView> days = period.startDate().datesUntil(period.endDate().plusDays(1))
                 .map(date -> toDayView(date, watchedLessonCountByDate.getOrDefault(date, 0), date.isAfter(today)))
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
 
         return new MonthlyGrassView(year, month, days);
     }
