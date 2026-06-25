@@ -44,6 +44,38 @@ class StudyTimerSessionMetricRecorderTest {
     }
 
     @Test
+    void recordResultRecordsSuccessWhenErrorCodeIsNull() {
+        SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+        StudyTimerSessionMetricRecorder recorder = new StudyTimerSessionMetricRecorder(meterRegistry);
+
+        recorder.recordResult(StudyTimerAction.RESUME, null);
+
+        Counter counter = meterRegistry.find("study_timer.session.result")
+                .tag("action", "resume")
+                .tag("status", "SUCCESS")
+                .tag("errorCode", "NONE")
+                .counter();
+        assertThat(counter).isNotNull();
+        assertThat(counter.count()).isEqualTo(1.0);
+    }
+
+    @Test
+    void recordResultRecordsFailureWhenErrorCodeIsPresent() {
+        SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+        StudyTimerSessionMetricRecorder recorder = new StudyTimerSessionMetricRecorder(meterRegistry);
+
+        recorder.recordResult(StudyTimerAction.RESUME, "STUDY_TIMER_SESSION_NOT_PAUSED");
+
+        Counter counter = meterRegistry.find("study_timer.session.result")
+                .tag("action", "resume")
+                .tag("status", "FAILED")
+                .tag("errorCode", "STUDY_TIMER_SESSION_NOT_PAUSED")
+                .counter();
+        assertThat(counter).isNotNull();
+        assertThat(counter.count()).isEqualTo(1.0);
+    }
+
+    @Test
     void swallowsExceptionWhenMeterRegistryFailsSoCallerNeverSeesIt() {
         // record()의 핵심 책임: metric 기록 실패가 세션 저장 트랜잭션에 전파되면 안 된다.
         MeterRegistry failingRegistry = mock(MeterRegistry.class, invocation -> {

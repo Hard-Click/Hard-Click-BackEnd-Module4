@@ -23,6 +23,16 @@ public class StudyTimerSessionMetricRecorder {
         record(action, errorCode);
     }
 
+    // 호출부에서 "errorCode == null ? recordSuccess : recordFailure" 분기를 매번 복제하지 않도록
+    // 그 판단 자체를 레코더가 떠맡는다. errorCode가 null이면 성공으로 기록한다.
+    public void recordResult(StudyTimerAction action, String errorCode) {
+        if (errorCode == null) {
+            recordSuccess(action);
+        } else {
+            recordFailure(action, errorCode);
+        }
+    }
+
     // metric 기록 실패가 핵심 트랜잭션(세션 저장)에 영향을 주면 안 되므로 예외를 여기서 흡수한다.
     private void record(StudyTimerAction action, String errorCode) {
         try {

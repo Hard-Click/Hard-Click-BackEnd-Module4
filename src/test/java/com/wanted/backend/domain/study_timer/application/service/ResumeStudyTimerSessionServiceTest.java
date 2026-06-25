@@ -90,7 +90,7 @@ class ResumeStudyTimerSessionServiceTest {
         assertThat(result.status()).isEqualTo("RUNNING");
         assertThat(result.accumulatedStudySeconds()).isEqualTo(200);
         assertThat(result.resumedAt()).isEqualTo(resumedAt);
-        verify(metricRecorder).recordSuccess(StudyTimerAction.RESUME);
+        verify(metricRecorder).recordResult(StudyTimerAction.RESUME, null);
     }
 
     @Test
@@ -164,7 +164,7 @@ class ResumeStudyTimerSessionServiceTest {
         verify(memberLockPort).lock(1L);
         verify(repository).findById(55L);
         verify(repository, never()).save(any());
-        verify(metricRecorder).recordFailure(StudyTimerAction.RESUME, "STUDY_TIMER_SESSION_NOT_PAUSED");
+        verify(metricRecorder).recordResult(StudyTimerAction.RESUME, "STUDY_TIMER_SESSION_NOT_PAUSED");
     }
 
     @Test
