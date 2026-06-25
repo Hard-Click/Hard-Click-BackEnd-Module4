@@ -72,7 +72,7 @@ public class PasswordCommandService implements PasswordCommandUseCase {
     @Transactional(readOnly = true)
     public void verifyCurrentPassword(Long memberId, String currentPassword) {
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
         if (!passwordEncoder.matches(currentPassword, member.getPassword())) {
             throw new BusinessException(ErrorCode.INVALID_PASSWORD);
