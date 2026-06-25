@@ -350,6 +350,30 @@ class StudyTimerSessionTest {
     }
 
     @Test
+    void resumeRejectsPausedSessionWithoutPausedAt() {
+        // paused_at 컬럼이 추가되기 전부터 PAUSED 상태였던 레거시 row는 pausedAt이 null일 수 있다.
+        // 8-arg 생성자는 pausedAt을 null로 위임하므로 이 케이스를 그대로 재현한다.
+        StudyTimerSession session = new StudyTimerSession(
+                55L,
+                1L,
+                null,
+                null,
+                OffsetDateTime.parse("2026-05-11T15:00:00+09:00"),
+                null,
+                200,
+                StudyTimerSessionStatus.PAUSED
+        );
+
+        assertThatThrownBy(() -> session.resume(
+                OffsetDateTime.parse("2026-05-11T15:04:10+09:00"),
+                SERVER_NOW
+        ))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_TIMER_SESSION_INVALID);
+    }
+
+    @Test
     void resumeRejectsEndedSession() {
         StudyTimerSession session = new StudyTimerSession(
                 55L,

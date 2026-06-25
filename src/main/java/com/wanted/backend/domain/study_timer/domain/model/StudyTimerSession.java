@@ -114,6 +114,9 @@ public class StudyTimerSession {
         if (status != StudyTimerSessionStatus.PAUSED) {
             throw new BusinessException(ErrorCode.STUDY_TIMER_SESSION_NOT_PAUSED);
         }
+        if (pausedAt == null) {
+            throw new BusinessException(ErrorCode.STUDY_TIMER_SESSION_INVALID);
+        }
         if (resumedAt == null) {
             throw new BusinessException(ErrorCode.STUDY_TIMER_RESUMED_AT_REQUIRED);
         }
