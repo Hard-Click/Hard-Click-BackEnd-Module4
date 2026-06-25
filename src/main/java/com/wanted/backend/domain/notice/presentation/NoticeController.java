@@ -92,6 +92,7 @@ public class NoticeController {
                 - 로그인한 회원만 조회 가능합니다.
                 - type으로 조회 범위를 구분합니다. (GLOBAL: 전체 공지, COURSE: 강의 공지)
                 - COURSE 타입 조회 시 courseId를 함께 전달해야 합니다.
+                - COURSE 타입은 ADMIN/INSTRUCTOR는 강의 소유 여부와 무관하게 조회 가능하며, 학생은 수강 중인 강의만 조회 가능합니다.
                 - keyword로 제목 검색이 가능합니다. (선택사항)
                 - 페이지 기본값: 0, 사이즈 기본값: 10
                 - 상단 고정 공지사항이 우선 노출됩니다.
