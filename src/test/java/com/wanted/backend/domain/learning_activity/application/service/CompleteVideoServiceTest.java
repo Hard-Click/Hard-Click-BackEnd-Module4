@@ -25,6 +25,7 @@ class CompleteVideoServiceTest {
     private VideoCatalogPort videoCatalogPort;
     private VideoProgressRepository videoProgressRepository;
     private VideoAccessService videoAccessService;
+    private LearningActivityMetricRecorder metricRecorder;
     private CompleteVideoService service;
 
     @BeforeEach
@@ -32,12 +33,14 @@ class CompleteVideoServiceTest {
         videoCatalogPort = mock(VideoCatalogPort.class);
         videoProgressRepository = mock(VideoProgressRepository.class);
         videoAccessService = mock(VideoAccessService.class);
+        metricRecorder = mock(LearningActivityMetricRecorder.class);
         PlayableVideoProgressReader playableVideoProgressReader =
                 new PlayableVideoProgressReader(videoCatalogPort, videoProgressRepository, videoAccessService);
         service = new CompleteVideoService(
                 playableVideoProgressReader,
                 videoProgressRepository,
-                new VideoCompletionPolicy()
+                new VideoCompletionPolicy(),
+                metricRecorder
         );
     }
 
@@ -56,6 +59,7 @@ class CompleteVideoServiceTest {
         assertThat(captor.getValue().completed()).isTrue();
         assertThat(captor.getValue().completedAt()).isNotNull();
         assertThat(captor.getValue().watchTimeSec()).isEqualTo(270);
+        verify(metricRecorder).recordResult(LearningActivityAction.COMPLETE_VIDEO, null);
     }
 
     @Test
@@ -86,6 +90,8 @@ class CompleteVideoServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.VIDEO_COMPLETION_CONDITION_NOT_MET);
+
+        verify(metricRecorder).recordResult(LearningActivityAction.COMPLETE_VIDEO, "VIDEO_COMPLETION_CONDITION_NOT_MET");
     }
 
     @Test
@@ -96,6 +102,8 @@ class CompleteVideoServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.VIDEO_NOT_FOUND);
+
+        verify(metricRecorder).recordResult(LearningActivityAction.COMPLETE_VIDEO, "VIDEO_NOT_FOUND");
     }
 
     private VideoAccessInfo accessInfo() {

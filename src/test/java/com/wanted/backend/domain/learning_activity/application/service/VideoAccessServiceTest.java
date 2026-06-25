@@ -19,16 +19,19 @@ class VideoAccessServiceTest {
 
     private EnrollmentAccessPort enrollmentAccessPort;
     private SubscriptionAccessPort subscriptionAccessPort;
+    private LearningActivityMetricRecorder metricRecorder;
     private VideoAccessService service;
 
     @BeforeEach
     void setUp() {
         enrollmentAccessPort = mock(EnrollmentAccessPort.class);
         subscriptionAccessPort = mock(SubscriptionAccessPort.class);
+        metricRecorder = mock(LearningActivityMetricRecorder.class);
         service = new VideoAccessService(
                 enrollmentAccessPort,
                 subscriptionAccessPort,
-                new VideoAccessPolicy()
+                new VideoAccessPolicy(),
+                metricRecorder
         );
     }
 
@@ -43,6 +46,7 @@ class VideoAccessServiceTest {
 
         verify(enrollmentAccessPort, never()).hasActiveEnrollment(1L, 20L);
         verify(subscriptionAccessPort, never()).hasActiveSubscription(1L);
+        verify(metricRecorder).recordResult(LearningActivityAction.VIDEO_ACCESS, "COURSE_NOT_PUBLISHED");
     }
 
     @Test
@@ -54,6 +58,7 @@ class VideoAccessServiceTest {
 
         verify(enrollmentAccessPort).hasActiveEnrollment(1L, 20L);
         verify(subscriptionAccessPort).hasActiveSubscription(1L);
+        verify(metricRecorder).recordResult(LearningActivityAction.VIDEO_ACCESS, null);
     }
 
     @Test
@@ -66,6 +71,8 @@ class VideoAccessServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.ENROLLMENT_REQUIRED);
+
+        verify(metricRecorder).recordResult(LearningActivityAction.VIDEO_ACCESS, "ENROLLMENT_REQUIRED");
     }
 
     private VideoAccessInfo accessInfo(String courseStatus, Integer coursePrice, Boolean preview) {
