@@ -55,7 +55,7 @@ class GetCourseProgressServiceTest {
         assertThat(result.lessons().get(0).videoId()).isEqualTo(10L);
         assertThat(result.lessons().get(0).completed()).isTrue();
         assertThat(result.lessons().get(0).lastPositionSeconds()).isEqualTo(300);
-        verify(metricRecorder).recordSuccess(LearningActivityAction.COURSE_PROGRESS);
+        verify(metricRecorder).recordResult(LearningActivityAction.COURSE_PROGRESS, null);
     }
 
     @Test
@@ -81,6 +81,6 @@ class GetCourseProgressServiceTest {
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.ENROLLMENT_REQUIRED);
 
-        verify(metricRecorder).recordFailure(LearningActivityAction.COURSE_PROGRESS, "ENROLLMENT_REQUIRED");
+        verify(metricRecorder).recordResult(LearningActivityAction.COURSE_PROGRESS, "ENROLLMENT_REQUIRED");
     }
 }

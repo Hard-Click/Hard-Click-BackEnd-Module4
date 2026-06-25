@@ -44,6 +44,38 @@ class LearningActivityMetricRecorderTest {
     }
 
     @Test
+    void recordResultRecordsSuccessWhenErrorCodeIsNull() {
+        SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+        LearningActivityMetricRecorder recorder = new LearningActivityMetricRecorder(meterRegistry);
+
+        recorder.recordResult(LearningActivityAction.COURSE_PROGRESS, null);
+
+        Counter counter = meterRegistry.find("learning_activity.access.result")
+                .tag("action", "courseProgress")
+                .tag("status", "SUCCESS")
+                .tag("errorCode", "NONE")
+                .counter();
+        assertThat(counter).isNotNull();
+        assertThat(counter.count()).isEqualTo(1.0);
+    }
+
+    @Test
+    void recordResultRecordsFailureWhenErrorCodeIsPresent() {
+        SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+        LearningActivityMetricRecorder recorder = new LearningActivityMetricRecorder(meterRegistry);
+
+        recorder.recordResult(LearningActivityAction.COURSE_PROGRESS, "ENROLLMENT_REQUIRED");
+
+        Counter counter = meterRegistry.find("learning_activity.access.result")
+                .tag("action", "courseProgress")
+                .tag("status", "FAILED")
+                .tag("errorCode", "ENROLLMENT_REQUIRED")
+                .counter();
+        assertThat(counter).isNotNull();
+        assertThat(counter.count()).isEqualTo(1.0);
+    }
+
+    @Test
     void swallowsExceptionWhenMeterRegistryFailsSoCallerNeverSeesIt() {
         MeterRegistry failingRegistry = mock(MeterRegistry.class, invocation -> {
             throw new RuntimeException("meter registry boom");

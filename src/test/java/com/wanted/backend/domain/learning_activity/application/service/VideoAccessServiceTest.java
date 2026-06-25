@@ -46,7 +46,7 @@ class VideoAccessServiceTest {
 
         verify(enrollmentAccessPort, never()).hasActiveEnrollment(1L, 20L);
         verify(subscriptionAccessPort, never()).hasActiveSubscription(1L);
-        verify(metricRecorder).recordFailure(LearningActivityAction.VIDEO_ACCESS, "COURSE_NOT_PUBLISHED");
+        verify(metricRecorder).recordResult(LearningActivityAction.VIDEO_ACCESS, "COURSE_NOT_PUBLISHED");
     }
 
     @Test
@@ -58,7 +58,7 @@ class VideoAccessServiceTest {
 
         verify(enrollmentAccessPort).hasActiveEnrollment(1L, 20L);
         verify(subscriptionAccessPort).hasActiveSubscription(1L);
-        verify(metricRecorder).recordSuccess(LearningActivityAction.VIDEO_ACCESS);
+        verify(metricRecorder).recordResult(LearningActivityAction.VIDEO_ACCESS, null);
     }
 
     @Test
@@ -72,7 +72,7 @@ class VideoAccessServiceTest {
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.ENROLLMENT_REQUIRED);
 
-        verify(metricRecorder).recordFailure(LearningActivityAction.VIDEO_ACCESS, "ENROLLMENT_REQUIRED");
+        verify(metricRecorder).recordResult(LearningActivityAction.VIDEO_ACCESS, "ENROLLMENT_REQUIRED");
     }
 
     private VideoAccessInfo accessInfo(String courseStatus, Integer coursePrice, Boolean preview) {

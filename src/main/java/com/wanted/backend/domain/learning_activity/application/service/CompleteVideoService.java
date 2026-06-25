@@ -48,15 +48,7 @@ public class CompleteVideoService implements CompleteVideoUseCase {
             errorCode = e.getErrorCode().name();
             throw e;
         } finally {
-            recordMetric(errorCode);
-        }
-    }
-
-    private void recordMetric(String errorCode) {
-        if (errorCode == null) {
-            metricRecorder.recordSuccess(ACTION);
-        } else {
-            metricRecorder.recordFailure(ACTION, errorCode);
+            metricRecorder.recordResult(ACTION, errorCode);
         }
     }
 

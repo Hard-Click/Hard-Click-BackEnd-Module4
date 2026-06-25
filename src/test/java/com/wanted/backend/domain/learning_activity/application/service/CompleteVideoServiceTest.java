@@ -59,7 +59,7 @@ class CompleteVideoServiceTest {
         assertThat(captor.getValue().completed()).isTrue();
         assertThat(captor.getValue().completedAt()).isNotNull();
         assertThat(captor.getValue().watchTimeSec()).isEqualTo(270);
-        verify(metricRecorder).recordSuccess(LearningActivityAction.COMPLETE_VIDEO);
+        verify(metricRecorder).recordResult(LearningActivityAction.COMPLETE_VIDEO, null);
     }
 
     @Test
@@ -91,7 +91,7 @@ class CompleteVideoServiceTest {
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.VIDEO_COMPLETION_CONDITION_NOT_MET);
 
-        verify(metricRecorder).recordFailure(LearningActivityAction.COMPLETE_VIDEO, "VIDEO_COMPLETION_CONDITION_NOT_MET");
+        verify(metricRecorder).recordResult(LearningActivityAction.COMPLETE_VIDEO, "VIDEO_COMPLETION_CONDITION_NOT_MET");
     }
 
     @Test
@@ -103,7 +103,7 @@ class CompleteVideoServiceTest {
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.VIDEO_NOT_FOUND);
 
-        verify(metricRecorder).recordFailure(LearningActivityAction.COMPLETE_VIDEO, "VIDEO_NOT_FOUND");
+        verify(metricRecorder).recordResult(LearningActivityAction.COMPLETE_VIDEO, "VIDEO_NOT_FOUND");
     }
 
     private VideoAccessInfo accessInfo() {

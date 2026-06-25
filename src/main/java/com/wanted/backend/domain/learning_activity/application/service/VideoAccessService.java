@@ -39,21 +39,13 @@ public class VideoAccessService {
             errorCode = e.getErrorCode().name();
             throw e;
         } finally {
-            recordMetric(errorCode);
+            metricRecorder.recordResult(ACTION, errorCode);
         }
     }
 
     private void validatePublished(VideoAccessInfo accessInfo) {
         if (!accessInfo.isPublishedCourse()) {
             throw new BusinessException(ErrorCode.COURSE_NOT_PUBLISHED);
-        }
-    }
-
-    private void recordMetric(String errorCode) {
-        if (errorCode == null) {
-            metricRecorder.recordSuccess(ACTION);
-        } else {
-            metricRecorder.recordFailure(ACTION, errorCode);
         }
     }
 }
