@@ -1,9 +1,12 @@
 package com.wanted.backend.domain.quiz.presentation;
 
+import com.wanted.backend.domain.cource.domain.model.Course;
+import com.wanted.backend.domain.cource.domain.repository.CourseRepository;
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -18,8 +21,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.stream.IntStream;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api")
 @Tag(name = "Quiz Mock", description = "학생/강사 퀴즈 Mock API")
 public class QuizMockController {
@@ -27,6 +32,10 @@ public class QuizMockController {
     private static final int DEFAULT_PAGE = 0;
     private static final int DEFAULT_PAGE_SIZE = 10;
     private static final int MAX_PAGE_SIZE = 50;
+    private static final int INSTRUCTOR_QUIZ_WEEK_COUNT = 5;
+    private static final long INSTRUCTOR_QUIZ_ID_BASE = 90L;
+
+    private final CourseRepository courseRepository;
 
     @GetMapping("/members/me/quizzes")
     @Operation(summary = "내 퀴즈 목록 조회", description = "현재 로그인한 회원의 퀴즈 목록을 조회합니다.")
@@ -125,7 +134,7 @@ public class QuizMockController {
         InstructorQuizListResponse response = new InstructorQuizListResponse(
                 courseId,
                 sectionId,
-                instructorQuizItems()
+                instructorQuizItems(courseId)
         );
 
         return ApiResponse.success("강사 퀴즈 목록을 조회했습니다.", response);
@@ -256,18 +265,18 @@ public class QuizMockController {
 
     private List<MyQuizListResponse.MyQuizItem> myQuizItems() {
         return List.of(
-                new MyQuizListResponse.MyQuizItem(90L, "React 기초 개념 퀴즈", "React 완벽 가이드", "섹션 1: React 기초", 8, true, 75, OffsetDateTime.parse("2026-05-10T15:30:00+09:00")),
-                new MyQuizListResponse.MyQuizItem(91L, "Hooks 활용 퀴즈", "React 완벽 가이드", "섹션 2: Hooks", 6, false, null, null),
-                new MyQuizListResponse.MyQuizItem(92L, "상태 관리 패턴 퀴즈", "React 완벽 가이드", "섹션 3: 상태 관리", 7, true, 92, OffsetDateTime.parse("2026-05-12T20:10:00+09:00")),
-                new MyQuizListResponse.MyQuizItem(93L, "React Router 실전 퀴즈", "프론트엔드 라우팅 마스터", "섹션 2: 동적 라우팅", 5, false, null, null),
-                new MyQuizListResponse.MyQuizItem(94L, "폼 검증과 에러 처리 퀴즈", "실전 프론트엔드 폼", "섹션 4: 유효성 검증", 9, true, 88, OffsetDateTime.parse("2026-05-18T21:45:00+09:00")),
-                new MyQuizListResponse.MyQuizItem(95L, "Spring Boot REST API 퀴즈", "Spring Boot 핵심 가이드", "섹션 1: REST API 설계", 10, true, 70, OffsetDateTime.parse("2026-05-20T19:20:00+09:00")),
-                new MyQuizListResponse.MyQuizItem(96L, "JPA 연관관계 퀴즈", "JPA 실전 입문", "섹션 3: 연관관계 매핑", 8, false, null, null),
-                new MyQuizListResponse.MyQuizItem(97L, "SQL 기본기 퀴즈", "데이터베이스 첫걸음", "섹션 2: SELECT와 JOIN", 12, true, 95, OffsetDateTime.parse("2026-05-25T22:05:00+09:00")),
-                new MyQuizListResponse.MyQuizItem(98L, "알고리즘 정렬 퀴즈", "코딩테스트 기본기", "섹션 1: 정렬", 6, true, 83, OffsetDateTime.parse("2026-05-28T18:30:00+09:00")),
-                new MyQuizListResponse.MyQuizItem(99L, "Docker 배포 기초 퀴즈", "배포 자동화 입문", "섹션 1: 컨테이너 이해", 7, false, null, null),
-                new MyQuizListResponse.MyQuizItem(100L, "Redis 캐싱 전략 퀴즈", "백엔드 성능 최적화", "섹션 2: 캐시 설계", 8, true, 78, OffsetDateTime.parse("2026-06-01T17:15:00+09:00")),
-                new MyQuizListResponse.MyQuizItem(101L, "JWT 인증 흐름 퀴즈", "Spring Security 실전", "섹션 3: 토큰 인증", 9, false, null, null)
+                new MyQuizListResponse.MyQuizItem(90L, "React 기초 개념 퀴즈", 1L, "React 완벽 가이드", "섹션 1: React 기초", 8, true, 75, OffsetDateTime.parse("2026-05-10T15:30:00+09:00")),
+                new MyQuizListResponse.MyQuizItem(91L, "Hooks 활용 퀴즈", 1L, "React 완벽 가이드", "섹션 2: Hooks", 6, false, null, null),
+                new MyQuizListResponse.MyQuizItem(92L, "상태 관리 패턴 퀴즈", 1L, "React 완벽 가이드", "섹션 3: 상태 관리", 7, true, 92, OffsetDateTime.parse("2026-05-12T20:10:00+09:00")),
+                new MyQuizListResponse.MyQuizItem(93L, "React Router 실전 퀴즈", 2L, "프론트엔드 라우팅 마스터", "섹션 2: 동적 라우팅", 5, false, null, null),
+                new MyQuizListResponse.MyQuizItem(94L, "폼 검증과 에러 처리 퀴즈", 3L, "실전 프론트엔드 폼", "섹션 4: 유효성 검증", 9, true, 88, OffsetDateTime.parse("2026-05-18T21:45:00+09:00")),
+                new MyQuizListResponse.MyQuizItem(95L, "Spring Boot REST API 퀴즈", 4L, "Spring Boot 핵심 가이드", "섹션 1: REST API 설계", 10, true, 70, OffsetDateTime.parse("2026-05-20T19:20:00+09:00")),
+                new MyQuizListResponse.MyQuizItem(96L, "JPA 연관관계 퀴즈", 5L, "JPA 실전 입문", "섹션 3: 연관관계 매핑", 8, false, null, null),
+                new MyQuizListResponse.MyQuizItem(97L, "SQL 기본기 퀴즈", 6L, "데이터베이스 첫걸음", "섹션 2: SELECT와 JOIN", 12, true, 95, OffsetDateTime.parse("2026-05-25T22:05:00+09:00")),
+                new MyQuizListResponse.MyQuizItem(98L, "알고리즘 정렬 퀴즈", 7L, "코딩테스트 기본기", "섹션 1: 정렬", 6, true, 83, OffsetDateTime.parse("2026-05-28T18:30:00+09:00")),
+                new MyQuizListResponse.MyQuizItem(99L, "Docker 배포 기초 퀴즈", 8L, "배포 자동화 입문", "섹션 1: 컨테이너 이해", 7, false, null, null),
+                new MyQuizListResponse.MyQuizItem(100L, "Redis 캐싱 전략 퀴즈", 9L, "백엔드 성능 최적화", "섹션 2: 캐시 설계", 8, true, 78, OffsetDateTime.parse("2026-06-01T17:15:00+09:00")),
+                new MyQuizListResponse.MyQuizItem(101L, "JWT 인증 흐름 퀴즈", 10L, "Spring Security 실전", "섹션 3: 토큰 인증", 9, false, null, null)
         );
     }
 
@@ -377,19 +386,32 @@ public class QuizMockController {
         );
     }
 
-    private List<InstructorQuizListResponse.InstructorQuizItem> instructorQuizItems() {
-        return List.of(
-                new InstructorQuizListResponse.InstructorQuizItem(90L, "React 기초 개념 퀴즈", "React 완벽 가이드", "섹션 1: React 기초", 8, OffsetDateTime.parse("2026-05-10T15:30:00+09:00")),
-                new InstructorQuizListResponse.InstructorQuizItem(91L, "Hooks 활용 퀴즈", "React 완벽 가이드", "섹션 2: Hooks", 6, OffsetDateTime.parse("2026-05-11T15:30:00+09:00")),
-                new InstructorQuizListResponse.InstructorQuizItem(92L, "상태 관리 패턴 퀴즈", "React 완벽 가이드", "섹션 3: 상태 관리", 7, OffsetDateTime.parse("2026-05-12T15:30:00+09:00")),
-                new InstructorQuizListResponse.InstructorQuizItem(93L, "React Router 실전 퀴즈", "프론트엔드 라우팅 마스터", "섹션 2: 동적 라우팅", 5, OffsetDateTime.parse("2026-05-13T15:30:00+09:00")),
-                new InstructorQuizListResponse.InstructorQuizItem(94L, "폼 검증과 에러 처리 퀴즈", "실전 프론트엔드 폼", "섹션 4: 유효성 검증", 9, OffsetDateTime.parse("2026-05-14T15:30:00+09:00")),
-                new InstructorQuizListResponse.InstructorQuizItem(95L, "Spring Boot REST API 퀴즈", "Spring Boot 핵심 가이드", "섹션 1: REST API 설계", 10, OffsetDateTime.parse("2026-05-15T15:30:00+09:00")),
-                new InstructorQuizListResponse.InstructorQuizItem(96L, "JPA 연관관계 퀴즈", "JPA 실전 입문", "섹션 3: 연관관계 매핑", 8, OffsetDateTime.parse("2026-05-16T15:30:00+09:00")),
-                new InstructorQuizListResponse.InstructorQuizItem(97L, "SQL 기본기 퀴즈", "데이터베이스 첫걸음", "섹션 2: SELECT와 JOIN", 12, OffsetDateTime.parse("2026-05-17T15:30:00+09:00")),
-                new InstructorQuizListResponse.InstructorQuizItem(98L, "알고리즘 정렬 퀴즈", "코딩테스트 기본기", "섹션 1: 정렬", 6, OffsetDateTime.parse("2026-05-18T15:30:00+09:00")),
-                new InstructorQuizListResponse.InstructorQuizItem(99L, "Docker 배포 기초 퀴즈", "배포 자동화 입문", "섹션 1: 컨테이너 이해", 7, OffsetDateTime.parse("2026-05-19T15:30:00+09:00"))
-        );
+    // Mock 컨트롤러라 실제 퀴즈 문항은 없지만, courseId로 실제 강의명을 조회해서
+    // 퀴즈 제목·강의명이 요청한 강의와 무관한 값으로 나가지 않도록 한다.
+    private List<InstructorQuizListResponse.InstructorQuizItem> instructorQuizItems(Long courseId) {
+        String courseTitle = resolveCourseTitle(courseId);
+        OffsetDateTime baseCreatedAt = OffsetDateTime.parse("2026-05-10T15:30:00+09:00");
+
+        return IntStream.rangeClosed(1, INSTRUCTOR_QUIZ_WEEK_COUNT)
+                .mapToObj(week -> new InstructorQuizListResponse.InstructorQuizItem(
+                        INSTRUCTOR_QUIZ_ID_BASE + week,
+                        courseTitle + " " + week + "주차 퀴즈",
+                        courseTitle,
+                        "섹션 " + week,
+                        8,
+                        baseCreatedAt.plusDays(week - 1)
+                ))
+                .toList();
+    }
+
+    private String resolveCourseTitle(Long courseId) {
+        if (courseId == null) {
+            return "전체 강의";
+        }
+
+        return courseRepository.findById(courseId)
+                .map(Course::getTitle)
+                .orElse("강의 #" + courseId);
     }
 
     private InstructorQuizStatisticsResponse instructorQuizStatistics() {
@@ -493,6 +515,7 @@ public class QuizMockController {
         public record MyQuizItem(
                 Long quizId,
                 String quizTitle,
+                Long courseId,
                 String courseTitle,
                 String sectionTitle,
                 int questionCount,
