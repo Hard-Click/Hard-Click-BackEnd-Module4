@@ -3,7 +3,6 @@ package com.wanted.backend.domain.notice.application.service;
 import com.wanted.backend.domain.notice.application.command.GetNoticeListCommand;
 import com.wanted.backend.domain.notice.application.port.CourseInfoPort;
 import com.wanted.backend.domain.notice.application.port.EnrolledCoursePort;
-import com.wanted.backend.domain.notice.application.port.InstructorCoursePort;
 import com.wanted.backend.domain.notice.application.usecase.NoticeQueryUseCase;
 import com.wanted.backend.domain.notice.domain.model.Notice;
 import com.wanted.backend.domain.notice.domain.repository.NoticeRepository;
@@ -27,16 +26,13 @@ public class NoticeQueryService implements NoticeQueryUseCase {
 
     private final NoticeRepository noticeRepository;
     private final CourseInfoPort courseInfoPort;
-    private final InstructorCoursePort instructorCoursePort;
     private final EnrolledCoursePort enrolledCoursePort;
 
     public NoticeQueryService(NoticeRepository noticeRepository,
                               CourseInfoPort courseInfoPort,
-                              InstructorCoursePort instructorCoursePort,
                               EnrolledCoursePort enrolledCoursePort) {
         this.noticeRepository = noticeRepository;
         this.courseInfoPort = courseInfoPort;
-        this.instructorCoursePort = instructorCoursePort;
         this.enrolledCoursePort = enrolledCoursePort;
     }
 
@@ -63,16 +59,8 @@ public class NoticeQueryService implements NoticeQueryUseCase {
 
             String role = command.role();
 
-            if ("ADMIN".equals(role)) {
-                noticePage = noticeRepository.findCourseNotices(
-                        command.courseId(),
-                        command.keyword() != null ? command.keyword() : "", pageable);
-
-            } else if ("INSTRUCTOR".equals(role)) {
-                List<Long> myCourseIds = instructorCoursePort.getCourseIdsByInstructorId(command.memberId());
-                if (!myCourseIds.contains(command.courseId())) {
-                    throw new BusinessException(ErrorCode.NOTICE_NOT_AUTHORIZED);
-                }
+            if ("ADMIN".equals(role) || "INSTRUCTOR".equals(role)) {
+                // 강사는 본인 강의뿐 아니라 다른 강사의 강의 상세에서도 공지를 조회할 수 있어야 한다(학생과 동일하게 공개 정보).
                 noticePage = noticeRepository.findCourseNotices(
                         command.courseId(),
                         command.keyword() != null ? command.keyword() : "", pageable);
