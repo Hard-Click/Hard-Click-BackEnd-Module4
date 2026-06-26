@@ -10,6 +10,7 @@ import com.wanted.backend.domain.study_timer.domain.repository.StudyTimerSession
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,7 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -77,8 +79,9 @@ public class EndStudyTimerSessionService implements EndStudyTimerSessionUseCase 
         } finally {
             try {
                 metricRecorder.recordResult(ACTION, errorCode);
-            } catch (RuntimeException ignored) {
+            } catch (RuntimeException e) {
                 // metric failure must not affect the business transaction
+                log.warn("study timer metric record failed: action={}, errorCode={}", ACTION, errorCode, e);
             }
         }
     }

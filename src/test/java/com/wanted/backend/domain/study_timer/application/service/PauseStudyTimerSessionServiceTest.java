@@ -22,6 +22,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -118,6 +119,30 @@ class PauseStudyTimerSessionServiceTest {
 
         verify(metricRecorder, never()).recordResult(StudyTimerAction.PAUSE, null);
         verify(metricRecorder).recordResult(StudyTimerAction.PAUSE, "UNKNOWN");
+    }
+
+    @Test
+    void businessResultIsUnaffectedWhenMetricRecordingFails() {
+        OffsetDateTime startedAt = OffsetDateTime.parse("2026-05-11T15:00:00+09:00");
+        OffsetDateTime pausedAt = OffsetDateTime.parse("2026-05-11T15:03:20+09:00");
+        when(repository.findById(55L)).thenReturn(Optional.of(new StudyTimerSession(
+                55L, 1L, null, null, startedAt, null, 120, StudyTimerSessionStatus.RUNNING
+        )));
+        when(repository.save(any(StudyTimerSession.class)))
+                .thenReturn(new StudyTimerSession(
+                        55L, 1L, null, null, startedAt, null, 200, StudyTimerSessionStatus.PAUSED
+                ));
+        doThrow(new RuntimeException("metric registry down"))
+                .when(metricRecorder).recordResult(StudyTimerAction.PAUSE, null);
+
+        PauseStudyTimerSessionUseCase.StudyTimerSessionPauseView result =
+                service.handle(new PauseStudyTimerSessionCommand(1L, 55L, pausedAt));
+
+        assertThat(result.sessionId()).isEqualTo(55L);
+        assertThat(result.status()).isEqualTo("PAUSED");
+        assertThat(result.accumulatedStudySeconds()).isEqualTo(200);
+        assertThat(result.pausedAt()).isEqualTo(pausedAt);
+        verify(metricRecorder).recordResult(StudyTimerAction.PAUSE, null);
     }
 
     @Test
