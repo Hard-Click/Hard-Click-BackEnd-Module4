@@ -5,6 +5,7 @@ import com.wanted.backend.domain.grass.application.usecase.GetStudyStreakUseCase
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -21,5 +22,13 @@ class MemberStreakAdapterTest {
         int result = adapter.getCurrentStreakDays(1L);
 
         assertThat(result).isEqualTo(7);
+    }
+
+    @Test
+    void propagatesExceptionWhenUseCaseFails() {
+        IllegalStateException exception = new IllegalStateException("학습 통계 조회 실패");
+        when(getStudyStreakUseCase.handle(new GetStudyStreakQuery(1L))).thenThrow(exception);
+
+        assertThatThrownBy(() -> adapter.getCurrentStreakDays(1L)).isSameAs(exception);
     }
 }

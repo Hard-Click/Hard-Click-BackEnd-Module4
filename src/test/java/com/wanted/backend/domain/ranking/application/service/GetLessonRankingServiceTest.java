@@ -73,6 +73,21 @@ class GetLessonRankingServiceTest {
     }
 
     @Test
+    void fallsBackToNullStreakWhenMemberStreakPortFails() {
+        when(rankingListReader.findByMetricAndPeriod(RankingMetric.LESSON, RankingPeriod.DAILY))
+                .thenReturn(new RankingList(1L, List.of(new RankingEntry(1L, 1L, 12L))));
+        when(memberNamePort.getNamesByMemberIds(List.of(1L))).thenReturn(Map.of(1L, "김지훈"));
+        when(memberStreakPort.getCurrentStreakDays(1L)).thenThrow(new IllegalStateException("연속 학습일 조회 실패"));
+
+        GetLessonRankingUseCase.LessonRankingView result =
+                service.handle(new GetLessonRankingQuery("daily"));
+
+        assertThat(result.rankings()).hasSize(1);
+        assertThat(result.rankings().get(0).memberName()).isEqualTo("김지훈");
+        assertThat(result.rankings().get(0).currentStreakDays()).isNull();
+    }
+
+    @Test
     void usesMonthlyPeriodByDefaultWhenPeriodIsNull() {
         when(rankingListReader.findByMetricAndPeriod(RankingMetric.LESSON, RankingPeriod.MONTHLY))
                 .thenReturn(RankingList.empty(0L));

@@ -73,6 +73,21 @@ class GetStudyTimeRankingServiceTest {
     }
 
     @Test
+    void fallsBackToNullStreakWhenMemberStreakPortFails() {
+        when(rankingListReader.findByMetricAndPeriod(RankingMetric.STUDY_TIME, RankingPeriod.DAILY))
+                .thenReturn(new RankingList(1L, List.of(new RankingEntry(1L, 1L, 7200L))));
+        when(memberNamePort.getNamesByMemberIds(List.of(1L))).thenReturn(Map.of(1L, "김지훈"));
+        when(memberStreakPort.getCurrentStreakDays(1L)).thenThrow(new IllegalStateException("연속 학습일 조회 실패"));
+
+        GetStudyTimeRankingUseCase.StudyTimeRankingView result =
+                service.handle(new GetStudyTimeRankingQuery("daily"));
+
+        assertThat(result.rankings()).hasSize(1);
+        assertThat(result.rankings().get(0).memberName()).isEqualTo("김지훈");
+        assertThat(result.rankings().get(0).currentStreakDays()).isNull();
+    }
+
+    @Test
     void usesMonthlyPeriodByDefault() {
         when(rankingListReader.findByMetricAndPeriod(RankingMetric.STUDY_TIME, RankingPeriod.MONTHLY))
                 .thenReturn(RankingList.empty(0L));

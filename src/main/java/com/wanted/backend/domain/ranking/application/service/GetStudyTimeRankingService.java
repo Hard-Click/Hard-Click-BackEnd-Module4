@@ -11,12 +11,14 @@ import com.wanted.backend.domain.ranking.domain.model.RankingMetric;
 import com.wanted.backend.domain.ranking.domain.model.RankingPeriod;
 import com.wanted.backend.domain.ranking.domain.policy.RankingPeriodPolicy;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -49,9 +51,18 @@ public class GetStudyTimeRankingService implements GetStudyTimeRankingUseCase {
                                 entry.memberId(),
                                 namesByMemberId.get(entry.memberId()),
                                 entry.score(),
-                                memberStreakPort.getCurrentStreakDays(entry.memberId())
+                                currentStreakDaysOrNull(entry.memberId())
                         ))
                         .toList()
         );
+    }
+
+    private Integer currentStreakDaysOrNull(Long memberId) {
+        try {
+            return memberStreakPort.getCurrentStreakDays(memberId);
+        } catch (RuntimeException exception) {
+            log.warn("[Ranking] 연속 학습일 조회 실패. memberId={}", memberId, exception);
+            return null;
+        }
     }
 }
