@@ -27,5 +27,7 @@ public interface NoticeRepository {
     // Hard Delete 추가
     void deleteById(Long noticeId);
 
+    Page<Notice> findAllCourseNotices(String keyword, Pageable pageable);
+
     Page<Notice> findCourseNoticesByIds(List<Long> courseIds, String keyword, Pageable pageable);
 }

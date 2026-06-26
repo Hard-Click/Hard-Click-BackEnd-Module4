@@ -43,5 +43,10 @@ application-secret.yaml
 logs/
 *.log
 
+### k6 ###
+k6/
+
+### Grafana & Monitoring ###
+monitoring/grafana/provisioning/dashboards/json/
 CLAUDE.md
 benchmark_post_list.sql

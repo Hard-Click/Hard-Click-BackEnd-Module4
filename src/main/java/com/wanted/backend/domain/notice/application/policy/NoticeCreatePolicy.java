@@ -6,6 +6,7 @@ import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import org.springframework.stereotype.Component;
 
+
 @Component
 public class NoticeCreatePolicy {
 
@@ -18,12 +19,13 @@ public class NoticeCreatePolicy {
     }
 
     public void validate(Long memberId, Long courseId) {
-        Long courseInstructorId = courseInstructorPort.getInstructorIdByCourseId(courseId);
-
         if (adminValidationPort.isAdmin(memberId)) {
+            // 관리자도 강의 존재 여부는 검증
+            courseInstructorPort.getInstructorIdByCourseId(courseId);
             return;
         }
 
+        Long courseInstructorId = courseInstructorPort.getInstructorIdByCourseId(courseId);
         if (!courseInstructorId.equals(memberId)) {
             throw new BusinessException(ErrorCode.NOTICE_NOT_AUTHORIZED);
         }
