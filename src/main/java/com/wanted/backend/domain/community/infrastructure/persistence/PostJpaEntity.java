@@ -8,9 +8,7 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "posts", indexes = {
-        @Index(name = "idx_posts_board_status_created", columnList = "board_type, status, created_at")
-})
+@Table(name = "posts")
 @Getter
 public class PostJpaEntity {
 
