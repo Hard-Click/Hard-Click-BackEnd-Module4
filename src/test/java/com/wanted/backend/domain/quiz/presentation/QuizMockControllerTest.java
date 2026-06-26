@@ -1,15 +1,10 @@
 package com.wanted.backend.domain.quiz.presentation;
 
-import com.wanted.backend.domain.cource.domain.model.Course;
-import com.wanted.backend.domain.cource.domain.model.CourseStatus;
-import com.wanted.backend.domain.cource.domain.model.PriceType;
-import com.wanted.backend.domain.cource.domain.repository.CourseRepository;
+import com.wanted.backend.domain.quiz.application.port.CourseTitlePort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 
-import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,24 +13,18 @@ import static org.mockito.Mockito.when;
 
 class QuizMockControllerTest {
 
-    private CourseRepository courseRepository;
+    private CourseTitlePort courseTitlePort;
     private QuizMockController controller;
 
     @BeforeEach
     void setUp() {
-        courseRepository = mock(CourseRepository.class);
-        controller = new QuizMockController(courseRepository);
+        courseTitlePort = mock(CourseTitlePort.class);
+        controller = new QuizMockController(courseTitlePort);
     }
 
     @Test
     void instructorQuizzesUseTheRequestedCourseRealTitleInsteadOfAHardcodedUnrelatedTopic() {
-        Course chineseCourse = Course.restore(
-                17L, 1L, "왕초보 중국어 회화", "중국어",
-                "설명", "thumb.png", PriceType.PAID, 50000, CourseStatus.PUBLISHED,
-                List.of(), Instant.parse("2026-01-01T00:00:00Z"),
-                List.of(), List.of(), List.of(), "초급"
-        );
-        when(courseRepository.findById(17L)).thenReturn(Optional.of(chineseCourse));
+        when(courseTitlePort.findTitleByCourseId(17L)).thenReturn(Optional.of("왕초보 중국어 회화"));
 
         ResponseEntity<com.wanted.backend.global.common.ApiResponse<QuizMockController.InstructorQuizListResponse>> result =
                 controller.getInstructorQuizzes(null, 17L, null);
@@ -52,7 +41,7 @@ class QuizMockControllerTest {
 
     @Test
     void instructorQuizzesFallBackToAPlaceholderWhenCourseIdDoesNotExist() {
-        when(courseRepository.findById(999L)).thenReturn(Optional.empty());
+        when(courseTitlePort.findTitleByCourseId(999L)).thenReturn(Optional.empty());
 
         ResponseEntity<com.wanted.backend.global.common.ApiResponse<QuizMockController.InstructorQuizListResponse>> result =
                 controller.getInstructorQuizzes(null, 999L, null);
@@ -80,5 +69,12 @@ class QuizMockControllerTest {
         QuizMockController.MyQuizListResponse response = result.getBody().data();
         assertThat(response.quizzes()).isNotEmpty();
         assertThat(response.quizzes()).allSatisfy(item -> assertThat(item.courseId()).isNotNull());
+
+        QuizMockController.MyQuizListResponse.MyQuizItem reactQuiz = response.quizzes().stream()
+                .filter(item -> item.quizId().equals(90L))
+                .findFirst()
+                .orElseThrow();
+        assertThat(reactQuiz.courseId()).isEqualTo(1L);
+        assertThat(reactQuiz.courseTitle()).isEqualTo("React 완벽 가이드");
     }
 }

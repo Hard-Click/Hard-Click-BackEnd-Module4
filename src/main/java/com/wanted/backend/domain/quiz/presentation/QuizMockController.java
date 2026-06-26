@@ -1,7 +1,6 @@
 package com.wanted.backend.domain.quiz.presentation;
 
-import com.wanted.backend.domain.cource.domain.model.Course;
-import com.wanted.backend.domain.cource.domain.repository.CourseRepository;
+import com.wanted.backend.domain.quiz.application.port.CourseTitlePort;
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,7 +34,7 @@ public class QuizMockController {
     private static final int INSTRUCTOR_QUIZ_WEEK_COUNT = 5;
     private static final long INSTRUCTOR_QUIZ_ID_BASE = 90L;
 
-    private final CourseRepository courseRepository;
+    private final CourseTitlePort courseTitlePort;
 
     @GetMapping("/members/me/quizzes")
     @Operation(summary = "내 퀴즈 목록 조회", description = "현재 로그인한 회원의 퀴즈 목록을 조회합니다.")
@@ -409,8 +408,7 @@ public class QuizMockController {
             return "전체 강의";
         }
 
-        return courseRepository.findById(courseId)
-                .map(Course::getTitle)
+        return courseTitlePort.findTitleByCourseId(courseId)
                 .orElse("강의 #" + courseId);
     }
 
