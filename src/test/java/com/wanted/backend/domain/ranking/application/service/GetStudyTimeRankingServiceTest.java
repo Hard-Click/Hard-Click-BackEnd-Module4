@@ -1,5 +1,7 @@
 package com.wanted.backend.domain.ranking.application.service;
 
+import com.wanted.backend.domain.ranking.application.port.MemberNamePort;
+import com.wanted.backend.domain.ranking.application.port.MemberStreakPort;
 import com.wanted.backend.domain.ranking.application.port.RankingListReader;
 import com.wanted.backend.domain.ranking.application.query.GetStudyTimeRankingQuery;
 import com.wanted.backend.domain.ranking.application.usecase.GetStudyTimeRankingUseCase;
@@ -12,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -23,14 +26,20 @@ import static org.mockito.Mockito.when;
 class GetStudyTimeRankingServiceTest {
 
     private RankingListReader rankingListReader;
+    private MemberNamePort memberNamePort;
+    private MemberStreakPort memberStreakPort;
     private GetStudyTimeRankingService service;
 
     @BeforeEach
     void setUp() {
         rankingListReader = mock(RankingListReader.class);
+        memberNamePort = mock(MemberNamePort.class);
+        memberStreakPort = mock(MemberStreakPort.class);
         service = new GetStudyTimeRankingService(
                 rankingListReader,
-                new RankingPeriodPolicy()
+                new RankingPeriodPolicy(),
+                memberNamePort,
+                memberStreakPort
         );
     }
 
@@ -44,6 +53,10 @@ class GetStudyTimeRankingServiceTest {
                                 new RankingEntry(2L, 2L, 3600L)
                         )
                 ));
+        when(memberNamePort.getNamesByMemberIds(List.of(1L, 2L)))
+                .thenReturn(Map.of(1L, "김지훈", 2L, "이서연"));
+        when(memberStreakPort.getCurrentStreakDays(1L)).thenReturn(7);
+        when(memberStreakPort.getCurrentStreakDays(2L)).thenReturn(3);
 
         GetStudyTimeRankingUseCase.StudyTimeRankingView result =
                 service.handle(new GetStudyTimeRankingQuery("daily"));
@@ -53,8 +66,25 @@ class GetStudyTimeRankingServiceTest {
         assertThat(result.rankings()).hasSize(2);
         assertThat(result.rankings().get(0).rank()).isEqualTo(1L);
         assertThat(result.rankings().get(0).memberId()).isEqualTo(1L);
+        assertThat(result.rankings().get(0).memberName()).isEqualTo("김지훈");
         assertThat(result.rankings().get(0).studySeconds()).isEqualTo(7200L);
+        assertThat(result.rankings().get(0).currentStreakDays()).isEqualTo(7);
         verify(rankingListReader).findByMetricAndPeriod(RankingMetric.STUDY_TIME, RankingPeriod.DAILY);
+    }
+
+    @Test
+    void fallsBackToNullStreakWhenMemberStreakPortFails() {
+        when(rankingListReader.findByMetricAndPeriod(RankingMetric.STUDY_TIME, RankingPeriod.DAILY))
+                .thenReturn(new RankingList(1L, List.of(new RankingEntry(1L, 1L, 7200L))));
+        when(memberNamePort.getNamesByMemberIds(List.of(1L))).thenReturn(Map.of(1L, "김지훈"));
+        when(memberStreakPort.getCurrentStreakDays(1L)).thenThrow(new IllegalStateException("연속 학습일 조회 실패"));
+
+        GetStudyTimeRankingUseCase.StudyTimeRankingView result =
+                service.handle(new GetStudyTimeRankingQuery("daily"));
+
+        assertThat(result.rankings()).hasSize(1);
+        assertThat(result.rankings().get(0).memberName()).isEqualTo("김지훈");
+        assertThat(result.rankings().get(0).currentStreakDays()).isNull();
     }
 
     @Test

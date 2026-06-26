@@ -18,7 +18,9 @@ public interface GetStudyTimeRankingUseCase {
     record StudyTimeRankingItem(
             Long rank,
             Long memberId,
-            Long studySeconds
+            String memberName,
+            Long studySeconds,
+            Integer currentStreakDays
     ) {
     }
 }
