@@ -28,9 +28,17 @@ public class EmailSendAdapter implements EmailSendPort {
 
         try {
             mailSender.send(message);
-            log.info("인증 메일 발송 성공: to={}", to);
+            log.info("인증 메일 발송 성공: to={}", maskEmail(to));
         } catch (MailException e) {
-            log.error("인증 메일 발송 실패: to={}", to, e);
+            log.error("인증 메일 발송 실패: to={}", maskEmail(to), e);
         }
+    }
+
+    private String maskEmail(String email) {
+        int atIndex = email.indexOf('@');
+        if (atIndex <= 1) {
+            return "*".repeat(email.length());
+        }
+        return email.charAt(0) + "*".repeat(atIndex - 1) + email.substring(atIndex);
     }
 }
