@@ -1,8 +1,11 @@
 package com.wanted.backend.domain.ranking.application.service;
 
+import com.wanted.backend.domain.ranking.application.port.MemberNamePort;
+import com.wanted.backend.domain.ranking.application.port.MemberStreakPort;
 import com.wanted.backend.domain.ranking.application.port.RankingListReader;
 import com.wanted.backend.domain.ranking.application.query.GetLessonRankingQuery;
 import com.wanted.backend.domain.ranking.application.usecase.GetLessonRankingUseCase;
+import com.wanted.backend.domain.ranking.domain.model.RankingEntry;
 import com.wanted.backend.domain.ranking.domain.model.RankingList;
 import com.wanted.backend.domain.ranking.domain.model.RankingMetric;
 import com.wanted.backend.domain.ranking.domain.model.RankingPeriod;
@@ -11,6 +14,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -18,6 +24,8 @@ public class GetLessonRankingService implements GetLessonRankingUseCase {
 
     private final RankingListReader rankingListReader;
     private final RankingPeriodPolicy rankingPeriodPolicy;
+    private final MemberNamePort memberNamePort;
+    private final MemberStreakPort memberStreakPort;
 
     @Override
     public LessonRankingView handle(GetLessonRankingQuery query) {
@@ -27,14 +35,21 @@ public class GetLessonRankingService implements GetLessonRankingUseCase {
                 period
         );
 
+        List<RankingEntry> entries = rankingList.entries();
+        Map<Long, String> namesByMemberId = memberNamePort.getNamesByMemberIds(
+                entries.stream().map(RankingEntry::memberId).toList()
+        );
+
         return new LessonRankingView(
                 period.value(),
                 rankingList.totalUsers(),
-                rankingList.entries().stream()
+                entries.stream()
                         .map(entry -> new LessonRankingItem(
                                 entry.rank(),
                                 entry.memberId(),
-                                entry.score()
+                                namesByMemberId.get(entry.memberId()),
+                                entry.score(),
+                                memberStreakPort.getCurrentStreakDays(entry.memberId())
                         ))
                         .toList()
         );

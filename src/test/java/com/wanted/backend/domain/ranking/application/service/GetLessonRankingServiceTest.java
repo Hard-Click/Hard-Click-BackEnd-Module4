@@ -1,5 +1,7 @@
 package com.wanted.backend.domain.ranking.application.service;
 
+import com.wanted.backend.domain.ranking.application.port.MemberNamePort;
+import com.wanted.backend.domain.ranking.application.port.MemberStreakPort;
 import com.wanted.backend.domain.ranking.application.port.RankingListReader;
 import com.wanted.backend.domain.ranking.application.query.GetLessonRankingQuery;
 import com.wanted.backend.domain.ranking.application.usecase.GetLessonRankingUseCase;
@@ -12,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -23,14 +26,20 @@ import static org.mockito.Mockito.when;
 class GetLessonRankingServiceTest {
 
     private RankingListReader rankingListReader;
+    private MemberNamePort memberNamePort;
+    private MemberStreakPort memberStreakPort;
     private GetLessonRankingService service;
 
     @BeforeEach
     void setUp() {
         rankingListReader = mock(RankingListReader.class);
+        memberNamePort = mock(MemberNamePort.class);
+        memberStreakPort = mock(MemberStreakPort.class);
         service = new GetLessonRankingService(
                 rankingListReader,
-                new RankingPeriodPolicy()
+                new RankingPeriodPolicy(),
+                memberNamePort,
+                memberStreakPort
         );
     }
 
@@ -44,6 +53,10 @@ class GetLessonRankingServiceTest {
                                 new RankingEntry(2L, 2L, 8L)
                         )
                 ));
+        when(memberNamePort.getNamesByMemberIds(List.of(1L, 2L)))
+                .thenReturn(Map.of(1L, "김지훈", 2L, "이서연"));
+        when(memberStreakPort.getCurrentStreakDays(1L)).thenReturn(7);
+        when(memberStreakPort.getCurrentStreakDays(2L)).thenReturn(3);
 
         GetLessonRankingUseCase.LessonRankingView result =
                 service.handle(new GetLessonRankingQuery("daily"));
@@ -53,7 +66,9 @@ class GetLessonRankingServiceTest {
         assertThat(result.rankings()).hasSize(2);
         assertThat(result.rankings().get(0).rank()).isEqualTo(1L);
         assertThat(result.rankings().get(0).memberId()).isEqualTo(1L);
+        assertThat(result.rankings().get(0).memberName()).isEqualTo("김지훈");
         assertThat(result.rankings().get(0).watchedLessonCount()).isEqualTo(12L);
+        assertThat(result.rankings().get(0).currentStreakDays()).isEqualTo(7);
         verify(rankingListReader).findByMetricAndPeriod(RankingMetric.LESSON, RankingPeriod.DAILY);
     }
 
