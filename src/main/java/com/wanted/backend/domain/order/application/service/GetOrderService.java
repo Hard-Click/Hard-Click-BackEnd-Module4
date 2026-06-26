@@ -26,6 +26,7 @@ public class GetOrderService implements GetOrderUseCase {
 
     @Override
     public OrderDetailResult getOrder(Long memberId, Long orderId) {
+
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
@@ -37,28 +38,52 @@ public class GetOrderService implements GetOrderUseCase {
                 .map(OrderItem::getCourseId)
                 .filter(java.util.Objects::nonNull)
                 .toList();
+
         Map<Long, String> enrollStatuses = courseIds.isEmpty()
                 ? Map.of()
                 : orderEnrollmentStatusPort.findEnrollStatuses(memberId, courseIds);
 
-        boolean orderPaid = order.getStatus() == OrderStatus.PAID
-                || order.getStatus() == OrderStatus.PARTIAL_REFUNDED;
+        boolean orderPaid =
+                order.getStatus() == OrderStatus.PAID
+                        || order.getStatus() == OrderStatus.PARTIAL_REFUNDED;
 
         List<OrderDetailResult.Item> items = order.getItems().stream()
                 .map(item -> {
-                    boolean refundable = orderPaid && !item.isRefunded();
-                    int refundAmount = item.isRefunded() ? 0 : item.getPrice();
-                    String enrollStatus = item.getCourseId() == null
-                            ? null
-                            : enrollStatuses.getOrDefault(item.getCourseId(), "NONE");
+
+                    boolean refundable =
+                            orderPaid && !item.isRefunded();
+
+                    int refundAmount =
+                            item.isRefunded() ? 0 : item.getPrice();
+
+                    String enrollStatus =
+                            item.getCourseId() == null
+                                    ? null
+                                    : enrollStatuses.getOrDefault(
+                                    item.getCourseId(),
+                                    "NONE"
+                            );
+
                     return new OrderDetailResult.Item(
-                            item.getCourseId(), item.getTitle(), item.getPrice(),
-                            refundable, refundAmount, enrollStatus);
+                            item.getCourseId(),
+                            item.getTitle(),
+                            item.getPrice(),
+                            refundable,
+                            refundAmount,
+                            item.isRefunded(),
+                            enrollStatus
+                    );
                 })
                 .toList();
 
         return new OrderDetailResult(
-                order.getOrderNo(), order.getStatus(), order.getType(),
-                order.getOrderedAt(), order.getPaidAt(), items, order.getTotalAmount());
+                order.getOrderNo(),
+                order.getStatus(),
+                order.getType(),
+                order.getOrderedAt(),
+                order.getPaidAt(),
+                items,
+                order.getTotalAmount()
+        );
     }
 }
