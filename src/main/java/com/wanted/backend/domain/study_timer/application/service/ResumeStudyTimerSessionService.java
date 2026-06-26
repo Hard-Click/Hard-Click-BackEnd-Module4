@@ -19,7 +19,7 @@ import java.time.OffsetDateTime;
 @Transactional(readOnly = true)
 public class ResumeStudyTimerSessionService implements ResumeStudyTimerSessionUseCase {
 
-    private static final String ACTION = "resume";
+    private static final StudyTimerAction ACTION = StudyTimerAction.RESUME;
 
     private final MemberLockPort memberLockPort;
     private final StudyTimerSessionRepository studyTimerSessionRepository;
@@ -56,15 +56,11 @@ public class ResumeStudyTimerSessionService implements ResumeStudyTimerSessionUs
             errorCode = e.getErrorCode().name();
             throw e;
         } finally {
-            recordMetric(errorCode);
-        }
-    }
-
-    private void recordMetric(String errorCode) {
-        if (errorCode == null) {
-            metricRecorder.recordSuccess(ACTION);
-        } else {
-            metricRecorder.recordFailure(ACTION, errorCode);
+            try {
+                metricRecorder.recordResult(ACTION, errorCode);
+            } catch (RuntimeException ignored) {
+                // metric failure must not affect the business transaction
+            }
         }
     }
 

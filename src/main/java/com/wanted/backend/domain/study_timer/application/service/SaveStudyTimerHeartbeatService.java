@@ -19,7 +19,7 @@ import java.time.OffsetDateTime;
 @Transactional(readOnly = true)
 public class SaveStudyTimerHeartbeatService implements SaveStudyTimerHeartbeatUseCase {
 
-    private static final String ACTION = "heartbeat";
+    private static final StudyTimerAction ACTION = StudyTimerAction.HEARTBEAT;
 
     private final MemberLockPort memberLockPort;
     private final StudyTimerSessionRepository studyTimerSessionRepository;
@@ -57,15 +57,11 @@ public class SaveStudyTimerHeartbeatService implements SaveStudyTimerHeartbeatUs
             errorCode = e.getErrorCode().name();
             throw e;
         } finally {
-            recordMetric(errorCode);
-        }
-    }
-
-    private void recordMetric(String errorCode) {
-        if (errorCode == null) {
-            metricRecorder.recordSuccess(ACTION);
-        } else {
-            metricRecorder.recordFailure(ACTION, errorCode);
+            try {
+                metricRecorder.recordResult(ACTION, errorCode);
+            } catch (RuntimeException ignored) {
+                // metric failure must not affect the business transaction
+            }
         }
     }
 

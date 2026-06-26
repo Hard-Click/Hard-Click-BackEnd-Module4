@@ -23,7 +23,7 @@ import java.time.OffsetDateTime;
 @Transactional(readOnly = true)
 public class EndStudyTimerSessionService implements EndStudyTimerSessionUseCase {
 
-    private static final String ACTION = "end";
+    private static final StudyTimerAction ACTION = StudyTimerAction.END;
 
     private final MemberLockPort memberLockPort;
     private final StudyTimerSessionRepository studyTimerSessionRepository;
@@ -75,15 +75,11 @@ public class EndStudyTimerSessionService implements EndStudyTimerSessionUseCase 
             errorCode = e.getErrorCode().name();
             throw e;
         } finally {
-            recordMetric(errorCode);
-        }
-    }
-
-    private void recordMetric(String errorCode) {
-        if (errorCode == null) {
-            metricRecorder.recordSuccess(ACTION);
-        } else {
-            metricRecorder.recordFailure(ACTION, errorCode);
+            try {
+                metricRecorder.recordResult(ACTION, errorCode);
+            } catch (RuntimeException ignored) {
+                // metric failure must not affect the business transaction
+            }
         }
     }
 

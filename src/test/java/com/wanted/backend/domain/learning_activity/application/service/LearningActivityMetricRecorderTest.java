@@ -1,4 +1,4 @@
-package com.wanted.backend.domain.study_timer.application.service;
+package com.wanted.backend.domain.learning_activity.application.service;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -9,17 +9,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.mock;
 
-class StudyTimerSessionMetricRecorderTest {
+class LearningActivityMetricRecorderTest {
 
     @Test
     void recordsSuccessCounterWithSuccessStatus() {
         SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
-        StudyTimerSessionMetricRecorder recorder = new StudyTimerSessionMetricRecorder(meterRegistry);
+        LearningActivityMetricRecorder recorder = new LearningActivityMetricRecorder(meterRegistry);
 
-        recorder.recordSuccess(StudyTimerAction.START);
+        recorder.recordSuccess(LearningActivityAction.COMPLETE_VIDEO);
 
-        Counter counter = meterRegistry.find("study_timer.session.result")
-                .tag("action", "start")
+        Counter counter = meterRegistry.find("learning_activity.access.result")
+                .tag("action", "completeVideo")
                 .tag("status", "SUCCESS")
                 .tag("errorCode", "NONE")
                 .counter();
@@ -30,14 +30,14 @@ class StudyTimerSessionMetricRecorderTest {
     @Test
     void recordsFailureCounterTaggedWithErrorCode() {
         SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
-        StudyTimerSessionMetricRecorder recorder = new StudyTimerSessionMetricRecorder(meterRegistry);
+        LearningActivityMetricRecorder recorder = new LearningActivityMetricRecorder(meterRegistry);
 
-        recorder.recordFailure(StudyTimerAction.PAUSE, "STUDY_TIMER_SESSION_NOT_RUNNING");
+        recorder.recordFailure(LearningActivityAction.VIDEO_ACCESS, "ENROLLMENT_REQUIRED");
 
-        Counter counter = meterRegistry.find("study_timer.session.result")
-                .tag("action", "pause")
+        Counter counter = meterRegistry.find("learning_activity.access.result")
+                .tag("action", "videoAccess")
                 .tag("status", "FAILED")
-                .tag("errorCode", "STUDY_TIMER_SESSION_NOT_RUNNING")
+                .tag("errorCode", "ENROLLMENT_REQUIRED")
                 .counter();
         assertThat(counter).isNotNull();
         assertThat(counter.count()).isEqualTo(1.0);
@@ -46,12 +46,12 @@ class StudyTimerSessionMetricRecorderTest {
     @Test
     void recordResultRecordsSuccessWhenErrorCodeIsNull() {
         SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
-        StudyTimerSessionMetricRecorder recorder = new StudyTimerSessionMetricRecorder(meterRegistry);
+        LearningActivityMetricRecorder recorder = new LearningActivityMetricRecorder(meterRegistry);
 
-        recorder.recordResult(StudyTimerAction.RESUME, null);
+        recorder.recordResult(LearningActivityAction.COURSE_PROGRESS, null);
 
-        Counter counter = meterRegistry.find("study_timer.session.result")
-                .tag("action", "resume")
+        Counter counter = meterRegistry.find("learning_activity.access.result")
+                .tag("action", "courseProgress")
                 .tag("status", "SUCCESS")
                 .tag("errorCode", "NONE")
                 .counter();
@@ -62,14 +62,14 @@ class StudyTimerSessionMetricRecorderTest {
     @Test
     void recordResultRecordsFailureWhenErrorCodeIsPresent() {
         SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
-        StudyTimerSessionMetricRecorder recorder = new StudyTimerSessionMetricRecorder(meterRegistry);
+        LearningActivityMetricRecorder recorder = new LearningActivityMetricRecorder(meterRegistry);
 
-        recorder.recordResult(StudyTimerAction.RESUME, "STUDY_TIMER_SESSION_NOT_PAUSED");
+        recorder.recordResult(LearningActivityAction.COURSE_PROGRESS, "ENROLLMENT_REQUIRED");
 
-        Counter counter = meterRegistry.find("study_timer.session.result")
-                .tag("action", "resume")
+        Counter counter = meterRegistry.find("learning_activity.access.result")
+                .tag("action", "courseProgress")
                 .tag("status", "FAILED")
-                .tag("errorCode", "STUDY_TIMER_SESSION_NOT_PAUSED")
+                .tag("errorCode", "ENROLLMENT_REQUIRED")
                 .counter();
         assertThat(counter).isNotNull();
         assertThat(counter.count()).isEqualTo(1.0);
@@ -77,14 +77,13 @@ class StudyTimerSessionMetricRecorderTest {
 
     @Test
     void swallowsExceptionWhenMeterRegistryFailsSoCallerNeverSeesIt() {
-        // record()의 핵심 책임: metric 기록 실패가 세션 저장 트랜잭션에 전파되면 안 된다.
         MeterRegistry failingRegistry = mock(MeterRegistry.class, invocation -> {
             throw new RuntimeException("meter registry boom");
         });
-        StudyTimerSessionMetricRecorder recorder = new StudyTimerSessionMetricRecorder(failingRegistry);
+        LearningActivityMetricRecorder recorder = new LearningActivityMetricRecorder(failingRegistry);
 
-        assertThatCode(() -> recorder.recordSuccess(StudyTimerAction.START)).doesNotThrowAnyException();
-        assertThatCode(() -> recorder.recordFailure(StudyTimerAction.PAUSE, "STUDY_TIMER_SESSION_NOT_RUNNING"))
+        assertThatCode(() -> recorder.recordSuccess(LearningActivityAction.COMPLETE_VIDEO)).doesNotThrowAnyException();
+        assertThatCode(() -> recorder.recordFailure(LearningActivityAction.VIDEO_ACCESS, "ENROLLMENT_REQUIRED"))
                 .doesNotThrowAnyException();
     }
 }

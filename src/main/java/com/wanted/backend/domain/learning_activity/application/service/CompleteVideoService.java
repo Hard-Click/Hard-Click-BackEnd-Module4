@@ -19,25 +19,37 @@ import java.time.LocalDateTime;
 @Transactional
 public class CompleteVideoService implements CompleteVideoUseCase {
 
+    private static final LearningActivityAction ACTION = LearningActivityAction.COMPLETE_VIDEO;
+
     private final PlayableVideoProgressReader playableVideoProgressReader;
     private final VideoProgressRepository videoProgressRepository;
     private final VideoCompletionPolicy videoCompletionPolicy;
+    private final LearningActivityMetricRecorder metricRecorder;
 
     @Override
     public void handle(MemberVideoCommand command) {
-        Long memberId = command.memberId();
-        Long videoId = command.videoId();
+        String errorCode = "UNKNOWN";
+        try {
+            Long memberId = command.memberId();
+            Long videoId = command.videoId();
 
-        PlayableVideoProgressReader.PlayableVideoProgress playable =
-                playableVideoProgressReader.get(memberId, videoId);
-        VideoAccessInfo accessInfo = playable.accessInfo();
-        VideoProgress progress = playable.progress();
+            PlayableVideoProgressReader.PlayableVideoProgress playable =
+                    playableVideoProgressReader.get(memberId, videoId);
+            VideoAccessInfo accessInfo = playable.accessInfo();
+            VideoProgress progress = playable.progress();
 
-        if (!videoCompletionPolicy.canComplete(effectiveProgressSeconds(progress), accessInfo.durationSeconds())) {
-            throw new BusinessException(ErrorCode.VIDEO_COMPLETION_CONDITION_NOT_MET);
+            if (!videoCompletionPolicy.canComplete(effectiveProgressSeconds(progress), accessInfo.durationSeconds())) {
+                throw new BusinessException(ErrorCode.VIDEO_COMPLETION_CONDITION_NOT_MET);
+            }
+
+            videoProgressRepository.save(progress.complete(LocalDateTime.now()));
+            errorCode = null;
+        } catch (BusinessException e) {
+            errorCode = e.getErrorCode().name();
+            throw e;
+        } finally {
+            metricRecorder.recordResult(ACTION, errorCode);
         }
-
-        videoProgressRepository.save(progress.complete(LocalDateTime.now()));
     }
 
     private int effectiveProgressSeconds(VideoProgress progress) {

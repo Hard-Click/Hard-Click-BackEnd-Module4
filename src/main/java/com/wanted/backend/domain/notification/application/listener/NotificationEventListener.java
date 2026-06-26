@@ -11,6 +11,8 @@ import com.wanted.backend.domain.notification.application.port.CourseEnrolleeQue
 import com.wanted.backend.domain.notification.application.port.MemberIdQueryPort;
 import com.wanted.backend.domain.notification.application.usecase.NotificationCommandUseCase;
 import com.wanted.backend.domain.notification.domain.model.NotificationType;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -27,13 +29,15 @@ public class NotificationEventListener {
     private final NotificationCommandUseCase notificationCommandUseCase;
     private final CourseEnrolleeQueryPort courseEnrolleeQueryPort;
     private final MemberIdQueryPort memberIdQueryPort;
+    private final MeterRegistry meterRegistry;
 
     public NotificationEventListener(NotificationCommandUseCase notificationCommandUseCase,
                                      CourseEnrolleeQueryPort courseEnrolleeQueryPort,
-                                     MemberIdQueryPort memberIdQueryPort) {
+                                     MemberIdQueryPort memberIdQueryPort, MeterRegistry meterRegistry) {
         this.notificationCommandUseCase = notificationCommandUseCase;
         this.courseEnrolleeQueryPort = courseEnrolleeQueryPort;
         this.memberIdQueryPort = memberIdQueryPort;
+        this.meterRegistry = meterRegistry;
     }
 
     // ── 커뮤니티 ──────────────────────────────────────────────────
@@ -105,6 +109,7 @@ public class NotificationEventListener {
 
     // ── 공지 ──────────────────────────────────────────────────────
 
+    // 110~146줄 교체
     @Async("notificationExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onNoticeCreated(NoticeCreatedEvent event) {
@@ -114,10 +119,17 @@ public class NotificationEventListener {
             if ("GLOBAL".equals(event.type())) {
                 String message = "새로운 전체 공지가 등록되었습니다: " + event.title();
                 List<NotificationRequest> requests = new ArrayList<>();
+
+                Timer.Sample memberQuerySample = Timer.start(meterRegistry);
                 memberIdQueryPort.findAllInstructorIds().forEach(id ->
                         requests.add(new NotificationRequest(id, NotificationType.NOTICE, message, url)));
                 memberIdQueryPort.findAllStudentIds().forEach(id ->
                         requests.add(new NotificationRequest(id, NotificationType.NOTICE, message, url)));
+                memberQuerySample.stop(Timer.builder("notification.member.query")
+                        .tag("type", "GLOBAL")
+                        .publishPercentileHistogram(true)
+                        .register(meterRegistry));
+
                 notificationCommandUseCase.sendBatch(requests);
 
             } else {
@@ -133,10 +145,14 @@ public class NotificationEventListener {
                             )));
                 }
 
-                String studentMessage = "수강 중인 강의에 새 공지가 등록되었습니다: " + event.title();
+                Timer.Sample memberQuerySample = Timer.start(meterRegistry);
                 courseEnrolleeQueryPort.findMemberIdsByCourseId(event.courseId()).forEach(memberId ->
                         requests.add(new NotificationRequest(
-                                memberId, NotificationType.NOTICE, studentMessage, url)));
+                                memberId, NotificationType.NOTICE,
+                                "수강 중인 강의에 새 공지가 등록되었습니다: " + event.title(), url)));
+                memberQuerySample.stop(Timer.builder("notification.member.query")
+                        .tag("type", "COURSE")
+                        .register(meterRegistry));
 
                 notificationCommandUseCase.sendBatch(requests);
             }
