@@ -3,6 +3,7 @@ package com.wanted.backend.domain.identity.infrastructure.persistence;
 import com.wanted.backend.domain.identity.domain.repository.MemberRepository;
 import com.wanted.backend.domain.identity.domain.model.Member;
 import com.wanted.backend.domain.identity.domain.model.MemberStatus;
+import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -12,9 +13,11 @@ import java.util.Optional;
 public class MemberPersistenceAdapter implements MemberRepository {
 
     private final MemberJpaRepository memberJpaRepository;
+    private final EntityManager entityManager;
 
-    public MemberPersistenceAdapter(MemberJpaRepository memberJpaRepository) {
+    public MemberPersistenceAdapter(MemberJpaRepository memberJpaRepository, EntityManager entityManager) {
         this.memberJpaRepository = memberJpaRepository;
+        this.entityManager = entityManager;
     }
 
     @Override
@@ -63,7 +66,14 @@ public class MemberPersistenceAdapter implements MemberRepository {
 
     @Override
     public int updateStatusIfActive(Long memberId, MemberStatus newStatus, LocalDateTime updatedAt) {
-        return memberJpaRepository.updateStatusIfActive(memberId, newStatus, updatedAt);
+        return entityManager.createQuery(
+                        "UPDATE MemberJpaEntity m SET m.status = :newStatus, m.updatedAt = :updatedAt "
+                                + "WHERE m.id = :id AND m.status = :activeStatus")
+                .setParameter("newStatus", newStatus)
+                .setParameter("updatedAt", updatedAt)
+                .setParameter("id", memberId)
+                .setParameter("activeStatus", MemberStatus.ACTIVE)
+                .executeUpdate();
     }
 
     @Override

@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -40,18 +41,33 @@ public class OrderController {
     @Operation(
             summary = "결제 진입(주문 준비)",
             description = "type=course(강의/장바구니) 또는 subscription(연간 패스)로 READY 주문을 생성합니다. " +
-                    "course 단건 결제 시 courseId를 함께 전달하고, 생략 시 장바구니 전체로 처리합니다."
+                    "course 단건 결제 시 courseId를 전달하고, " +
+                    "courseIds 전달 시 선택한 장바구니 강의만 결제하며, " +
+                    "둘 다 없으면 장바구니 전체를 결제합니다."
     )
     public ResponseEntity<ApiResponse<CheckoutResponse>> checkout(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+
             @Parameter(description = "주문 타입 (course | subscription)", example = "course")
             @RequestParam String type,
-            @Parameter(description = "단건 강의 결제 대상 ID (course 단건 결제 시)", example = "1")
-            @RequestParam(required = false) Long courseId
+
+            @Parameter(description = "단건 강의 결제 대상 ID", example = "1")
+            @RequestParam(required = false) Long courseId,
+
+            @Parameter(description = "선택한 장바구니 강의 ID 목록", example = "1,2,3")
+            @RequestParam(required = false) List<Long> courseIds
     ) {
         OrderType orderType = parseType(type);
+
         CheckoutResponse response = CheckoutResponse.from(
-                checkoutUseCase.checkout(userDetails.getMemberId(), orderType, courseId));
+                checkoutUseCase.checkout(
+                        userDetails.getMemberId(),
+                        orderType,
+                        courseId,
+                        courseIds
+                )
+        );
+
         return ApiResponse.success("결제 진입 성공", response);
     }
 
@@ -83,14 +99,22 @@ public class OrderController {
         if (idempotencyKey == null || idempotencyKey.isBlank()) {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
+
         String normalizedIdempotencyKey = idempotencyKey.trim();
+
         try {
             UUID.fromString(normalizedIdempotencyKey);
         } catch (IllegalArgumentException e) {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
 
-        refundOrderItemUseCase.refund(userDetails.getMemberId(), orderId, courseId, normalizedIdempotencyKey);
+        refundOrderItemUseCase.refund(
+                userDetails.getMemberId(),
+                orderId,
+                courseId,
+                normalizedIdempotencyKey
+        );
+
         return ApiResponse.successNoContent("환불이 처리되었습니다.");
     }
 
@@ -98,6 +122,7 @@ public class OrderController {
         if (type == null || type.isBlank()) {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
+
         try {
             return OrderType.valueOf(type.trim().toUpperCase());
         } catch (IllegalArgumentException e) {

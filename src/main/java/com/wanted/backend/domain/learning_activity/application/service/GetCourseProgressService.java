@@ -7,6 +7,7 @@ import com.wanted.backend.domain.learning_activity.application.usecase.GetCourse
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +15,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -63,7 +65,12 @@ public class GetCourseProgressService implements GetCourseProgressUseCase {
             errorCode = e.getErrorCode().name();
             throw e;
         } finally {
-            metricRecorder.recordResult(ACTION, errorCode);
+            try {
+                metricRecorder.recordResult(ACTION, errorCode);
+            } catch (RuntimeException e) {
+                // metric failure must not affect the business transaction
+                log.warn("learning activity metric record failed: action={}, errorCode={}", ACTION, errorCode, e);
+            }
         }
     }
 

@@ -38,7 +38,6 @@ import org.springframework.http.HttpStatus;
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "U018", "회원 정보를 찾을 수 없습니다."),
     INVALID_MEMBER_STATUS_CHANGE(HttpStatus.BAD_REQUEST, "U019", "변경할 수 없는 회원 상태입니다."),
     PASSWORD_CONFIRM_MISMATCH(HttpStatus.BAD_REQUEST, "U016", "새 비밀번호와 비밀번호 확인이 일치하지 않습니다."),
-        INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "AUTH_009", "현재 비밀번호가 일치하지 않습니다."),
 
     /* =========================================================================
        3. 인증 및 보안 관련 고도화 예외 (AUTH000)

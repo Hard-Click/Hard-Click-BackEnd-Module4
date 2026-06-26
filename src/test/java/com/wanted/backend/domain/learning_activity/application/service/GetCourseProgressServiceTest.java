@@ -13,7 +13,9 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -56,6 +58,18 @@ class GetCourseProgressServiceTest {
         assertThat(result.lessons().get(0).completed()).isTrue();
         assertThat(result.lessons().get(0).lastPositionSeconds()).isEqualTo(300);
         verify(metricRecorder).recordResult(LearningActivityAction.COURSE_PROGRESS, null);
+    }
+
+    @Test
+    void 메트릭_기록이_실패해도_조회_결과는_그대로_유지된다() {
+        when(enrollmentAccessPort.hasActiveEnrollment(1L, 20L)).thenReturn(true);
+        when(courseProgressQueryPort.findByMemberIdAndCourseId(1L, 20L))
+                .thenReturn(new CourseProgressQueryPort.CourseProgressData(20L, List.of()));
+        doThrow(new RuntimeException("metric registry down"))
+                .when(metricRecorder).recordResult(LearningActivityAction.COURSE_PROGRESS, null);
+
+        assertThatCode(() -> service.handle(new GetCourseProgressCommand(1L, 20L)))
+                .doesNotThrowAnyException();
     }
 
     @Test
