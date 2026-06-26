@@ -64,7 +64,7 @@ public class ProfileCommandService implements ProfileCommandUseCase {
         }
 
         if (!passwordEncoder.matches(command.currentPassword(), member.getPassword())) {
-            throw new BusinessException(ErrorCode.INVALID_PASSWORD);
+            throw new BusinessException(ErrorCode.INVALID_CURRENT_PASSWORD);
         }
 
         String encodedDeletedPassword = passwordEncoder.encode(UUID.randomUUID().toString());
