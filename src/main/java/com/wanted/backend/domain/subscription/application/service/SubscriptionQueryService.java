@@ -2,6 +2,7 @@ package com.wanted.backend.domain.subscription.application.service;
 
 import com.wanted.backend.domain.subscription.application.dto.MySubscriptionResult;
 import com.wanted.backend.domain.subscription.application.dto.SubscriptionPlanResult;
+import com.wanted.backend.domain.subscription.application.pricing.SubscriptionPricingPolicy;
 import com.wanted.backend.domain.subscription.application.usecase.GetMySubscriptionUseCase;
 import com.wanted.backend.domain.subscription.application.usecase.GetSubscriptionPlanUseCase;
 import com.wanted.backend.domain.subscription.domain.model.Subscription;
@@ -20,6 +21,7 @@ import java.time.LocalDateTime;
 public class SubscriptionQueryService implements GetSubscriptionPlanUseCase, GetMySubscriptionUseCase {
 
     private final SubscriptionRepository subscriptionRepository;
+    private final SubscriptionPricingPolicy pricingPolicy;
     private final Clock clock;
 
     @Override
@@ -27,8 +29,10 @@ public class SubscriptionQueryService implements GetSubscriptionPlanUseCase, Get
         return new SubscriptionPlanResult(
                 SubscriptionPlanCatalog.ANNUAL_PASS_PLAN_ID,
                 SubscriptionPlanCatalog.ANNUAL_PASS_NAME,
-                SubscriptionPlanCatalog.ANNUAL_PASS_PRICE,
+                pricingPolicy.currentPrice(),
                 SubscriptionPlanCatalog.ANNUAL_PASS_DURATION_DAYS,
+                pricingPolicy.daysUntilSuneung(),
+                pricingPolicy.upcomingSuneungDate(),
                 SubscriptionPlanCatalog.ANNUAL_PASS_BENEFITS
         );
     }

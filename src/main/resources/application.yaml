@@ -101,6 +101,12 @@ community:
     comment-url: /uploads/comments
     max-size: 5242880
 
+subscription:
+  # 연간 패스 가격 = (다가오는 수능까지 남은 일수) × daily-rate
+  # 수능 날짜는 매년 갱신 필요(미갱신 시 다음 해 같은 날짜로 자동 롤오버).
+  suneung-date: ${SUBSCRIPTION_SUNEUNG_DATE:2026-11-19}
+  daily-rate: ${SUBSCRIPTION_DAILY_RATE:30000}
+
 grass:
   lesson:
     max-level: ${GRASS_LESSON_MAX_LEVEL:4}

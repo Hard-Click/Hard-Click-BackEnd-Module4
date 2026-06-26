@@ -23,7 +23,7 @@ public class SubscribeService implements SubscribeUseCase {
     private final Clock clock;
 
     @Override
-    public MySubscriptionResult handle(Long memberId) {
+    public MySubscriptionResult handle(Long memberId, int paidAmount) {
         subscriptionRepository.findActiveByMemberId(memberId).ifPresent(s -> {
             throw new BusinessException(ErrorCode.SUBSCRIPTION_ALREADY_ACTIVE);
         });
@@ -35,7 +35,7 @@ public class SubscribeService implements SubscribeUseCase {
                 memberId,
                 SubscriptionPlanCatalog.ANNUAL_PASS_PLAN_ID,
                 SubscriptionPlanCatalog.DEFAULT_PAYMENT_METHOD,
-                SubscriptionPlanCatalog.ANNUAL_PASS_PRICE,
+                paidAmount,
                 now,
                 expiredAt,
                 now
