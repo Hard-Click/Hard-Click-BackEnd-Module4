@@ -42,3 +42,6 @@ application-secret.yaml
 ### Logs ###
 logs/
 *.log
+
+CLAUDE.md
+benchmark_post_list.sql

@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.identity.application.service;
 
+import com.wanted.backend.domain.identity.application.AccountLockVerifyResult;
 import com.wanted.backend.domain.identity.application.command.AccountLockVerifyCommand;
 import com.wanted.backend.domain.identity.application.usecase.EmailVerificationUseCase;
 import com.wanted.backend.domain.identity.domain.model.EmailPurpose;
@@ -51,9 +52,9 @@ class AccountLockServiceTest {
         when(memberRepository.findByEmail(email)).thenReturn(Optional.of(member));
         when(emailVerificationUseCase.verifyCode(email, code, EmailPurpose.ACCOUNT_LOCK)).thenReturn(token);
 
-        String result = passwordCommandService.verify(new AccountLockVerifyCommand(email, code));
+        AccountLockVerifyResult result = passwordCommandService.verify(new AccountLockVerifyCommand(email, code));
 
-        assertThat(result).isEqualTo(token);
+        assertThat(result.passwordChangeToken()).isEqualTo(token);
         verify(memberRepository).findByEmail(email);
         verify(emailVerificationUseCase).verifyCode(email, code, EmailPurpose.ACCOUNT_LOCK);
     }
