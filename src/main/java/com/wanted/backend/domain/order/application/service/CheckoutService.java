@@ -19,15 +19,16 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class CheckoutService implements CheckoutUseCase {
 
-    private static final DateTimeFormatter ORDER_NO_DATE =
-            DateTimeFormatter.ofPattern("yyyyMMdd");
+    private static final DateTimeFormatter ORDER_NO_DATE = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     private final OrderRepository orderRepository;
     private final OrderCourseQueryPort orderCourseQueryPort;
@@ -36,17 +37,11 @@ public class CheckoutService implements CheckoutUseCase {
     private final Clock clock;
 
     @Override
-    public CheckoutResult checkout(
-            Long memberId,
-            OrderType type,
-            Long courseId,
-            List<Long> courseIds
-    ) {
+    public CheckoutResult checkout(Long memberId, OrderType type, Long courseId, List<Long> selectedCourseIds) {
         LocalDateTime now = LocalDateTime.now(clock);
-
         return type == OrderType.SUBSCRIPTION
                 ? checkoutSubscription(memberId, now)
-                : checkoutCourse(memberId, courseId, courseIds, now);
+                : checkoutCourse(memberId, courseId, selectedCourseIds, now);
     }
 
     private CheckoutResult checkoutCourse(
@@ -58,26 +53,25 @@ public class CheckoutService implements CheckoutUseCase {
 
         List<Long> courseIds;
 
-        // 선택 결제
         if (selectedCourseIds != null && !selectedCourseIds.isEmpty()) {
 
-            List<Long> cartCourseIds =
-                    orderCartQueryPort.findCartCourseIds(memberId);
+            List<Long> cartCourseIds = orderCartQueryPort.findCartCourseIds(memberId);
 
+            // 중복 제거
             courseIds = selectedCourseIds.stream()
                     .distinct()
-                    .filter(cartCourseIds::contains)
                     .toList();
 
-        }
-        // 단건 결제
-        else if (courseId != null) {
+            // 하나라도 장바구니에 없으면 실패
+            if (!cartCourseIds.containsAll(courseIds)) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+            }
+
+        } else if (courseId != null) {
 
             courseIds = List.of(courseId);
 
-        }
-        // 장바구니 전체
-        else {
+        } else {
 
             courseIds = orderCartQueryPort.findCartCourseIds(memberId);
 
@@ -90,8 +84,17 @@ public class CheckoutService implements CheckoutUseCase {
         List<OrderCourseQueryPort.CourseInfo> courses =
                 orderCourseQueryPort.findAllByIds(courseIds);
 
-        if (courses.isEmpty()) {
-            throw new BusinessException(ErrorCode.EMPTY_CHECKOUT);
+        // 조회되지 않은 강의가 하나라도 있으면 실패
+        if (courses.size() != courseIds.size()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
+        Set<Long> foundCourseIds = courses.stream()
+                .map(OrderCourseQueryPort.CourseInfo::courseId)
+                .collect(Collectors.toSet());
+
+        if (!foundCourseIds.containsAll(courseIds)) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
 
         List<OrderItem> items = courses.stream()
@@ -114,8 +117,7 @@ public class CheckoutService implements CheckoutUseCase {
                         total,
                         now,
                         items
-                )
-        );
+                ));
 
         return toResult(order);
     }
@@ -134,8 +136,7 @@ public class CheckoutService implements CheckoutUseCase {
                         plan.price(),
                         now,
                         List.of()
-                )
-        );
+                ));
 
         return new CheckoutResult(
                 order.getOrderNo(),
@@ -154,13 +155,11 @@ public class CheckoutService implements CheckoutUseCase {
     }
 
     private CheckoutResult toResult(Order order) {
-
         List<CheckoutResult.Item> items = order.getItems().stream()
                 .map(i -> new CheckoutResult.Item(
                         i.getCourseId(),
                         i.getTitle(),
-                        i.getPrice()
-                ))
+                        i.getPrice()))
                 .toList();
 
         return new CheckoutResult(
@@ -174,13 +173,9 @@ public class CheckoutService implements CheckoutUseCase {
     }
 
     private String generateOrderNo(LocalDateTime now) {
-
         return "ORD-"
                 + now.format(ORDER_NO_DATE)
                 + "-"
-                + UUID.randomUUID()
-                .toString()
-                .substring(0, 8)
-                .toUpperCase();
+                + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
 }
