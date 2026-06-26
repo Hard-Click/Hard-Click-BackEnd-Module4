@@ -16,7 +16,7 @@ class StudyTimerSessionMetricRecorderTest {
         SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
         StudyTimerSessionMetricRecorder recorder = new StudyTimerSessionMetricRecorder(meterRegistry);
 
-        recorder.recordSuccess("start");
+        recorder.recordSuccess(StudyTimerAction.START);
 
         Counter counter = meterRegistry.find("study_timer.session.result")
                 .tag("action", "start")
@@ -32,12 +32,44 @@ class StudyTimerSessionMetricRecorderTest {
         SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
         StudyTimerSessionMetricRecorder recorder = new StudyTimerSessionMetricRecorder(meterRegistry);
 
-        recorder.recordFailure("pause", "STUDY_TIMER_SESSION_NOT_RUNNING");
+        recorder.recordFailure(StudyTimerAction.PAUSE, "STUDY_TIMER_SESSION_NOT_RUNNING");
 
         Counter counter = meterRegistry.find("study_timer.session.result")
                 .tag("action", "pause")
                 .tag("status", "FAILED")
                 .tag("errorCode", "STUDY_TIMER_SESSION_NOT_RUNNING")
+                .counter();
+        assertThat(counter).isNotNull();
+        assertThat(counter.count()).isEqualTo(1.0);
+    }
+
+    @Test
+    void recordResultRecordsSuccessWhenErrorCodeIsNull() {
+        SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+        StudyTimerSessionMetricRecorder recorder = new StudyTimerSessionMetricRecorder(meterRegistry);
+
+        recorder.recordResult(StudyTimerAction.RESUME, null);
+
+        Counter counter = meterRegistry.find("study_timer.session.result")
+                .tag("action", "resume")
+                .tag("status", "SUCCESS")
+                .tag("errorCode", "NONE")
+                .counter();
+        assertThat(counter).isNotNull();
+        assertThat(counter.count()).isEqualTo(1.0);
+    }
+
+    @Test
+    void recordResultRecordsFailureWhenErrorCodeIsPresent() {
+        SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+        StudyTimerSessionMetricRecorder recorder = new StudyTimerSessionMetricRecorder(meterRegistry);
+
+        recorder.recordResult(StudyTimerAction.RESUME, "STUDY_TIMER_SESSION_NOT_PAUSED");
+
+        Counter counter = meterRegistry.find("study_timer.session.result")
+                .tag("action", "resume")
+                .tag("status", "FAILED")
+                .tag("errorCode", "STUDY_TIMER_SESSION_NOT_PAUSED")
                 .counter();
         assertThat(counter).isNotNull();
         assertThat(counter.count()).isEqualTo(1.0);
@@ -51,8 +83,8 @@ class StudyTimerSessionMetricRecorderTest {
         });
         StudyTimerSessionMetricRecorder recorder = new StudyTimerSessionMetricRecorder(failingRegistry);
 
-        assertThatCode(() -> recorder.recordSuccess("start")).doesNotThrowAnyException();
-        assertThatCode(() -> recorder.recordFailure("pause", "STUDY_TIMER_SESSION_NOT_RUNNING"))
+        assertThatCode(() -> recorder.recordSuccess(StudyTimerAction.START)).doesNotThrowAnyException();
+        assertThatCode(() -> recorder.recordFailure(StudyTimerAction.PAUSE, "STUDY_TIMER_SESSION_NOT_RUNNING"))
                 .doesNotThrowAnyException();
     }
 }

@@ -71,7 +71,7 @@ class StartStudyTimerSessionServiceTest {
         assertThat(result.sessionId()).isEqualTo(55L);
         assertThat(result.status()).isEqualTo("RUNNING");
         assertThat(result.startedAt()).isEqualTo(startedAt);
-        verify(metricRecorder).recordSuccess("start");
+        verify(metricRecorder).recordResult(StudyTimerAction.START, null);
     }
 
     @Test
@@ -89,6 +89,6 @@ class StartStudyTimerSessionServiceTest {
         verify(memberLockPort).lock(1L);
         verify(repository).existsActiveByMemberId(1L);
         verify(repository, never()).save(any());
-        verify(metricRecorder).recordFailure("start", "STUDY_TIMER_SESSION_ALREADY_RUNNING");
+        verify(metricRecorder).recordResult(StudyTimerAction.START, "STUDY_TIMER_SESSION_ALREADY_RUNNING");
     }
 }

@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class StartStudyTimerSessionService implements StartStudyTimerSessionUseCase {
 
-    private static final String ACTION = "start";
+    private static final StudyTimerAction ACTION = StudyTimerAction.START;
 
     private final MemberLockPort memberLockPort;
     private final StudyTimerSessionRepository studyTimerSessionRepository;
@@ -48,15 +48,11 @@ public class StartStudyTimerSessionService implements StartStudyTimerSessionUseC
             errorCode = e.getErrorCode().name();
             throw e;
         } finally {
-            recordMetric(errorCode);
-        }
-    }
-
-    private void recordMetric(String errorCode) {
-        if (errorCode == null) {
-            metricRecorder.recordSuccess(ACTION);
-        } else {
-            metricRecorder.recordFailure(ACTION, errorCode);
+            try {
+                metricRecorder.recordResult(ACTION, errorCode);
+            } catch (RuntimeException ignored) {
+                // metric failure must not affect the business transaction
+            }
         }
     }
 }
