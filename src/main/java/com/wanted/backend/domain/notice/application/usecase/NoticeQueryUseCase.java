@@ -6,5 +6,6 @@ import com.wanted.backend.domain.notice.presentation.response.NoticeListResponse
 
 public interface NoticeQueryUseCase {
     NoticeListResponse getList(GetNoticeListCommand command);
-    NoticeDetailResponse getDetail(Long noticeId);
+    // 읽음 여부 반영을 위해 memberId 추가
+    NoticeDetailResponse getDetail(Long noticeId, Long memberId);
 }

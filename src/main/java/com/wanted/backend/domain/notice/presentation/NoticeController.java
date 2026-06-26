@@ -116,15 +116,17 @@ public class NoticeController {
     @Operation(
             summary = "공지사항 상세 조회",
             description = """
-                공지사항 상세 내용을 조회합니다.
-                - 로그인한 회원만 조회 가능합니다.
-                - 이전 공지사항 ID와 제목을 함께 반환합니다.
-                """
+            공지사항 상세 내용을 조회합니다.
+            - 로그인한 회원만 조회 가능합니다.
+            - 이전 공지사항 ID와 제목을 함께 반환합니다.
+            """
     )
     public ResponseEntity<ApiResponse<NoticeDetailResponse>> getNotice(
+            @AuthenticationPrincipal CustomUserDetails userDetails, // 읽음 여부 확인을 위해 추가
             @PathVariable Long noticeId) {
 
-        NoticeDetailResponse response = noticeQueryUseCase.getDetail(noticeId);
+        Long memberId = userDetails != null ? userDetails.getMemberId() : null;
+        NoticeDetailResponse response = noticeQueryUseCase.getDetail(noticeId, memberId);
 
         return ApiResponse.success("공지사항 상세 조회 성공", response);
     }

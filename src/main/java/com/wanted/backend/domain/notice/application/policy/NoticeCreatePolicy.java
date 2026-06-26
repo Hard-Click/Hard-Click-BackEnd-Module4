@@ -19,15 +19,13 @@ public class NoticeCreatePolicy {
     }
 
     public void validate(Long memberId, Long courseId) {
-
         if (adminValidationPort.isAdmin(memberId)) {
+            // 관리자도 강의 존재 여부는 검증
+            courseInstructorPort.getInstructorIdByCourseId(courseId);
             return;
         }
 
-        // [1단계] 강의 담당 강사 ID 조회 (존재하지 않는 강의면 예외 발생)
         Long courseInstructorId = courseInstructorPort.getInstructorIdByCourseId(courseId);
-
-        // [2단계] 해당 강의의 담당 강사인지 확인
         if (!courseInstructorId.equals(memberId)) {
             throw new BusinessException(ErrorCode.NOTICE_NOT_AUTHORIZED);
         }

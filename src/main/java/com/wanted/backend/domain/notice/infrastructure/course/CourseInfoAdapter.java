@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 @Component
-@Transactional(readOnly = true)
+@Transactional(readOnly = true, noRollbackFor = BusinessException.class)
 public class CourseInfoAdapter implements CourseInfoPort {
 
     private final SpringDataCourseReferenceRepository courseReferenceRepository;
