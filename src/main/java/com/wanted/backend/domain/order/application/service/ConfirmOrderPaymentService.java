@@ -132,7 +132,7 @@ public class ConfirmOrderPaymentService implements ConfirmOrderPaymentUseCase {
     private void dispatchAccessGrant(Order order) {
         try {
             if (order.getType() == OrderType.SUBSCRIPTION) {
-                subscribeUseCase.handle(order.getMemberId());
+                subscribeUseCase.handle(order.getMemberId(), order.getFinalAmount());
             } else {
                 for (OrderItem item : order.getItems()) {
                     grantEnrollment(order.getMemberId(), item.getCourseId());
