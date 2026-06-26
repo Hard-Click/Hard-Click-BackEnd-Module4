@@ -15,7 +15,10 @@ import org.mockito.ArgumentCaptor;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -60,6 +63,21 @@ class CompleteVideoServiceTest {
         assertThat(captor.getValue().completedAt()).isNotNull();
         assertThat(captor.getValue().watchTimeSec()).isEqualTo(270);
         verify(metricRecorder).recordResult(LearningActivityAction.COMPLETE_VIDEO, null);
+    }
+
+    @Test
+    void 메트릭_기록이_실패해도_영상_완료_처리는_그대로_유지된다() {
+        VideoAccessInfo accessInfo = accessInfo();
+        VideoProgress progress = new VideoProgress(100L, 1L, 20L, 10L, 42, 270, false, null);
+        when(videoCatalogPort.findByVideoId(10L)).thenReturn(Optional.of(accessInfo));
+        when(videoProgressRepository.findByMemberIdAndVideoId(1L, 10L)).thenReturn(Optional.of(progress));
+        doThrow(new RuntimeException("metric registry down"))
+                .when(metricRecorder).recordResult(LearningActivityAction.COMPLETE_VIDEO, null);
+
+        assertThatCode(() -> service.handle(new MemberVideoCommand(1L, 10L)))
+                .doesNotThrowAnyException();
+
+        verify(videoProgressRepository).save(any(VideoProgress.class));
     }
 
     @Test

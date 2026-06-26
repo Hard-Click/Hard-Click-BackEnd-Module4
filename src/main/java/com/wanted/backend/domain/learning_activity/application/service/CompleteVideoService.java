@@ -9,11 +9,13 @@ import com.wanted.backend.domain.learning_activity.domain.repository.VideoProgre
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -48,7 +50,12 @@ public class CompleteVideoService implements CompleteVideoUseCase {
             errorCode = e.getErrorCode().name();
             throw e;
         } finally {
-            metricRecorder.recordResult(ACTION, errorCode);
+            try {
+                metricRecorder.recordResult(ACTION, errorCode);
+            } catch (RuntimeException e) {
+                // metric failure must not affect the business transaction
+                log.warn("learning activity metric record failed: action={}, errorCode={}", ACTION, errorCode, e);
+            }
         }
     }
 
