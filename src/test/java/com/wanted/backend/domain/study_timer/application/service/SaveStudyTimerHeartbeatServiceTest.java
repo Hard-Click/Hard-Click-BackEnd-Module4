@@ -22,6 +22,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -32,14 +33,16 @@ class SaveStudyTimerHeartbeatServiceTest {
 
     private MemberLockPort memberLockPort;
     private StudyTimerSessionRepository repository;
+    private StudyTimerSessionMetricRecorder metricRecorder;
     private SaveStudyTimerHeartbeatService service;
 
     @BeforeEach
     void setUp() {
         memberLockPort = mock(MemberLockPort.class);
         repository = mock(StudyTimerSessionRepository.class);
+        metricRecorder = mock(StudyTimerSessionMetricRecorder.class);
         Clock clock = Clock.fixed(Instant.parse("2026-05-11T06:05:00Z"), ZoneId.of("Asia/Seoul"));
-        service = new SaveStudyTimerHeartbeatService(memberLockPort, repository, clock);
+        service = new SaveStudyTimerHeartbeatService(memberLockPort, repository, metricRecorder, clock);
     }
 
     @Test
@@ -85,6 +88,31 @@ class SaveStudyTimerHeartbeatServiceTest {
         assertThat(result.status()).isEqualTo("RUNNING");
         assertThat(result.accumulatedStudySeconds()).isEqualTo(200);
         assertThat(result.heartbeatAt()).isEqualTo(heartbeatAt);
+        verify(metricRecorder).recordResult(StudyTimerAction.HEARTBEAT, null);
+    }
+
+    @Test
+    void businessResultIsUnaffectedWhenMetricRecordingFails() {
+        OffsetDateTime startedAt = OffsetDateTime.parse("2026-05-11T15:00:00+09:00");
+        OffsetDateTime heartbeatAt = OffsetDateTime.parse("2026-05-11T15:03:20+09:00");
+        when(repository.findById(55L)).thenReturn(Optional.of(new StudyTimerSession(
+                55L, 1L, null, null, startedAt, null, 120, StudyTimerSessionStatus.RUNNING
+        )));
+        when(repository.save(any(StudyTimerSession.class)))
+                .thenReturn(new StudyTimerSession(
+                        55L, 1L, null, null, startedAt, null, 200, StudyTimerSessionStatus.RUNNING
+                ));
+        doThrow(new RuntimeException("metric registry down"))
+                .when(metricRecorder).recordResult(StudyTimerAction.HEARTBEAT, null);
+
+        SaveStudyTimerHeartbeatUseCase.StudyTimerHeartbeatView result =
+                service.handle(new SaveStudyTimerHeartbeatCommand(1L, 55L, heartbeatAt));
+
+        assertThat(result.sessionId()).isEqualTo(55L);
+        assertThat(result.status()).isEqualTo("RUNNING");
+        assertThat(result.accumulatedStudySeconds()).isEqualTo(200);
+        assertThat(result.heartbeatAt()).isEqualTo(heartbeatAt);
+        verify(metricRecorder).recordResult(StudyTimerAction.HEARTBEAT, null);
     }
 
     @Test
@@ -157,6 +185,7 @@ class SaveStudyTimerHeartbeatServiceTest {
         verify(memberLockPort).lock(1L);
         verify(repository).findById(55L);
         verify(repository, never()).save(any());
+        verify(metricRecorder).recordResult(StudyTimerAction.HEARTBEAT, "STUDY_TIMER_SESSION_NOT_RUNNING");
     }
 
     @Test
@@ -166,8 +195,9 @@ class SaveStudyTimerHeartbeatServiceTest {
                 55L,
                 OffsetDateTime.parse("2026-05-11T15:05:01+09:00")
         )))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("하트비트 시각은 현재 시각 이후일 수 없습니다.");
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_TIMER_HEARTBEAT_AT_IN_FUTURE);
 
         verify(memberLockPort, never()).lock(any());
         verify(repository, never()).findById(any());

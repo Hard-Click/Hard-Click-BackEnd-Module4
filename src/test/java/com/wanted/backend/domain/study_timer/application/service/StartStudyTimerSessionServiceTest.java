@@ -18,6 +18,7 @@ import java.time.OffsetDateTime;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -28,21 +29,23 @@ class StartStudyTimerSessionServiceTest {
 
     private MemberLockPort memberLockPort;
     private StudyTimerSessionRepository repository;
+    private StudyTimerSessionMetricRecorder metricRecorder;
     private StartStudyTimerSessionService service;
 
     @BeforeEach
     void setUp() {
         memberLockPort = mock(MemberLockPort.class);
         repository = mock(StudyTimerSessionRepository.class);
-        service = new StartStudyTimerSessionService(memberLockPort, repository);
+        metricRecorder = mock(StudyTimerSessionMetricRecorder.class);
+        service = new StartStudyTimerSessionService(memberLockPort, repository, metricRecorder);
     }
 
     @Test
-    void startsSessionAfterAcquiringLockAndCheckingExistingRunningSession() {
+    void startsSessionAfterAcquiringLockAndCheckingExistingActiveSession() {
         OffsetDateTime startedAt = OffsetDateTime.parse("2026-05-11T15:00:00+09:00");
         StartStudyTimerSessionCommand command = new StartStudyTimerSessionCommand(1L, startedAt);
 
-        when(repository.existsRunningByMemberId(1L)).thenReturn(false);
+        when(repository.existsActiveByMemberId(1L)).thenReturn(false);
         when(repository.save(any(StudyTimerSession.class)))
                 .thenReturn(new StudyTimerSession(
                         55L,
@@ -60,7 +63,7 @@ class StartStudyTimerSessionServiceTest {
         ArgumentCaptor<StudyTimerSession> captor = ArgumentCaptor.forClass(StudyTimerSession.class);
         InOrder inOrder = inOrder(memberLockPort, repository);
         inOrder.verify(memberLockPort).lock(1L);
-        inOrder.verify(repository).existsRunningByMemberId(1L);
+        inOrder.verify(repository).existsActiveByMemberId(1L);
         inOrder.verify(repository).save(captor.capture());
 
         assertThat(captor.getValue().memberId()).isEqualTo(1L);
@@ -69,11 +72,12 @@ class StartStudyTimerSessionServiceTest {
         assertThat(result.sessionId()).isEqualTo(55L);
         assertThat(result.status()).isEqualTo("RUNNING");
         assertThat(result.startedAt()).isEqualTo(startedAt);
+        verify(metricRecorder).recordResult(StudyTimerAction.START, null);
     }
 
     @Test
-    void throwsConflictWhenRunningSessionAlreadyExistsAfterLocking() {
-        when(repository.existsRunningByMemberId(1L)).thenReturn(true);
+    void throwsConflictWhenActiveSessionAlreadyExistsAfterLocking() {
+        when(repository.existsActiveByMemberId(1L)).thenReturn(true);
 
         assertThatThrownBy(() -> service.handle(new StartStudyTimerSessionCommand(
                 1L,
@@ -84,7 +88,35 @@ class StartStudyTimerSessionServiceTest {
                 .isEqualTo(ErrorCode.STUDY_TIMER_SESSION_ALREADY_RUNNING);
 
         verify(memberLockPort).lock(1L);
-        verify(repository).existsRunningByMemberId(1L);
+        verify(repository).existsActiveByMemberId(1L);
         verify(repository, never()).save(any());
+        verify(metricRecorder).recordResult(StudyTimerAction.START, "STUDY_TIMER_SESSION_ALREADY_RUNNING");
+    }
+
+    @Test
+    void businessResultIsUnaffectedWhenMetricRecordingFails() {
+        OffsetDateTime startedAt = OffsetDateTime.parse("2026-05-11T15:00:00+09:00");
+        when(repository.existsActiveByMemberId(1L)).thenReturn(false);
+        when(repository.save(any(StudyTimerSession.class)))
+                .thenReturn(new StudyTimerSession(
+                        55L,
+                        1L,
+                        null,
+                        null,
+                        startedAt,
+                        null,
+                        0,
+                        StudyTimerSessionStatus.RUNNING
+                ));
+        doThrow(new RuntimeException("metric registry down"))
+                .when(metricRecorder).recordResult(StudyTimerAction.START, null);
+
+        StartStudyTimerSessionUseCase.StudyTimerSessionStartView result =
+                service.handle(new StartStudyTimerSessionCommand(1L, startedAt));
+
+        assertThat(result.sessionId()).isEqualTo(55L);
+        assertThat(result.status()).isEqualTo("RUNNING");
+        assertThat(result.startedAt()).isEqualTo(startedAt);
+        verify(metricRecorder).recordResult(StudyTimerAction.START, null);
     }
 }

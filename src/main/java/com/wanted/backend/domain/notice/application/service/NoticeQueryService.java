@@ -10,7 +10,7 @@ import com.wanted.backend.domain.notice.domain.repository.NoticeRepository;
 import com.wanted.backend.domain.notice.presentation.response.NoticeDetailResponse;
 import com.wanted.backend.domain.notice.presentation.response.NoticeItemResponse;
 import com.wanted.backend.domain.notice.presentation.response.NoticeListResponse;
-import com.wanted.backend.domain.notification.domain.repository.NotificationRepository; // 읽음 여부 확인을 위해 추가
+import com.wanted.backend.domain.notification.domain.repository.NotificationRepository; 
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import org.springframework.data.domain.Page;
@@ -30,7 +30,7 @@ public class NoticeQueryService implements NoticeQueryUseCase {
     private final CourseInfoPort courseInfoPort;
     private final InstructorCoursePort instructorCoursePort;
     private final EnrolledCoursePort enrolledCoursePort;
-    private final NotificationRepository notificationRepository; // 읽음 여부 확인을 위해 추가
+    private final NotificationRepository notificationRepository; 
 
     public NoticeQueryService(NoticeRepository noticeRepository,
                               CourseInfoPort courseInfoPort,
@@ -41,7 +41,7 @@ public class NoticeQueryService implements NoticeQueryUseCase {
         this.courseInfoPort = courseInfoPort;
         this.instructorCoursePort = instructorCoursePort;
         this.enrolledCoursePort = enrolledCoursePort;
-        this.notificationRepository = notificationRepository; // 읽음 여부 확인을 위해 추가
+        this.notificationRepository = notificationRepository; 
     }
 
     @Override

@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS video (
     curriculum_id BIGINT NOT NULL,
     title VARCHAR(200) NOT NULL,
     video_url VARCHAR(500) NOT NULL,
+    s3_key VARCHAR(1024),
     is_preview TINYINT NOT NULL,
     duration_seconds INT NOT NULL,
     sort_order INT NOT NULL

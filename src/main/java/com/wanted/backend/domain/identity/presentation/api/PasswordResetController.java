@@ -11,6 +11,7 @@ import com.wanted.backend.domain.identity.presentation.api.response.EmptyRespons
 import com.wanted.backend.domain.identity.presentation.api.response.PasswordChangeTokenResponse;
 import com.wanted.backend.global.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "Identity", description = "인증 및 회원가입 API")
 @RestController
 @RequestMapping("/api/auth/password-reset")
 @RequiredArgsConstructor

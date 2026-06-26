@@ -30,7 +30,7 @@ class GetCurrentStudyTimerSessionServiceTest {
     @Test
     void returnsCurrentRunningSession() {
         OffsetDateTime startedAt = OffsetDateTime.parse("2026-05-11T15:00:00+09:00");
-        when(repository.findRunningByMemberId(1L)).thenReturn(Optional.of(new StudyTimerSession(
+        when(repository.findActiveByMemberId(1L)).thenReturn(Optional.of(new StudyTimerSession(
                 55L,
                 1L,
                 null,
@@ -48,17 +48,41 @@ class GetCurrentStudyTimerSessionServiceTest {
         assertThat(result.status()).isEqualTo("RUNNING");
         assertThat(result.startedAt()).isEqualTo(startedAt);
         assertThat(result.accumulatedStudySeconds()).isEqualTo(200);
-        verify(repository).findRunningByMemberId(1L);
+        verify(repository).findActiveByMemberId(1L);
     }
 
     @Test
-    void returnsNullWhenRunningSessionDoesNotExist() {
-        when(repository.findRunningByMemberId(1L)).thenReturn(Optional.empty());
+    void returnsCurrentPausedSession() {
+        OffsetDateTime startedAt = OffsetDateTime.parse("2026-05-11T15:00:00+09:00");
+        when(repository.findActiveByMemberId(1L)).thenReturn(Optional.of(new StudyTimerSession(
+                55L,
+                1L,
+                null,
+                null,
+                startedAt,
+                null,
+                200,
+                StudyTimerSessionStatus.PAUSED
+        )));
+
+        GetCurrentStudyTimerSessionUseCase.CurrentStudyTimerSessionView result =
+                service.handle(new GetCurrentStudyTimerSessionQuery(1L));
+
+        assertThat(result.sessionId()).isEqualTo(55L);
+        assertThat(result.status()).isEqualTo("PAUSED");
+        assertThat(result.startedAt()).isEqualTo(startedAt);
+        assertThat(result.accumulatedStudySeconds()).isEqualTo(200);
+        verify(repository).findActiveByMemberId(1L);
+    }
+
+    @Test
+    void returnsNullWhenActiveSessionDoesNotExist() {
+        when(repository.findActiveByMemberId(1L)).thenReturn(Optional.empty());
 
         GetCurrentStudyTimerSessionUseCase.CurrentStudyTimerSessionView result =
                 service.handle(new GetCurrentStudyTimerSessionQuery(1L));
 
         assertThat(result).isNull();
-        verify(repository).findRunningByMemberId(1L);
+        verify(repository).findActiveByMemberId(1L);
     }
 }

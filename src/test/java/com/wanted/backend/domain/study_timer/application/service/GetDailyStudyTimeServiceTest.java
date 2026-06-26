@@ -4,6 +4,8 @@ import com.wanted.backend.domain.study_timer.application.query.GetDailyStudyTime
 import com.wanted.backend.domain.study_timer.application.usecase.GetDailyStudyTimeUseCase;
 import com.wanted.backend.domain.study_timer.domain.model.DailyStudyStat;
 import com.wanted.backend.domain.study_timer.domain.repository.DailyStudyStatsRepository;
+import com.wanted.backend.global.exception.BusinessException;
+import com.wanted.backend.global.exception.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -80,8 +82,9 @@ class GetDailyStudyTimeServiceTest {
         LocalDate endDate = LocalDate.parse("2026-05-01");
 
         assertThatThrownBy(() -> service.handle(new GetDailyStudyTimeQuery(1L, startDate, endDate)))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("시작 날짜는 종료 날짜 이후일 수 없습니다.");
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_TIMER_DAILY_DATE_RANGE_INVALID);
 
         verify(repository, never()).findByMemberIdAndDateBetween(1L, startDate, endDate);
     }
@@ -92,8 +95,9 @@ class GetDailyStudyTimeServiceTest {
         LocalDate endDate = LocalDate.parse("2026-05-03");
 
         assertThatThrownBy(() -> service.handle(new GetDailyStudyTimeQuery(null, startDate, endDate)))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("회원 ID는 필수입니다.");
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_TIMER_MEMBER_ID_REQUIRED);
 
         verifyNoInteractions(repository);
     }
@@ -103,8 +107,9 @@ class GetDailyStudyTimeServiceTest {
         LocalDate endDate = LocalDate.parse("2026-05-03");
 
         assertThatThrownBy(() -> service.handle(new GetDailyStudyTimeQuery(1L, null, endDate)))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("시작 날짜는 필수입니다.");
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_TIMER_DAILY_START_DATE_REQUIRED);
 
         verifyNoInteractions(repository);
     }
@@ -114,8 +119,9 @@ class GetDailyStudyTimeServiceTest {
         LocalDate startDate = LocalDate.parse("2026-05-01");
 
         assertThatThrownBy(() -> service.handle(new GetDailyStudyTimeQuery(1L, startDate, null)))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("종료 날짜는 필수입니다.");
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_TIMER_DAILY_END_DATE_REQUIRED);
 
         verifyNoInteractions(repository);
     }
@@ -126,8 +132,9 @@ class GetDailyStudyTimeServiceTest {
         LocalDate endDate = LocalDate.parse("2027-01-01");
 
         assertThatThrownBy(() -> service.handle(new GetDailyStudyTimeQuery(1L, startDate, endDate)))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("일별 학습 시간은 최대 1년치까지만 조회할 수 있습니다.");
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.STUDY_TIMER_DAILY_DATE_RANGE_TOO_LONG);
 
         verifyNoInteractions(repository);
     }

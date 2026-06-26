@@ -1,0 +1,91 @@
+package com.wanted.backend.domain.ranking.application.service;
+
+import com.wanted.backend.domain.ranking.application.port.RankingScoreWriter;
+import com.wanted.backend.domain.ranking.domain.model.RankingMetric;
+import com.wanted.backend.domain.ranking.domain.model.RankingPeriod;
+import com.wanted.backend.domain.study_timer.domain.event.StudySessionEndedEvent;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+
+class RankingScoreUpdaterTest {
+
+    private RankingScoreWriter rankingScoreWriter;
+    private RankingScoreUpdater updater;
+
+    @BeforeEach
+    void setUp() {
+        rankingScoreWriter = mock(RankingScoreWriter.class);
+        updater = new RankingScoreUpdater(rankingScoreWriter);
+    }
+
+    @Test
+    void incrementsStudyTimeScoresForAllPeriods() {
+        StudySessionEndedEvent event = StudySessionEndedEvent.of(
+                1L,
+                LocalDate.parse("2026-05-11"),
+                300,
+                OffsetDateTime.parse("2026-05-11T15:05:00+09:00")
+        );
+
+        updater.handle(event);
+
+        verify(rankingScoreWriter).incrementScore(RankingMetric.STUDY_TIME, RankingPeriod.DAILY, 1L, 300);
+        verify(rankingScoreWriter).incrementScore(RankingMetric.STUDY_TIME, RankingPeriod.WEEKLY, 1L, 300);
+        verify(rankingScoreWriter).incrementScore(RankingMetric.STUDY_TIME, RankingPeriod.MONTHLY, 1L, 300);
+    }
+
+    @Test
+    void keepsUpdatingOtherPeriodsWhenRedisUpdateFails() {
+        StudySessionEndedEvent event = StudySessionEndedEvent.of(
+                1L,
+                LocalDate.parse("2026-05-11"),
+                300,
+                OffsetDateTime.parse("2026-05-11T15:05:00+09:00")
+        );
+        doThrow(new RuntimeException("redis down"))
+                .when(rankingScoreWriter)
+                .incrementScore(RankingMetric.STUDY_TIME, RankingPeriod.DAILY, 1L, 300);
+
+        updater.handle(event);
+
+        verify(rankingScoreWriter).incrementScore(RankingMetric.STUDY_TIME, RankingPeriod.DAILY, 1L, 300);
+        verify(rankingScoreWriter).incrementScore(RankingMetric.STUDY_TIME, RankingPeriod.WEEKLY, 1L, 300);
+        verify(rankingScoreWriter).incrementScore(RankingMetric.STUDY_TIME, RankingPeriod.MONTHLY, 1L, 300);
+    }
+
+    @Test
+    void ignoresNonPositiveDelta() {
+        StudySessionEndedEvent event = StudySessionEndedEvent.of(
+                1L,
+                LocalDate.parse("2026-05-11"),
+                0,
+                OffsetDateTime.parse("2026-05-11T15:05:00+09:00")
+        );
+
+        updater.handle(event);
+
+        verifyNoInteractions(rankingScoreWriter);
+    }
+
+    @Test
+    void ignoresNullDelta() {
+        StudySessionEndedEvent event = StudySessionEndedEvent.of(
+                1L,
+                LocalDate.parse("2026-05-11"),
+                null,
+                OffsetDateTime.parse("2026-05-11T15:05:00+09:00")
+        );
+
+        updater.handle(event);
+
+        verifyNoInteractions(rankingScoreWriter);
+    }
+}

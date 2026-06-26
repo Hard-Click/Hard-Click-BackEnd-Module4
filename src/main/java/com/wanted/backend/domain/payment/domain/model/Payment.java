@@ -53,6 +53,13 @@ public class Payment {
         this.paidAt = paidAt;
     }
 
+    public void refund() {
+        if (this.status != PaymentStatus.PAID) {
+            throw new IllegalStateException("PAID 상태에서만 환불이 가능합니다. 현재 상태: " + this.status);
+        }
+        this.status = PaymentStatus.REFUNDED;
+    }
+
     public void fail() {
         if (this.status != PaymentStatus.PENDING) {
             throw new IllegalStateException("PENDING 상태에서만 결제 실패 처리가 가능합니다. 현재 상태: " + this.status);

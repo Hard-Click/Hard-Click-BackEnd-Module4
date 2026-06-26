@@ -4,6 +4,8 @@ import com.wanted.backend.domain.stats.application.query.GetDailyStudyStatQuery;
 import com.wanted.backend.domain.stats.application.usecase.GetDailyStudyStatUseCase;
 import com.wanted.backend.domain.stats.domain.model.DailyStudyStat;
 import com.wanted.backend.domain.stats.domain.repository.DailyStudyStatsRepository;
+import com.wanted.backend.global.exception.BusinessException;
+import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,10 +35,10 @@ public class GetDailyStudyStatService implements GetDailyStudyStatUseCase {
 
     private void validate(GetDailyStudyStatQuery query) {
         if (query.memberId() == null) {
-            throw new IllegalArgumentException("회원 ID는 필수입니다.");
+            throw new BusinessException(ErrorCode.DAILY_STATS_MEMBER_ID_REQUIRED);
         }
         if (query.date() == null) {
-            throw new IllegalArgumentException("조회 날짜는 필수입니다.");
+            throw new BusinessException(ErrorCode.DAILY_STATS_DATE_REQUIRED);
         }
     }
 }

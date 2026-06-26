@@ -40,7 +40,7 @@ class CachedGetYearlyGrassUseCaseTest {
         Cacheable cacheable = handleMethod.getAnnotation(Cacheable.class);
 
         assertThat(cacheable).isNotNull();
-        assertThat(cacheable.cacheNames()).containsExactly("grassYearly");
+        assertThat(cacheable.cacheNames()).containsExactly("grassYearly:v2");
         assertThat(cacheable.key())
                 .contains("#query.memberId()")
                 .contains("#query.year()")

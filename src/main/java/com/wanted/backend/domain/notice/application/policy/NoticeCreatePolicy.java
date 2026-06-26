@@ -6,7 +6,6 @@ import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import org.springframework.stereotype.Component;
 
-
 @Component
 public class NoticeCreatePolicy {
 
