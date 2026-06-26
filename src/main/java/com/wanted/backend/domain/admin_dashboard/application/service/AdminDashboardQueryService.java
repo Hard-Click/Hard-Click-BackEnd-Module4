@@ -16,7 +16,7 @@ public class AdminDashboardQueryService implements GetAdminDashboardUseCase {
     private final AdminDashboardQueryPort adminDashboardQueryPort;
 
     @Override
-    @Cacheable(cacheNames = "adminDashboard", key = "'summary'", sync = true)
+    @Cacheable(cacheNames = "adminDashboard:v2", key = "'summary'", sync = true)
     public AdminDashboardResult getDashboard() {
         return adminDashboardQueryPort.findDashboard();
     }

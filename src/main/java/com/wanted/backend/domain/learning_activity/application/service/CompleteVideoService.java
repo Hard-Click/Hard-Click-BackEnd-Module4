@@ -9,35 +9,54 @@ import com.wanted.backend.domain.learning_activity.domain.repository.VideoProgre
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class CompleteVideoService implements CompleteVideoUseCase {
 
+    private static final LearningActivityAction ACTION = LearningActivityAction.COMPLETE_VIDEO;
+
     private final PlayableVideoProgressReader playableVideoProgressReader;
     private final VideoProgressRepository videoProgressRepository;
     private final VideoCompletionPolicy videoCompletionPolicy;
+    private final LearningActivityMetricRecorder metricRecorder;
 
     @Override
     public void handle(MemberVideoCommand command) {
-        Long memberId = command.memberId();
-        Long videoId = command.videoId();
+        String errorCode = "UNKNOWN";
+        try {
+            Long memberId = command.memberId();
+            Long videoId = command.videoId();
 
-        PlayableVideoProgressReader.PlayableVideoProgress playable =
-                playableVideoProgressReader.get(memberId, videoId);
-        VideoAccessInfo accessInfo = playable.accessInfo();
-        VideoProgress progress = playable.progress();
+            PlayableVideoProgressReader.PlayableVideoProgress playable =
+                    playableVideoProgressReader.get(memberId, videoId);
+            VideoAccessInfo accessInfo = playable.accessInfo();
+            VideoProgress progress = playable.progress();
 
-        if (!videoCompletionPolicy.canComplete(effectiveProgressSeconds(progress), accessInfo.durationSeconds())) {
-            throw new BusinessException(ErrorCode.VIDEO_COMPLETION_CONDITION_NOT_MET);
+            if (!videoCompletionPolicy.canComplete(effectiveProgressSeconds(progress), accessInfo.durationSeconds())) {
+                throw new BusinessException(ErrorCode.VIDEO_COMPLETION_CONDITION_NOT_MET);
+            }
+
+            videoProgressRepository.save(progress.complete(LocalDateTime.now()));
+            errorCode = null;
+        } catch (BusinessException e) {
+            errorCode = e.getErrorCode().name();
+            throw e;
+        } finally {
+            try {
+                metricRecorder.recordResult(ACTION, errorCode);
+            } catch (RuntimeException e) {
+                // metric failure must not affect the business transaction
+                log.warn("learning activity metric record failed: action={}, errorCode={}", ACTION, errorCode, e);
+            }
         }
-
-        videoProgressRepository.save(progress.complete(LocalDateTime.now()));
     }
 
     private int effectiveProgressSeconds(VideoProgress progress) {

@@ -53,4 +53,8 @@ public class ReportRepositoryAdapter implements ReportRepository {
                 .map(ReportType::valueOf)
                 .toList();
     }
+    @Override
+    public int countByReportedMemberId(Long reportedMemberId) {
+        return repository.countByReportedMemberId(reportedMemberId);
+    }
 }

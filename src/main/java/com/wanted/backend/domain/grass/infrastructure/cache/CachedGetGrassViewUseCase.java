@@ -20,7 +20,7 @@ public class CachedGetGrassViewUseCase implements GetGrassViewUseCase {
     }
 
     @Override
-    @Cacheable(cacheNames = "grassView", key = "#query.memberId() + ':' + (#query.view() == null ? null : #query.view().trim().toLowerCase()) + ':' + #query.year() + ':' + #query.month() + ':' + T(java.time.LocalDate).now(@clock)")
+    @Cacheable(cacheNames = "grassView:v2", key = "#query.memberId() + ':' + (#query.view() == null ? null : #query.view().trim().toLowerCase()) + ':' + #query.year() + ':' + #query.month() + ':' + T(java.time.LocalDate).now(@clock)")
     public GrassView handle(GetGrassViewQuery query) {
         return delegate.handle(query);
     }

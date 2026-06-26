@@ -2,10 +2,12 @@ package com.wanted.backend.domain.ranking.presentation.api;
 
 import com.wanted.backend.domain.ranking.application.query.GetAcceptedCommentRankingQuery;
 import com.wanted.backend.domain.ranking.application.query.GetLessonRankingQuery;
+import com.wanted.backend.domain.ranking.application.query.GetMyRankingDetailQuery;
 import com.wanted.backend.domain.ranking.application.query.GetMyRankingSummaryQuery;
 import com.wanted.backend.domain.ranking.application.query.GetStudyTimeRankingQuery;
 import com.wanted.backend.domain.ranking.application.usecase.GetAcceptedCommentRankingUseCase;
 import com.wanted.backend.domain.ranking.application.usecase.GetLessonRankingUseCase;
+import com.wanted.backend.domain.ranking.application.usecase.GetMyRankingDetailUseCase;
 import com.wanted.backend.domain.ranking.application.usecase.GetMyRankingSummaryUseCase;
 import com.wanted.backend.domain.ranking.application.usecase.GetStudyTimeRankingUseCase;
 import com.wanted.backend.global.security.CustomUserDetails;
@@ -35,6 +37,9 @@ class RankingControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
+    private GetMyRankingDetailUseCase getMyRankingDetailUseCase;
+
+    @MockitoBean
     private GetMyRankingSummaryUseCase getMyRankingSummaryUseCase;
 
     @MockitoBean
@@ -52,10 +57,10 @@ class RankingControllerTest {
     }
 
     @Test
-    void meReturnsOkWithRankingSummary() throws Exception {
+    void meReturnsOkWithRankingDetail() throws Exception {
         authenticateMember(1L);
-        when(getMyRankingSummaryUseCase.handle(new GetMyRankingSummaryQuery(1L, "study-time", "monthly")))
-                .thenReturn(new GetMyRankingSummaryUseCase.MyRankingSummaryView(
+        when(getMyRankingDetailUseCase.handle(new GetMyRankingDetailQuery(1L, "study-time", "monthly")))
+                .thenReturn(new GetMyRankingDetailUseCase.MyRankingDetailView(
                         "study-time",
                         "monthly",
                         12L,
@@ -77,6 +82,31 @@ class RankingControllerTest {
     }
 
     @Test
+    void mySummaryReturnsOkWithMonthlyRankingCards() throws Exception {
+        authenticateMember(1L);
+        when(getMyRankingSummaryUseCase.handle(new GetMyRankingSummaryQuery(1L)))
+                .thenReturn(new GetMyRankingSummaryUseCase.MyRankingSummaryView(
+                        new GetMyRankingSummaryUseCase.RankingSummaryItem(42L, 350L, 12.0),
+                        new GetMyRankingSummaryUseCase.RankingSummaryItem(38L, 380L, 10.0),
+                        new GetMyRankingSummaryUseCase.RankingSummaryItem(15L, 300L, 5.0)
+                ));
+
+        mockMvc.perform(get("/api/rankings/me/summary"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.httpStatus").value(200))
+                .andExpect(jsonPath("$.message").value("내 랭킹 요약 정보를 조회했습니다."))
+                .andExpect(jsonPath("$.data.studyTime.rank").value(42))
+                .andExpect(jsonPath("$.data.studyTime.totalUsers").value(350))
+                .andExpect(jsonPath("$.data.studyTime.topPercent").value(12.0))
+                .andExpect(jsonPath("$.data.lesson.rank").value(38))
+                .andExpect(jsonPath("$.data.lesson.totalUsers").value(380))
+                .andExpect(jsonPath("$.data.lesson.topPercent").value(10.0))
+                .andExpect(jsonPath("$.data.acceptedComment.rank").value(15))
+                .andExpect(jsonPath("$.data.acceptedComment.totalUsers").value(300))
+                .andExpect(jsonPath("$.data.acceptedComment.topPercent").value(5.0));
+    }
+
+    @Test
     void studyTimeReturnsOkWithRankingList() throws Exception {
         authenticateMember(1L);
         when(getStudyTimeRankingUseCase.handle(new GetStudyTimeRankingQuery("daily")))
@@ -84,8 +114,8 @@ class RankingControllerTest {
                         "daily",
                         2L,
                         List.of(
-                                new GetStudyTimeRankingUseCase.StudyTimeRankingItem(1L, 1L, 7200L),
-                                new GetStudyTimeRankingUseCase.StudyTimeRankingItem(2L, 2L, 3600L)
+                                new GetStudyTimeRankingUseCase.StudyTimeRankingItem(1L, 1L, "김지훈", 7200L, 7),
+                                new GetStudyTimeRankingUseCase.StudyTimeRankingItem(2L, 2L, "이서연", 3600L, 3)
                         )
                 ));
 
@@ -98,10 +128,14 @@ class RankingControllerTest {
                 .andExpect(jsonPath("$.data.totalUsers").value(2))
                 .andExpect(jsonPath("$.data.rankings[0].rank").value(1))
                 .andExpect(jsonPath("$.data.rankings[0].memberId").value(1))
+                .andExpect(jsonPath("$.data.rankings[0].memberName").value("김지훈"))
                 .andExpect(jsonPath("$.data.rankings[0].studySeconds").value(7200))
+                .andExpect(jsonPath("$.data.rankings[0].currentStreakDays").value(7))
                 .andExpect(jsonPath("$.data.rankings[1].rank").value(2))
                 .andExpect(jsonPath("$.data.rankings[1].memberId").value(2))
-                .andExpect(jsonPath("$.data.rankings[1].studySeconds").value(3600));
+                .andExpect(jsonPath("$.data.rankings[1].memberName").value("이서연"))
+                .andExpect(jsonPath("$.data.rankings[1].studySeconds").value(3600))
+                .andExpect(jsonPath("$.data.rankings[1].currentStreakDays").value(3));
     }
 
     @Test
@@ -149,8 +183,8 @@ class RankingControllerTest {
                         "daily",
                         2L,
                         List.of(
-                                new GetLessonRankingUseCase.LessonRankingItem(1L, 1L, 12L),
-                                new GetLessonRankingUseCase.LessonRankingItem(2L, 2L, 8L)
+                                new GetLessonRankingUseCase.LessonRankingItem(1L, 1L, "김지훈", 12L, 7),
+                                new GetLessonRankingUseCase.LessonRankingItem(2L, 2L, "이서연", 8L, 3)
                         )
                 ));
 
@@ -163,10 +197,14 @@ class RankingControllerTest {
                 .andExpect(jsonPath("$.data.totalUsers").value(2))
                 .andExpect(jsonPath("$.data.rankings[0].rank").value(1))
                 .andExpect(jsonPath("$.data.rankings[0].memberId").value(1))
+                .andExpect(jsonPath("$.data.rankings[0].memberName").value("김지훈"))
                 .andExpect(jsonPath("$.data.rankings[0].watchedLessonCount").value(12))
+                .andExpect(jsonPath("$.data.rankings[0].currentStreakDays").value(7))
                 .andExpect(jsonPath("$.data.rankings[1].rank").value(2))
                 .andExpect(jsonPath("$.data.rankings[1].memberId").value(2))
-                .andExpect(jsonPath("$.data.rankings[1].watchedLessonCount").value(8));
+                .andExpect(jsonPath("$.data.rankings[1].memberName").value("이서연"))
+                .andExpect(jsonPath("$.data.rankings[1].watchedLessonCount").value(8))
+                .andExpect(jsonPath("$.data.rankings[1].currentStreakDays").value(3));
     }
 
     @Test
@@ -214,8 +252,8 @@ class RankingControllerTest {
                         "daily",
                         2L,
                         List.of(
-                                new GetAcceptedCommentRankingUseCase.AcceptedCommentRankingItem(1L, 1L, 7L),
-                                new GetAcceptedCommentRankingUseCase.AcceptedCommentRankingItem(2L, 2L, 4L)
+                                new GetAcceptedCommentRankingUseCase.AcceptedCommentRankingItem(1L, 1L, "김지훈", 7L, 7),
+                                new GetAcceptedCommentRankingUseCase.AcceptedCommentRankingItem(2L, 2L, "이서연", 4L, 3)
                         )
                 ));
 
@@ -228,10 +266,14 @@ class RankingControllerTest {
                 .andExpect(jsonPath("$.data.totalUsers").value(2))
                 .andExpect(jsonPath("$.data.rankings[0].rank").value(1))
                 .andExpect(jsonPath("$.data.rankings[0].memberId").value(1))
+                .andExpect(jsonPath("$.data.rankings[0].memberName").value("김지훈"))
                 .andExpect(jsonPath("$.data.rankings[0].acceptedCommentCount").value(7))
+                .andExpect(jsonPath("$.data.rankings[0].currentStreakDays").value(7))
                 .andExpect(jsonPath("$.data.rankings[1].rank").value(2))
                 .andExpect(jsonPath("$.data.rankings[1].memberId").value(2))
-                .andExpect(jsonPath("$.data.rankings[1].acceptedCommentCount").value(4));
+                .andExpect(jsonPath("$.data.rankings[1].memberName").value("이서연"))
+                .andExpect(jsonPath("$.data.rankings[1].acceptedCommentCount").value(4))
+                .andExpect(jsonPath("$.data.rankings[1].currentStreakDays").value(3));
     }
 
     @Test
@@ -279,9 +321,16 @@ class RankingControllerTest {
     }
 
     @Test
+    void mySummaryReturnsUnauthorizedWhenUserIsNotAuthenticated() throws Exception {
+        mockMvc.perform(get("/api/rankings/me/summary"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("C003"));
+    }
+
+    @Test
     void meReturnsBadRequestWhenMetricIsInvalid() throws Exception {
         authenticateMember(1L);
-        when(getMyRankingSummaryUseCase.handle(new GetMyRankingSummaryQuery(1L, "likes", null)))
+        when(getMyRankingDetailUseCase.handle(new GetMyRankingDetailQuery(1L, "likes", null)))
                 .thenThrow(new IllegalArgumentException("랭킹 기준은 study-time, lessons, accepted-comments 중 하나여야 합니다."));
 
         mockMvc.perform(get("/api/rankings/me")
@@ -293,7 +342,7 @@ class RankingControllerTest {
     @Test
     void meReturnsBadRequestWhenPeriodIsInvalid() throws Exception {
         authenticateMember(1L);
-        when(getMyRankingSummaryUseCase.handle(new GetMyRankingSummaryQuery(1L, "study-time", "yearly")))
+        when(getMyRankingDetailUseCase.handle(new GetMyRankingDetailQuery(1L, "study-time", "yearly")))
                 .thenThrow(new IllegalArgumentException("랭킹 기간은 daily, weekly, monthly 중 하나여야 합니다."));
 
         mockMvc.perform(get("/api/rankings/me")

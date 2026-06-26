@@ -54,6 +54,9 @@ public class StudyTimerSessionJpaEntity {
     @Column(name = "status", nullable = false)
     private StudyTimerSessionStatus status;
 
+    @Column(name = "paused_at")
+    private LocalDateTime pausedAt;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -85,16 +88,20 @@ public class StudyTimerSessionJpaEntity {
     public void updateSession(
             Long courseId,
             Long lessonId,
+            LocalDateTime startedAt,
             LocalDateTime endedAt,
             Integer accumulatedStudySeconds,
             StudyTimerSessionStatus status,
+            LocalDateTime pausedAt,
             LocalDateTime updatedAt
     ) {
         this.courseId = courseId;
         this.lessonId = lessonId;
+        this.startedAt = startedAt;
         this.endedAt = endedAt;
         this.accumulatedStudySeconds = accumulatedStudySeconds;
         this.status = status;
+        this.pausedAt = pausedAt;
         this.updatedAt = updatedAt;
     }
 }

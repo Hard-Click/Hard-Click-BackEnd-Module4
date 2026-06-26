@@ -7,42 +7,52 @@ import com.wanted.backend.domain.learning_activity.domain.model.VideoAccessInfo;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class VideoAccessService {
 
-    /* comment.
-    *   재생 가능 여부 검증 르흠을 담당한다.
-    *   1. 강의가 공개 상태인지 확인
-    *   2. 수강권 있는지 확인
-    *   3. 구독권 있는지 확인
-    *   4. policy 에게 최종 판단 맡김
-    *   5. 실패하면 BusinessException 던짐
-    * */
+    private static final LearningActivityAction ACTION = LearningActivityAction.VIDEO_ACCESS;
 
     private final EnrollmentAccessPort enrollmentAccessPort;
     private final SubscriptionAccessPort subscriptionAccessPort;
     private final VideoAccessPolicy videoAccessPolicy;
+    private final LearningActivityMetricRecorder metricRecorder;
 
-    // 1번
     public void validatePlayable(Long memberId, VideoAccessInfo accessInfo) {
+        String errorCode = "UNKNOWN";
+        try {
+            validatePublished(accessInfo);
+
+            boolean enrolled = enrollmentAccessPort.hasActiveEnrollment(memberId, accessInfo.courseId());
+            boolean subscribed = subscriptionAccessPort.hasActiveSubscription(memberId);
+
+            if (!videoAccessPolicy.canPlay(accessInfo, enrolled, subscribed)) {
+                throw new BusinessException(ErrorCode.ENROLLMENT_REQUIRED);
+            }
+
+            errorCode = null;
+        } catch (BusinessException e) {
+            errorCode = e.getErrorCode().name();
+            throw e;
+        } finally {
+            try {
+                metricRecorder.recordResult(ACTION, errorCode);
+            } catch (RuntimeException e) {
+                // metric failure must not affect the business transaction
+                log.warn("learning activity metric record failed: action={}, errorCode={}", ACTION, errorCode, e);
+            }
+        }
+    }
+
+    private void validatePublished(VideoAccessInfo accessInfo) {
         if (!accessInfo.isPublishedCourse()) {
             throw new BusinessException(ErrorCode.COURSE_NOT_PUBLISHED);
         }
-
-        // 2번
-        boolean enrolled = enrollmentAccessPort.hasActiveEnrollment(memberId, accessInfo.courseId());
-        // 3번
-        boolean subscribed = subscriptionAccessPort.hasActiveSubscription(memberId);
-        // 4번
-        if (videoAccessPolicy.canPlay(accessInfo, enrolled, subscribed)) {
-            return;
-        }
-        // 5번
-        throw new BusinessException(ErrorCode.ENROLLMENT_REQUIRED);
     }
 }

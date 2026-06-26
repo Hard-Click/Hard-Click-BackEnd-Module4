@@ -6,5 +6,8 @@ public interface CommunityFileStoragePort {
 
     String store(MultipartFile file, String prefix, long maxFileSize);
 
-    void delete(String fileUrl);
+    /** 저장된 S3 key를 조회용 Presigned URL로 변환한다. */
+    String presignUrl(String key);
+
+    void delete(String fileKey);
 }

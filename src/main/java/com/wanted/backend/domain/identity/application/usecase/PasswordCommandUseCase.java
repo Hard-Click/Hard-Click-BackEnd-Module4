@@ -10,4 +10,5 @@ public interface PasswordCommandUseCase {
     void resetPassword(ResetPasswordCommand command);
     String verify(AccountLockVerifyCommand command);
     void changePassword(AccountLockPasswordChangeCommand command);
+    void verifyCurrentPassword(Long memberId, String currentPassword);
 }

@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.learning_activity.application.service;
 
 import com.wanted.backend.domain.learning_activity.application.command.MemberVideoCommand;
+import com.wanted.backend.domain.learning_activity.application.port.VideoPlaybackUrlPort;
 import com.wanted.backend.domain.learning_activity.application.usecase.VideoPlayUseCase;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoAccessInfo;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoProgress;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class VideoPlayService implements VideoPlayUseCase {
 
     private final PlayableVideoProgressReader playableVideoProgressReader;
+    private final VideoPlaybackUrlPort videoPlaybackUrlPort;
 
     @Override
     public VideoPlayView handle(MemberVideoCommand command) {
@@ -24,11 +26,12 @@ public class VideoPlayService implements VideoPlayUseCase {
                 playableVideoProgressReader.get(memberId, videoId);
         VideoAccessInfo accessInfo = playable.accessInfo();
         VideoProgress progress = playable.progress();
+        String streamingUrl = videoPlaybackUrlPort.generatePlaybackUrl(accessInfo);
 
         return new VideoPlayView(
                 accessInfo.videoId(),
                 accessInfo.courseId(),
-                accessInfo.streamingUrl(),
+                streamingUrl,
                 accessInfo.durationSeconds(),
                 progress.lastPositionSec(),
                 progress.watchTimeSec(),

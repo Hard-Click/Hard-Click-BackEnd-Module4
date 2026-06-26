@@ -15,7 +15,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -142,7 +144,7 @@ public class AdminDashboardQueryAdapter implements AdminDashboardQueryPort {
                 .getResultList()
                 .stream()
                 .map(this::toRecentReport)
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     private AdminDashboardResult.RecentReport toRecentReport(Object[] row) {
@@ -178,7 +180,7 @@ public class AdminDashboardQueryAdapter implements AdminDashboardQueryPort {
                         notice.isPinned(),
                         notice.getCreatedAt()
                 ))
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     private String findTargetTitle(TargetType targetType, Long targetId) {

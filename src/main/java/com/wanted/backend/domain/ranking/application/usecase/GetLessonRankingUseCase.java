@@ -18,7 +18,9 @@ public interface GetLessonRankingUseCase {
     record LessonRankingItem(
             Long rank,
             Long memberId,
-            Long watchedLessonCount
+            String memberName,
+            Long watchedLessonCount,
+            Integer currentStreakDays
     ) {
     }
 }

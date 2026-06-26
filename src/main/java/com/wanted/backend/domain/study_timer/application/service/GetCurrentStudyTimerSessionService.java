@@ -17,7 +17,7 @@ public class GetCurrentStudyTimerSessionService implements GetCurrentStudyTimerS
 
     @Override
     public CurrentStudyTimerSessionView handle(GetCurrentStudyTimerSessionQuery query) {
-        return studyTimerSessionRepository.findRunningByMemberId(query.memberId())
+        return studyTimerSessionRepository.findActiveByMemberId(query.memberId())
                 .map(this::toView)
                 .orElse(null);
     }

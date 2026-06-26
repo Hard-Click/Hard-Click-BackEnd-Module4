@@ -70,4 +70,8 @@ public class PaymentJpaEntity {
     public void markFailed() {
         this.status = "FAILED";
     }
+
+    public void refund() {
+        this.status = "REFUNDED";
+    }
 }
