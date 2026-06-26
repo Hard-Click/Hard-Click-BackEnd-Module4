@@ -19,7 +19,6 @@ services:
       - ./monitoring/recording-rules:/etc/prometheus/rules/recording-rules:ro
     depends_on:
       - alertmanager
-      -
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -33,6 +32,23 @@ services:
     command:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
 
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: hardclick-loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+
+  promtail:
+    image: grafana/promtail:2.9.0
+    container_name: hardclick-promtail
+    volumes:
+      - ./monitoring/promtail-config.yml:/etc/promtail/config.yml:ro
+      - ./logs:/var/log/hard-click:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+
   grafana:
     image: grafana/grafana:latest
     container_name: hardclick-grafana
@@ -44,6 +60,7 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     depends_on:
       - prometheus
+      - loki
 
 volumes:
   redis-data:
