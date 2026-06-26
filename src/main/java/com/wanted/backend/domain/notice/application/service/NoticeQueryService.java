@@ -21,6 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @Service
 @Transactional(readOnly = true)
@@ -88,18 +90,36 @@ public class NoticeQueryService implements NoticeQueryUseCase {
             throw new BusinessException(ErrorCode.INVALID_NOTICE_TYPE);
         }
 
-        // N+1 방지를 위해 페이지 내 공지 ID를 배치로 조회하여 읽음 목록 확보
         List<Long> noticeIds = noticePage.getContent().stream()
                 .map(Notice::getId)
                 .toList();
+
+        // 빈 페이지면 불필요한 쿼리 없이 바로 반환
+        if (noticeIds.isEmpty()) {
+            return new NoticeListResponse(List.of(), noticePage.getTotalPages());
+        }
+
+        // N+1 방지를 위해 페이지 내 공지 ID를 배치로 조회하여 읽음 목록 확보
         List<Long> readIds = notificationRepository.findReadNoticeIds(command.memberId(), noticeIds);
 
+        // 코스명 배치 조회 — finalCourseName이 null인 경우(INSTRUCTOR/수강생/courseId 없는 ADMIN)에만
         final String finalCourseName = courseName;
+        Map<Long, String> courseNameMap = Map.of();
+        if (finalCourseName == null) {
+            List<Long> courseIds = noticePage.getContent().stream()
+                    .map(Notice::getCourseId)
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .toList();
+            courseNameMap = courseInfoPort.getCourseNamesByCourseIds(courseIds);
+        }
+
+        final Map<Long, String> finalCourseNameMap = courseNameMap;
         List<NoticeItemResponse> content = noticePage.getContent().stream()
                 .map(notice -> {
                     String name = finalCourseName != null
                             ? finalCourseName
-                            : getCourseNameSafe(notice.getCourseId());
+                            : finalCourseNameMap.get(notice.getCourseId());
                     boolean isRead = readIds.contains(notice.getId());
                     return toItemResponse(notice, name, isRead);
                 })
@@ -115,7 +135,7 @@ public class NoticeQueryService implements NoticeQueryUseCase {
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOTICE_NOT_FOUND));
 
         // 비로그인 접근 방어 및 단건 읽음 여부 확인
-        boolean isRead = memberId != null && notificationRepository.isNoticeRead(memberId, noticeId);
+        boolean isRead = notificationRepository.isNoticeRead(memberId, noticeId);
 
         String courseName = "COURSE".equals(notice.getType())
                 ? courseInfoPort.getCourseNameByCourseId(notice.getCourseId())
@@ -152,12 +172,4 @@ public class NoticeQueryService implements NoticeQueryUseCase {
         );
     }
 
-    private String getCourseNameSafe(Long courseId) {
-        if (courseId == null) return null;
-        try {
-            return courseInfoPort.getCourseNameByCourseId(courseId);
-        } catch (BusinessException e) {
-            return null;
-        }
-    }
 }

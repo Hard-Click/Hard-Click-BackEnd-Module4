@@ -6,6 +6,10 @@ import com.wanted.backend.global.exception.ErrorCode;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 
 @Component
 @Transactional(readOnly = true, noRollbackFor = BusinessException.class)
@@ -22,5 +26,16 @@ public class CourseInfoAdapter implements CourseInfoPort {
         return courseReferenceRepository.findById(courseId)
                 .map(CourseReferenceEntity::getTitle)
                 .orElseThrow(() -> new BusinessException(ErrorCode.COURSE_NOT_FOUND));
+    }
+    // 코스명 배치 조회 — N+1 방지용
+    @Override
+    public Map<Long, String> getCourseNamesByCourseIds(List<Long> courseIds) {
+        if (courseIds.isEmpty()) return Map.of();
+        return courseReferenceRepository.findAllById(courseIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        CourseReferenceEntity::getId,
+                        CourseReferenceEntity::getTitle
+                ));
     }
 }

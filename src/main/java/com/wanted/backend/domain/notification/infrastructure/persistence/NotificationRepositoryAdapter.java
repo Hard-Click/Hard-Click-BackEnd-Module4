@@ -87,15 +87,21 @@ public class NotificationRepositoryAdapter implements NotificationRepository {
     }
 
     // noticeId 목록을 redirectUrl로 변환 후 읽음 처리된 공지 ID만 추출하여 반환
+    // noticeId 목록을 redirectUrl로 변환 후 읽음 처리된 공지 ID만 추출하여 반환
     @Override
     public List<Long> findReadNoticeIds(Long memberId, List<Long> noticeIds) {
         List<String> redirectUrls = noticeIds.stream()
                 .map(id -> "/notices/" + id)
                 .toList();
-        return repository.findByReceiverIdAndRedirectUrlInAndIsReadTrue(memberId, redirectUrls)
+        List<String> readUrls = repository
+                .findByReceiverIdAndRedirectUrlInAndIsReadTrue(memberId, redirectUrls)
                 .stream()
-                .map(entity -> Long.parseLong(
-                        entity.getRedirectUrl().replace("/notices/", "")))
+                .map(NotificationJpaEntity::getRedirectUrl)
+                .collect(Collectors.toList());
+
+        // Long.parseLong() 파싱 제거 — 원본 noticeIds에서 역방향 필터링
+        return noticeIds.stream()
+                .filter(id -> readUrls.contains("/notices/" + id))
                 .collect(Collectors.toList());
     }
 

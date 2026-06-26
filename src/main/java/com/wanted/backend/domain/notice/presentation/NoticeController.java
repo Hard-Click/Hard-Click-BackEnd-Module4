@@ -122,10 +122,10 @@ public class NoticeController {
             """
     )
     public ResponseEntity<ApiResponse<NoticeDetailResponse>> getNotice(
-            @AuthenticationPrincipal CustomUserDetails userDetails, // 읽음 여부 확인을 위해 추가
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long noticeId) {
 
-        Long memberId = userDetails != null ? userDetails.getMemberId() : null;
+        Long memberId = userDetails.getMemberId();
         NoticeDetailResponse response = noticeQueryUseCase.getDetail(noticeId, memberId);
 
         return ApiResponse.success("공지사항 상세 조회 성공", response);
