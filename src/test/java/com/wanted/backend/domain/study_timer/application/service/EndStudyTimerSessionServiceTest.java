@@ -24,7 +24,6 @@ import java.time.ZoneId;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
@@ -130,8 +129,16 @@ class EndStudyTimerSessionServiceTest {
         doThrow(new RuntimeException("metric registry down"))
                 .when(metricRecorder).recordResult(StudyTimerAction.END, null);
 
-        assertThatCode(() -> service.handle(new EndStudyTimerSessionCommand(1L, 55L, endedAt)))
-                .doesNotThrowAnyException();
+        EndStudyTimerSessionUseCase.StudyTimerSessionEndView result =
+                service.handle(new EndStudyTimerSessionCommand(1L, 55L, endedAt));
+
+        assertThat(result.sessionId()).isEqualTo(55L);
+        assertThat(result.accumulatedStudySeconds()).isEqualTo(500);
+        assertThat(result.status()).isEqualTo("ENDED");
+        assertThat(result.endedAt()).isEqualTo(endedAt);
+        verify(dailyStudyStatsRepository).upsertStudySeconds(1L, LocalDate.parse("2026-05-11"), 300);
+        verify(eventPublisher).publishEvent(any(Object.class));
+        verify(metricRecorder).recordResult(StudyTimerAction.END, null);
     }
 
     @Test

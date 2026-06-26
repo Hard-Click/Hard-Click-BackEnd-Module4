@@ -16,7 +16,6 @@ import org.mockito.InOrder;
 import java.time.OffsetDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
@@ -112,7 +111,12 @@ class StartStudyTimerSessionServiceTest {
         doThrow(new RuntimeException("metric registry down"))
                 .when(metricRecorder).recordResult(StudyTimerAction.START, null);
 
-        assertThatCode(() -> service.handle(new StartStudyTimerSessionCommand(1L, startedAt)))
-                .doesNotThrowAnyException();
+        StartStudyTimerSessionUseCase.StudyTimerSessionStartView result =
+                service.handle(new StartStudyTimerSessionCommand(1L, startedAt));
+
+        assertThat(result.sessionId()).isEqualTo(55L);
+        assertThat(result.status()).isEqualTo("RUNNING");
+        assertThat(result.startedAt()).isEqualTo(startedAt);
+        verify(metricRecorder).recordResult(StudyTimerAction.START, null);
     }
 }
