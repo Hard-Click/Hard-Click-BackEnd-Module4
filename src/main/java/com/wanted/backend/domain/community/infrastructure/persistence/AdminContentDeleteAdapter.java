@@ -1,4 +1,4 @@
-package com.wanted.backend.domain.report_moderation.infrastructure.persistence;
+package com.wanted.backend.domain.community.infrastructure.persistence;
 
 import com.wanted.backend.domain.community.domain.model.Comment;
 import com.wanted.backend.domain.community.domain.model.TargetType;
@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 
 @Component
 @RequiredArgsConstructor
-public class AdminContentCommandAdapter implements AdminContentCommandPort {
+public class AdminContentDeleteAdapter implements AdminContentCommandPort {
 
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;

@@ -91,14 +91,7 @@ public class EmailVerificationService implements EmailVerificationUseCase {
                 .findLatestPendingByEmailAndPurpose(email, purpose)
                 .orElseThrow(() -> new BusinessException(ErrorCode.VERIFICATION_NOT_FOUND));
 
-        try {
-            verification.verify(code);
-        } catch (RuntimeException exception) {
-            if (exception.getMessage().contains("만료")) {
-                throw new BusinessException(ErrorCode.VERIFICATION_EXPIRED);
-            }
-            throw new BusinessException(ErrorCode.VERIFICATION_CODE_MISMATCH);
-        }
+        verification.verify(code);
 
         verificationRepository.save(verification);
         return verification.getVerificationToken();

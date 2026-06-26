@@ -92,17 +92,17 @@ public class EmailVerification {
         LocalDateTime now = LocalDateTime.now();
 
         if (this.status != VerificationStatus.PENDING) {
-            throw new RuntimeException("검증할 수 없는 인증 요청입니다.");
+            throw new BusinessException(ErrorCode.VERIFICATION_NOT_FOUND);
         }
         if (now.isAfter(expiresAt)) {
             expire();
-            throw new RuntimeException("인증번호가 만료되었습니다.");
+            throw new BusinessException(ErrorCode.VERIFICATION_EXPIRED);
         }
         if (!MessageDigest.isEqual(
                 codeHash.getBytes(StandardCharsets.UTF_8),
                 hash(inputCode).getBytes(StandardCharsets.UTF_8)
         )) {
-            throw new RuntimeException("인증번호가 올바르지 않습니다.");
+            throw new BusinessException(ErrorCode.VERIFICATION_CODE_MISMATCH);
         }
 
         this.status = VerificationStatus.VERIFIED;
@@ -112,11 +112,11 @@ public class EmailVerification {
 
     public void useToken() {
         if (this.status != VerificationStatus.VERIFIED) {
-            throw new RuntimeException("사용할 수 없는 인증 토큰입니다.");
+            throw new BusinessException(ErrorCode.VERIFICATION_NOT_FOUND);
         }
         if (LocalDateTime.now().isAfter(expiresAt)) {
             expire();
-            throw new RuntimeException("인증 토큰이 만료되었습니다.");
+            throw new BusinessException(ErrorCode.VERIFICATION_EXPIRED);
         }
         this.status = VerificationStatus.USED;
     }
