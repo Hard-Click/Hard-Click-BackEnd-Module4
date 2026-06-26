@@ -6,7 +6,6 @@ import com.wanted.backend.domain.grass.domain.model.LessonGrassStat;
 import com.wanted.backend.domain.grass.domain.policy.LessonGrassLevelPolicy;
 import com.wanted.backend.domain.grass.domain.repository.LessonGrassRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,7 +27,6 @@ public class GetLessonGrassService implements GetLessonGrassUseCase {
     private final Clock clock;
 
     @Override
-    @Cacheable(cacheNames = "grassLessons:v2", key = "#query.memberId() + ':' + T(java.time.LocalDate).now(@clock)")
     public List<LessonGrassView> handle(GetLessonGrassQuery query) {
         LocalDate today = LocalDate.now(clock);
         LocalDate startDate = LocalDate.of(today.getYear(), Month.JANUARY, 1);
