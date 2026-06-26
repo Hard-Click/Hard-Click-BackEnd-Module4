@@ -9,7 +9,9 @@ import com.wanted.backend.global.exception.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -59,6 +61,17 @@ class VideoAccessServiceTest {
         verify(enrollmentAccessPort).hasActiveEnrollment(1L, 20L);
         verify(subscriptionAccessPort).hasActiveSubscription(1L);
         verify(metricRecorder).recordResult(LearningActivityAction.VIDEO_ACCESS, null);
+    }
+
+    @Test
+    void 메트릭_기록이_실패해도_검증_결과는_그대로_유지된다() {
+        VideoAccessInfo accessInfo = accessInfo("PUBLISHED", 10000, false);
+        when(enrollmentAccessPort.hasActiveEnrollment(1L, 20L)).thenReturn(true);
+        doThrow(new RuntimeException("metric registry down"))
+                .when(metricRecorder).recordResult(LearningActivityAction.VIDEO_ACCESS, null);
+
+        assertThatCode(() -> service.validatePlayable(1L, accessInfo))
+                .doesNotThrowAnyException();
     }
 
     @Test
