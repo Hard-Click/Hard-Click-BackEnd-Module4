@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.cource.presentation.api.request;
 
 import com.wanted.backend.domain.cource.application.command.CreateCourseCommand;
+import com.wanted.backend.domain.cource.domain.model.CourseLevel;
 import com.wanted.backend.domain.cource.domain.model.PriceType;
 import com.wanted.backend.global.domain.SubjectType;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -50,8 +51,9 @@ public record CreateCourseRequest(
         @Schema(description = "기술 태그 목록", example = "[\"미분법\", \"적분법\", \"극한\"]")
         List<String> techTags,
 
-        @Schema(description = "난이도", example = "중급~고급")
-        String level
+        @Schema(description = "난이도 (입문 / 중급 / 심화)", example = "중급")
+        @NotNull(message = "난이도는 필수입니다.")
+        CourseLevel level
 ) {
     public CreateCourseCommand toCommand(Long authorId) {
         List<CreateCourseCommand.SectionCommand> sectionCommands = sections == null
@@ -69,6 +71,6 @@ public record CreateCourseRequest(
 
         return new CreateCourseCommand(authorId, title, subject.name(), description,
                 thumbnailUrl, priceType, price, sectionCommands,
-                learningObjectives, targetAudience, techTags, level);
+                learningObjectives, targetAudience, techTags, level.getLabel());
     }
 }

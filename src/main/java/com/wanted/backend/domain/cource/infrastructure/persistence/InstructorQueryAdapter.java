@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.cource.infrastructure.persistence;
 
 import com.wanted.backend.domain.cource.application.port.InstructorQueryPort;
+import com.wanted.backend.domain.cource.application.port.InstructorQueryPort.InstructorProfile;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -44,5 +45,19 @@ public class InstructorQueryAdapter implements InstructorQueryPort {
         return rows.stream()
                 .map(r -> ((Number) r).longValue())
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public InstructorProfile findProfileById(Long instructorId) {
+        List<Object[]> rows = em.createNativeQuery(
+                        "SELECT one_line_intro, introduction, career FROM members WHERE member_id = :id")
+                .setParameter("id", instructorId)
+                .getResultList();
+        if (rows.isEmpty()) {
+            return InstructorProfile.empty();
+        }
+        Object[] row = rows.get(0);
+        return new InstructorProfile((String) row[0], (String) row[1], (String) row[2]);
     }
 }

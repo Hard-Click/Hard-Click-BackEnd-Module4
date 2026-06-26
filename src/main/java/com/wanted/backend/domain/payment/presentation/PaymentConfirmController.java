@@ -1,6 +1,6 @@
 package com.wanted.backend.domain.payment.presentation;
 
-import com.wanted.backend.domain.payment.application.facade.PaymentFacade;
+import com.wanted.backend.domain.order.application.usecase.ConfirmOrderPaymentUseCase;
 import com.wanted.backend.domain.payment.presentation.request.PaymentConfirmRequest;
 import com.wanted.backend.domain.payment.presentation.response.PaymentConfirmResponse;
 import com.wanted.backend.global.common.ApiResponse;
@@ -24,7 +24,7 @@ import java.util.UUID;
 @Tag(name = "Payment", description = "결제 확정 API (중복결제 방지)")
 public class PaymentConfirmController {
 
-    private final PaymentFacade paymentFacade;
+    private final ConfirmOrderPaymentUseCase confirmOrderPaymentUseCase;
 
     @PostMapping("/confirm")
     @Operation(
@@ -40,17 +40,19 @@ public class PaymentConfirmController {
         if (idempotencyKey == null || idempotencyKey.isBlank()) {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
+        String normalizedIdempotencyKey = idempotencyKey.trim();
         try {
-            UUID.fromString(idempotencyKey.trim());
+            UUID.fromString(normalizedIdempotencyKey);
         } catch (IllegalArgumentException e) {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
 
-        PaymentFacade.Result result = paymentFacade.confirm(
+        ConfirmOrderPaymentUseCase.Result result = confirmOrderPaymentUseCase.confirm(
                 userDetails.getMemberId(),
-                request.courseId(),
+                request.orderId(),
+                request.paymentKey(),
                 request.amount(),
-                idempotencyKey
+                normalizedIdempotencyKey
         );
 
         PaymentConfirmResponse response = PaymentConfirmResponse.from(result);

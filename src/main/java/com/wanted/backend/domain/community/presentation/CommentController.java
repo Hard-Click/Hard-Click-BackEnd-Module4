@@ -91,20 +91,21 @@ public class CommentController {
     @Operation(
             summary = "댓글 목록 조회",
             description = """
-                게시글의 댓글 목록을 조회합니다.
-                - 로그인한 회원만 조회 가능합니다.
-                - 댓글에 대댓글이 있을 경우 replies 필드에 중첩하여 반환합니다.
-                - 본인이 작성한 댓글은 isMine: true로 표시됩니다.
-                - 채택된 댓글은 isAccepted: true로 표시됩니다.
-                - 삭제된 댓글은 isDeleted: true로 표시됩니다.
-                """
+            게시글의 댓글 목록을 조회합니다.
+            - 로그인한 회원만 조회 가능합니다.
+            - 댓글에 대댓글이 있을 경우 replies 필드에 중첩하여 반환합니다.
+            - 본인이 작성한 댓글은 isMine: true로 표시됩니다.
+            - 채택된 댓글은 isAccepted: true로 표시됩니다.
+            - 삭제된 댓글은 isDeleted: true로 표시됩니다.
+            """
     )
     public ResponseEntity<ApiResponse<CommentListResponse>> getComments(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long postId) {
 
+        boolean isAdmin = "ADMIN".equals(userDetails.getRole());
         CommentListResponse response = commentQueryUseCase.getComments(
-                postId, userDetails.getMemberId());
+                postId, userDetails.getMemberId(), isAdmin);
 
         return ApiResponse.success("댓글 목록 조회 성공", response);
     }

@@ -5,17 +5,23 @@ import com.wanted.backend.domain.community.domain.model.TargetType;
 import com.wanted.backend.domain.report_moderation.application.query.AdminReportListQuery;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 
 public class AdminReportListRequest {
 
+    @Schema(description = "처리 상태 (PENDING, RESOLVED, REJECTED 등)", example = "PENDING")
     private String status;
+
+    @Schema(description = "신고 대상 타입 (POST, COMMENT, REVIEW)", example = "POST")
     private String targetType;
 
+    @Schema(description = "페이지 번호 (0부터 시작)", example = "0")
     @Min(value = 0, message = "페이지 번호는 0 이상이어야 합니다.")
     private int page = 0;
 
+    @Schema(description = "조회 크기", example = "10")
     @Min(value = 1, message = "조회 크기는 1 이상이어야 합니다.")
     @Max(value = 100, message = "조회 크기는 100 이하여야 합니다.")
     private int size = 10;

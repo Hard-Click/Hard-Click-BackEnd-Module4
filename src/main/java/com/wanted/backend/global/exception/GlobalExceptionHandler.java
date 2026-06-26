@@ -7,8 +7,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -34,6 +36,24 @@ public class GlobalExceptionHandler {
         );
 
         log.warn("[Validation Error] Path: {}, Message: 클라이언트 입력값 오류", request.getRequestURI());
+
+        ErrorResponse response = ErrorResponse.create()
+                .errorCode(ErrorCode.INVALID_INPUT_VALUE.getCode())
+                .message(ErrorCode.INVALID_INPUT_VALUE.getMessage())
+                .path(request.getRequestURI())
+                .details(details);
+
+        return ResponseEntity.status(ErrorCode.INVALID_INPUT_VALUE.getStatus()).body(response);
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponse> handleMissingRequestParameterException(
+            MissingServletRequestParameterException e,
+            HttpServletRequest request) {
+
+        Map<String, Object> details = Map.of(e.getParameterName(), "필수 요청 파라미터입니다.");
+
+        log.warn("[Missing Request Parameter] Path: {}, Parameter: {}", request.getRequestURI(), e.getParameterName());
 
         ErrorResponse response = ErrorResponse.create()
                 .errorCode(ErrorCode.INVALID_INPUT_VALUE.getCode())
@@ -96,6 +116,31 @@ public class GlobalExceptionHandler {
         ErrorResponse response = ErrorResponse.create()
                 .errorCode(ErrorCode.INVALID_INPUT_VALUE.getCode())
                 .message(e.getMessage())
+                .path(request.getRequestURI());
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    /**
+     * 요청 본문 파싱 실패 (JSON 형식 오류, enum 역직렬화 실패 등)
+     * 예: 잘못된 subject/level enum 값 → @JsonCreator가 IllegalArgumentException을 던지면
+     *     Jackson이 HttpMessageNotReadableException으로 감싸서 올라온다. 500이 아닌 400으로 처리.
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleNotReadableException(
+            HttpMessageNotReadableException e,
+            HttpServletRequest request) {
+
+        Throwable root = e.getMostSpecificCause();
+        String message = (root != null && root.getMessage() != null)
+                ? root.getMessage()
+                : "요청 본문 형식이 올바르지 않습니다.";
+
+        log.warn("[Message Not Readable] Path: {}, Message: {}", request.getRequestURI(), message);
+
+        ErrorResponse response = ErrorResponse.create()
+                .errorCode(ErrorCode.INVALID_INPUT_VALUE.getCode())
+                .message(message)
                 .path(request.getRequestURI());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);

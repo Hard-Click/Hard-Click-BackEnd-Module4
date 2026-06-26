@@ -7,6 +7,7 @@ import com.wanted.backend.domain.learning_activity.application.usecase.GetCourse
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,43 +15,63 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class GetCourseProgressService implements GetCourseProgressUseCase {
 
+    private static final LearningActivityAction ACTION = LearningActivityAction.COURSE_PROGRESS;
+
     private final CourseProgressQueryPort courseProgressQueryPort;
     private final EnrollmentAccessPort enrollmentAccessPort;
+    private final LearningActivityMetricRecorder metricRecorder;
 
     @Override
     public CourseProgressView handle(GetCourseProgressCommand command) {
-        if (!enrollmentAccessPort.hasActiveEnrollment(command.memberId(), command.courseId())) {
-            throw new BusinessException(ErrorCode.ENROLLMENT_REQUIRED);
+        String errorCode = "UNKNOWN";
+        try {
+            if (!enrollmentAccessPort.hasActiveEnrollment(command.memberId(), command.courseId())) {
+                throw new BusinessException(ErrorCode.ENROLLMENT_REQUIRED);
+            }
+
+            CourseProgressQueryPort.CourseProgressData progressData = courseProgressQueryPort
+                    .findByMemberIdAndCourseId(command.memberId(), command.courseId());
+
+            List<LessonProgressView> lessons = progressData.lessons().stream()
+                    .map(lesson -> new LessonProgressView(
+                            lesson.videoId(),
+                            lesson.completed(),
+                            lesson.lastPositionSeconds()
+                    ))
+                    .toList();
+
+            int totalLessonCount = lessons.size();
+            int completedLessonCount = (int) lessons.stream()
+                    .filter(lesson -> Boolean.TRUE.equals(lesson.completed()))
+                    .count();
+
+            CourseProgressView view = new CourseProgressView(
+                    progressData.courseId(),
+                    calculateProgressRate(completedLessonCount, totalLessonCount),
+                    completedLessonCount,
+                    totalLessonCount,
+                    lessons
+            );
+
+            errorCode = null;
+            return view;
+        } catch (BusinessException e) {
+            errorCode = e.getErrorCode().name();
+            throw e;
+        } finally {
+            try {
+                metricRecorder.recordResult(ACTION, errorCode);
+            } catch (RuntimeException e) {
+                // metric failure must not affect the business transaction
+                log.warn("learning activity metric record failed: action={}, errorCode={}", ACTION, errorCode, e);
+            }
         }
-
-        CourseProgressQueryPort.CourseProgressData progressData = courseProgressQueryPort
-                .findByMemberIdAndCourseId(command.memberId(), command.courseId());
-
-        List<LessonProgressView> lessons = progressData.lessons().stream()
-                .map(lesson -> new LessonProgressView(
-                        lesson.videoId(),
-                        lesson.completed(),
-                        lesson.lastPositionSeconds()
-                ))
-                .toList();
-
-        int totalLessonCount = lessons.size();
-        int completedLessonCount = (int) lessons.stream()
-                .filter(lesson -> Boolean.TRUE.equals(lesson.completed()))
-                .count();
-
-        return new CourseProgressView(
-                progressData.courseId(),
-                calculateProgressRate(completedLessonCount, totalLessonCount),
-                completedLessonCount,
-                totalLessonCount,
-                lessons
-        );
     }
 
     private BigDecimal calculateProgressRate(int completedLessonCount, int totalLessonCount) {

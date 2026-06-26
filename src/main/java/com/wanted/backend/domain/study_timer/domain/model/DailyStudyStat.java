@@ -1,5 +1,8 @@
 package com.wanted.backend.domain.study_timer.domain.model;
 
+import com.wanted.backend.global.exception.BusinessException;
+import com.wanted.backend.global.exception.ErrorCode;
+
 import java.time.LocalDate;
 
 public record DailyStudyStat(
@@ -9,17 +12,21 @@ public record DailyStudyStat(
 ) {
 
     public DailyStudyStat {
-        if (memberId == null) {
-            throw new IllegalArgumentException("회원 ID는 필수입니다.");
+        if (memberId == null || studyDate == null || studySeconds == null || studySeconds < 0) {
+            throw new BusinessException(ErrorCode.STUDY_TIMER_DAILY_STAT_INVALID);
         }
-        if (studyDate == null) {
-            throw new IllegalArgumentException("학습 날짜는 필수입니다.");
+    }
+
+    public DailyStudyStat increaseStudySeconds(Integer additionalStudySeconds) {
+        if (additionalStudySeconds == null || additionalStudySeconds < 0) {
+            throw new BusinessException(ErrorCode.STUDY_TIMER_DAILY_STAT_INVALID);
         }
-        if (studySeconds == null) {
-            throw new IllegalArgumentException("순공시간은 필수입니다.");
+
+        long nextStudySeconds = (long) studySeconds + additionalStudySeconds;
+        if (nextStudySeconds > Integer.MAX_VALUE) {
+            throw new BusinessException(ErrorCode.STUDY_TIMER_DAILY_STAT_INVALID);
         }
-        if (studySeconds < 0) {
-            throw new IllegalArgumentException("순공시간은 0 이상이어야 합니다.");
-        }
+
+        return new DailyStudyStat(memberId, studyDate, (int) nextStudySeconds);
     }
 }

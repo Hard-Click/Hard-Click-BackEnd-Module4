@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.community.application.service;
 
+import com.wanted.backend.domain.community.application.port.CommunityFileStoragePort;
 import com.wanted.backend.domain.community.application.port.MemberNamePort;
 import com.wanted.backend.domain.community.application.usecase.PostQueryUseCase;
 import com.wanted.backend.domain.community.domain.model.*;
@@ -12,6 +13,8 @@ import com.wanted.backend.domain.community.presentation.response.PostItemRespons
 import com.wanted.backend.domain.community.presentation.response.PostListResponse;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,21 +35,26 @@ public class PostQueryService implements PostQueryUseCase {
     private final ViewLogRepository viewLogRepository;
     private final MemberNamePort memberNamePort;
     private final CommentRepository commentRepository;
+    private final CommunityFileStoragePort fileStoragePort;
+    private final MeterRegistry meterRegistry;
 
     public PostQueryService(PostRepository postRepository,
                             PostFileRepository postFileRepository,
                             ViewLogRepository viewLogRepository,
-                            MemberNamePort memberNamePort, CommentRepository commentRepository) {
+                            MemberNamePort memberNamePort, CommentRepository commentRepository,
+                            CommunityFileStoragePort fileStoragePort, MeterRegistry meterRegistry) {
         this.postRepository = postRepository;
         this.postFileRepository = postFileRepository;
         this.viewLogRepository = viewLogRepository;
         this.memberNamePort = memberNamePort;
         this.commentRepository = commentRepository;
+        this.fileStoragePort = fileStoragePort;
+        this.meterRegistry = meterRegistry;
     }
 
     @Override
     public PostListResponse getList(BoardType boardType, PostSortType sort,
-                                    String keyword, int page) {
+                                    String keyword, int page, boolean isAdmin) {
         List<Post> posts = boardType != null
                 ? postRepository.findByBoardType(boardType, sort, keyword, page, PAGE_SIZE)
                 : postRepository.findAll(sort, keyword, page, PAGE_SIZE);
@@ -56,7 +64,7 @@ public class PostQueryService implements PostQueryUseCase {
                 : postRepository.countAll(keyword);
 
         List<PostItemResponse> items = posts.stream()
-                .map(this::toItemResponse)
+                .map(post -> toItemResponse(post, isAdmin))
                 .toList();
 
         return new PostListResponse(
@@ -69,7 +77,7 @@ public class PostQueryService implements PostQueryUseCase {
 
     @Override
     @Transactional
-    public PostDetailResponse getDetail(Long postId, Long memberId) {
+    public PostDetailResponse getDetail(Long postId, Long memberId, boolean isAdmin) {
 
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
@@ -81,41 +89,54 @@ public class PostQueryService implements PostQueryUseCase {
         // memberId가 null이면 조회수 트래킹 스킵
         if (memberId != null) {
             LocalDateTime thirtyMinutesAgo = LocalDateTime.now().minusMinutes(30);
+
+            Timer.Sample duplicateCheckSample = Timer.start(meterRegistry);
             boolean alreadyViewed = viewLogRepository
                     .existsByMemberIdAndPostIdAndViewedAtAfter(memberId, postId, thirtyMinutesAgo);
+            duplicateCheckSample.stop(Timer.builder("post.view.duplicate.check")
+                    .publishPercentileHistogram(true)
+                    .register(meterRegistry));
 
             if (!alreadyViewed) {
+                Timer.Sample updateSample = Timer.start(meterRegistry);
                 post.increaseViewCount();
                 postRepository.updateViewCount(postId, post.getViewCount());
                 viewLogRepository.save(ViewLog.create(memberId, postId));
+                updateSample.stop(Timer.builder("post.view.count.update")
+                        .publishPercentileHistogram(true)
+                        .register(meterRegistry));
             }
         }
 
         String name = memberNamePort.getNameByMemberId(post.getAuthorId());
+        String displayName = isAdmin ? name : Review.maskName(name);
 
         List<String> fileUrls = post.isAdminDeleted()
                 ? List.of()
                 : postFileRepository.findByPostId(postId)
                 .stream()
                 .map(PostFile::getFileUrl)
+                .map(fileStoragePort::presignUrl)
                 .toList();
 
         return new PostDetailResponse(
                 post.getId(),
                 post.getBoardType(),
                 post.isAdminDeleted() ? ADMIN_DELETED_MESSAGE : post.getTitle(),
-                Review.maskName(name),
+                displayName,
                 post.getCreatedAt(),
                 post.getViewCount(),
                 post.isAdminDeleted() ? ADMIN_DELETED_MESSAGE : post.getContent(),
                 post.isOwner(memberId),   // Post 도메인 모델에 위임
                 post.isAccepted(),
-                fileUrls
+                fileUrls,
+                post.getSubject()
         );
     }
 
-    private PostItemResponse toItemResponse(Post post) {
+    private PostItemResponse toItemResponse(Post post, boolean isAdmin) {
         String name = memberNamePort.getNameByMemberId(post.getAuthorId());
+        String displayName = isAdmin ? name : Review.maskName(name);
         int commentCount = commentRepository.countByPostId(post.getId());
         return new PostItemResponse(
                 post.getId(),

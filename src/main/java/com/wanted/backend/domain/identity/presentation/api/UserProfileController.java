@@ -6,6 +6,7 @@ import com.wanted.backend.domain.identity.application.usecase.ProfileCommandUseC
 import com.wanted.backend.domain.identity.application.usecase.ProfileQueryUseCase;
 import com.wanted.backend.domain.identity.presentation.api.request.UpdateMyProfileRequest;
 import com.wanted.backend.domain.identity.presentation.api.request.UpdatePasswordRequest;
+import com.wanted.backend.domain.identity.presentation.api.request.VerifyPasswordRequest;
 import com.wanted.backend.domain.identity.presentation.api.request.WithdrawMemberRequest;
 import com.wanted.backend.domain.identity.presentation.api.response.EmptyResponse;
 import com.wanted.backend.domain.identity.presentation.api.response.ProfileImageResponse;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -35,7 +37,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/members")
-@Tag(name = "User Profile", description = "마이페이지 프로필 API")
+@Tag(name = "User Profile", description = "마이페이지 프로필 패스워드 확인 API")
 public class UserProfileController {
 
     private final ProfileQueryUseCase profileQueryUseCase;
@@ -65,6 +67,20 @@ public class UserProfileController {
         passwordCommandUseCase.updatePassword(userDetails.getMemberId(), request.toCommand());
 
         return ApiResponse.success("비밀번호가 변경되었습니다", new EmptyResponse());
+    }
+
+    @PostMapping("/me/password/verify")
+    @Operation(
+            summary = "현재 비밀번호 검증",
+            description = "비밀번호 변경이나 회원 탈퇴 없이, 로그인한 사용자의 현재 비밀번호 일치 여부만 확인합니다."
+    )
+    public ResponseEntity<ApiResponse<EmptyResponse>> verifyPassword(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody VerifyPasswordRequest request
+    ) {
+        passwordCommandUseCase.verifyCurrentPassword(userDetails.getMemberId(), request.currentPassword());
+
+        return ApiResponse.success("현재 비밀번호가 확인되었습니다.", new EmptyResponse());
     }
 
     @PatchMapping(value = "/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

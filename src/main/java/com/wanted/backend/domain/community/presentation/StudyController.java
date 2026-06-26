@@ -7,6 +7,7 @@ import com.wanted.backend.domain.community.presentation.response.StudyListRespon
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.domain.SubjectType;
 import com.wanted.backend.global.security.CustomUserDetails;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -34,6 +35,7 @@ public class StudyController {
         return ApiResponse.success("스터디 목록 조회 완료", new StudyListResponse(content, 1));
     }
 
+    @Operation(summary = "스터디 목록 조회", description = "스터디 목록을 조회합니다. subject로 과목 필터링 가능 (SubjectType enum 값)")
     @GetMapping("/{groupId}")
     public ResponseEntity<ApiResponse<StudyDetailResponse>> getStudyDetail(
             @AuthenticationPrincipal CustomUserDetails userDetails,

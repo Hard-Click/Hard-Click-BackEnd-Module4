@@ -46,6 +46,7 @@ public class VideoCatalogAdapter implements VideoCatalogPort {
                 course.getStatus(),
                 course.getPrice(),
                 isPreview,
+                video.getS3Key(),
                 video.getStreamingUrl(),
                 video.getDurationSeconds()
         );

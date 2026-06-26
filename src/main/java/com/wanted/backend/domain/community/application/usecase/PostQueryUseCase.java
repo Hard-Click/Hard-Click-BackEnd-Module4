@@ -8,9 +8,6 @@ import com.wanted.backend.domain.community.presentation.response.PostListRespons
 public interface PostQueryUseCase {
 
     // 게시글 목록 조회
-    PostListResponse getList(BoardType boardType, PostSortType sort,
-                             String keyword, int page);
-
-    // 게시글 상세 조회
-    PostDetailResponse getDetail(Long postId, Long memberId);
+    PostListResponse getList(BoardType boardType, PostSortType sort, String keyword, int page, boolean isAdmin);
+    PostDetailResponse getDetail(Long postId, Long memberId, boolean isAdmin);
 }

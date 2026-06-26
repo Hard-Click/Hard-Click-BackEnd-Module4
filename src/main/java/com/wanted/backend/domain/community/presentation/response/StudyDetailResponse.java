@@ -1,5 +1,7 @@
 package com.wanted.backend.domain.community.presentation.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -15,5 +17,6 @@ public record StudyDetailResponse(
         boolean isJoined,
         boolean isClosed,
         List<String> members,
+        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss+09:00")
         LocalDateTime createdAt
 ) {}

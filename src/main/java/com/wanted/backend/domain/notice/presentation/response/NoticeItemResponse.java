@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.notice.presentation.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
@@ -25,6 +26,7 @@ public record NoticeItemResponse(
         @Schema(description = "읽음 여부 (추후 구현 예정)", example = "false")
         boolean isRead,       // 추후 구현 예정
 
+        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss+09:00")
         @Schema(description = "작성일시", example = "2025-03-15T14:30:00")
         LocalDateTime createdAt
 

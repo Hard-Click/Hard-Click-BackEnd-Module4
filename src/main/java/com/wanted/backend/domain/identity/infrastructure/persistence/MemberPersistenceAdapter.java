@@ -2,8 +2,10 @@ package com.wanted.backend.domain.identity.infrastructure.persistence;
 
 import com.wanted.backend.domain.identity.domain.repository.MemberRepository;
 import com.wanted.backend.domain.identity.domain.model.Member;
+import com.wanted.backend.domain.identity.domain.model.MemberStatus;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Component
@@ -57,6 +59,11 @@ public class MemberPersistenceAdapter implements MemberRepository {
 
         MemberJpaEntity savedEntity = memberJpaRepository.save(entity);
         return toDomain(savedEntity);
+    }
+
+    @Override
+    public int updateStatusIfActive(Long memberId, MemberStatus newStatus, LocalDateTime updatedAt) {
+        return memberJpaRepository.updateStatusIfActive(memberId, newStatus, updatedAt);
     }
 
     @Override

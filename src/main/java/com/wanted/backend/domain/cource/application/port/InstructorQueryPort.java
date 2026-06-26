@@ -14,4 +14,13 @@ public interface InstructorQueryPort {
 
     /** 강사명 검색 → authorId 목록 */
     List<Long> findIdsByName(String name);
+
+    /** 강사 ID → 한줄소개/자기소개/경력 */
+    InstructorProfile findProfileById(Long instructorId);
+
+    record InstructorProfile(String oneLineIntro, String introduction, String career) {
+        public static InstructorProfile empty() {
+            return new InstructorProfile(null, null, null);
+        }
+    }
 }
