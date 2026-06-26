@@ -69,6 +69,17 @@ public class PasswordCommandService implements PasswordCommandUseCase {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public void verifyCurrentPassword(Long memberId, String currentPassword) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        if (!passwordEncoder.matches(currentPassword, member.getPassword())) {
+            throw new BusinessException(ErrorCode.INVALID_PASSWORD);
+        }
+    }
+
+    @Override
     @Transactional
     public String verify(AccountLockVerifyCommand command) {
         Member member = memberRepository.findByEmail(command.email())
