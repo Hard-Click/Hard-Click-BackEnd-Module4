@@ -2,7 +2,9 @@ package com.wanted.backend.domain.identity.presentation.api;
 
 import com.wanted.backend.domain.identity.application.command.AccountLockPasswordChangeCommand;
 import com.wanted.backend.domain.identity.application.command.AccountLockVerifyCommand;
+import com.wanted.backend.domain.identity.application.usecase.EmailVerificationUseCase;
 import com.wanted.backend.domain.identity.application.usecase.PasswordCommandUseCase;
+import com.wanted.backend.domain.identity.presentation.api.request.AccountLockEmailRequest;
 import com.wanted.backend.domain.identity.presentation.api.request.AccountLockPasswordChangeRequest;
 import com.wanted.backend.domain.identity.presentation.api.request.AccountLockVerifyRequest;
 import com.wanted.backend.domain.identity.presentation.api.response.EmptyResponse;
@@ -26,6 +28,19 @@ import org.springframework.web.bind.annotation.RestController;
 public class AccountLockController {
 
     private final PasswordCommandUseCase passwordCommandUseCase;
+    private final EmailVerificationUseCase emailVerificationUseCase;
+
+    @Operation(
+            summary = "계정 잠금 인증번호 발송",
+            description = "계정 잠금 상태의 사용자 이메일로 인증번호를 발송합니다."
+    )
+    @PostMapping("/email")
+    public ResponseEntity<ApiResponse<EmptyResponse>> sendEmail(
+            @Valid @RequestBody AccountLockEmailRequest request
+    ) {
+        emailVerificationUseCase.sendAccountLockCode(request.email());
+        return ApiResponse.success("계정 잠금 인증번호가 발송되었습니다", new EmptyResponse());
+    }
 
     @Operation(
             summary = "계정 잠금 인증",
