@@ -109,6 +109,7 @@ class ResumeStudyTimerSessionServiceTest {
         verify(memberLockPort).lock(1L);
         verify(repository).findById(55L);
         verify(repository, never()).save(any());
+        verify(metricRecorder).recordResult(StudyTimerAction.RESUME, "STUDY_TIMER_SESSION_NOT_FOUND");
     }
 
     @Test
@@ -137,6 +138,7 @@ class ResumeStudyTimerSessionServiceTest {
         verify(memberLockPort).lock(1L);
         verify(repository).findById(55L);
         verify(repository, never()).save(any());
+        verify(metricRecorder).recordResult(StudyTimerAction.RESUME, "FORBIDDEN");
     }
 
     @Test
@@ -195,6 +197,7 @@ class ResumeStudyTimerSessionServiceTest {
         verify(memberLockPort).lock(1L);
         verify(repository).findById(55L);
         verify(repository, never()).save(any());
+        verify(metricRecorder).recordResult(StudyTimerAction.RESUME, "STUDY_TIMER_RESUMED_AT_BEFORE_PAUSED_AT");
     }
 
     @Test
@@ -211,6 +214,7 @@ class ResumeStudyTimerSessionServiceTest {
         verify(memberLockPort, never()).lock(any());
         verify(repository, never()).findById(any());
         verify(repository, never()).save(any());
+        verify(metricRecorder).recordResult(StudyTimerAction.RESUME, "STUDY_TIMER_RESUMED_AT_IN_FUTURE");
     }
 
     @Test
@@ -227,5 +231,6 @@ class ResumeStudyTimerSessionServiceTest {
         verify(memberLockPort, never()).lock(any());
         verify(repository, never()).findById(any());
         verify(repository, never()).save(any());
+        verify(metricRecorder).recordResult(StudyTimerAction.RESUME, "STUDY_TIMER_RESUMED_AT_REQUIRED");
     }
 }

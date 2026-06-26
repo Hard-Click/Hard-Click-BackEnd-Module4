@@ -75,7 +75,11 @@ public class EndStudyTimerSessionService implements EndStudyTimerSessionUseCase 
             errorCode = e.getErrorCode().name();
             throw e;
         } finally {
-            metricRecorder.recordResult(ACTION, errorCode);
+            try {
+                metricRecorder.recordResult(ACTION, errorCode);
+            } catch (RuntimeException ignored) {
+                // metric failure must not affect the business transaction
+            }
         }
     }
 
