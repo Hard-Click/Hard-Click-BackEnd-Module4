@@ -1,5 +1,7 @@
 package com.wanted.backend.domain.identity.application.service;
 
+import com.wanted.backend.domain.identity.application.AccountLockVerifyResult;
+import com.wanted.backend.domain.identity.application.PasswordChangeResult;
 import com.wanted.backend.domain.identity.application.command.AccountLockPasswordChangeCommand;
 import com.wanted.backend.domain.identity.application.command.AccountLockVerifyCommand;
 import com.wanted.backend.domain.identity.application.command.ResetPasswordCommand;
@@ -32,12 +34,12 @@ public class PasswordCommandService implements PasswordCommandUseCase {
 
     @Override
     @Transactional
-    public void updatePassword(Long memberId, UpdatePasswordCommand command) {
+    public PasswordChangeResult updatePassword(Long memberId, UpdatePasswordCommand command) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         if (!passwordEncoder.matches(command.currentPassword(), member.getPassword())) {
-            throw new BusinessException(ErrorCode.INVALID_PASSWORD);
+            throw new BusinessException(ErrorCode.INVALID_CURRENT_PASSWORD);
         }
 
         if (!command.newPassword().equals(command.newPasswordConfirm())) {
@@ -45,12 +47,13 @@ public class PasswordCommandService implements PasswordCommandUseCase {
         }
 
         member.changePassword(passwordEncoder.encode(command.newPassword()));
-        memberRepository.save(member);
+        Member saved = memberRepository.save(member);
+        return PasswordChangeResult.from(saved);
     }
 
     @Override
     @Transactional
-    public void resetPassword(ResetPasswordCommand command) {
+    public PasswordChangeResult resetPassword(ResetPasswordCommand command) {
         if (!command.newPassword().equals(command.newPasswordConfirm())) {
             throw new BusinessException(ErrorCode.PASSWORD_CONFIRM_MISMATCH);
         }
@@ -65,7 +68,8 @@ public class PasswordCommandService implements PasswordCommandUseCase {
         );
         member.changePasswordAndUnlock(passwordEncoder.encode(command.newPassword()), LocalDateTime.now());
 
-        memberRepository.save(member);
+        Member saved = memberRepository.save(member);
+        return PasswordChangeResult.from(saved);
     }
 
     @Override
@@ -75,13 +79,13 @@ public class PasswordCommandService implements PasswordCommandUseCase {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         if (!passwordEncoder.matches(currentPassword, member.getPassword())) {
-            throw new BusinessException(ErrorCode.INVALID_PASSWORD);
+            throw new BusinessException(ErrorCode.INVALID_CURRENT_PASSWORD);
         }
     }
 
     @Override
     @Transactional
-    public String verify(AccountLockVerifyCommand command) {
+    public AccountLockVerifyResult verify(AccountLockVerifyCommand command) {
         Member member = memberRepository.findByEmail(command.email())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
@@ -89,16 +93,17 @@ public class PasswordCommandService implements PasswordCommandUseCase {
             throw new BusinessException(ErrorCode.ACCOUNT_NOT_LOCKED);
         }
 
-        return emailVerificationUseCase.verifyCode(
+        String token = emailVerificationUseCase.verifyCode(
                 command.email(),
                 command.code(),
                 EmailPurpose.ACCOUNT_LOCK
         );
+        return AccountLockVerifyResult.from(token);
     }
 
     @Override
     @Transactional
-    public void changePassword(AccountLockPasswordChangeCommand command) {
+    public PasswordChangeResult changePassword(AccountLockPasswordChangeCommand command) {
         if (!command.newPassword().equals(command.newPasswordConfirm())) {
             throw new BusinessException(ErrorCode.PASSWORD_CONFIRM_MISMATCH);
         }
@@ -125,6 +130,7 @@ public class PasswordCommandService implements PasswordCommandUseCase {
                 LocalDateTime.now()
         );
 
-        memberRepository.save(member);
+        Member saved = memberRepository.save(member);
+        return PasswordChangeResult.from(saved);
     }
 }

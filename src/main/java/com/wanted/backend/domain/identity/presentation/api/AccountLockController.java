@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.identity.presentation.api;
 
+import com.wanted.backend.domain.identity.application.AccountLockVerifyResult;
 import com.wanted.backend.domain.identity.application.command.AccountLockPasswordChangeCommand;
 import com.wanted.backend.domain.identity.application.command.AccountLockVerifyCommand;
 import com.wanted.backend.domain.identity.application.usecase.EmailVerificationUseCase;
@@ -50,14 +51,14 @@ public class AccountLockController {
     public ResponseEntity<ApiResponse<PasswordChangeTokenResponse>> verify(
             @Valid @RequestBody AccountLockVerifyRequest request
     ) {
-        String token = passwordCommandUseCase.verify(new AccountLockVerifyCommand(
+        AccountLockVerifyResult result = passwordCommandUseCase.verify(new AccountLockVerifyCommand(
                 request.email(),
                 request.code()
         ));
 
         return ApiResponse.success(
                 "계정 보호 인증이 완료되었습니다",
-                new PasswordChangeTokenResponse(token)
+                new PasswordChangeTokenResponse(result.passwordChangeToken())
         );
     }
 

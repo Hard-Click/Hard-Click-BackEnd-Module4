@@ -1,11 +1,10 @@
-package com.wanted.backend.domain.report_moderation.infrastructure;
+package com.wanted.backend.domain.community.infrastructure;
 
-import com.wanted.backend.domain.community.domain.model.Review;
+import com.wanted.backend.domain.community.domain.model.TargetType;
 import com.wanted.backend.domain.community.domain.repository.CommentRepository;
 import com.wanted.backend.domain.community.domain.repository.PostRepository;
 import com.wanted.backend.domain.community.domain.repository.ReviewRepository;
-import com.wanted.backend.domain.community.domain.model.TargetType;
-import com.wanted.backend.domain.report_moderation.infrastructure.persistence.AdminContentCommandAdapter;
+import com.wanted.backend.domain.community.infrastructure.persistence.AdminContentDeleteAdapter;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import org.junit.jupiter.api.DisplayName;
@@ -22,10 +21,10 @@ import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-class AdminContentCommandAdapterTest {
+class AdminContentDeleteAdapterTest {
 
     @InjectMocks
-    private AdminContentCommandAdapter adminContentCommandAdapter;
+    private AdminContentDeleteAdapter adminContentDeleteAdapter;
 
     @Mock
     private PostRepository postRepository;
@@ -40,7 +39,7 @@ class AdminContentCommandAdapterTest {
     @DisplayName("게시글 삭제 시 PostRepository.adminDeleteById가 호출된다")
     void deleteByAdmin_post() {
         // when
-        adminContentCommandAdapter.deleteByAdmin(TargetType.POST, 15L);
+        adminContentDeleteAdapter.deleteByAdmin(TargetType.POST, 15L);
 
         // then
         verify(postRepository).adminDeleteById(15L);
@@ -50,7 +49,7 @@ class AdminContentCommandAdapterTest {
     @DisplayName("댓글 삭제 시 CommentRepository.softDeleteByAdmin이 호출된다")
     void deleteByAdmin_comment() {
         // when
-        adminContentCommandAdapter.deleteByAdmin(TargetType.COMMENT, 20L);
+        adminContentDeleteAdapter.deleteByAdmin(TargetType.COMMENT, 20L);
 
         // then
         verify(commentRepository).softDeleteByAdmin(eq(20L), any());
@@ -64,7 +63,7 @@ class AdminContentCommandAdapterTest {
                 .given(postRepository).adminDeleteById(15L);
 
         // when & then
-        assertThatThrownBy(() -> adminContentCommandAdapter.deleteByAdmin(TargetType.POST, 15L))
+        assertThatThrownBy(() -> adminContentDeleteAdapter.deleteByAdmin(TargetType.POST, 15L))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(ErrorCode.POST_NOT_FOUND.getMessage());
     }
@@ -77,7 +76,7 @@ class AdminContentCommandAdapterTest {
                 .given(commentRepository).softDeleteByAdmin(eq(20L), any());
 
         // when & then
-        assertThatThrownBy(() -> adminContentCommandAdapter.deleteByAdmin(TargetType.COMMENT, 20L))
+        assertThatThrownBy(() -> adminContentDeleteAdapter.deleteByAdmin(TargetType.COMMENT, 20L))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(ErrorCode.COMMENT_NOT_FOUND.getMessage());
     }
@@ -86,7 +85,7 @@ class AdminContentCommandAdapterTest {
     @DisplayName("리뷰 삭제 시 ReviewRepository.adminDeleteById가 호출된다")
     void deleteByAdmin_review() {
         // when
-        adminContentCommandAdapter.deleteByAdmin(TargetType.REVIEW, 30L);
+        adminContentDeleteAdapter.deleteByAdmin(TargetType.REVIEW, 30L);
 
         // then
         verify(reviewRepository).adminDeleteById(30L);
@@ -100,7 +99,7 @@ class AdminContentCommandAdapterTest {
                 .given(reviewRepository).adminDeleteById(30L);
 
         // when & then
-        assertThatThrownBy(() -> adminContentCommandAdapter.deleteByAdmin(TargetType.REVIEW, 30L))
+        assertThatThrownBy(() -> adminContentDeleteAdapter.deleteByAdmin(TargetType.REVIEW, 30L))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(ErrorCode.REVIEW_NOT_FOUND.getMessage());
     }

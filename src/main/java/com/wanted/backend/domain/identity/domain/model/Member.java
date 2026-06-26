@@ -154,7 +154,7 @@ public class Member {
 
     public void withdraw(String encodedDeletedPassword, LocalDateTime now) {
         if (this.status == MemberStatus.WITHDRAWN) {
-            throw new IllegalStateException("이미 탈퇴한 회원입니다.");
+            throw new BusinessException(ErrorCode.ALREADY_WITHDRAWN_MEMBER);
         }
 
         String suffix = UUID.randomUUID().toString();
