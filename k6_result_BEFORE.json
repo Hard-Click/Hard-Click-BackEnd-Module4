@@ -1,0 +1,152 @@
+{
+    "metrics": {
+        "data_sent": {
+            "count": 1154977,
+            "rate": 18597.688639669534
+        },
+        "http_req_receiving": {
+            "avg": 0.6721366164921476,
+            "min": 0,
+            "med": 0.6565,
+            "max": 6.7323,
+            "p(90)": 1.343,
+            "p(95)": 1.5126
+        },
+        "http_req_duration": {
+            "avg": 992.5840188808891,
+            "min": 238.4817,
+            "med": 954.2953,
+            "max": 2425.4464,
+            "p(90)": 1232.9850000000001,
+            "p(95)": 1378.314075,
+            "thresholds": {
+                "p(95)<1000": true
+            }
+        },
+        "http_req_tls_handshaking": {
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "max": 0
+        },
+        "http_reqs": {
+            "count": 3056,
+            "rate": 49.2083708011762
+        },
+        "checks": {
+            "fails": 0,
+            "passes": 3056,
+            "value": 1
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 3056,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "http_req_waiting": {
+            "p(90)": 1231.01945,
+            "p(95)": 1378.183975,
+            "avg": 991.8028831479037,
+            "min": 237.3371,
+            "med": 953.47525,
+            "max": 2425.4464
+        },
+        "http_req_blocked": {
+            "min": 0,
+            "med": 0,
+            "max": 39.7092,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0.2579603730366492
+        },
+        "http_req_sending": {
+            "p(95)": 0,
+            "avg": 0.10899911649214661,
+            "min": 0,
+            "med": 0,
+            "max": 33.623,
+            "p(90)": 0
+        },
+        "iterations": {
+            "count": 3055,
+            "rate": 49.192268585599905
+        },
+        "iteration_duration": {
+            "med": 1955.53,
+            "max": 3447.6992,
+            "p(90)": 2234.6951999999997,
+            "p(95)": 2379.50904,
+            "avg": 1994.0712092307651,
+            "min": 1250.1332
+        },
+        "http_req_duration{expected_response:true}": {
+            "p(90)": 1232.9850000000001,
+            "p(95)": 1378.314075,
+            "avg": 992.5840188808891,
+            "min": 238.4817,
+            "med": 954.2953,
+            "max": 2425.4464
+        },
+        "data_received": {
+            "count": 6709726,
+            "rate": 108041.45450991257
+        },
+        "vus": {
+            "value": 9,
+            "min": 9,
+            "max": 100
+        },
+        "vus_max": {
+            "min": 100,
+            "max": 100,
+            "value": 100
+        },
+        "http_req_connecting": {
+            "avg": 0.12278661649214659,
+            "min": 0,
+            "med": 0,
+            "max": 29.8682,
+            "p(90)": 0,
+            "p(95)": 0
+        }
+    },
+    "setup_data": {
+        "accessToken": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIzMDcyIiwidXNlcm5hbWUiOiJiZW5jaF91c2VyXzEiLCJyb2xlIjoiUk9MRV9TVFVERU5UIiwidG9rZW5UeXBlIjoiYWNjZXNzIiwiaWF0IjoxNzgyMzAwMjIwLCJleHAiOjE3ODIzMDExMjB9.2MJJnadpe7JraJWKv-0P6nasw4gV8wRrQ-9siFsbMPgSZ3I0pRvTo0rGiPF7dKRw"
+    },
+    "root_group": {
+        "checks": {
+            "200 응답": {
+                "fails": 0,
+                "name": "200 응답",
+                "path": "::200 응답",
+                "id": "435bc11384d80f2f3f7ca487fc06ea85",
+                "passes": 3055
+            }
+        },
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {
+            "setup": {
+                "name": "setup",
+                "path": "::setup",
+                "id": "5c0f8025f7e0b6654089e5b00e950f1a",
+                "groups": {},
+                "checks": {
+                        "로그인 성공": {
+                            "name": "로그인 성공",
+                            "path": "::setup::로그인 성공",
+                            "id": "3d0a440225044c6f346cabe7a9b5a0d5",
+                            "passes": 1,
+                            "fails": 0
+                        }
+                    }
+            }
+        }
+    }
+}

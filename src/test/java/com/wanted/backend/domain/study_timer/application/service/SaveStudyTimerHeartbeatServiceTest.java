@@ -87,7 +87,7 @@ class SaveStudyTimerHeartbeatServiceTest {
         assertThat(result.status()).isEqualTo("RUNNING");
         assertThat(result.accumulatedStudySeconds()).isEqualTo(200);
         assertThat(result.heartbeatAt()).isEqualTo(heartbeatAt);
-        verify(metricRecorder).recordSuccess("heartbeat");
+        verify(metricRecorder).recordResult(StudyTimerAction.HEARTBEAT, null);
     }
 
     @Test
@@ -160,7 +160,7 @@ class SaveStudyTimerHeartbeatServiceTest {
         verify(memberLockPort).lock(1L);
         verify(repository).findById(55L);
         verify(repository, never()).save(any());
-        verify(metricRecorder).recordFailure("heartbeat", "STUDY_TIMER_SESSION_NOT_RUNNING");
+        verify(metricRecorder).recordResult(StudyTimerAction.HEARTBEAT, "STUDY_TIMER_SESSION_NOT_RUNNING");
     }
 
     @Test

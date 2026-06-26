@@ -111,7 +111,7 @@ class EndStudyTimerSessionServiceTest {
         assertThat(eventCaptor.getValue().studyDate()).isEqualTo(LocalDate.parse("2026-05-11"));
         assertThat(eventCaptor.getValue().deltaStudySeconds()).isEqualTo(300);
         assertThat(eventCaptor.getValue().endedAt()).isEqualTo(endedAt);
-        verify(metricRecorder).recordSuccess("end");
+        verify(metricRecorder).recordResult(StudyTimerAction.END, null);
     }
 
     @Test
@@ -184,7 +184,7 @@ class EndStudyTimerSessionServiceTest {
                 .hasMessage("db down");
 
         verify(eventPublisher, never()).publishEvent(any(Object.class));
-        verify(metricRecorder).recordFailure("end", "UNKNOWN");
+        verify(metricRecorder).recordResult(StudyTimerAction.END, "UNKNOWN");
     }
 
     @Test
@@ -263,7 +263,7 @@ class EndStudyTimerSessionServiceTest {
         verify(repository, never()).save(any());
         verify(dailyStudyStatsRepository, never()).upsertStudySeconds(any(), any(), any());
         verify(eventPublisher, never()).publishEvent(any(Object.class));
-        verify(metricRecorder).recordFailure("end", "STUDY_TIMER_SESSION_NOT_RUNNING");
+        verify(metricRecorder).recordResult(StudyTimerAction.END, "STUDY_TIMER_SESSION_NOT_RUNNING");
     }
 
     @Test
