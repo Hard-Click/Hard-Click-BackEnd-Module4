@@ -18,7 +18,9 @@ public interface GetAcceptedCommentRankingUseCase {
     record AcceptedCommentRankingItem(
             Long rank,
             Long memberId,
-            Long acceptedCommentCount
+            String memberName,
+            Long acceptedCommentCount,
+            Integer currentStreakDays
     ) {
     }
 }
