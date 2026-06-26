@@ -24,8 +24,10 @@ import java.time.ZoneId;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -112,6 +114,24 @@ class EndStudyTimerSessionServiceTest {
         assertThat(eventCaptor.getValue().deltaStudySeconds()).isEqualTo(300);
         assertThat(eventCaptor.getValue().endedAt()).isEqualTo(endedAt);
         verify(metricRecorder).recordResult(StudyTimerAction.END, null);
+    }
+
+    @Test
+    void businessResultIsUnaffectedWhenMetricRecordingFails() {
+        OffsetDateTime startedAt = OffsetDateTime.parse("2026-05-11T15:00:00+09:00");
+        OffsetDateTime endedAt = OffsetDateTime.parse("2026-05-11T15:08:20+09:00");
+        when(repository.findById(55L)).thenReturn(Optional.of(new StudyTimerSession(
+                55L, 1L, null, null, startedAt, null, 200, StudyTimerSessionStatus.RUNNING
+        )));
+        when(repository.save(any(StudyTimerSession.class)))
+                .thenReturn(new StudyTimerSession(
+                        55L, 1L, null, null, startedAt, endedAt, 500, StudyTimerSessionStatus.ENDED
+                ));
+        doThrow(new RuntimeException("metric registry down"))
+                .when(metricRecorder).recordResult(StudyTimerAction.END, null);
+
+        assertThatCode(() -> service.handle(new EndStudyTimerSessionCommand(1L, 55L, endedAt)))
+                .doesNotThrowAnyException();
     }
 
     @Test

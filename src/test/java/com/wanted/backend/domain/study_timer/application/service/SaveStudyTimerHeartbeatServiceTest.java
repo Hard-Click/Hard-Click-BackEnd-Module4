@@ -20,8 +20,10 @@ import java.time.ZoneId;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -88,6 +90,24 @@ class SaveStudyTimerHeartbeatServiceTest {
         assertThat(result.accumulatedStudySeconds()).isEqualTo(200);
         assertThat(result.heartbeatAt()).isEqualTo(heartbeatAt);
         verify(metricRecorder).recordResult(StudyTimerAction.HEARTBEAT, null);
+    }
+
+    @Test
+    void businessResultIsUnaffectedWhenMetricRecordingFails() {
+        OffsetDateTime startedAt = OffsetDateTime.parse("2026-05-11T15:00:00+09:00");
+        OffsetDateTime heartbeatAt = OffsetDateTime.parse("2026-05-11T15:03:20+09:00");
+        when(repository.findById(55L)).thenReturn(Optional.of(new StudyTimerSession(
+                55L, 1L, null, null, startedAt, null, 120, StudyTimerSessionStatus.RUNNING
+        )));
+        when(repository.save(any(StudyTimerSession.class)))
+                .thenReturn(new StudyTimerSession(
+                        55L, 1L, null, null, startedAt, null, 200, StudyTimerSessionStatus.RUNNING
+                ));
+        doThrow(new RuntimeException("metric registry down"))
+                .when(metricRecorder).recordResult(StudyTimerAction.HEARTBEAT, null);
+
+        assertThatCode(() -> service.handle(new SaveStudyTimerHeartbeatCommand(1L, 55L, heartbeatAt)))
+                .doesNotThrowAnyException();
     }
 
     @Test

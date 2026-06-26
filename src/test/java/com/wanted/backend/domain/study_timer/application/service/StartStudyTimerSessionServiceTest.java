@@ -16,8 +16,10 @@ import org.mockito.InOrder;
 import java.time.OffsetDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -90,5 +92,27 @@ class StartStudyTimerSessionServiceTest {
         verify(repository).existsActiveByMemberId(1L);
         verify(repository, never()).save(any());
         verify(metricRecorder).recordResult(StudyTimerAction.START, "STUDY_TIMER_SESSION_ALREADY_RUNNING");
+    }
+
+    @Test
+    void businessResultIsUnaffectedWhenMetricRecordingFails() {
+        OffsetDateTime startedAt = OffsetDateTime.parse("2026-05-11T15:00:00+09:00");
+        when(repository.existsActiveByMemberId(1L)).thenReturn(false);
+        when(repository.save(any(StudyTimerSession.class)))
+                .thenReturn(new StudyTimerSession(
+                        55L,
+                        1L,
+                        null,
+                        null,
+                        startedAt,
+                        null,
+                        0,
+                        StudyTimerSessionStatus.RUNNING
+                ));
+        doThrow(new RuntimeException("metric registry down"))
+                .when(metricRecorder).recordResult(StudyTimerAction.START, null);
+
+        assertThatCode(() -> service.handle(new StartStudyTimerSessionCommand(1L, startedAt)))
+                .doesNotThrowAnyException();
     }
 }
