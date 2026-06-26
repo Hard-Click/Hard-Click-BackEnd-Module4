@@ -7,6 +7,8 @@ import com.wanted.backend.domain.notification.application.usecase.NotificationCo
 import com.wanted.backend.domain.notification.domain.model.Notification;
 import com.wanted.backend.domain.notification.domain.model.NotificationType;
 import com.wanted.backend.domain.notification.domain.repository.NotificationRepository;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,11 +22,14 @@ public class NotificationCommandService implements NotificationCommandUseCase {
 
     private final NotificationRepository notificationRepository;
     private final NotificationSsePort notificationSsePort;
+    private final MeterRegistry meterRegistry;
+
 
     public NotificationCommandService(NotificationRepository notificationRepository,
-                                      NotificationSsePort notificationSsePort) {
+                                      NotificationSsePort notificationSsePort, MeterRegistry meterRegistry) {
         this.notificationRepository = notificationRepository;
         this.notificationSsePort = notificationSsePort;
+        this.meterRegistry = meterRegistry;
     }
 
     @Override
@@ -33,13 +38,21 @@ public class NotificationCommandService implements NotificationCommandUseCase {
         return notificationSsePort.connect(memberId);
     }
 
+    // 38~48줄 교체
     @Override
     @Transactional
     public void sendBatch(List<NotificationRequest> requests) {
         List<Notification> notifications = requests.stream()
                 .map(req -> Notification.create(req.receiverId(), req.type(), req.message(), req.redirectUrl()))
                 .toList();
+
+        Timer.Sample sample = Timer.start(meterRegistry);
         List<Notification> saved = notificationRepository.saveAll(notifications);
+        sample.stop(Timer.builder("notification.send_batch")
+                .tag("count", String.valueOf(requests.size()))
+                .publishPercentileHistogram(true)
+                .register(meterRegistry));
+
         for (Notification noti : saved) {
             notificationSsePort.send(noti.getReceiverId(), new NotificationPayload(
                     noti.getId(), noti.getType(), noti.getMessage(),

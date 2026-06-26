@@ -13,6 +13,8 @@ import com.wanted.backend.domain.community.presentation.response.PostItemRespons
 import com.wanted.backend.domain.community.presentation.response.PostListResponse;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,18 +36,20 @@ public class PostQueryService implements PostQueryUseCase {
     private final MemberNamePort memberNamePort;
     private final CommentRepository commentRepository;
     private final CommunityFileStoragePort fileStoragePort;
+    private final MeterRegistry meterRegistry;
 
     public PostQueryService(PostRepository postRepository,
                             PostFileRepository postFileRepository,
                             ViewLogRepository viewLogRepository,
                             MemberNamePort memberNamePort, CommentRepository commentRepository,
-                            CommunityFileStoragePort fileStoragePort) {
+                            CommunityFileStoragePort fileStoragePort, MeterRegistry meterRegistry) {
         this.postRepository = postRepository;
         this.postFileRepository = postFileRepository;
         this.viewLogRepository = viewLogRepository;
         this.memberNamePort = memberNamePort;
         this.commentRepository = commentRepository;
         this.fileStoragePort = fileStoragePort;
+        this.meterRegistry = meterRegistry;
     }
 
     @Override
@@ -85,13 +89,22 @@ public class PostQueryService implements PostQueryUseCase {
         // memberId가 null이면 조회수 트래킹 스킵
         if (memberId != null) {
             LocalDateTime thirtyMinutesAgo = LocalDateTime.now().minusMinutes(30);
+
+            Timer.Sample duplicateCheckSample = Timer.start(meterRegistry);
             boolean alreadyViewed = viewLogRepository
                     .existsByMemberIdAndPostIdAndViewedAtAfter(memberId, postId, thirtyMinutesAgo);
+            duplicateCheckSample.stop(Timer.builder("post.view.duplicate.check")
+                    .publishPercentileHistogram(true)
+                    .register(meterRegistry));
 
             if (!alreadyViewed) {
+                Timer.Sample updateSample = Timer.start(meterRegistry);
                 post.increaseViewCount();
                 postRepository.updateViewCount(postId, post.getViewCount());
                 viewLogRepository.save(ViewLog.create(memberId, postId));
+                updateSample.stop(Timer.builder("post.view.count.update")
+                        .publishPercentileHistogram(true)
+                        .register(meterRegistry));
             }
         }
 
