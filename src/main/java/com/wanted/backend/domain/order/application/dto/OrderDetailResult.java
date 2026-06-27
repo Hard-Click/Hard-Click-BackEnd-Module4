@@ -19,6 +19,7 @@ public record OrderDetailResult(
     public record Item(
             Long courseId,
             String title,
+            String thumbnailUrl,
             int price,
             boolean refundable,
             int refundAmount,
