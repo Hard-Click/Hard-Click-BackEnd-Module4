@@ -20,9 +20,12 @@ import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -38,6 +41,7 @@ public class CourseCommandService implements CourseCommandUseCase {
     private final VideoStoragePort videoStoragePort;
     private final FileProcessingService fileProcessingService;
     private final ApplicationEventPublisher eventPublisher;
+    private final PlatformTransactionManager transactionManager;
     private final Clock clock;
     private final NotificationRepository notificationRepository;
 
@@ -97,7 +101,7 @@ public class CourseCommandService implements CourseCommandUseCase {
                     List<Lesson> lessons = sc.lessons().stream()
                             .map(lc -> lc.id() != null
                                     ? Lesson.restore(lc.id(), null, lc.title(), lc.description(),
-                                                     lc.orderIndex(), null, null, null, null)
+                                                     lc.orderIndex(), null, null, null, null, null)
                                     : Lesson.create(null, lc.title(), lc.description(),
                                                     lc.orderIndex(), lc.durationSeconds(), clock.instant()))
                             .toList();
@@ -152,6 +156,7 @@ public class CourseCommandService implements CourseCommandUseCase {
     }
 
     @Override
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public String uploadLessonVideo(UploadLessonVideoCommand command) {
         Lesson lesson = lessonRepository.findById(command.lessonId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
@@ -166,24 +171,38 @@ public class CourseCommandService implements CourseCommandUseCase {
             throw new BusinessException(ErrorCode.COURSE_ACCESS_DENIED);
         }
 
-        String videoUrl = videoStoragePort.store(
+        // S3 업로드(네트워크 블로킹 호출)는 트랜잭션 밖에서 수행해 DB 커넥션을 점유하지 않는다.
+        VideoStoragePort.StoredVideo storedVideo = videoStoragePort.store(
                 command.lessonId(),
                 command.originalFilename(),
                 command.videoData()
         );
 
-        lesson.attachVideo(videoUrl);
-        lessonRepository.save(lesson);
+        try {
+            persistUploadedVideo(lesson, storedVideo, command.lessonId());
+        } catch (RuntimeException e) {
+            // DB 저장이 실패하면 이미 업로드된 S3 객체가 orphan으로 남지 않도록 보상 삭제한다.
+            videoStoragePort.delete(storedVideo.key());
+            throw e;
+        }
 
-        // 트랜잭션 커밋 후 비동기 처리 시작
-        Long lessonId = command.lessonId();
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-                fileProcessingService.process(lessonId);
-            }
+        return storedVideo.presignedUrl();
+    }
+
+    // lesson 갱신 + 커밋 후 비동기 처리 트리거만 짧은 트랜잭션으로 묶는다.
+    // (uploadLessonVideo 자체는 NOT_SUPPORTED라 트랜잭션이 없어, 별도로 새 트랜잭션을 열어야
+    // afterCommit 동기화가 유효하다.)
+    private void persistUploadedVideo(Lesson lesson, VideoStoragePort.StoredVideo storedVideo, Long lessonId) {
+        new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
+            lesson.attachVideo(storedVideo.presignedUrl(), storedVideo.key());
+            lessonRepository.save(lesson);
+
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    fileProcessingService.process(lessonId);
+                }
+            });
         });
-
-        return videoUrl;
     }
 }

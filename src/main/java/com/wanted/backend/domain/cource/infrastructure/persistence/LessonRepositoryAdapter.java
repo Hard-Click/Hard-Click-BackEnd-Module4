@@ -22,7 +22,7 @@ public class LessonRepositoryAdapter implements LessonRepository {
     public Lesson save(Lesson lesson) {
         LessonJpaEntity entity = jpaRepository.findById(lesson.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
-        entity.update(lesson.getVideoUrl(), lesson.getFileProcessingStatus());
+        entity.update(lesson.getVideoUrl(), lesson.getS3Key(), lesson.getFileProcessingStatus());
         return toDomain(jpaRepository.save(entity));
     }
 
@@ -44,6 +44,7 @@ public class LessonRepositoryAdapter implements LessonRepository {
                 entity.getDescription(),
                 entity.getOrderIndex(),
                 entity.getVideoUrl(),
+                entity.getS3Key(),
                 entity.getDurationSeconds(),
                 entity.getFileProcessingStatus(),
                 entity.getCreatedAt()
