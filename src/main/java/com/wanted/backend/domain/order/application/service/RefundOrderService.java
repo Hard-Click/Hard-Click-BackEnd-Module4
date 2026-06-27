@@ -47,6 +47,15 @@ public class RefundOrderService implements RefundOrderUseCase {
 
     @Override
     public void refundOrder(Long orderId) {
+        doRefund(orderId, null);
+    }
+
+    @Override
+    public void refundOrderByMember(Long memberId, Long orderId) {
+        doRefund(orderId, memberId);
+    }
+
+    private void doRefund(Long orderId, Long requesterMemberId) {
         String lockKey = LOCK_KEY_PREFIX + orderId;
         String lockValue = UUID.randomUUID().toString();
         Boolean acquired = redisTemplate.opsForValue().setIfAbsent(lockKey, lockValue, LOCK_TTL);
@@ -57,6 +66,11 @@ public class RefundOrderService implements RefundOrderUseCase {
         try {
             Order order = orderRepository.findById(orderId)
                     .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+
+            // requesterMemberId가 있으면(사용자 본인 요청) 소유자 검증
+            if (requesterMemberId != null && !order.getMemberId().equals(requesterMemberId)) {
+                throw new BusinessException(ErrorCode.ORDER_ACCESS_DENIED);
+            }
 
             if (order.getStatus() != OrderStatus.PAID && order.getStatus() != OrderStatus.PARTIAL_REFUNDED) {
                 throw new BusinessException(ErrorCode.ORDER_NOT_REFUNDABLE);

@@ -3,6 +3,7 @@ package com.wanted.backend.domain.order.presentation;
 import com.wanted.backend.domain.order.application.usecase.CheckoutUseCase;
 import com.wanted.backend.domain.order.application.usecase.GetOrderUseCase;
 import com.wanted.backend.domain.order.application.usecase.RefundOrderItemUseCase;
+import com.wanted.backend.domain.order.application.usecase.RefundOrderUseCase;
 import com.wanted.backend.domain.order.domain.model.OrderType;
 import com.wanted.backend.domain.order.presentation.response.CheckoutResponse;
 import com.wanted.backend.domain.order.presentation.response.OrderDetailResponse;
@@ -36,6 +37,7 @@ public class OrderController {
     private final CheckoutUseCase checkoutUseCase;
     private final GetOrderUseCase getOrderUseCase;
     private final RefundOrderItemUseCase refundOrderItemUseCase;
+    private final RefundOrderUseCase refundOrderUseCase;
 
     @GetMapping("/checkout")
     @Operation(
@@ -115,6 +117,20 @@ public class OrderController {
                 normalizedIdempotencyKey
         );
 
+        return ApiResponse.successNoContent("환불이 처리되었습니다.");
+    }
+
+    @PostMapping("/{orderId}/refund")
+    @Operation(
+            summary = "주문 전체 환불",
+            description = "주문 전체를 환불합니다. 항목 단위 환불이 불가능한 구독 주문의 환불 경로로 사용합니다. " +
+                    "본인 주문만 가능하며 Toss 결제취소 후 수강 권한 또는 구독이 즉시 박탈됩니다."
+    )
+    public ResponseEntity<ApiResponse<Void>> refundOrder(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long orderId
+    ) {
+        refundOrderUseCase.refundOrderByMember(userDetails.getMemberId(), orderId);
         return ApiResponse.successNoContent("환불이 처리되었습니다.");
     }
 
