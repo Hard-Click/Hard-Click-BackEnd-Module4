@@ -4,9 +4,11 @@ import com.wanted.backend.domain.enrollment_management.domain.model.Enrollment;
 import com.wanted.backend.domain.enrollment_management.domain.model.EnrollmentStatus;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface EnrollmentRepository {
     boolean existsByMemberIdAndCourseId(Long memberId, Long courseId);
+    Optional<Enrollment> findByMemberIdAndCourseId(Long memberId, Long courseId);
     Enrollment save(Enrollment enrollment);
     List<Enrollment> findByMemberId(Long memberId);
     List<Enrollment> findByMemberIdAndStatus(Long memberId, EnrollmentStatus status);

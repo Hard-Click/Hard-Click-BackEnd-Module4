@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -17,6 +18,12 @@ public class EnrollmentRepositoryAdapter implements EnrollmentRepository {
     @Override
     public boolean existsByMemberIdAndCourseId(Long memberId, Long courseId) {
         return jpaRepository.existsByMemberIdAndCourseId(memberId, courseId);
+    }
+
+    @Override
+    public Optional<Enrollment> findByMemberIdAndCourseId(Long memberId, Long courseId) {
+        return jpaRepository.findByMemberIdAndCourseId(memberId, courseId)
+                .map(EnrollmentJpaEntity::toDomain);
     }
 
     @Override

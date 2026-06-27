@@ -46,10 +46,13 @@ public class EnrollmentJpaEntity {
 
     static EnrollmentJpaEntity from(Enrollment enrollment) {
         EnrollmentJpaEntity entity = new EnrollmentJpaEntity();
+        // id가 있으면(재활성화 등) UPDATE, 없으면 INSERT — 도메인 상태를 그대로 반영한다
+        entity.id = enrollment.getId();
         entity.memberId = enrollment.getMemberId();
         entity.courseId = enrollment.getCourseId();
         entity.enrolledAt = enrollment.getEnrolledAt();
-        entity.status = EnrollmentStatus.IN_PROGRESS;
+        entity.status = enrollment.getStatus();
+        entity.expiredAt = enrollment.getExpiredAt();
         return entity;
     }
 

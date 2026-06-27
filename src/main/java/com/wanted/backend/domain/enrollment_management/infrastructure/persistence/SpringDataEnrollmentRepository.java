@@ -4,9 +4,11 @@ import com.wanted.backend.domain.enrollment_management.domain.model.EnrollmentSt
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 interface SpringDataEnrollmentRepository extends JpaRepository<EnrollmentJpaEntity, Long> {
     boolean existsByMemberIdAndCourseId(Long memberId, Long courseId);
+    Optional<EnrollmentJpaEntity> findByMemberIdAndCourseId(Long memberId, Long courseId);
     List<EnrollmentJpaEntity> findByMemberId(Long memberId);
     List<EnrollmentJpaEntity> findByMemberIdAndStatus(Long memberId, EnrollmentStatus status);
     boolean existsByMemberIdAndCourseIdAndStatus(Long memberId, Long courseId, EnrollmentStatus status);

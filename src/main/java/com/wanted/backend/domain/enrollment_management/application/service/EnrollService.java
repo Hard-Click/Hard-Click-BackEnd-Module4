@@ -23,12 +23,18 @@ public class EnrollService implements EnrollUseCase {
 
     @Override
     public Long handle(EnrollCommand command) {
-        // 중복 수강신청 검증
-        if (enrollmentRepository.existsByMemberIdAndCourseId(command.memberId(), command.courseId())) {
-            throw new BusinessException(ErrorCode.ENROLLMENT_ALREADY_EXISTS);
-        }
+        Instant now = Instant.now(clock);
 
-        Enrollment enrollment = Enrollment.create(command.memberId(), command.courseId(), Instant.now(clock));
-        return enrollmentRepository.save(enrollment).getId();
+        // 기존 수강 이력이 있으면: 활성 상태면 중복, 환불/만료 상태면 재활성화(재구매)
+        return enrollmentRepository.findByMemberIdAndCourseId(command.memberId(), command.courseId())
+                .map(existing -> {
+                    if (existing.isActive()) {
+                        throw new BusinessException(ErrorCode.ENROLLMENT_ALREADY_EXISTS);
+                    }
+                    existing.reactivate(now);
+                    return enrollmentRepository.save(existing).getId();
+                })
+                .orElseGet(() -> enrollmentRepository.save(
+                        Enrollment.create(command.memberId(), command.courseId(), now)).getId());
     }
 }

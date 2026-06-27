@@ -32,6 +32,9 @@ public class CheckoutService implements CheckoutUseCase {
 
     private static final DateTimeFormatter ORDER_NO_DATE = DateTimeFormatter.ofPattern("yyyyMMdd");
 
+    // 재구매를 차단할 활성 수강 상태(환불 REFUNDED·만료 EXPIRED는 재구매 허용)
+    private static final Set<String> ACTIVE_ENROLLMENT_STATUSES = Set.of("ENROLLED", "IN_PROGRESS", "COMPLETED");
+
     private final OrderRepository orderRepository;
     private final OrderCourseQueryPort orderCourseQueryPort;
     private final OrderCartQueryPort orderCartQueryPort;
@@ -100,8 +103,11 @@ public class CheckoutService implements CheckoutUseCase {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
 
+        // 활성 수강(ENROLLED/IN_PROGRESS/COMPLETED)만 재구매 차단 — 환불(REFUNDED)/만료(EXPIRED)는 재구매 허용
         Map<Long, String> enrollStatuses = orderEnrollmentStatusPort.findEnrollStatuses(memberId, courseIds);
-        if (!enrollStatuses.isEmpty()) {
+        boolean alreadyEnrolled = enrollStatuses.values().stream()
+                .anyMatch(ACTIVE_ENROLLMENT_STATUSES::contains);
+        if (alreadyEnrolled) {
             throw new BusinessException(ErrorCode.ENROLLMENT_ALREADY_EXISTS);
         }
 

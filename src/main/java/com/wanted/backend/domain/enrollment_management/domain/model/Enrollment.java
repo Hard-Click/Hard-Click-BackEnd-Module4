@@ -47,6 +47,18 @@ public class Enrollment {
         return status;
     }
 
+    /** 유효한 수강 권한 보유 여부(만료 반영). */
+    public boolean isActive() {
+        return getEffectiveStatus().isActive();
+    }
+
+    /** 환불/만료된 수강을 재구매로 다시 활성화한다. */
+    public void reactivate(Instant now) {
+        this.status = EnrollmentStatus.IN_PROGRESS;
+        this.enrolledAt = now;
+        this.expiredAt = null;
+    }
+
     public Long getId() { return id; }
     public Long getMemberId() { return memberId; }
     public Long getCourseId() { return courseId; }
