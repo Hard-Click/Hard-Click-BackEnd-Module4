@@ -39,7 +39,8 @@ public class CourseJpaEntity {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "thumbnail_url")
+    // S3 presigned URL(X-Amz 쿼리 포함)은 700자 이상이 될 수 있어 VARCHAR(255)로는 부족
+    @Column(name = "thumbnail_url", columnDefinition = "TEXT")
     private String thumbnailUrl;
 
     @Enumerated(EnumType.STRING)
