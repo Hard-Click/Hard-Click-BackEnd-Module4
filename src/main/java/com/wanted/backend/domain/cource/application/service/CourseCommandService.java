@@ -97,7 +97,7 @@ public class CourseCommandService implements CourseCommandUseCase {
                     List<Lesson> lessons = sc.lessons().stream()
                             .map(lc -> lc.id() != null
                                     ? Lesson.restore(lc.id(), null, lc.title(), lc.description(),
-                                                     lc.orderIndex(), null, null, null, null)
+                                                     lc.orderIndex(), null, null, null, null, null)
                                     : Lesson.create(null, lc.title(), lc.description(),
                                                     lc.orderIndex(), lc.durationSeconds(), clock.instant()))
                             .toList();
@@ -166,13 +166,13 @@ public class CourseCommandService implements CourseCommandUseCase {
             throw new BusinessException(ErrorCode.COURSE_ACCESS_DENIED);
         }
 
-        String videoUrl = videoStoragePort.store(
+        VideoStoragePort.StoredVideo storedVideo = videoStoragePort.store(
                 command.lessonId(),
                 command.originalFilename(),
                 command.videoData()
         );
 
-        lesson.attachVideo(videoUrl);
+        lesson.attachVideo(storedVideo.presignedUrl(), storedVideo.key());
         lessonRepository.save(lesson);
 
         // 트랜잭션 커밋 후 비동기 처리 시작
@@ -184,6 +184,6 @@ public class CourseCommandService implements CourseCommandUseCase {
             }
         });
 
-        return videoUrl;
+        return storedVideo.presignedUrl();
     }
 }

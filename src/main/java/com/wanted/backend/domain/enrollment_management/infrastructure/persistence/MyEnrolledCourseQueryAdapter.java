@@ -6,18 +6,20 @@ import com.wanted.backend.domain.enrollment_management.domain.model.EnrollmentSt
 import com.wanted.backend.domain.enrollment_management.domain.repository.EnrollmentRepository;
 import com.wanted.backend.domain.enrollment_management.infrastructure.course.CourseReferenceEntity;
 import com.wanted.backend.domain.enrollment_management.infrastructure.course.CourseReferenceRepository;
-import com.wanted.backend.domain.enrollment_management.infrastructure.curriculum.CurriculumReferenceEntity;
-import com.wanted.backend.domain.enrollment_management.infrastructure.curriculum.CurriculumReferenceRepository;
+import com.wanted.backend.domain.enrollment_management.infrastructure.lesson.EnrolledLessonReferenceEntity;
+import com.wanted.backend.domain.enrollment_management.infrastructure.lesson.EnrolledLessonReferenceRepository;
 import com.wanted.backend.domain.enrollment_management.infrastructure.progress.VideoProgressReferenceEntity;
 import com.wanted.backend.domain.enrollment_management.infrastructure.progress.VideoProgressReferenceRepository;
-import com.wanted.backend.domain.enrollment_management.infrastructure.video.EnrolledCourseVideoReferenceEntity;
-import com.wanted.backend.domain.enrollment_management.infrastructure.video.EnrolledCourseVideoReferenceRepository;
+import com.wanted.backend.domain.enrollment_management.infrastructure.section.EnrolledCourseSectionReferenceEntity;
+import com.wanted.backend.domain.enrollment_management.infrastructure.section.EnrolledCourseSectionReferenceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,8 +34,8 @@ public class MyEnrolledCourseQueryAdapter implements MyEnrolledCourseQueryPort {
     // 여러 참조 테이블에서 가져온 조회 결과를 화면 응답에 필요한 포트 데이터로 조합한다.
     private final EnrollmentRepository enrollmentRepository;
     private final CourseReferenceRepository courseRepository;
-    private final CurriculumReferenceRepository curriculumRepository;
-    private final EnrolledCourseVideoReferenceRepository videoRepository;
+    private final EnrolledCourseSectionReferenceRepository sectionRepository;
+    private final EnrolledLessonReferenceRepository lessonRepository;
     private final VideoProgressReferenceRepository progressRepository;
 
     @Override
@@ -48,10 +50,10 @@ public class MyEnrolledCourseQueryAdapter implements MyEnrolledCourseQueryPort {
                 .distinct()
                 .toList();
 
-        // 강의/커리큘럼/영상/진도 정보를 한 번씩 조회한 뒤 courseId 기준으로 묶어서 N+1 조회를 피한다.
+        // 강의/레슨/진도 정보를 한 번씩 조회한 뒤 courseId 기준으로 묶어서 N+1 조회를 피한다.
         Map<Long, CourseReferenceEntity> courseById = courseRepository.findByIdIn(courseIds).stream()
                 .collect(Collectors.toMap(CourseReferenceEntity::getId, Function.identity()));
-        Map<Long, List<EnrolledCourseVideoReferenceEntity>> videosByCourseId = findVideosByCourseId(courseIds);
+        Map<Long, List<EnrolledLessonReferenceEntity>> lessonsByCourseId = findLessonsByCourseId(courseIds);
         Map<Long, List<VideoProgressReferenceEntity>> progressesByCourseId = progressRepository
                 .findByMemberIdAndCourseIdIn(memberId, courseIds).stream()
                 .collect(Collectors.groupingBy(VideoProgressReferenceEntity::getCourseId));
@@ -60,7 +62,7 @@ public class MyEnrolledCourseQueryAdapter implements MyEnrolledCourseQueryPort {
                 .map(enrollment -> toData(
                         enrollment.getCourseId(),
                         courseById.get(enrollment.getCourseId()),
-                        videosByCourseId.getOrDefault(enrollment.getCourseId(), List.of()),
+                        lessonsByCourseId.getOrDefault(enrollment.getCourseId(), List.of()),
                         progressesByCourseId.getOrDefault(enrollment.getCourseId(), List.of()),
                         enrollment.getEffectiveStatus()
                 ))
@@ -73,57 +75,65 @@ public class MyEnrolledCourseQueryAdapter implements MyEnrolledCourseQueryPort {
                 .toList();
     }
 
-    private Map<Long, List<EnrolledCourseVideoReferenceEntity>> findVideosByCourseId(Collection<Long> courseIds) {
-        List<CurriculumReferenceEntity> curriculums = curriculumRepository
-                .findByCourseIdInOrderByCourseIdAscIdAsc(courseIds);
-        if (curriculums.isEmpty()) {
+    // 영상 재생 식별자(videoId)는 이제 lesson.id다 — 강의별로 섹션 순서 -> 레슨 순서를 보존해서 묶는다.
+    private Map<Long, List<EnrolledLessonReferenceEntity>> findLessonsByCourseId(Collection<Long> courseIds) {
+        List<EnrolledCourseSectionReferenceEntity> sections = sectionRepository
+                .findByCourseIdInOrderByCourseIdAscOrderIndexAsc(courseIds);
+        if (sections.isEmpty()) {
             return Map.of();
         }
 
-        Map<Long, Long> courseIdByCurriculumId = curriculums.stream()
-                .collect(Collectors.toMap(CurriculumReferenceEntity::getId, CurriculumReferenceEntity::getCourseId));
+        List<Long> sectionIds = sections.stream().map(EnrolledCourseSectionReferenceEntity::getId).toList();
+        Map<Long, List<EnrolledLessonReferenceEntity>> lessonsBySectionId = lessonRepository
+                .findBySectionIdInOrderByOrderIndexAsc(sectionIds).stream()
+                .collect(Collectors.groupingBy(EnrolledLessonReferenceEntity::getSectionId));
 
-        return videoRepository.findByCurriculumIdInOrderByCurriculumIdAscIdAsc(courseIdByCurriculumId.keySet()).stream()
-                .collect(Collectors.groupingBy(video -> courseIdByCurriculumId.get(video.getCurriculumId())));
+        Map<Long, List<EnrolledLessonReferenceEntity>> lessonsByCourseId = new LinkedHashMap<>();
+        for (EnrolledCourseSectionReferenceEntity section : sections) {
+            lessonsByCourseId
+                    .computeIfAbsent(section.getCourseId(), key -> new ArrayList<>())
+                    .addAll(lessonsBySectionId.getOrDefault(section.getId(), List.of()));
+        }
+        return lessonsByCourseId;
     }
 
     private MyEnrolledCourseData toData(
             Long courseId,
             CourseReferenceEntity course,
-            List<EnrolledCourseVideoReferenceEntity> videos,
+            List<EnrolledLessonReferenceEntity> lessons,
             List<VideoProgressReferenceEntity> progresses,
             EnrollmentStatus enrollmentStatus
     ) {
         VideoProgressReferenceEntity lastProgress = findLastProgress(progresses);
-        EnrolledCourseVideoReferenceEntity firstVideo = videos.isEmpty() ? null : videos.get(0);
+        EnrolledLessonReferenceEntity firstLesson = lessons.isEmpty() ? null : lessons.get(0);
 
         return new MyEnrolledCourseData(
                 courseId,
                 course == null ? "(삭제된 강의)" : course.getTitle(),
                 course == null ? null : course.getThumbnailUrl(),
-                countCompletedLessons(videos, progresses),
-                videos.size(),
+                countCompletedLessons(lessons, progresses),
+                lessons.size(),
                 lastProgress == null ? null : lastProgress.getUpdatedAt(),
-                lastProgress == null ? firstVideoId(firstVideo) : lastProgress.getVideoId(),
+                lastProgress == null ? firstVideoId(firstLesson) : lastProgress.getVideoId(),
                 lastProgress == null ? 0 : lastProgress.getLastPositionSeconds(),
                 enrollmentStatus
         );
     }
 
-    private Long firstVideoId(EnrolledCourseVideoReferenceEntity firstVideo) {
-        return firstVideo == null ? null : firstVideo.getId();
+    private Long firstVideoId(EnrolledLessonReferenceEntity firstLesson) {
+        return firstLesson == null ? null : firstLesson.getId();
     }
 
     private Integer countCompletedLessons(
-            List<EnrolledCourseVideoReferenceEntity> videos,
+            List<EnrolledLessonReferenceEntity> lessons,
             List<VideoProgressReferenceEntity> progresses
     ) {
-        Set<Long> videoIds = videos.stream()
-                .map(EnrolledCourseVideoReferenceEntity::getId)
+        Set<Long> lessonIds = lessons.stream()
+                .map(EnrolledLessonReferenceEntity::getId)
                 .collect(Collectors.toSet());
 
         return (int) progresses.stream()
-                .filter(progress -> videoIds.contains(progress.getVideoId()))
+                .filter(progress -> lessonIds.contains(progress.getVideoId()))
                 .filter(progress -> Boolean.TRUE.equals(progress.getCompleted()))
                 .count();
     }

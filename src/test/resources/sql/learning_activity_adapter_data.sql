@@ -2,8 +2,8 @@ DELETE FROM video_progress;
 DELETE FROM study_timer_sessions;
 DELETE FROM enrollment;
 DELETE FROM subscriptions;
-DELETE FROM video;
-DELETE FROM course_curriculum;
+DELETE FROM lesson;
+DELETE FROM course_section;
 DELETE FROM course;
 
 INSERT INTO course (
@@ -16,16 +16,16 @@ INSERT INTO course (
     0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 );
 
-INSERT INTO course_curriculum (
-    curriculum_id, course_id, title, duration_minutes, order_index
+INSERT INTO course_section (
+    id, course_id, title, order_index
 ) VALUES (
-    30, 20, 'Section 1', 60, 1
+    30, 20, 'Section 1', 0
 );
 
-INSERT INTO video (
-    video_id, curriculum_id, title, video_url, s3_key, is_preview, duration_seconds, sort_order
+INSERT INTO lesson (
+    id, section_id, title, order_index, video_url, s3_key, duration_seconds, created_at
 ) VALUES (
-    10, 30, 'Video 1', 'https://stream.example.com/video.m3u8', 'videos/10.mp4', 1, 300, 1
+    10, 30, 'Lesson 1', 0, 'https://stream.example.com/video.m3u8', 'videos/10.mp4', 300, CURRENT_TIMESTAMP
 );
 
 INSERT INTO video_progress (

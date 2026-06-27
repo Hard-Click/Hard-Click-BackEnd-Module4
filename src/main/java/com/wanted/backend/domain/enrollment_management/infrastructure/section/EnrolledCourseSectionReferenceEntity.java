@@ -1,4 +1,4 @@
-package com.wanted.backend.domain.enrollment_management.infrastructure.curriculum;
+package com.wanted.backend.domain.enrollment_management.infrastructure.section;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,14 +12,16 @@ import org.hibernate.annotations.Immutable;
 @Entity
 @Getter
 @Immutable
-@Table(name = "course_curriculum")
+@Table(name = "course_section")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class CurriculumReferenceEntity {
+public class EnrolledCourseSectionReferenceEntity {
 
     @Id
-    @Column(name = "curriculum_id")
     private Long id;
 
     @Column(name = "course_id", nullable = false)
     private Long courseId;
+
+    @Column(name = "order_index", nullable = false)
+    private Integer orderIndex;
 }

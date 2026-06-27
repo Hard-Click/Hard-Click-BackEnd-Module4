@@ -52,7 +52,7 @@ public class S3VideoStorageAdapter implements VideoStoragePort {
     }
 
     @Override
-    public String store(Long lessonId, String originalFilename, byte[] data) {
+    public StoredVideo store(Long lessonId, String originalFilename, byte[] data) {
         if (data == null || data.length == 0) {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
@@ -71,12 +71,14 @@ public class S3VideoStorageAdapter implements VideoStoragePort {
                 RequestBody.fromBytes(data)
         );
 
-        return s3Presigner.presignGetObject(GetObjectPresignRequest.builder()
+        String presignedUrl = s3Presigner.presignGetObject(GetObjectPresignRequest.builder()
                         .signatureDuration(PRESIGNED_URL_EXPIRY)
                         .getObjectRequest(r -> r.bucket(bucket).key(key))
                         .build())
                 .url()
                 .toString();
+
+        return new StoredVideo(key, presignedUrl);
     }
 
     private String extractAllowedExtension(String originalFilename) {
