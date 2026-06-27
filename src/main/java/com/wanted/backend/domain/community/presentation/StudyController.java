@@ -8,6 +8,7 @@ import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.domain.SubjectType;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Tag(name = "Study", description = "스터디 모집 API")
 @RestController
 @RequestMapping("/api/studies")
 public class StudyController {

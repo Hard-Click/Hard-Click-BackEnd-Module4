@@ -6,6 +6,7 @@ import com.wanted.backend.domain.community.presentation.response.FileUploadRespo
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 
+@Tag(name = "File Upload", description = "커뮤니티 파일 업로드 API")
 @RestController
 @RequestMapping("/api/files")
 public class FileUploadController {
