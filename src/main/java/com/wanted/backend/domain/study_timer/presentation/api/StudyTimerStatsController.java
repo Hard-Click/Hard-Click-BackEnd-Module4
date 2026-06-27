@@ -22,7 +22,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/study-timers/stats")
-@Tag(name = "Study Timer Stat", description = "순공시간 통계 API")
+@Tag(name = "Study Timer Stats", description = "순공시간 통계 API")
 public class StudyTimerStatsController {
 
     private final GetDailyStudyTimeUseCase getDailyStudyTimeUseCase;
