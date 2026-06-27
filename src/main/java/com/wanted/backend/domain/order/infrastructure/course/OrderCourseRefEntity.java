@@ -28,4 +28,7 @@ public class OrderCourseRefEntity {
 
     @Column(name = "status")
     private String status;
+
+    @Column(name = "thumbnail_url")
+    private String thumbnailUrl;
 }

@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.order.infrastructure.course;
 
 import com.wanted.backend.domain.order.application.port.OrderCourseQueryPort;
+import com.wanted.backend.global.config.S3UrlPresigner;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,6 +13,7 @@ import java.util.List;
 public class OrderCourseQueryAdapter implements OrderCourseQueryPort {
 
     private final OrderCourseRefRepository courseRepository;
+    private final S3UrlPresigner s3UrlPresigner;
 
     @Override
     @Transactional(readOnly = true)
@@ -24,7 +26,8 @@ public class OrderCourseQueryAdapter implements OrderCourseQueryPort {
                 .map(c -> new CourseInfo(
                         c.getId(),
                         c.getTitle(),
-                        c.getPrice() != null ? c.getPrice() : 0))
+                        c.getPrice() != null ? c.getPrice() : 0,
+                        s3UrlPresigner.presign(c.getThumbnailUrl())))
                 .toList();
     }
 }

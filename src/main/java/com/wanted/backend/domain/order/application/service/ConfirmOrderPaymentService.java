@@ -134,7 +134,7 @@ public class ConfirmOrderPaymentService implements ConfirmOrderPaymentUseCase {
     private void dispatchAccessGrant(Order order) {
         try {
             if (order.getType() == OrderType.SUBSCRIPTION) {
-                subscribeUseCase.handle(order.getMemberId(), order.getFinalAmount());
+                subscribeUseCase.handle(order.getMemberId(), order.getId(), order.getFinalAmount());
                 orderCartDeletePort.deleteAllByMemberId(order.getMemberId());
             } else {
                 List<Long> purchasedCourseIds = order.getItems().stream()
