@@ -3,7 +3,9 @@ package com.wanted.backend.domain.cource.application.service;
 import com.wanted.backend.domain.cource.application.command.ChangeCourseStatusCommand;
 import com.wanted.backend.domain.cource.application.command.CreateCourseCommand;
 import com.wanted.backend.domain.cource.application.command.UpdateCourseCommand;
+import com.wanted.backend.domain.cource.application.command.UploadCourseThumbnailCommand;
 import com.wanted.backend.domain.cource.application.command.UploadLessonVideoCommand;
+import com.wanted.backend.domain.cource.application.port.ThumbnailStoragePort;
 import com.wanted.backend.domain.cource.application.port.VideoStoragePort;
 import com.wanted.backend.domain.cource.application.usecase.CourseCommandUseCase;
 import com.wanted.backend.domain.cource.domain.dto.CourseAuthorInfo;
@@ -39,6 +41,7 @@ public class CourseCommandService implements CourseCommandUseCase {
     private final CourseRepository courseRepository;
     private final LessonRepository lessonRepository;
     private final VideoStoragePort videoStoragePort;
+    private final ThumbnailStoragePort thumbnailStoragePort;
     private final FileProcessingService fileProcessingService;
     private final ApplicationEventPublisher eventPublisher;
     private final PlatformTransactionManager transactionManager;
@@ -187,6 +190,40 @@ public class CourseCommandService implements CourseCommandUseCase {
         }
 
         return storedVideo.presignedUrl();
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public String uploadCourseThumbnail(UploadCourseThumbnailCommand command) {
+        Course course = courseRepository.findById(command.courseId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.COURSE_NOT_FOUND));
+        if (course.isDeleted()) {
+            throw new BusinessException(ErrorCode.COURSE_NOT_FOUND);
+        }
+        if (!course.getAuthorId().equals(command.requesterId())) {
+            throw new BusinessException(ErrorCode.COURSE_ACCESS_DENIED);
+        }
+
+        ThumbnailStoragePort.StoredThumbnail stored = thumbnailStoragePort.store(
+                command.courseId(), command.originalFilename(), command.imageData());
+
+        String oldKey = course.getThumbnailUrl();
+        try {
+            new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
+                course.updateThumbnail(stored.key());
+                courseRepository.save(course);
+            });
+        } catch (RuntimeException e) {
+            thumbnailStoragePort.delete(stored.key());
+            throw e;
+        }
+
+        // 이전 썸네일 S3 객체 정리 (http(s) URL이면 외부 이미지이므로 삭제 안 함)
+        if (oldKey != null && !oldKey.startsWith("http")) {
+            thumbnailStoragePort.delete(oldKey);
+        }
+
+        return stored.presignedUrl();
     }
 
     // lesson 갱신 + 커밋 후 비동기 처리 트리거만 짧은 트랜잭션으로 묶는다.

@@ -20,6 +20,7 @@ public class OrderCourseQueryAdapter implements OrderCourseQueryPort {
             return List.of();
         }
         return courseRepository.findByIdIn(courseIds).stream()
+                .filter(c -> "PUBLISHED".equals(c.getStatus()))
                 .map(c -> new CourseInfo(
                         c.getId(),
                         c.getTitle(),

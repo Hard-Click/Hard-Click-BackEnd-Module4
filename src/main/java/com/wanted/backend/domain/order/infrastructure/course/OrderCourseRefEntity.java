@@ -25,4 +25,7 @@ public class OrderCourseRefEntity {
 
     @Column(name = "price")
     private Integer price;
+
+    @Column(name = "status")
+    private String status;
 }
