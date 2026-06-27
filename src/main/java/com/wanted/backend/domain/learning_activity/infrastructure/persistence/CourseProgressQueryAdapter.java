@@ -26,16 +26,21 @@ public class CourseProgressQueryAdapter implements CourseProgressQueryPort {
     @Override
     public CourseProgressData findByMemberIdAndCourseId(Long memberId, Long courseId) {
         // 영상 재생 식별자(videoId)는 이제 lesson.id다 — 섹션 순서 -> 레슨 순서로 정렬한다.
-        List<CourseSectionReferenceEntity> sections = sectionRepository.findByCourseIdOrderByOrderIndexAsc(courseId);
+        List<CourseSectionReferenceEntity> sections = sectionRepository.findByCourseIdOrderByOrderIndexAscIdAsc(courseId);
         List<Long> sectionIds = sections.stream().map(CourseSectionReferenceEntity::getId).toList();
 
         Map<Long, List<LessonReferenceEntity>> lessonsBySectionId = lessonRepository
-                .findBySectionIdInOrderByOrderIndexAsc(sectionIds).stream()
+                .findBySectionIdInOrderByOrderIndexAscIdAsc(sectionIds).stream()
                 .collect(Collectors.groupingBy(LessonReferenceEntity::getSectionId));
 
+        // (member_id, course_id, video_id)에 DB 유니크 제약이 없어 중복 행이 있을 수 있으므로,
+        // 병합 함수로 막아 진도 조회 전체가 예외로 실패하지 않게 한다.
         Map<Long, VideoProgressJpaEntity> progressByVideoId = videoProgressRepository
                 .findByMemberIdAndCourseId(memberId, courseId).stream()
-                .collect(Collectors.toMap(VideoProgressJpaEntity::getVideoId, Function.identity()));
+                .collect(Collectors.toMap(
+                        VideoProgressJpaEntity::getVideoId,
+                        Function.identity(),
+                        (existing, duplicate) -> existing));
 
         List<LessonProgressData> lessons = sections.stream()
                 .flatMap(section -> lessonsBySectionId.getOrDefault(section.getId(), List.of()).stream())

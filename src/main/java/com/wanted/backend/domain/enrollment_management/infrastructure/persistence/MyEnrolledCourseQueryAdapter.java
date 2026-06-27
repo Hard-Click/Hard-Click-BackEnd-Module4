@@ -78,14 +78,14 @@ public class MyEnrolledCourseQueryAdapter implements MyEnrolledCourseQueryPort {
     // 영상 재생 식별자(videoId)는 이제 lesson.id다 — 강의별로 섹션 순서 -> 레슨 순서를 보존해서 묶는다.
     private Map<Long, List<EnrolledLessonReferenceEntity>> findLessonsByCourseId(Collection<Long> courseIds) {
         List<EnrolledCourseSectionReferenceEntity> sections = sectionRepository
-                .findByCourseIdInOrderByCourseIdAscOrderIndexAsc(courseIds);
+                .findByCourseIdInOrderByCourseIdAscOrderIndexAscIdAsc(courseIds);
         if (sections.isEmpty()) {
             return Map.of();
         }
 
         List<Long> sectionIds = sections.stream().map(EnrolledCourseSectionReferenceEntity::getId).toList();
         Map<Long, List<EnrolledLessonReferenceEntity>> lessonsBySectionId = lessonRepository
-                .findBySectionIdInOrderByOrderIndexAsc(sectionIds).stream()
+                .findBySectionIdInOrderByOrderIndexAscIdAsc(sectionIds).stream()
                 .collect(Collectors.groupingBy(EnrolledLessonReferenceEntity::getSectionId));
 
         Map<Long, List<EnrolledLessonReferenceEntity>> lessonsByCourseId = new LinkedHashMap<>();
@@ -104,14 +104,23 @@ public class MyEnrolledCourseQueryAdapter implements MyEnrolledCourseQueryPort {
             List<VideoProgressReferenceEntity> progresses,
             EnrollmentStatus enrollmentStatus
     ) {
-        VideoProgressReferenceEntity lastProgress = findLastProgress(progresses);
+        Set<Long> lessonIds = lessons.stream()
+                .map(EnrolledLessonReferenceEntity::getId)
+                .collect(Collectors.toSet());
+        // 삭제/이동된 레슨의 진도 이력이 남아있어도 이어보기 값이 현재 목록 밖을 가리키지 않도록
+        // 진도 후보를 현재 lessonIds로 제한한다.
+        List<VideoProgressReferenceEntity> progressesForCurrentLessons = progresses.stream()
+                .filter(progress -> lessonIds.contains(progress.getVideoId()))
+                .toList();
+
+        VideoProgressReferenceEntity lastProgress = findLastProgress(progressesForCurrentLessons);
         EnrolledLessonReferenceEntity firstLesson = lessons.isEmpty() ? null : lessons.get(0);
 
         return new MyEnrolledCourseData(
                 courseId,
                 course == null ? "(삭제된 강의)" : course.getTitle(),
                 course == null ? null : course.getThumbnailUrl(),
-                countCompletedLessons(lessons, progresses),
+                countCompletedLessons(progressesForCurrentLessons),
                 lessons.size(),
                 lastProgress == null ? null : lastProgress.getUpdatedAt(),
                 lastProgress == null ? firstVideoId(firstLesson) : lastProgress.getVideoId(),
@@ -124,16 +133,8 @@ public class MyEnrolledCourseQueryAdapter implements MyEnrolledCourseQueryPort {
         return firstLesson == null ? null : firstLesson.getId();
     }
 
-    private Integer countCompletedLessons(
-            List<EnrolledLessonReferenceEntity> lessons,
-            List<VideoProgressReferenceEntity> progresses
-    ) {
-        Set<Long> lessonIds = lessons.stream()
-                .map(EnrolledLessonReferenceEntity::getId)
-                .collect(Collectors.toSet());
-
-        return (int) progresses.stream()
-                .filter(progress -> lessonIds.contains(progress.getVideoId()))
+    private Integer countCompletedLessons(List<VideoProgressReferenceEntity> progressesForCurrentLessons) {
+        return (int) progressesForCurrentLessons.stream()
                 .filter(progress -> Boolean.TRUE.equals(progress.getCompleted()))
                 .count();
     }

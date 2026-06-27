@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface EnrolledCourseSectionReferenceRepository extends JpaRepository<EnrolledCourseSectionReferenceEntity, Long> {
 
-    List<EnrolledCourseSectionReferenceEntity> findByCourseIdInOrderByCourseIdAscOrderIndexAsc(Collection<Long> courseIds);
+    List<EnrolledCourseSectionReferenceEntity> findByCourseIdInOrderByCourseIdAscOrderIndexAscIdAsc(Collection<Long> courseIds);
 }

@@ -81,6 +81,15 @@ public class S3VideoStorageAdapter implements VideoStoragePort {
         return new StoredVideo(key, presignedUrl);
     }
 
+    @Override
+    public void delete(String key) {
+        try {
+            s3Client.deleteObject(r -> r.bucket(bucket).key(key));
+        } catch (Exception e) {
+            log.warn("S3 영상 삭제 실패: {}", key, e);
+        }
+    }
+
     private String extractAllowedExtension(String originalFilename) {
         if (originalFilename == null) {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);

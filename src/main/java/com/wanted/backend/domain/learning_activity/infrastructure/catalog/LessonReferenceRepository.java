@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface LessonReferenceRepository extends JpaRepository<LessonReferenceEntity, Long> {
 
-    List<LessonReferenceEntity> findBySectionIdInOrderByOrderIndexAsc(Collection<Long> sectionIds);
+    List<LessonReferenceEntity> findBySectionIdInOrderByOrderIndexAscIdAsc(Collection<Long> sectionIds);
 }
