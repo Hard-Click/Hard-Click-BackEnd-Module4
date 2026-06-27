@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -26,8 +28,21 @@ public class OrderCourseQueryAdapter implements OrderCourseQueryPort {
                 .map(c -> new CourseInfo(
                         c.getId(),
                         c.getTitle(),
-                        c.getPrice() != null ? c.getPrice() : 0,
-                        s3UrlPresigner.presign(c.getThumbnailUrl())))
+                        c.getPrice() != null ? c.getPrice() : 0))
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Long, String> findThumbnailUrlsByIds(List<Long> courseIds) {
+        if (courseIds.isEmpty()) {
+            return Map.of();
+        }
+        return courseRepository.findByIdIn(courseIds).stream()
+                .filter(c -> c.getThumbnailUrl() != null)
+                .collect(Collectors.toMap(
+                        OrderCourseRefEntity::getId,
+                        c -> s3UrlPresigner.presign(c.getThumbnailUrl()),
+                        (a, b) -> a));
     }
 }

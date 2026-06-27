@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -48,10 +47,7 @@ public class GetOrderService implements GetOrderUseCase {
 
         Map<Long, String> thumbnailByCourseId = courseIds.isEmpty()
                 ? Map.of()
-                : orderCourseQueryPort.findAllByIds(courseIds).stream()
-                        .collect(Collectors.toMap(OrderCourseQueryPort.CourseInfo::courseId,
-                                info -> info.thumbnailUrl() != null ? info.thumbnailUrl() : "",
-                                (a, b) -> a));
+                : orderCourseQueryPort.findThumbnailUrlsByIds(courseIds);
 
         boolean orderPaid =
                 order.getStatus() == OrderStatus.PAID

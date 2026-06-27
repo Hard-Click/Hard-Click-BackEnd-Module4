@@ -76,11 +76,6 @@ public class RefundOrderItemService implements RefundOrderItemUseCase {
                 return;
             }
 
-            boolean allOthersAlreadyRefunded = order.getItems().stream()
-                    .filter(i -> !courseId.equals(i.getCourseId()))
-                    .allMatch(OrderItem::isRefunded);
-            OrderStatus newStatus = allOthersAlreadyRefunded ? OrderStatus.REFUNDED : OrderStatus.PARTIAL_REFUNDED;
-
             // Step 2: PG 취소 — @Transactional 밖에서 실행 (DB 커넥션 미점유)
             // PG 취소 성공 후 DB 업데이트 실패 시 운영자 수동 보정 대상(ERROR 로그)
             try {
@@ -90,7 +85,8 @@ public class RefundOrderItemService implements RefundOrderItemUseCase {
             }
 
             // Step 3: DB 상태 갱신 (orderRepository.refundItem 자체 @Transactional)
-            orderRepository.refundItem(orderId, courseId, newStatus);
+            // 주문 상태(REFUNDED/PARTIAL_REFUNDED)는 refundItem 내부에서 비관적 락 + DB 재조회로 재계산
+            orderRepository.refundItem(orderId, courseId);
             enrollmentRevocationPort.revoke(memberId, courseId);
 
         } finally {

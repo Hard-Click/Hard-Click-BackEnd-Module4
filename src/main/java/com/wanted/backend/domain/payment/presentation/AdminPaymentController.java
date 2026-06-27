@@ -1,8 +1,8 @@
 package com.wanted.backend.domain.payment.presentation;
 
+import com.wanted.backend.domain.order.application.usecase.RefundOrderUseCase;
 import com.wanted.backend.domain.payment.application.port.AdminPaymentQueryPort;
 import com.wanted.backend.domain.payment.application.usecase.GetAdminPaymentsUseCase;
-import com.wanted.backend.domain.payment.application.usecase.RefundPaymentUseCase;
 import com.wanted.backend.domain.payment.domain.model.PaymentStatus;
 import com.wanted.backend.domain.payment.presentation.response.AdminPaymentListResponse;
 import com.wanted.backend.global.common.ApiResponse;
@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminPaymentController {
 
     private final GetAdminPaymentsUseCase getAdminPaymentsUseCase;
-    private final RefundPaymentUseCase refundPaymentUseCase;
+    private final RefundOrderUseCase refundOrderUseCase;
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -52,14 +52,14 @@ public class AdminPaymentController {
         return ApiResponse.success("관리자 결제 목록 조회 성공", AdminPaymentListResponse.from(result));
     }
 
-    @PostMapping("/{paymentId}/refund")
+    @PostMapping("/{orderId}/refund")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             summary = "결제 환불 처리",
-            description = "결제완료 상태의 결제를 환불 처리합니다. 강의 결제인 경우 수강 권한이 즉시 박탈되며 복구할 수 없습니다. ADMIN 권한 필요."
+            description = "결제완료 상태의 주문을 환불 처리합니다. 강의 결제인 경우 수강 권한이, 구독인 경우 구독이 즉시 박탈되며 복구할 수 없습니다. ADMIN 권한 필요."
     )
-    public ResponseEntity<ApiResponse<Void>> refund(@PathVariable Long paymentId) {
-        refundPaymentUseCase.handle(paymentId);
+    public ResponseEntity<ApiResponse<Void>> refund(@PathVariable Long orderId) {
+        refundOrderUseCase.refundOrder(orderId);
         return ApiResponse.successNoContent("환불이 처리되었습니다.");
     }
 }
