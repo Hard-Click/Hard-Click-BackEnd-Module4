@@ -25,5 +25,8 @@ public interface CourseRepository {
     PageResult<CourseListItem> findList(String keyword, String subject, List<Long> authorIds,
                                        CourseSortType sort, int page, int size);
 
+    /** POPULAR/RATING 인메모리 정렬용 — 필터 조건에 맞는 전체 목록 반환 (페이징 없음) */
+    List<CourseListItem> findAllForSort(String keyword, String subject, List<Long> authorIds);
+
     PageResult<CourseListItem> findByAuthor(Long authorId, int page, int size);
 }

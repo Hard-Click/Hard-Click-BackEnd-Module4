@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.order.application.service;
 
 import com.wanted.backend.domain.order.application.dto.OrderDetailResult;
+import com.wanted.backend.domain.order.application.port.OrderCourseQueryPort;
 import com.wanted.backend.domain.order.application.port.OrderEnrollmentStatusPort;
 import com.wanted.backend.domain.order.application.usecase.GetOrderUseCase;
 import com.wanted.backend.domain.order.domain.model.Order;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +25,7 @@ public class GetOrderService implements GetOrderUseCase {
 
     private final OrderRepository orderRepository;
     private final OrderEnrollmentStatusPort orderEnrollmentStatusPort;
+    private final OrderCourseQueryPort orderCourseQueryPort;
 
     @Override
     public OrderDetailResult getOrder(Long memberId, Long orderId) {
@@ -43,6 +46,13 @@ public class GetOrderService implements GetOrderUseCase {
                 ? Map.of()
                 : orderEnrollmentStatusPort.findEnrollStatuses(memberId, courseIds);
 
+        Map<Long, String> thumbnailByCourseId = courseIds.isEmpty()
+                ? Map.of()
+                : orderCourseQueryPort.findAllByIds(courseIds).stream()
+                        .collect(Collectors.toMap(OrderCourseQueryPort.CourseInfo::courseId,
+                                info -> info.thumbnailUrl() != null ? info.thumbnailUrl() : "",
+                                (a, b) -> a));
+
         boolean orderPaid =
                 order.getStatus() == OrderStatus.PAID
                         || order.getStatus() == OrderStatus.PARTIAL_REFUNDED;
@@ -59,14 +69,17 @@ public class GetOrderService implements GetOrderUseCase {
                     String enrollStatus =
                             item.getCourseId() == null
                                     ? null
-                                    : enrollStatuses.getOrDefault(
-                                    item.getCourseId(),
-                                    "NONE"
-                            );
+                                    : enrollStatuses.getOrDefault(item.getCourseId(), "NONE");
+
+                    String thumbnailUrl =
+                            item.getCourseId() == null
+                                    ? null
+                                    : thumbnailByCourseId.getOrDefault(item.getCourseId(), null);
 
                     return new OrderDetailResult.Item(
                             item.getCourseId(),
                             item.getTitle(),
+                            thumbnailUrl,
                             item.getPrice(),
                             refundable,
                             refundAmount,

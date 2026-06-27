@@ -25,4 +25,10 @@ public class OrderCourseRefEntity {
 
     @Column(name = "price")
     private Integer price;
+
+    @Column(name = "status")
+    private String status;
+
+    @Column(name = "thumbnail_url")
+    private String thumbnailUrl;
 }

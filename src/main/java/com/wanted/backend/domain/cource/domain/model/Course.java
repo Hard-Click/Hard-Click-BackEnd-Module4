@@ -98,6 +98,11 @@ public class Course {
         this.level = level;
     }
 
+    public void updateThumbnail(String thumbnailUrl) {
+        ensureNotDeleted();
+        this.thumbnailUrl = thumbnailUrl;
+    }
+
     public void softDelete() {
         this.status = CourseStatus.DELETED;
     }

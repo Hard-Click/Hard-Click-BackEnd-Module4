@@ -40,6 +40,9 @@ public record OrderDetailResponse(
             @Schema(description = "제목", example = "2027 수능 수학 미적분 실전 킬러 특강")
             String title,
 
+            @Schema(description = "썸네일 URL (구독은 null)")
+            String thumbnailUrl,
+
             @Schema(description = "가격", example = "89000")
             int price,
 
@@ -63,6 +66,7 @@ public record OrderDetailResponse(
                 .map(i -> new Item(
                         i.courseId(),
                         i.title(),
+                        i.thumbnailUrl(),
                         i.price(),
                         i.refundable(),
                         i.refundAmount(),
