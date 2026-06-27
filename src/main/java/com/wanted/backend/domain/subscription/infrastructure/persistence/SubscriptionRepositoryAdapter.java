@@ -6,6 +6,7 @@ import com.wanted.backend.domain.subscription.domain.repository.SubscriptionRepo
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,9 +38,22 @@ public class SubscriptionRepositoryAdapter implements SubscriptionRepository {
             // active_member_id 유니크 제약을 즉시 검증하기 위해 flush까지 강제
             return toDomain(repository.saveAndFlush(entity));
         } catch (DataIntegrityViolationException e) {
-            // 동시 구독 요청으로 활성 구독 중복 생성이 차단된 경우
-            throw new BusinessException(ErrorCode.SUBSCRIPTION_ALREADY_ACTIVE);
+            // 활성 구독 유니크 제약(active_member_id) 위반일 때만 "이미 구독 중"으로 변환한다.
+            // 그 외 제약 위반(NOT NULL, 채번 실패 등)은 원인을 가리지 않도록 원래 예외를 전파한다.
+            if (isActiveMemberUniqueViolation(e)) {
+                throw new BusinessException(ErrorCode.SUBSCRIPTION_ALREADY_ACTIVE);
+            }
+            throw e;
         }
+    }
+
+    private boolean isActiveMemberUniqueViolation(DataIntegrityViolationException e) {
+        Throwable cause = e.getCause();
+        if (cause instanceof ConstraintViolationException cve) {
+            String constraintName = cve.getConstraintName();
+            return constraintName != null && constraintName.toLowerCase().contains("active_member");
+        }
+        return false;
     }
 
     @Override
