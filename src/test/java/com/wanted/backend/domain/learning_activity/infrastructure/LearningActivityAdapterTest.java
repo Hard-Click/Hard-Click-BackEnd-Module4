@@ -3,15 +3,13 @@ package com.wanted.backend.domain.learning_activity.infrastructure;
 import com.wanted.backend.domain.learning_activity.application.port.CourseProgressQueryPort;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoAccessInfo;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoProgress;
-import com.wanted.backend.domain.learning_activity.infrastructure.curriculum.CourseCurriculumReferenceEntity;
-import com.wanted.backend.domain.learning_activity.infrastructure.curriculum.CourseCurriculumReferenceRepository;
 import com.wanted.backend.domain.learning_activity.infrastructure.catalog.CatalogCourseReferenceEntity;
 import com.wanted.backend.domain.learning_activity.infrastructure.catalog.CatalogCourseReferenceRepository;
-import com.wanted.backend.domain.learning_activity.infrastructure.catalog.CatalogVideoReferenceEntity;
-import com.wanted.backend.domain.learning_activity.infrastructure.catalog.CatalogVideoReferenceRepository;
+import com.wanted.backend.domain.learning_activity.infrastructure.catalog.CourseSectionReferenceEntity;
+import com.wanted.backend.domain.learning_activity.infrastructure.catalog.CourseSectionReferenceRepository;
+import com.wanted.backend.domain.learning_activity.infrastructure.catalog.LessonReferenceEntity;
+import com.wanted.backend.domain.learning_activity.infrastructure.catalog.LessonReferenceRepository;
 import com.wanted.backend.domain.learning_activity.infrastructure.catalog.VideoCatalogAdapter;
-import com.wanted.backend.domain.learning_activity.infrastructure.video.VideoReferenceEntity;
-import com.wanted.backend.domain.learning_activity.infrastructure.video.VideoReferenceRepository;
 import com.wanted.backend.domain.learning_activity.infrastructure.enrollment.EnrollmentAccessAdapter;
 import com.wanted.backend.domain.learning_activity.infrastructure.enrollment.EnrollmentReferenceJpaEntity;
 import com.wanted.backend.domain.learning_activity.infrastructure.enrollment.SpringDataEnrollmentAccessRepository;
@@ -43,16 +41,14 @@ import static org.assertj.core.api.Assertions.assertThat;
         VideoProgressJpaEntity.class,
         EnrollmentReferenceJpaEntity.class,
         SubscriptionReferenceJpaEntity.class,
-        CourseCurriculumReferenceEntity.class,
-        VideoReferenceEntity.class,
-        CatalogVideoReferenceEntity.class,
+        CourseSectionReferenceEntity.class,
+        LessonReferenceEntity.class,
         CatalogCourseReferenceEntity.class
 })
 @EnableJpaRepositories(basePackageClasses = {
         SpringDataVideoProgressRepository.class,
-        CourseCurriculumReferenceRepository.class,
-        VideoReferenceRepository.class,
-        CatalogVideoReferenceRepository.class,
+        CourseSectionReferenceRepository.class,
+        LessonReferenceRepository.class,
         CatalogCourseReferenceRepository.class,
         SpringDataEnrollmentAccessRepository.class,
         SpringDataSubscriptionAccessRepository.class

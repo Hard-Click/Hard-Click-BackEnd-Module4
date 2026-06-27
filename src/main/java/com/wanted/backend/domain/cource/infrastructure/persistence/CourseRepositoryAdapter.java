@@ -216,7 +216,7 @@ public class CourseRepositoryAdapter implements CourseRepository {
                             .map(l -> Lesson.restore(
                                     l.getId(), sectionEntity.getId(),
                                     l.getTitle(), l.getDescription(), l.getOrderIndex(),
-                                    l.getVideoUrl(), l.getDurationSeconds(),
+                                    l.getVideoUrl(), l.getS3Key(), l.getDurationSeconds(),
                                     l.getFileProcessingStatus(), l.getCreatedAt()))
                             .toList();
                     return CourseSection.restore(
