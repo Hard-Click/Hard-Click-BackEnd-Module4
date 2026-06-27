@@ -147,6 +147,22 @@ public class CommentCommandService implements CommentCommandUseCase {
         Comment comment = commentRepository.findById(command.commentId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
 
+        if (command.isAdmin()) {
+            if (comment.getImageUrl() != null) {
+                storagePort.delete(comment.getImageUrl());
+            }
+
+            boolean hasReplies = commentRepository.existsByParentId(command.commentId());
+            if (hasReplies || comment.isAccepted()) {
+                // 대댓글이 있거나 채택된 댓글은 구조 보존을 위해 소프트 삭제
+                comment.softDeleteByAdmin();
+                commentRepository.softDeleteByAdmin(comment.getId(), comment.getUpdatedAt());
+            } else {
+                commentRepository.deleteById(command.commentId());
+            }
+            return;
+        }
+
         comment.validateDeletable(command.memberId());
 
         if (comment.getImageUrl() != null) {
