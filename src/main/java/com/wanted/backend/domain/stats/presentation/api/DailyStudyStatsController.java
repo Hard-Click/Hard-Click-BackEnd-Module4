@@ -23,7 +23,7 @@ import java.time.format.DateTimeParseException;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/stats")
-@Tag(name = "Stat", description = "학습 통계 API")
+@Tag(name = "Stats", description = "학습 통계 API")
 public class DailyStudyStatsController {
 
     private final GetDailyStudyStatUseCase getDailyStudyStatUseCase;
