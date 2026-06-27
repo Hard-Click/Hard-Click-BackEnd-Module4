@@ -21,7 +21,7 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/payments")
-@Tag(name = "Payment", description = "결제 확정 API (중복결제 방지)")
+@Tag(name = "Payments", description = "결제 확정 API (중복결제 방지) (/api/payments)")
 public class PaymentConfirmController {
 
     private final ConfirmOrderPaymentUseCase confirmOrderPaymentUseCase;

@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/rankings")
-@Tag(name = "Ranking", description = "랭킹 API")
+@Tag(name = "Rankings", description = "랭킹 API (/api/rankings)")
 public class RankingController {
 
     private final GetMyRankingDetailUseCase getMyRankingDetailUseCase;

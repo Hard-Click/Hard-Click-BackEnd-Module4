@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/admin/payments")
 @RequiredArgsConstructor
-@Tag(name = "Admin Payment", description = "관리자 결제 관리 API")
+@Tag(name = "Admin Payments", description = "관리자 결제 관리 API (/api/admin/payments)")
 public class AdminPaymentController {
 
     private final GetAdminPaymentsUseCase getAdminPaymentsUseCase;

@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/subscriptions")
 @RequiredArgsConstructor
-@Tag(name = "Subscription", description = "구독(연간 패스) API")
+@Tag(name = "Subscriptions", description = "구독(연간 패스) API (/api/subscriptions)")
 public class SubscriptionController {
 
     private final GetSubscriptionPlanUseCase getSubscriptionPlanUseCase;

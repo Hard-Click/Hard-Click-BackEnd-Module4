@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 @RequestMapping("/api/admin/contents")
 @RequiredArgsConstructor
-@Tag(name = "Admin Content", description = "관리자 콘텐츠 관리 API")
+@Tag(name = "Admin Contents", description = "관리자 콘텐츠 관리 API (/api/admin/contents)")
 public class AdminContentController {
 
     private final GetAdminContentUseCase getAdminContentUseCase;

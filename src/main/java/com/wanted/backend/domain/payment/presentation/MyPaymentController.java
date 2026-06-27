@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/payment")
-@Tag(name = "Payment", description = "결제 API")
+@Tag(name = "Payment", description = "결제 API (/api/payment)")
 public class MyPaymentController {
 
     private final GetMyPaymentHistoryUseCase getMyPaymentHistoryUseCase;
