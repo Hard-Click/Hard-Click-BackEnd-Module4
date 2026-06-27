@@ -5,6 +5,7 @@ import com.wanted.backend.domain.cource.application.command.CreateCourseCommand;
 import com.wanted.backend.domain.cource.application.command.UpdateCourseCommand;
 import com.wanted.backend.domain.cource.application.command.UploadCourseThumbnailCommand;
 import com.wanted.backend.domain.cource.application.command.UploadLessonVideoCommand;
+import com.wanted.backend.domain.cource.application.port.CourseVideoCatalogSyncPort;
 import com.wanted.backend.domain.cource.application.port.ThumbnailStoragePort;
 import com.wanted.backend.domain.cource.application.port.VideoStoragePort;
 import com.wanted.backend.domain.cource.application.usecase.CourseCommandUseCase;
@@ -47,6 +48,7 @@ public class CourseCommandService implements CourseCommandUseCase {
     private final PlatformTransactionManager transactionManager;
     private final Clock clock;
     private final NotificationRepository notificationRepository;
+    private final CourseVideoCatalogSyncPort videoCatalogSyncPort;
 
     @Override
     public Long create(CreateCourseCommand command) {
@@ -82,6 +84,9 @@ public class CourseCommandService implements CourseCommandUseCase {
 
         eventPublisher.publishEvent(CourseCreatedEvent.of(
                 saved.getId(), command.authorId(), saved.getTitle()));
+
+        // 커밋 후 재생 스키마(course_curriculum/video)로 미러링
+        registerVideoCatalogSync(saved.getId());
 
         return saved.getId();
     }
@@ -120,6 +125,9 @@ public class CourseCommandService implements CourseCommandUseCase {
                 command.techTags(), command.level());
 
         courseRepository.save(course);
+
+        // 섹션/레슨 변경을 재생 스키마(course_curriculum/video)에 반영
+        registerVideoCatalogSync(command.courseId());
     }
 
     @Override
@@ -182,7 +190,7 @@ public class CourseCommandService implements CourseCommandUseCase {
         );
 
         try {
-            persistUploadedVideo(lesson, storedVideo, command.lessonId());
+            persistUploadedVideo(lesson, storedVideo, command.lessonId(), courseInfo.courseId());
         } catch (RuntimeException e) {
             // DB 저장이 실패하면 이미 업로드된 S3 객체가 orphan으로 남지 않도록 보상 삭제한다.
             videoStoragePort.delete(storedVideo.key());
@@ -229,7 +237,8 @@ public class CourseCommandService implements CourseCommandUseCase {
     // lesson 갱신 + 커밋 후 비동기 처리 트리거만 짧은 트랜잭션으로 묶는다.
     // (uploadLessonVideo 자체는 NOT_SUPPORTED라 트랜잭션이 없어, 별도로 새 트랜잭션을 열어야
     // afterCommit 동기화가 유효하다.)
-    private void persistUploadedVideo(Lesson lesson, VideoStoragePort.StoredVideo storedVideo, Long lessonId) {
+    private void persistUploadedVideo(Lesson lesson, VideoStoragePort.StoredVideo storedVideo,
+                                      Long lessonId, Long courseId) {
         new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
             lesson.attachVideo(storedVideo.presignedUrl(), storedVideo.key());
             lessonRepository.save(lesson);
@@ -238,8 +247,20 @@ public class CourseCommandService implements CourseCommandUseCase {
                 @Override
                 public void afterCommit() {
                     fileProcessingService.process(lessonId);
+                    // 업로드된 영상(s3_key)을 재생 스키마(video)로 반영
+                    videoCatalogSyncPort.syncByCourse(courseId);
                 }
             });
+        });
+    }
+
+    // 커밋 이후 작성 스키마(course_section/lesson)를 재생 스키마(course_curriculum/video)로 미러링한다.
+    private void registerVideoCatalogSync(Long courseId) {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                videoCatalogSyncPort.syncByCourse(courseId);
+            }
         });
     }
 }
