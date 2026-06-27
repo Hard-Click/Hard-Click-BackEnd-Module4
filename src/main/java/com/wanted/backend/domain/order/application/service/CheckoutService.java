@@ -3,6 +3,7 @@ package com.wanted.backend.domain.order.application.service;
 import com.wanted.backend.domain.order.application.dto.CheckoutResult;
 import com.wanted.backend.domain.order.application.port.OrderCartQueryPort;
 import com.wanted.backend.domain.order.application.port.OrderCourseQueryPort;
+import com.wanted.backend.domain.order.application.port.OrderEnrollmentStatusPort;
 import com.wanted.backend.domain.order.application.port.OrderSubscriptionPlanPort;
 import com.wanted.backend.domain.order.application.usecase.CheckoutUseCase;
 import com.wanted.backend.domain.order.domain.model.Order;
@@ -19,6 +20,7 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -34,6 +36,7 @@ public class CheckoutService implements CheckoutUseCase {
     private final OrderCourseQueryPort orderCourseQueryPort;
     private final OrderCartQueryPort orderCartQueryPort;
     private final OrderSubscriptionPlanPort orderSubscriptionPlanPort;
+    private final OrderEnrollmentStatusPort orderEnrollmentStatusPort;
     private final Clock clock;
 
     @Override
@@ -95,6 +98,11 @@ public class CheckoutService implements CheckoutUseCase {
 
         if (!foundCourseIds.containsAll(courseIds)) {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
+        Map<Long, String> enrollStatuses = orderEnrollmentStatusPort.findEnrollStatuses(memberId, courseIds);
+        if (!enrollStatuses.isEmpty()) {
+            throw new BusinessException(ErrorCode.ENROLLMENT_ALREADY_EXISTS);
         }
 
         List<OrderItem> items = courses.stream()
