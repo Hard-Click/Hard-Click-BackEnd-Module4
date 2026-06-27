@@ -31,7 +31,7 @@ public class LessonJpaEntity {
     @Column(name = "order_index", nullable = false)
     private int orderIndex;
 
-    @Column(name = "video_url")
+    @Column(name = "video_url", columnDefinition = "TEXT")
     private String videoUrl;
 
     @Column(name = "s3_key")
