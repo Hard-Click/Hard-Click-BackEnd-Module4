@@ -33,7 +33,7 @@ import java.io.IOException;
 @RestController
 @RequestMapping("/api/courses")
 @RequiredArgsConstructor
-@Tag(name = "Courses", description = "강의 목록/상세 조회, 등록/수정/삭제, 영상 업로드 API (/api/courses)")
+@Tag(name = "Course", description = "강의 목록/상세 조회, 등록/수정/삭제, 영상 업로드 API")
 public class CourseController {
 
     private final CourseCommandUseCase courseCommandUseCase;

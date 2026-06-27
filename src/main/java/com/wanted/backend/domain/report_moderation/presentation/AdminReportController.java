@@ -35,7 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 @RequestMapping("/api/admin/reports")
 @RequiredArgsConstructor
-@Tag(name = "Admin Reports", description = "관리자 신고 관리 API (/api/admin/reports)")
+@Tag(name = "Admin Report", description = "관리자 신고 관리 API")
 public class AdminReportController {
 
     private final GetAdminReportListUseCase getAdminReportListUseCase;
