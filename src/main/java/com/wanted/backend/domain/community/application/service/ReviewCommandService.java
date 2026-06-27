@@ -68,11 +68,15 @@ public class ReviewCommandService implements ReviewCommandUseCase {
         Review review = reviewRepository.findById(command.reviewId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
 
+        if (command.isAdmin()) {
+            reviewRepository.adminDeleteById(command.reviewId());
+            return;
+        }
+
         if (!review.isOwner(command.memberId())) {
             throw new BusinessException(ErrorCode.REVIEW_NOT_AUTHORIZED);
         }
 
-        // [3단계] Hard Delete
         reviewRepository.deleteById(command.reviewId());
     }
 }

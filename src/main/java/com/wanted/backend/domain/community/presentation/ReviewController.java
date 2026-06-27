@@ -126,7 +126,8 @@ public class ReviewController {
             @PathVariable Long reviewId) {
 
         reviewCommandUseCase.delete(new DeleteReviewCommand(
-                userDetails.getMemberId(), reviewId));
+                userDetails.getMemberId(), reviewId,
+                "ADMIN".equals(userDetails.getRole())));
 
         return ApiResponse.successNoContent("리뷰가 삭제되었습니다.");
     }

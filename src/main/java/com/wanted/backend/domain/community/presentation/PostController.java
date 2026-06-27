@@ -184,17 +184,20 @@ public class PostController {
     @Operation(
             summary = "게시글 삭제",
             description = """
-                본인이 작성한 게시글을 삭제합니다.
-                - 로그인한 회원만 삭제할 수 있습니다.
-                - 본인이 작성한 게시글인지 검증 후 삭제합니다.
-                """
+            게시글을 삭제합니다.
+            - 로그인한 회원만 삭제할 수 있습니다.
+            - 본인이 작성한 게시글인지 검증 후 삭제합니다.
+            - ADMIN은 모든 게시글을 삭제할 수 있습니다.
+            """
     )
     public ResponseEntity<ApiResponse<Void>> deletePost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long postId) {
 
         postCommandUseCase.delete(new DeletePostCommand(
-                userDetails.getMemberId(), postId));
+                userDetails.getMemberId(),
+                postId,
+                "ADMIN".equals(userDetails.getRole())));
 
         return ApiResponse.successNoContent("게시글이 삭제되었습니다.");
     }

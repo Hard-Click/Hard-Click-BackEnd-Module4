@@ -144,13 +144,14 @@ public class CommentController {
     @Operation(
             summary = "댓글 삭제",
             description = """
-                본인이 작성한 댓글을 삭제합니다.
-                - 로그인한 회원만 삭제할 수 있습니다.
-                - 본인이 작성한 댓글인지 검증 후 삭제합니다.
-                - 채택된 댓글은 삭제할 수 없습니다.
-                - 대댓글이 존재하는 댓글은 즉시 삭제되지 않고 삭제 상태로 표시됩니다.
-                - 대댓글이 없는 댓글은 즉시 삭제됩니다.
-                """
+            댓글을 삭제합니다.
+            - 로그인한 회원만 삭제할 수 있습니다.
+            - 본인이 작성한 댓글인지 검증 후 삭제합니다.
+            - 채택된 댓글은 삭제할 수 없습니다.
+            - 대댓글이 존재하는 댓글은 즉시 삭제되지 않고 삭제 상태로 표시됩니다.
+            - 대댓글이 없는 댓글은 즉시 삭제됩니다.
+            - ADMIN은 모든 댓글을 삭제할 수 있습니다.
+            """
     )
     public ResponseEntity<ApiResponse<Void>> deleteComment(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -158,8 +159,8 @@ public class CommentController {
 
         commentCommandUseCase.delete(new DeleteCommentCommand(
                 userDetails.getMemberId(),
-                commentId
-        ));
+                commentId,
+                "ADMIN".equals(userDetails.getRole())));
 
         return ApiResponse.successNoContent("댓글이 삭제되었습니다.");
     }
