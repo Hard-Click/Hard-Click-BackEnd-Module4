@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.cource.application.service;
 
 import com.wanted.backend.domain.cource.application.command.UploadLessonVideoCommand;
+import com.wanted.backend.domain.cource.application.port.ThumbnailStoragePort;
 import com.wanted.backend.domain.cource.application.port.VideoStoragePort;
 import com.wanted.backend.domain.cource.domain.dto.CourseAuthorInfo;
 import com.wanted.backend.domain.cource.domain.model.CourseStatus;
@@ -41,6 +42,7 @@ class CourseCommandServiceTest {
         CourseRepository courseRepository = mock(CourseRepository.class);
         lessonRepository = mock(LessonRepository.class);
         videoStoragePort = mock(VideoStoragePort.class);
+        ThumbnailStoragePort thumbnailStoragePort = mock(ThumbnailStoragePort.class);
         FileProcessingService fileProcessingService = mock(FileProcessingService.class);
         ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
         NotificationRepository notificationRepository = mock(NotificationRepository.class);
@@ -50,6 +52,7 @@ class CourseCommandServiceTest {
                 courseRepository,
                 lessonRepository,
                 videoStoragePort,
+                thumbnailStoragePort,
                 fileProcessingService,
                 eventPublisher,
                 // 실제 DB 없이도 TransactionTemplate의 트랜잭션 동기화(afterCommit)가 동작하게 해주는
