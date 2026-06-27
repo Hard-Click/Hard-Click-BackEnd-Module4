@@ -6,6 +6,7 @@ import com.wanted.backend.domain.community.domain.model.Review;
 import com.wanted.backend.domain.community.domain.model.ReviewSortType;
 import com.wanted.backend.domain.community.domain.repository.ReviewRepository;
 import com.wanted.backend.domain.community.presentation.response.*;
+import com.wanted.backend.global.exception.BusinessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +19,7 @@ public class ReviewQueryService implements ReviewQueryUseCase {
 
     private static final int PAGE_SIZE = 10;
     private static final String ADMIN_DELETED_MESSAGE = "관리자에 의해 삭제되었습니다.";
+    private static final String UNKNOWN_MEMBER_NAME = "알 수 없음";
 
     private final ReviewRepository reviewRepository;
     private final MemberNamePort memberNamePort;
@@ -66,7 +68,8 @@ public class ReviewQueryService implements ReviewQueryUseCase {
 
     private ReviewItemResponse toItemResponse(Review review, Long currentMemberId) {
         //바로 port를 호출하는 이유는 단순 다른 BC에서의 조회이기때문에 정책 클래스인 Policy 클래스 존재 필요 없음
-        String name = memberNamePort.getNameByMemberId(review.getMemberId());
+        // 탈퇴/삭제된 회원의 리뷰 하나 때문에 목록 전체가 실패하지 않도록 방어 처리
+        String name = resolveName(review.getMemberId());
         return new ReviewItemResponse(
                 review.getId(),
                 review.maskName(name),
@@ -76,5 +79,15 @@ public class ReviewQueryService implements ReviewQueryUseCase {
                 review.getCreatedAt().toLocalDate(),
                 review.isOwner(currentMemberId)
         );
+    }
+
+    private String resolveName(Long memberId) {
+        try {
+            String name = memberNamePort.getNameByMemberId(memberId);
+            return (name == null || name.isBlank()) ? UNKNOWN_MEMBER_NAME : name;
+        } catch (BusinessException e) {
+            // 회원이 없거나 조회 실패 시에도 리뷰 목록은 정상 노출
+            return UNKNOWN_MEMBER_NAME;
+        }
     }
 }
