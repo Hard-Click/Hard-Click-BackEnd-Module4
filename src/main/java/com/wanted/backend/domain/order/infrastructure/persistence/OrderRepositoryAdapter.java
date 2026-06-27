@@ -89,8 +89,16 @@ public class OrderRepositoryAdapter implements OrderRepository {
                 .toList();
         return Order.restore(
                 e.getId(), e.getOrderNo(), e.getMemberId(), e.getType(),
-                OrderStatus.valueOf(e.getStatus()),
+                parseOrderStatus(e.getStatus()),
                 e.getTotalAmount(), e.getFinalAmount(), e.getOrderedAt(), e.getPaidAt(),
                 e.getPaymentKey(), items);
+    }
+
+    private OrderStatus parseOrderStatus(String raw) {
+        try {
+            return OrderStatus.valueOf(raw);
+        } catch (IllegalArgumentException ex) {
+            throw new BusinessException(ErrorCode.ORDER_INVALID_STATUS);
+        }
     }
 }
