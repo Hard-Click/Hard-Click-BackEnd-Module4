@@ -105,7 +105,7 @@ public class NoticeQueryService implements NoticeQueryUseCase {
         // 코스명 배치 조회 — finalCourseName이 null인 경우(INSTRUCTOR/수강생/courseId 없는 ADMIN)에만
         final String finalCourseName = courseName;
         Map<Long, String> courseNameMap = Map.of();
-        if (finalCourseName == null) {
+        if ("COURSE".equals(command.type()) && finalCourseName == null) {
             List<Long> courseIds = noticePage.getContent().stream()
                     .map(Notice::getCourseId)
                     .filter(Objects::nonNull)
@@ -119,7 +119,9 @@ public class NoticeQueryService implements NoticeQueryUseCase {
                 .map(notice -> {
                     String name = finalCourseName != null
                             ? finalCourseName
-                            : finalCourseNameMap.get(notice.getCourseId());
+                            : notice.getCourseId() != null
+                            ? finalCourseNameMap.get(notice.getCourseId())
+                            : null;
                     boolean isRead = readIds.contains(notice.getId());
                     return toItemResponse(notice, name, isRead);
                 })

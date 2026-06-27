@@ -14,6 +14,7 @@ import com.wanted.backend.domain.community.presentation.response.UpdateCommentRe
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 
+@Tag(name = "Community Comment", description = "커뮤니티 댓글 API")
 @RestController
 @RequestMapping("/api")
 public class CommentController {

@@ -7,11 +7,13 @@ import com.wanted.backend.domain.community.presentation.response.CreateReportRes
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Community Report", description = "커뮤니티 신고 API")
 @RestController
 @RequestMapping("/api")
 public class ReportController {
