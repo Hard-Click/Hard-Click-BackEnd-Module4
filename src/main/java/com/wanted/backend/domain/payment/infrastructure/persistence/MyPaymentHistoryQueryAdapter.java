@@ -2,7 +2,6 @@ package com.wanted.backend.domain.payment.infrastructure.persistence;
 
 import com.wanted.backend.domain.payment.application.port.MyPaymentHistoryQueryPort;
 import com.wanted.backend.domain.payment.domain.model.PaymentStatus;
-import com.wanted.backend.domain.payment.domain.model.PaymentType;
 import com.wanted.backend.domain.payment.infrastructure.subscription.PaymentSubscriptionReferenceEntity;
 import com.wanted.backend.domain.payment.infrastructure.subscription.PaymentSubscriptionReferenceRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -23,38 +23,44 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class MyPaymentHistoryQueryAdapter implements MyPaymentHistoryQueryPort {
 
-    private final PaymentJpaRepository paymentRepository;
+    private static final Set<String> VISIBLE_STATUSES = Set.of(
+            "PAID", "PARTIAL_REFUNDED", "REFUNDED", "CANCELED"
+    );
+
     private final OrderJpaRepository orderRepository;
     private final OrderItemJpaRepository orderItemRepository;
     private final PaymentSubscriptionReferenceRepository subscriptionRepository;
 
     @Override
     public Page<MyPaymentHistoryData> findByMemberId(Long memberId, Pageable pageable) {
-        Page<PaymentJpaEntity> payments = paymentRepository.findByMemberId(memberId, pageable);
-        if (payments.isEmpty()) {
+        Page<OrderJpaEntity> orders = orderRepository.findByMemberIdAndStatusIn(memberId, VISIBLE_STATUSES, pageable);
+        if (orders.isEmpty()) {
             return Page.empty(pageable);
         }
 
-        List<Long> orderIds = payments.getContent().stream()
-                .map(PaymentJpaEntity::getOrderId)
+        List<Long> orderIds = orders.getContent().stream()
+                .map(OrderJpaEntity::getId)
                 .distinct()
                 .toList();
 
-        Map<Long, OrderJpaEntity> orderById = orderRepository.findByIdIn(orderIds).stream()
-                .collect(Collectors.toMap(OrderJpaEntity::getId, Function.identity()));
         Map<Long, List<Long>> courseIdsByOrderId = findCourseIdsByOrderId(orderIds);
         Map<Long, Long> planIdByOrderId = findSubscriptionPlanIdByOrderId(orderIds);
 
-        List<MyPaymentHistoryData> content = payments.getContent().stream()
-                .map(payment -> toData(
-                        payment,
-                        orderById.get(payment.getOrderId()),
-                        courseIdsByOrderId.getOrDefault(payment.getOrderId(), List.of()),
-                        planIdByOrderId.get(payment.getOrderId())
+        List<MyPaymentHistoryData> content = orders.getContent().stream()
+                .map(order -> new MyPaymentHistoryData(
+                        order.getId(),
+                        order.getId(),
+                        order.getOrderNo(),
+                        order.getPaymentType(),
+                        order.getFinalAmount(),
+                        toPaymentStatus(order.getStatus()),
+                        order.getPaidAt(),
+                        courseIdsByOrderId.getOrDefault(order.getId(), List.of()),
+                        planIdByOrderId.get(order.getId())
                 ))
                 .toList();
 
-        return new PageImpl<>(content, pageable, payments.getTotalElements());
+        return new PageImpl<>(content, pageable, orders.getTotalElements());
     }
 
     private Map<Long, List<Long>> findCourseIdsByOrderId(Collection<Long> orderIds) {
@@ -74,24 +80,12 @@ public class MyPaymentHistoryQueryAdapter implements MyPaymentHistoryQueryPort {
                 ));
     }
 
-    private MyPaymentHistoryData toData(
-            PaymentJpaEntity payment,
-            OrderJpaEntity order,
-            List<Long> courseIds,
-            Long subscriptionPlanId
-    ) {
-        PaymentType paymentType = order == null ? null : order.getPaymentType();
-
-        return new MyPaymentHistoryData(
-                payment.getId(),
-                payment.getOrderId(),
-                order == null ? null : order.getOrderNo(),
-                paymentType,
-                payment.getPaidAmount(),
-                PaymentStatus.from(payment.getStatus()),
-                payment.getPaidAt(),
-                courseIds,
-                subscriptionPlanId
-        );
+    private PaymentStatus toPaymentStatus(String orderStatus) {
+        return switch (orderStatus) {
+            case "PAID", "PARTIAL_REFUNDED" -> PaymentStatus.PAID;
+            case "REFUNDED" -> PaymentStatus.REFUNDED;
+            case "CANCELED" -> PaymentStatus.CANCELED;
+            default -> PaymentStatus.READY;
+        };
     }
 }
