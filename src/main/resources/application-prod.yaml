@@ -1,0 +1,8 @@
+spring:
+  jpa:
+    hibernate:
+      # 운영에서는 앱이 스키마를 변경하지 않고(update 금지), 엔티티 ↔ DB 불일치만 검증한다.
+      # AUTO_INCREMENT 누락·컬럼 길이/타입 드리프트가 있으면 기동 단계에서 실패로 드러나므로,
+      # 운영 중 INSERT 500이 터지기 전에 배포 시점에서 잡는다.
+      # (반복된 스키마 드리프트 사고: study_timer_sessions ENUM, subscriptions/video_progress AUTO_INCREMENT)
+      ddl-auto: validate
