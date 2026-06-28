@@ -4,13 +4,13 @@ import com.wanted.backend.domain.notice.application.command.GetNoticeListCommand
 import com.wanted.backend.domain.notice.application.port.CourseInfoPort;
 import com.wanted.backend.domain.notice.application.port.EnrolledCoursePort;
 import com.wanted.backend.domain.notice.application.port.InstructorCoursePort;
+import com.wanted.backend.domain.notice.application.result.NoticeDetailResult;
+import com.wanted.backend.domain.notice.application.result.NoticeItemResult;
+import com.wanted.backend.domain.notice.application.result.NoticeListResult;
 import com.wanted.backend.domain.notice.application.usecase.NoticeQueryUseCase;
 import com.wanted.backend.domain.notice.domain.model.Notice;
 import com.wanted.backend.domain.notice.domain.repository.NoticeRepository;
-import com.wanted.backend.domain.notice.presentation.response.NoticeDetailResponse;
-import com.wanted.backend.domain.notice.presentation.response.NoticeItemResponse;
-import com.wanted.backend.domain.notice.presentation.response.NoticeListResponse;
-import com.wanted.backend.domain.notification.domain.repository.NotificationRepository; // 읽음 여부 확인을 위해 추가
+import com.wanted.backend.domain.notification.domain.repository.NotificationRepository;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import org.springframework.data.domain.Page;
@@ -32,7 +32,7 @@ public class NoticeQueryService implements NoticeQueryUseCase {
     private final CourseInfoPort courseInfoPort;
     private final InstructorCoursePort instructorCoursePort;
     private final EnrolledCoursePort enrolledCoursePort;
-    private final NotificationRepository notificationRepository; // 읽음 여부 확인을 위해 추가
+    private final NotificationRepository notificationRepository;
 
     public NoticeQueryService(NoticeRepository noticeRepository,
                               CourseInfoPort courseInfoPort,
@@ -43,15 +43,14 @@ public class NoticeQueryService implements NoticeQueryUseCase {
         this.courseInfoPort = courseInfoPort;
         this.instructorCoursePort = instructorCoursePort;
         this.enrolledCoursePort = enrolledCoursePort;
-        this.notificationRepository = notificationRepository; // 읽음 여부 확인을 위해 추가
+        this.notificationRepository = notificationRepository;
     }
 
     @Override
-    public NoticeListResponse getList(GetNoticeListCommand command) {
+    public NoticeListResult getList(GetNoticeListCommand command) {
 
         Pageable pageable = PageRequest.of(
-                command.page(),
-                command.size(),
+                command.page(), command.size(),
                 Sort.by(Sort.Order.desc("isPinned"), Sort.Order.desc("createdAt"))
         );
 
@@ -74,12 +73,10 @@ public class NoticeQueryService implements NoticeQueryUseCase {
                     noticePage = noticeRepository.findCourseNotices(
                             command.courseId(), command.keyword() != null ? command.keyword() : "", pageable);
                 }
-
             } else if ("INSTRUCTOR".equals(role)) {
                 List<Long> myCourseIds = instructorCoursePort.getCourseIdsByInstructorId(command.memberId());
                 noticePage = noticeRepository.findCourseNoticesByIds(
                         myCourseIds, command.keyword() != null ? command.keyword() : "", pageable);
-
             } else {
                 List<Long> enrolledIds = enrolledCoursePort.getEnrolledCourseIdsByMemberId(command.memberId());
                 noticePage = noticeRepository.findCourseNoticesByIds(
@@ -94,15 +91,12 @@ public class NoticeQueryService implements NoticeQueryUseCase {
                 .map(Notice::getId)
                 .toList();
 
-        // 빈 페이지면 불필요한 쿼리 없이 바로 반환
         if (noticeIds.isEmpty()) {
-            return new NoticeListResponse(List.of(), noticePage.getTotalPages());
+            return new NoticeListResult(List.of(), noticePage.getTotalPages());
         }
 
-        // N+1 방지를 위해 페이지 내 공지 ID를 배치로 조회하여 읽음 목록 확보
         List<Long> readIds = notificationRepository.findReadNoticeIds(command.memberId(), noticeIds);
 
-        // 코스명 배치 조회 — finalCourseName이 null인 경우(INSTRUCTOR/수강생/courseId 없는 ADMIN)에만
         final String finalCourseName = courseName;
         Map<Long, String> courseNameMap = Map.of();
         if ("COURSE".equals(command.type()) && finalCourseName == null) {
@@ -115,7 +109,7 @@ public class NoticeQueryService implements NoticeQueryUseCase {
         }
 
         final Map<Long, String> finalCourseNameMap = courseNameMap;
-        List<NoticeItemResponse> content = noticePage.getContent().stream()
+        List<NoticeItemResult> content = noticePage.getContent().stream()
                 .map(notice -> {
                     String name = finalCourseName != null
                             ? finalCourseName
@@ -123,55 +117,35 @@ public class NoticeQueryService implements NoticeQueryUseCase {
                             ? finalCourseNameMap.get(notice.getCourseId())
                             : null;
                     boolean isRead = readIds.contains(notice.getId());
-                    return toItemResponse(notice, name, isRead);
+                    return new NoticeItemResult(
+                            notice.getId(), notice.getType(), name,
+                            notice.getTitle(), notice.isPinned(), isRead, notice.getCreatedAt());
                 })
                 .toList();
 
-        return new NoticeListResponse(content, noticePage.getTotalPages());
+        return new NoticeListResult(content, noticePage.getTotalPages());
     }
 
     @Override
-    public NoticeDetailResponse getDetail(Long noticeId, Long memberId) {
+    public NoticeDetailResult getDetail(Long noticeId, Long memberId) {
 
         Notice notice = noticeRepository.findById(noticeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOTICE_NOT_FOUND));
 
-        // 비로그인 접근 방어 및 단건 읽음 여부 확인
         boolean isRead = notificationRepository.isNoticeRead(memberId, noticeId);
 
         String courseName = "COURSE".equals(notice.getType())
                 ? courseInfoPort.getCourseNameByCourseId(notice.getCourseId())
                 : null;
 
-        NoticeDetailResponse.PreviousNotice previousNotice = noticeRepository
+        NoticeDetailResult.PreviousNoticeResult previousNotice = noticeRepository
                 .findPreviousNotice(noticeId, notice.getType(), notice.getCourseId())
-                .map(prev -> new NoticeDetailResponse.PreviousNotice(prev.getId(), prev.getTitle()))
+                .map(prev -> new NoticeDetailResult.PreviousNoticeResult(prev.getId(), prev.getTitle()))
                 .orElse(null);
 
-        return new NoticeDetailResponse(
-                notice.getId(),
-                notice.getType(),
-                courseName,
-                notice.getTitle(),
-                notice.getContent(),
-                notice.isPinned(),
-                isRead,
-                notice.getCreatedAt(),
-                previousNotice
-        );
+        return new NoticeDetailResult(
+                notice.getId(), notice.getType(), courseName, notice.getTitle(),
+                notice.getContent(), notice.isPinned(), isRead, notice.getCreatedAt(),
+                previousNotice);
     }
-
-    // isRead 파라미터 추가로 하드코딩 제거
-    private NoticeItemResponse toItemResponse(Notice notice, String courseName, boolean isRead) {
-        return new NoticeItemResponse(
-                notice.getId(),
-                notice.getType(),
-                courseName,
-                notice.getTitle(),
-                notice.isPinned(),
-                isRead,
-                notice.getCreatedAt()
-        );
-    }
-
 }
