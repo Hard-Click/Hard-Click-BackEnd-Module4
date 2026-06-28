@@ -22,18 +22,19 @@ public record UnifiedBoardItemResponse(
         LocalDateTime createdAt
 ) {
     public static UnifiedBoardItemResponse fromPost(PostItemResponse post) {
-        return new UnifiedBoardItemResponse(
-                "POST", post.postId(), null, post.boardType().name(),
-                post.title(), post.authorName(), post.viewCount(), post.commentCount(),
-                null, null, null, null, post.createdAt()
-        );
+        return fromFields("POST", post.postId(), post.boardType().name(),
+                post.title(), post.authorName(), post.viewCount(), post.commentCount(), post.createdAt());
     }
 
     public static UnifiedBoardItemResponse fromPostItem(PostItemResult result) {
+        return fromFields("POST", result.postId(), result.boardType().name(),
+                result.title(), result.authorName(), result.viewCount(), result.commentCount(), result.createdAt());
+    }
+
+    private static UnifiedBoardItemResponse fromFields(String type, Long postId, String boardType,
+                                                       String title, String authorName, Integer viewCount, Integer commentCount, LocalDateTime createdAt) {
         return new UnifiedBoardItemResponse(
-                "POST", result.postId(), null, result.boardType().name(),
-                result.title(), result.authorName(), result.viewCount(), result.commentCount(),
-                null, null, null, null, result.createdAt()
-        );
+                type, postId, null, boardType, title, authorName,
+                viewCount, commentCount, null, null, null, null, createdAt);
     }
 }

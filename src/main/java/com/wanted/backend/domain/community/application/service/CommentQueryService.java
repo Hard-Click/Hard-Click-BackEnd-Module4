@@ -41,7 +41,7 @@ public class CommentQueryService implements CommentQueryUseCase {
                 .map(comment -> toResult(comment, memberId, isAdmin))
                 .toList();
 
-        return new CommentListResult(comments.size(), comments);
+        return new CommentListResult(commentRepository.countByPostId(postId), comments);
     }
 
     private CommentResult toResult(Comment comment, Long currentMemberId, boolean isAdmin) {
