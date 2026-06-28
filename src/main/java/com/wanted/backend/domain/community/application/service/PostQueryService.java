@@ -3,15 +3,15 @@ package com.wanted.backend.domain.community.application.service;
 import com.wanted.backend.domain.community.application.policy.CommunityAccessPolicy;
 import com.wanted.backend.domain.community.application.port.CommunityFileStoragePort;
 import com.wanted.backend.domain.community.application.port.MemberNamePort;
+import com.wanted.backend.domain.community.application.result.PostDetailResult;
+import com.wanted.backend.domain.community.application.result.PostItemResult;
+import com.wanted.backend.domain.community.application.result.PostListResult;
 import com.wanted.backend.domain.community.application.usecase.PostQueryUseCase;
 import com.wanted.backend.domain.community.domain.model.*;
 import com.wanted.backend.domain.community.domain.repository.CommentRepository;
 import com.wanted.backend.domain.community.domain.repository.PostFileRepository;
 import com.wanted.backend.domain.community.domain.repository.PostRepository;
 import com.wanted.backend.domain.community.domain.repository.ViewLogRepository;
-import com.wanted.backend.domain.community.presentation.response.PostDetailResponse;
-import com.wanted.backend.domain.community.presentation.response.PostItemResponse;
-import com.wanted.backend.domain.community.presentation.response.PostListResponse;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -21,8 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
-
 
 @Service
 @Transactional(readOnly = true)
@@ -43,8 +41,10 @@ public class PostQueryService implements PostQueryUseCase {
     public PostQueryService(PostRepository postRepository,
                             PostFileRepository postFileRepository,
                             ViewLogRepository viewLogRepository,
-                            MemberNamePort memberNamePort, CommentRepository commentRepository,
-                            CommunityFileStoragePort fileStoragePort, MeterRegistry meterRegistry,
+                            MemberNamePort memberNamePort,
+                            CommentRepository commentRepository,
+                            CommunityFileStoragePort fileStoragePort,
+                            MeterRegistry meterRegistry,
                             CommunityAccessPolicy communityAccessPolicy) {
         this.postRepository = postRepository;
         this.postFileRepository = postFileRepository;
@@ -57,8 +57,8 @@ public class PostQueryService implements PostQueryUseCase {
     }
 
     @Override
-    public PostListResponse getList(BoardType boardType, PostSortType sort,
-                                    String keyword, int page, boolean isAdmin, Long memberId) {
+    public PostListResult getList(BoardType boardType, PostSortType sort,
+                                  String keyword, int page, boolean isAdmin, Long memberId) {
         communityAccessPolicy.validateAccessIfLoggedIn(memberId);
 
         List<Post> posts = boardType != null
@@ -69,21 +69,19 @@ public class PostQueryService implements PostQueryUseCase {
                 ? postRepository.countByBoardType(boardType, keyword)
                 : postRepository.countAll(keyword);
 
-        List<PostItemResponse> items = posts.stream()
-                .map(post -> toItemResponse(post, isAdmin))
+        List<PostItemResult> items = posts.stream()
+                .map(post -> toItemResult(post, isAdmin))
                 .toList();
 
-        return new PostListResponse(
-                items,
-                page,
+        return new PostListResult(
+                items, page,
                 (int) Math.ceil((double) totalCount / PAGE_SIZE),
-                totalCount
-        );
+                totalCount);
     }
 
     @Override
     @Transactional
-    public PostDetailResponse getDetail(Long postId, Long memberId, boolean isAdmin) {
+    public PostDetailResult getDetail(Long postId, Long memberId, boolean isAdmin) {
         communityAccessPolicy.validateAccessIfLoggedIn(memberId);
 
         Post post = postRepository.findById(postId)
@@ -93,7 +91,6 @@ public class PostQueryService implements PostQueryUseCase {
             throw new BusinessException(ErrorCode.POST_NOT_FOUND);
         }
 
-        // memberId가 null이면 조회수 트래킹 스킵
         if (memberId != null) {
             LocalDateTime thirtyMinutesAgo = LocalDateTime.now().minusMinutes(30);
 
@@ -120,13 +117,12 @@ public class PostQueryService implements PostQueryUseCase {
 
         List<String> fileUrls = post.isAdminDeleted()
                 ? List.of()
-                : postFileRepository.findByPostId(postId)
-                .stream()
+                : postFileRepository.findByPostId(postId).stream()
                 .map(PostFile::getFileUrl)
                 .map(fileStoragePort::presignUrl)
                 .toList();
 
-        return new PostDetailResponse(
+        return new PostDetailResult(
                 post.getId(),
                 post.getBoardType(),
                 post.isAdminDeleted() ? ADMIN_DELETED_MESSAGE : post.getTitle(),
@@ -134,25 +130,18 @@ public class PostQueryService implements PostQueryUseCase {
                 post.getCreatedAt(),
                 post.getViewCount(),
                 post.isAdminDeleted() ? ADMIN_DELETED_MESSAGE : post.getContent(),
-                post.isOwner(memberId),   // Post 도메인 모델에 위임
+                post.isOwner(memberId),
                 post.isAccepted(),
                 fileUrls,
-                post.getSubject()
-        );
+                post.getSubject());
     }
 
-    private PostItemResponse toItemResponse(Post post, boolean isAdmin) {
+    private PostItemResult toItemResult(Post post, boolean isAdmin) {
         String name = memberNamePort.getNameByMemberId(post.getAuthorId());
         String displayName = isAdmin ? name : Review.maskName(name);
         int commentCount = commentRepository.countByPostId(post.getId());
-        return new PostItemResponse(
-                post.getId(),
-                post.getBoardType(),
-                post.getTitle(),
-                Review.maskName(name),
-                post.getCreatedAt(),
-                post.getViewCount(),
-                commentCount
-        );
+        return new PostItemResult(
+                post.getId(), post.getBoardType(), post.getTitle(),
+                displayName, post.getCreatedAt(), post.getViewCount(), commentCount);
     }
 }

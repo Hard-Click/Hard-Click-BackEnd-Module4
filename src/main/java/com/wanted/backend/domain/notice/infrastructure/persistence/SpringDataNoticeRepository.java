@@ -32,4 +32,5 @@ public interface SpringDataNoticeRepository
     // INSTRUCTOR/STUDENT용 - 특정 강의 ID 목록으로 조회
     Page<NoticeJpaEntity> findByCourseIdInAndTypeAndTitleContaining(
             List<Long> courseIds, String type, String keyword, Pageable pageable);
+
 }

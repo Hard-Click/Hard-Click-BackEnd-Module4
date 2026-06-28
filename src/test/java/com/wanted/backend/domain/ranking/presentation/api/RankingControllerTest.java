@@ -114,8 +114,8 @@ class RankingControllerTest {
                         "daily",
                         2L,
                         List.of(
-                                new GetStudyTimeRankingUseCase.StudyTimeRankingItem(1L, 1L, 7200L),
-                                new GetStudyTimeRankingUseCase.StudyTimeRankingItem(2L, 2L, 3600L)
+                                new GetStudyTimeRankingUseCase.StudyTimeRankingItem(1L, 1L, "김지훈", 7200L, 7),
+                                new GetStudyTimeRankingUseCase.StudyTimeRankingItem(2L, 2L, "이서연", 3600L, 3)
                         )
                 ));
 
@@ -128,10 +128,14 @@ class RankingControllerTest {
                 .andExpect(jsonPath("$.data.totalUsers").value(2))
                 .andExpect(jsonPath("$.data.rankings[0].rank").value(1))
                 .andExpect(jsonPath("$.data.rankings[0].memberId").value(1))
+                .andExpect(jsonPath("$.data.rankings[0].memberName").value("김지훈"))
                 .andExpect(jsonPath("$.data.rankings[0].studySeconds").value(7200))
+                .andExpect(jsonPath("$.data.rankings[0].currentStreakDays").value(7))
                 .andExpect(jsonPath("$.data.rankings[1].rank").value(2))
                 .andExpect(jsonPath("$.data.rankings[1].memberId").value(2))
-                .andExpect(jsonPath("$.data.rankings[1].studySeconds").value(3600));
+                .andExpect(jsonPath("$.data.rankings[1].memberName").value("이서연"))
+                .andExpect(jsonPath("$.data.rankings[1].studySeconds").value(3600))
+                .andExpect(jsonPath("$.data.rankings[1].currentStreakDays").value(3));
     }
 
     @Test
@@ -179,8 +183,8 @@ class RankingControllerTest {
                         "daily",
                         2L,
                         List.of(
-                                new GetLessonRankingUseCase.LessonRankingItem(1L, 1L, 12L),
-                                new GetLessonRankingUseCase.LessonRankingItem(2L, 2L, 8L)
+                                new GetLessonRankingUseCase.LessonRankingItem(1L, 1L, "김지훈", 12L, 7),
+                                new GetLessonRankingUseCase.LessonRankingItem(2L, 2L, "이서연", 8L, 3)
                         )
                 ));
 
@@ -193,10 +197,14 @@ class RankingControllerTest {
                 .andExpect(jsonPath("$.data.totalUsers").value(2))
                 .andExpect(jsonPath("$.data.rankings[0].rank").value(1))
                 .andExpect(jsonPath("$.data.rankings[0].memberId").value(1))
+                .andExpect(jsonPath("$.data.rankings[0].memberName").value("김지훈"))
                 .andExpect(jsonPath("$.data.rankings[0].watchedLessonCount").value(12))
+                .andExpect(jsonPath("$.data.rankings[0].currentStreakDays").value(7))
                 .andExpect(jsonPath("$.data.rankings[1].rank").value(2))
                 .andExpect(jsonPath("$.data.rankings[1].memberId").value(2))
-                .andExpect(jsonPath("$.data.rankings[1].watchedLessonCount").value(8));
+                .andExpect(jsonPath("$.data.rankings[1].memberName").value("이서연"))
+                .andExpect(jsonPath("$.data.rankings[1].watchedLessonCount").value(8))
+                .andExpect(jsonPath("$.data.rankings[1].currentStreakDays").value(3));
     }
 
     @Test
@@ -244,8 +252,8 @@ class RankingControllerTest {
                         "daily",
                         2L,
                         List.of(
-                                new GetAcceptedCommentRankingUseCase.AcceptedCommentRankingItem(1L, 1L, 7L),
-                                new GetAcceptedCommentRankingUseCase.AcceptedCommentRankingItem(2L, 2L, 4L)
+                                new GetAcceptedCommentRankingUseCase.AcceptedCommentRankingItem(1L, 1L, "김지훈", 7L, 7),
+                                new GetAcceptedCommentRankingUseCase.AcceptedCommentRankingItem(2L, 2L, "이서연", 4L, 3)
                         )
                 ));
 
@@ -258,10 +266,14 @@ class RankingControllerTest {
                 .andExpect(jsonPath("$.data.totalUsers").value(2))
                 .andExpect(jsonPath("$.data.rankings[0].rank").value(1))
                 .andExpect(jsonPath("$.data.rankings[0].memberId").value(1))
+                .andExpect(jsonPath("$.data.rankings[0].memberName").value("김지훈"))
                 .andExpect(jsonPath("$.data.rankings[0].acceptedCommentCount").value(7))
+                .andExpect(jsonPath("$.data.rankings[0].currentStreakDays").value(7))
                 .andExpect(jsonPath("$.data.rankings[1].rank").value(2))
                 .andExpect(jsonPath("$.data.rankings[1].memberId").value(2))
-                .andExpect(jsonPath("$.data.rankings[1].acceptedCommentCount").value(4));
+                .andExpect(jsonPath("$.data.rankings[1].memberName").value("이서연"))
+                .andExpect(jsonPath("$.data.rankings[1].acceptedCommentCount").value(4))
+                .andExpect(jsonPath("$.data.rankings[1].currentStreakDays").value(3));
     }
 
     @Test

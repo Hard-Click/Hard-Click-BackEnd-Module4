@@ -7,7 +7,11 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "notification")
+@Table(name = "notification",
+        indexes = @Index(
+                name = "idx_notification_receiver_read_url",
+                columnList = "receiver_id, is_read, redirect_url"
+        ))
 @Getter
 public class NotificationJpaEntity {
 

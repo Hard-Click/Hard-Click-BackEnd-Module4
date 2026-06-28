@@ -6,5 +6,5 @@ public interface OrderCourseQueryPort {
 
     List<CourseInfo> findAllByIds(List<Long> courseIds);
 
-    record CourseInfo(Long courseId, String title, int price) {}
+    record CourseInfo(Long courseId, String title, int price, String thumbnailUrl) {}
 }

@@ -3,6 +3,8 @@ package com.wanted.backend.domain.community.presentation;
 import com.wanted.backend.domain.community.application.command.CreatePostCommand;
 import com.wanted.backend.domain.community.application.command.DeletePostCommand;
 import com.wanted.backend.domain.community.application.command.UpdatePostCommand;
+import com.wanted.backend.domain.community.application.result.PostDetailResult;
+import com.wanted.backend.domain.community.application.result.PostListResult;
 import com.wanted.backend.domain.community.application.usecase.PostCommandUseCase;
 import com.wanted.backend.domain.community.application.usecase.PostQueryUseCase;
 import com.wanted.backend.domain.community.domain.model.BoardType;
@@ -13,6 +15,7 @@ import com.wanted.backend.domain.community.presentation.response.*;
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +27,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@Tag(name = "Community Post", description = "커뮤니티 게시글 API")
 @RestController
 @RequestMapping("/api")
 public class PostController {
@@ -94,8 +98,8 @@ public class PostController {
             @RequestParam(defaultValue = "0") int page) {
 
         boolean isAdmin = "ADMIN".equals(userDetails.getRole());
-        PostListResponse response = postQueryUseCase.getList(boardType, sort, keyword, page, isAdmin, userDetails.getMemberId());
-        return ApiResponse.success("게시글 목록 조회 성공", response);
+        PostListResult result = postQueryUseCase.getList(boardType, sort, keyword, page, isAdmin, userDetails.getMemberId());
+        return ApiResponse.success("게시글 목록 조회 성공", PostListResponse.from(result));
     }
 
 
@@ -118,12 +122,12 @@ public class PostController {
             @RequestParam(defaultValue = "0") int page) {
 
         boolean isAdmin = "ADMIN".equals(userDetails.getRole());
-        PostListResponse postList = postQueryUseCase.getList(null, sort, keyword, page, isAdmin, userDetails.getMemberId());
+        PostListResult result = postQueryUseCase.getList(null, sort, keyword, page, isAdmin, userDetails.getMemberId());
         List<UnifiedBoardItemResponse> items = new ArrayList<>(
-                postList.posts().stream().map(UnifiedBoardItemResponse::fromPost).toList());
+                result.posts().stream().map(UnifiedBoardItemResponse::fromPostItem).toList());
         items.addAll(MOCK_STUDY_ITEMS);
         return ApiResponse.success("게시글 목록 조회 성공",
-                new UnifiedBoardListResponse(items, postList.currentPage(), postList.totalPages(), postList.totalCount()));
+                new UnifiedBoardListResponse(items, result.currentPage(), result.totalPages(), result.totalCount()));
     }
 
     @GetMapping("/posts/{postId}")
@@ -143,10 +147,8 @@ public class PostController {
             @PathVariable Long postId) {
 
         boolean isAdmin = "ADMIN".equals(userDetails.getRole());
-        PostDetailResponse response = postQueryUseCase.getDetail(
-                postId, userDetails.getMemberId(), isAdmin);
-
-        return ApiResponse.success("게시글 상세 조회 성공", response);
+        PostDetailResult result = postQueryUseCase.getDetail(postId, userDetails.getMemberId(), isAdmin);
+        return ApiResponse.success("게시글 상세 조회 성공", PostDetailResponse.from(result));
     }
 
 
@@ -184,17 +186,20 @@ public class PostController {
     @Operation(
             summary = "게시글 삭제",
             description = """
-                본인이 작성한 게시글을 삭제합니다.
-                - 로그인한 회원만 삭제할 수 있습니다.
-                - 본인이 작성한 게시글인지 검증 후 삭제합니다.
-                """
+            게시글을 삭제합니다.
+            - 로그인한 회원만 삭제할 수 있습니다.
+            - 본인이 작성한 게시글인지 검증 후 삭제합니다.
+            - ADMIN은 모든 게시글을 삭제할 수 있습니다.
+            """
     )
     public ResponseEntity<ApiResponse<Void>> deletePost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long postId) {
 
         postCommandUseCase.delete(new DeletePostCommand(
-                userDetails.getMemberId(), postId));
+                userDetails.getMemberId(),
+                postId,
+                "ADMIN".equals(userDetails.getRole())));
 
         return ApiResponse.successNoContent("게시글이 삭제되었습니다.");
     }

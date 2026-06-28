@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -86,6 +87,13 @@ public class PostCommandService implements PostCommandUseCase {
 
         Post post = postRepository.findById(command.postId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
+
+        if (command.isAdmin()) {
+            // 관리자는 소유권 검증 없이 소프트 삭제 (ADMIN_DELETED 상태로 변경)
+            post.softDeleteByAdmin(LocalDateTime.now());
+            postRepository.save(post);
+            return;
+        }
 
         post.validateDeletable(command.memberId());
 

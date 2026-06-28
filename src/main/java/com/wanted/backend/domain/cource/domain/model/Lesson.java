@@ -10,6 +10,7 @@ public class Lesson {
     private String description;
     private int orderIndex;
     private String videoUrl;
+    private String s3Key;
     private Integer durationSeconds;
     private FileProcessingStatus fileProcessingStatus;
     private Instant createdAt;
@@ -29,7 +30,7 @@ public class Lesson {
     }
 
     public static Lesson restore(Long id, Long sectionId, String title, String description,
-                                 int orderIndex, String videoUrl, Integer durationSeconds,
+                                 int orderIndex, String videoUrl, String s3Key, Integer durationSeconds,
                                  FileProcessingStatus fileProcessingStatus, Instant createdAt) {
         Lesson lesson = new Lesson();
         lesson.id = id;
@@ -38,6 +39,7 @@ public class Lesson {
         lesson.description = description;
         lesson.orderIndex = orderIndex;
         lesson.videoUrl = videoUrl;
+        lesson.s3Key = s3Key;
         lesson.durationSeconds = durationSeconds;
         lesson.fileProcessingStatus = fileProcessingStatus;
         lesson.createdAt = createdAt;
@@ -45,8 +47,9 @@ public class Lesson {
     }
 
     // 영상 파일 첨부 + PENDING 상태로 전이
-    public void attachVideo(String videoUrl) {
+    public void attachVideo(String videoUrl, String s3Key) {
         this.videoUrl = videoUrl;
+        this.s3Key = s3Key;
         this.fileProcessingStatus = FileProcessingStatus.PENDING;
     }
 
@@ -71,6 +74,7 @@ public class Lesson {
     public String getDescription() { return description; }
     public int getOrderIndex() { return orderIndex; }
     public String getVideoUrl() { return videoUrl; }
+    public String getS3Key() { return s3Key; }
     public Integer getDurationSeconds() { return durationSeconds; }
     public FileProcessingStatus getFileProcessingStatus() { return fileProcessingStatus; }
     public Instant getCreatedAt() { return createdAt; }

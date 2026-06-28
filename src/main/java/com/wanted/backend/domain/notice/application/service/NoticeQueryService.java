@@ -3,12 +3,14 @@ package com.wanted.backend.domain.notice.application.service;
 import com.wanted.backend.domain.notice.application.command.GetNoticeListCommand;
 import com.wanted.backend.domain.notice.application.port.CourseInfoPort;
 import com.wanted.backend.domain.notice.application.port.EnrolledCoursePort;
+import com.wanted.backend.domain.notice.application.port.InstructorCoursePort;
+import com.wanted.backend.domain.notice.application.result.NoticeDetailResult;
+import com.wanted.backend.domain.notice.application.result.NoticeItemResult;
+import com.wanted.backend.domain.notice.application.result.NoticeListResult;
 import com.wanted.backend.domain.notice.application.usecase.NoticeQueryUseCase;
 import com.wanted.backend.domain.notice.domain.model.Notice;
 import com.wanted.backend.domain.notice.domain.repository.NoticeRepository;
-import com.wanted.backend.domain.notice.presentation.response.NoticeDetailResponse;
-import com.wanted.backend.domain.notice.presentation.response.NoticeItemResponse;
-import com.wanted.backend.domain.notice.presentation.response.NoticeListResponse;
+import com.wanted.backend.domain.notification.domain.repository.NotificationRepository;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import org.springframework.data.domain.Page;
@@ -19,6 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @Service
 @Transactional(readOnly = true)
@@ -26,22 +30,27 @@ public class NoticeQueryService implements NoticeQueryUseCase {
 
     private final NoticeRepository noticeRepository;
     private final CourseInfoPort courseInfoPort;
+    private final InstructorCoursePort instructorCoursePort;
     private final EnrolledCoursePort enrolledCoursePort;
+    private final NotificationRepository notificationRepository;
 
     public NoticeQueryService(NoticeRepository noticeRepository,
                               CourseInfoPort courseInfoPort,
-                              EnrolledCoursePort enrolledCoursePort) {
+                              InstructorCoursePort instructorCoursePort,
+                              EnrolledCoursePort enrolledCoursePort,
+                              NotificationRepository notificationRepository) {
         this.noticeRepository = noticeRepository;
         this.courseInfoPort = courseInfoPort;
+        this.instructorCoursePort = instructorCoursePort;
         this.enrolledCoursePort = enrolledCoursePort;
+        this.notificationRepository = notificationRepository;
     }
 
     @Override
-    public NoticeListResponse getList(GetNoticeListCommand command) {
+    public NoticeListResult getList(GetNoticeListCommand command) {
 
         Pageable pageable = PageRequest.of(
-                command.page(),
-                command.size(),
+                command.page(), command.size(),
                 Sort.by(Sort.Order.desc("isPinned"), Sort.Order.desc("createdAt"))
         );
 
@@ -53,84 +62,90 @@ public class NoticeQueryService implements NoticeQueryUseCase {
                     command.keyword() != null ? command.keyword() : "", pageable);
 
         } else if ("COURSE".equals(command.type())) {
-            if (command.courseId() == null) {
-                throw new BusinessException(ErrorCode.COURSE_ID_REQUIRED);
-            }
-
             String role = command.role();
 
-            if ("ADMIN".equals(role) || "INSTRUCTOR".equals(role)) {
-                // 강사는 본인 강의뿐 아니라 다른 강사의 강의 상세에서도 공지를 조회할 수 있어야 한다(학생과 동일하게 공개 정보).
-                noticePage = noticeRepository.findCourseNotices(
-                        command.courseId(),
-                        command.keyword() != null ? command.keyword() : "", pageable);
-
+            if ("ADMIN".equals(role)) {
+                if (command.courseId() == null) {
+                    noticePage = noticeRepository.findAllCourseNotices(
+                            command.keyword() != null ? command.keyword() : "", pageable);
+                } else {
+                    courseName = courseInfoPort.getCourseNameByCourseId(command.courseId());
+                    noticePage = noticeRepository.findCourseNotices(
+                            command.courseId(), command.keyword() != null ? command.keyword() : "", pageable);
+                }
+            } else if ("INSTRUCTOR".equals(role)) {
+                List<Long> myCourseIds = instructorCoursePort.getCourseIdsByInstructorId(command.memberId());
+                noticePage = noticeRepository.findCourseNoticesByIds(
+                        myCourseIds, command.keyword() != null ? command.keyword() : "", pageable);
             } else {
                 List<Long> enrolledIds = enrolledCoursePort.getEnrolledCourseIdsByMemberId(command.memberId());
-                if (!enrolledIds.contains(command.courseId())) {
-                    throw new BusinessException(ErrorCode.NOTICE_NOT_AUTHORIZED);
-                }
-                noticePage = noticeRepository.findCourseNotices(
-                        command.courseId(),
-                        command.keyword() != null ? command.keyword() : "", pageable);
+                noticePage = noticeRepository.findCourseNoticesByIds(
+                        enrolledIds, command.keyword() != null ? command.keyword() : "", pageable);
             }
-
-            courseName = courseInfoPort.getCourseNameByCourseId(command.courseId());
 
         } else {
             throw new BusinessException(ErrorCode.INVALID_NOTICE_TYPE);
         }
 
-        String finalCourseName = courseName;
-        List<NoticeItemResponse> content = noticePage.getContent()
-                .stream()
-                .map(notice -> toItemResponse(notice, finalCourseName))
+        List<Long> noticeIds = noticePage.getContent().stream()
+                .map(Notice::getId)
                 .toList();
 
-        return new NoticeListResponse(content, noticePage.getTotalPages());
+        if (noticeIds.isEmpty()) {
+            return new NoticeListResult(List.of(), noticePage.getTotalPages());
+        }
+
+        List<Long> readIds = notificationRepository.findReadNoticeIds(command.memberId(), noticeIds);
+
+        final String finalCourseName = courseName;
+        Map<Long, String> courseNameMap = Map.of();
+        if ("COURSE".equals(command.type()) && finalCourseName == null) {
+            List<Long> courseIds = noticePage.getContent().stream()
+                    .map(Notice::getCourseId)
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .toList();
+            courseNameMap = courseInfoPort.getCourseNamesByCourseIds(courseIds);
+        }
+
+        final Map<Long, String> finalCourseNameMap = courseNameMap;
+        List<NoticeItemResult> content = noticePage.getContent().stream()
+                .map(notice -> {
+                    String name = finalCourseName != null
+                            ? finalCourseName
+                            : notice.getCourseId() != null
+                            ? finalCourseNameMap.get(notice.getCourseId())
+                            : null;
+                    boolean isRead = readIds.contains(notice.getId());
+                    return new NoticeItemResult(
+                            notice.getId(), notice.getType(), name,
+                            notice.getTitle(), notice.isPinned(), isRead, notice.getCreatedAt());
+                })
+                .toList();
+
+        return new NoticeListResult(content, noticePage.getTotalPages());
     }
 
     @Override
-    public NoticeDetailResponse getDetail(Long noticeId) {
+    public NoticeDetailResult getDetail(Long noticeId, Long memberId) {
 
-        // 공지 존재 여부 확인
         Notice notice = noticeRepository.findById(noticeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOTICE_NOT_FOUND));
 
-        // 강의명 조회 (COURSE 타입일 때만)
+        boolean isRead = notificationRepository.isNoticeRead(memberId, noticeId);
+
         String courseName = "COURSE".equals(notice.getType())
                 ? courseInfoPort.getCourseNameByCourseId(notice.getCourseId())
                 : null;
 
-        // 이전 공지 조회
-        NoticeDetailResponse.PreviousNotice previousNotice = noticeRepository
+        NoticeDetailResult.PreviousNoticeResult previousNotice = noticeRepository
                 .findPreviousNotice(noticeId, notice.getType(), notice.getCourseId())
-                .map(prev -> new NoticeDetailResponse.PreviousNotice(
-                        prev.getId(), prev.getTitle()))
+                .map(prev -> new NoticeDetailResult.PreviousNoticeResult(prev.getId(), prev.getTitle()))
                 .orElse(null);
 
-        return new NoticeDetailResponse(
-                notice.getId(),
-                notice.getType(),
-                courseName,
-                notice.getTitle(),
-                notice.getContent(),
-                notice.isPinned(),
-                false,  // isRead: 추후 구현
-                notice.getCreatedAt(),
-                previousNotice
-        );
-    }
-
-    private NoticeItemResponse toItemResponse(Notice notice, String courseName) {
-        return new NoticeItemResponse(
-                notice.getId(),
-                notice.getType(),
-                courseName,
-                notice.getTitle(),
-                notice.isPinned(),
-                false,  // isRead: 추후 구현
-                notice.getCreatedAt()
-        );
+        return new NoticeDetailResult(
+                notice.getId(), notice.getType(), courseName, notice.getTitle(),
+                notice.getContent(), notice.isPinned(), isRead, notice.getCreatedAt(),
+                previousNotice);
     }
 }

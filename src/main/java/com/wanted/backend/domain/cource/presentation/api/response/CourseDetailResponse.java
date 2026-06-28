@@ -101,6 +101,9 @@ public record CourseDetailResponse(
             @Schema(description = "레슨 ID", example = "1")
             Long lessonId,
 
+            @Schema(description = "재생/진도 API에 사용하는 영상 ID (lessonId와 동일)", example = "1")
+            Long videoId,
+
             @Schema(description = "레슨 제목", example = "OT 및 학습 방향")
             String title,
 
@@ -129,6 +132,7 @@ public record CourseDetailResponse(
                         s.orderIndex(),
                         s.lessons().stream()
                                 .map(l -> new LessonResponse(
+                                        l.lessonId(),
                                         l.lessonId(),
                                         l.title(),
                                         l.description(),

@@ -33,6 +33,9 @@ public class SubscriptionJpaEntity {
     @Column(name = "member_id", nullable = false)
     private Long memberId;
 
+    @Column(name = "order_id")
+    private Long orderId;
+
     /**
      * 활성 구독에 한해 memberId를 보관하고, 취소/만료 시 NULL로 비운다.
      * NULL은 유니크 제약에서 제외되므로(MySQL) "회원당 활성 구독 1건"을 DB 레벨에서 강제한다.
@@ -64,10 +67,11 @@ public class SubscriptionJpaEntity {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    public SubscriptionJpaEntity(Long memberId, Long planId, String paymentMethod, Integer paidAmount,
+    public SubscriptionJpaEntity(Long memberId, Long orderId, Long planId, String paymentMethod, Integer paidAmount,
                                   String status, LocalDateTime startedAt, LocalDateTime expiredAt,
                                   LocalDateTime createdAt) {
         this.memberId = memberId;
+        this.orderId = orderId;
         this.activeMemberId = "ACTIVE".equals(status) ? memberId : null;
         this.planId = planId;
         this.paymentMethod = paymentMethod;

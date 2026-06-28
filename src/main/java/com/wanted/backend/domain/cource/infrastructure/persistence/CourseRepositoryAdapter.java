@@ -96,6 +96,31 @@ public class CourseRepositoryAdapter implements CourseRepository {
     }
 
     @Override
+    public List<CourseListItem> findAllForSort(String keyword, String subject, List<Long> authorIds) {
+        Specification<CourseJpaEntity> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("status"), CourseStatus.PUBLISHED));
+            if (keyword != null && !keyword.isBlank()) {
+                predicates.add(cb.like(cb.lower(root.get("title")), "%" + keyword.toLowerCase() + "%"));
+            }
+            if (subject != null && !subject.isBlank()) {
+                predicates.add(cb.equal(root.get("subject"), subject));
+            }
+            if (authorIds != null && !authorIds.isEmpty()) {
+                predicates.add(root.get("authorId").in(authorIds));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return jpaRepository.findAll(spec).stream()
+                .map(e -> new CourseListItem(
+                        e.getId(), e.getAuthorId(), e.getTitle(), e.getSubject(),
+                        e.getThumbnailUrl(), e.getPriceType(), e.getPrice(),
+                        e.getStatus(), e.getCreatedAt()))
+                .toList();
+    }
+
+    @Override
     public PageResult<CourseListItem> findByAuthor(Long authorId, int page, int size) {
         Specification<CourseJpaEntity> spec = (root, query, cb) ->
                 cb.equal(root.get("authorId"), authorId);
@@ -216,7 +241,7 @@ public class CourseRepositoryAdapter implements CourseRepository {
                             .map(l -> Lesson.restore(
                                     l.getId(), sectionEntity.getId(),
                                     l.getTitle(), l.getDescription(), l.getOrderIndex(),
-                                    l.getVideoUrl(), l.getDurationSeconds(),
+                                    l.getVideoUrl(), l.getS3Key(), l.getDurationSeconds(),
                                     l.getFileProcessingStatus(), l.getCreatedAt()))
                             .toList();
                     return CourseSection.restore(

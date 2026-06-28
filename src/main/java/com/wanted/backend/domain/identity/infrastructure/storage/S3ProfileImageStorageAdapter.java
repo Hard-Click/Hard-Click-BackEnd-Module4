@@ -48,13 +48,6 @@ public class S3ProfileImageStorageAdapter implements ProfileImageStoragePort {
         String key = "profiles/" + UUID.randomUUID() + "." + extension;
 
         try {
-
-            log.error("========== S3 Upload Start ==========");
-            log.error("bucket={}", bucket);
-            log.error("key={}", key);
-            log.error("contentType={}", file.getContentType());
-            log.error("size={}", file.getSize());
-
             s3Client.putObject(
                     PutObjectRequest.builder()
                             .bucket(bucket)
@@ -65,26 +58,16 @@ public class S3ProfileImageStorageAdapter implements ProfileImageStoragePort {
                     RequestBody.fromInputStream(file.getInputStream(), file.getSize())
             );
 
-            log.error("========== S3 Upload Success ==========");
-
         } catch (S3Exception e) {
-
-            log.error("========== S3 Upload Failed ==========");
-            log.error("status={}", e.statusCode());
-
-            if (e.awsErrorDetails() != null) {
-                log.error("errorCode={}", e.awsErrorDetails().errorCode());
-                log.error("errorMessage={}", e.awsErrorDetails().errorMessage());
-            }
-
-            log.error("requestId={}", e.requestId(), e);
-
-            throw e;
+            log.error("S3 upload failed: status={}, errorCode={}, message={}, requestId={}",
+                    e.statusCode(),
+                    e.awsErrorDetails() != null ? e.awsErrorDetails().errorCode() : "N/A",
+                    e.awsErrorDetails() != null ? e.awsErrorDetails().errorMessage() : "N/A",
+                    e.requestId(), e);
+            throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED, e);
 
         } catch (IOException e) {
-
             log.error("IOException during S3 upload", e);
-
             throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED, e);
         }
 

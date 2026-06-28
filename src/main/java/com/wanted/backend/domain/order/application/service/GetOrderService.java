@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.order.application.service;
 
 import com.wanted.backend.domain.order.application.dto.OrderDetailResult;
+import com.wanted.backend.domain.order.application.port.OrderCourseQueryPort;
 import com.wanted.backend.domain.order.application.port.OrderEnrollmentStatusPort;
 import com.wanted.backend.domain.order.application.usecase.GetOrderUseCase;
 import com.wanted.backend.domain.order.domain.model.Order;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,9 +25,11 @@ public class GetOrderService implements GetOrderUseCase {
 
     private final OrderRepository orderRepository;
     private final OrderEnrollmentStatusPort orderEnrollmentStatusPort;
+    private final OrderCourseQueryPort orderCourseQueryPort;
 
     @Override
     public OrderDetailResult getOrder(Long memberId, Long orderId) {
+
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
@@ -37,28 +41,62 @@ public class GetOrderService implements GetOrderUseCase {
                 .map(OrderItem::getCourseId)
                 .filter(java.util.Objects::nonNull)
                 .toList();
+
         Map<Long, String> enrollStatuses = courseIds.isEmpty()
                 ? Map.of()
                 : orderEnrollmentStatusPort.findEnrollStatuses(memberId, courseIds);
 
-        boolean orderPaid = order.getStatus() == OrderStatus.PAID
-                || order.getStatus() == OrderStatus.PARTIAL_REFUNDED;
+        Map<Long, String> thumbnailByCourseId = courseIds.isEmpty()
+                ? Map.of()
+                : orderCourseQueryPort.findAllByIds(courseIds).stream()
+                        .collect(Collectors.toMap(OrderCourseQueryPort.CourseInfo::courseId,
+                                info -> info.thumbnailUrl() != null ? info.thumbnailUrl() : "",
+                                (a, b) -> a));
+
+        boolean orderPaid =
+                order.getStatus() == OrderStatus.PAID
+                        || order.getStatus() == OrderStatus.PARTIAL_REFUNDED;
 
         List<OrderDetailResult.Item> items = order.getItems().stream()
                 .map(item -> {
-                    boolean refundable = orderPaid && !item.isRefunded();
-                    int refundAmount = item.isRefunded() ? 0 : item.getPrice();
-                    String enrollStatus = item.getCourseId() == null
-                            ? null
-                            : enrollStatuses.getOrDefault(item.getCourseId(), "NONE");
+
+                    boolean refundable =
+                            orderPaid && !item.isRefunded();
+
+                    int refundAmount =
+                            item.isRefunded() ? 0 : item.getPrice();
+
+                    String enrollStatus =
+                            item.getCourseId() == null
+                                    ? null
+                                    : enrollStatuses.getOrDefault(item.getCourseId(), "NONE");
+
+                    String thumbnailUrl =
+                            item.getCourseId() == null
+                                    ? null
+                                    : thumbnailByCourseId.getOrDefault(item.getCourseId(), null);
+
                     return new OrderDetailResult.Item(
-                            item.getCourseId(), item.getTitle(), item.getPrice(),
-                            refundable, refundAmount, enrollStatus);
+                            item.getCourseId(),
+                            item.getTitle(),
+                            thumbnailUrl,
+                            item.getPrice(),
+                            refundable,
+                            refundAmount,
+                            item.isRefunded(),
+                            enrollStatus
+                    );
                 })
                 .toList();
 
         return new OrderDetailResult(
-                order.getOrderNo(), order.getStatus(), order.getType(),
-                order.getOrderedAt(), order.getPaidAt(), items, order.getTotalAmount());
+                order.getOrderNo(),
+                order.getStatus(),
+                order.getType(),
+                order.getOrderedAt(),
+                order.getPaidAt(),
+                items,
+                order.getTotalAmount()
+        );
     }
 }

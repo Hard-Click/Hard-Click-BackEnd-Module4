@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.cource.presentation.api;
 
 import com.wanted.backend.domain.cource.application.command.ChangeCourseStatusCommand;
+import com.wanted.backend.domain.cource.application.command.UploadCourseThumbnailCommand;
 import com.wanted.backend.domain.cource.application.command.UploadLessonVideoCommand;
 import com.wanted.backend.domain.cource.application.dto.CourseDetailResult;
 import com.wanted.backend.domain.cource.application.dto.CourseListResult;
@@ -14,6 +15,7 @@ import com.wanted.backend.domain.cource.presentation.api.request.UpdateCourseReq
 import com.wanted.backend.domain.cource.presentation.api.response.CourseDetailResponse;
 import com.wanted.backend.domain.cource.presentation.api.response.CourseListResponse;
 import com.wanted.backend.domain.cource.presentation.api.response.CreateCourseResponse;
+import com.wanted.backend.domain.cource.presentation.api.response.UploadCourseThumbnailResponse;
 import com.wanted.backend.domain.cource.presentation.api.response.UploadLessonVideoResponse;
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
@@ -101,6 +103,21 @@ public class CourseController {
         courseCommandUseCase.changeStatus(new ChangeCourseStatusCommand(courseId, userDetails.getMemberId(), targetStatus));
         String message = published ? "강의가 공개되었습니다." : "강의가 비공개 처리되었습니다.";
         return ApiResponse.successNoContent(message);
+    }
+
+    @PostMapping(value = "/{courseId}/thumbnail", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "강의 썸네일 업로드", description = "강의 ID에 해당하는 썸네일 이미지를 S3에 업로드합니다. jpg, jpeg, png 허용. INSTRUCTOR 권한 필요.")
+    public ResponseEntity<ApiResponse<UploadCourseThumbnailResponse>> uploadCourseThumbnail(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "강의 ID", example = "1") @PathVariable Long courseId,
+            @RequestPart("file") MultipartFile file
+    ) throws IOException {
+        String thumbnailUrl = courseCommandUseCase.uploadCourseThumbnail(
+                new UploadCourseThumbnailCommand(courseId, userDetails.getMemberId(),
+                        file.getOriginalFilename(), file.getBytes())
+        );
+        return ApiResponse.success("썸네일이 업로드되었습니다.",
+                new UploadCourseThumbnailResponse(courseId, thumbnailUrl));
     }
 
     @PostMapping(value = "/lessons/{lessonId}/video", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

@@ -15,12 +15,16 @@ public record OrderDetailResult(
         List<Item> items,
         int totalAmount
 ) {
+
     public record Item(
             Long courseId,
             String title,
+            String thumbnailUrl,
             int price,
             boolean refundable,
             int refundAmount,
+            boolean refunded,
             String enrollStatus
-    ) {}
+    ) {
+    }
 }

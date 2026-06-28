@@ -8,9 +8,11 @@ import com.wanted.backend.domain.study_timer.domain.repository.StudyTimerSession
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -50,8 +52,9 @@ public class StartStudyTimerSessionService implements StartStudyTimerSessionUseC
         } finally {
             try {
                 metricRecorder.recordResult(ACTION, errorCode);
-            } catch (RuntimeException ignored) {
+            } catch (RuntimeException e) {
                 // metric failure must not affect the business transaction
+                log.warn("study timer metric record failed: action={}, errorCode={}", ACTION, errorCode, e);
             }
         }
     }

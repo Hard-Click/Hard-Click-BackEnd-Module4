@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.IOException;
 import java.util.List;
@@ -53,6 +54,13 @@ public class S3CommunityFileStorageAdapter implements CommunityFileStoragePort {
                             .build(),
                     RequestBody.fromInputStream(file.getInputStream(), file.getSize())
             );
+        } catch (S3Exception e) {
+            log.error("S3 upload failed: status={}, errorCode={}, message={}, requestId={}",
+                    e.statusCode(),
+                    e.awsErrorDetails() != null ? e.awsErrorDetails().errorCode() : "N/A",
+                    e.awsErrorDetails() != null ? e.awsErrorDetails().errorMessage() : "N/A",
+                    e.requestId(), e);
+            throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED, e);
         } catch (IOException e) {
             throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED, e);
         }

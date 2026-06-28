@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.community.presentation.response;
 
+import com.wanted.backend.domain.community.application.result.PostListResult;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
@@ -17,4 +18,10 @@ public record PostListResponse(
 
         @Schema(description = "전체 게시글 수", example = "48")
         int totalCount
-) {}
+) {
+        public static PostListResponse from(PostListResult result) {
+                return new PostListResponse(
+                        result.posts().stream().map(PostItemResponse::from).toList(),
+                        result.currentPage(), result.totalPages(), result.totalCount());
+        }
+}

@@ -1,8 +1,7 @@
 package com.wanted.backend.domain.community.application.usecase;
 
-import com.wanted.backend.domain.community.presentation.response.CommentListResponse;
-
+import com.wanted.backend.domain.community.application.result.CommentListResult;
 
 public interface CommentQueryUseCase {
-    CommentListResponse getComments(Long postId, Long memberId, boolean isAdmin);
+    CommentListResult getComments(Long postId, Long memberId, boolean isAdmin);
 }

@@ -2,6 +2,7 @@ package com.wanted.backend.domain.order.application.service;
 
 import com.wanted.backend.domain.enrollment_management.application.command.EnrollCommand;
 import com.wanted.backend.domain.enrollment_management.application.usecase.EnrollUseCase;
+import com.wanted.backend.domain.order.application.port.OrderCartDeletePort;
 import com.wanted.backend.domain.order.application.usecase.ConfirmOrderPaymentUseCase;
 import com.wanted.backend.domain.order.domain.model.Order;
 import com.wanted.backend.domain.order.domain.model.OrderItem;
@@ -49,6 +50,7 @@ public class ConfirmOrderPaymentService implements ConfirmOrderPaymentUseCase {
     private final PgClient pgClient;
     private final EnrollUseCase enrollUseCase;
     private final SubscribeUseCase subscribeUseCase;
+    private final OrderCartDeletePort orderCartDeletePort;
     private final StringRedisTemplate redisTemplate;
     private final MeterRegistry meterRegistry;
     private final Clock clock;
@@ -132,11 +134,17 @@ public class ConfirmOrderPaymentService implements ConfirmOrderPaymentUseCase {
     private void dispatchAccessGrant(Order order) {
         try {
             if (order.getType() == OrderType.SUBSCRIPTION) {
-                subscribeUseCase.handle(order.getMemberId());
+                subscribeUseCase.handle(order.getMemberId(), order.getId(), order.getFinalAmount());
+                orderCartDeletePort.deleteAllByMemberId(order.getMemberId());
             } else {
+                List<Long> purchasedCourseIds = order.getItems().stream()
+                        .map(OrderItem::getCourseId)
+                        .filter(java.util.Objects::nonNull)
+                        .toList();
                 for (OrderItem item : order.getItems()) {
                     grantEnrollment(order.getMemberId(), item.getCourseId());
                 }
+                orderCartDeletePort.deleteByMemberIdAndCourseIds(order.getMemberId(), purchasedCourseIds);
             }
         } catch (RuntimeException e) {
             log.error("[ACCESS_GRANT_FAILED] 결제는 완료됐지만 수강권/구독권 지급 실패 — orderNo: {}, type: {}",

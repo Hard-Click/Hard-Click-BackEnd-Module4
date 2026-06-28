@@ -22,6 +22,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -86,6 +87,31 @@ class ResumeStudyTimerSessionServiceTest {
         assertThat(captor.getValue().id()).isEqualTo(55L);
         assertThat(captor.getValue().status()).isEqualTo(StudyTimerSessionStatus.RUNNING);
         assertThat(captor.getValue().startedAt()).isEqualTo(startedAt.plusSeconds(50));
+        assertThat(result.sessionId()).isEqualTo(55L);
+        assertThat(result.status()).isEqualTo("RUNNING");
+        assertThat(result.accumulatedStudySeconds()).isEqualTo(200);
+        assertThat(result.resumedAt()).isEqualTo(resumedAt);
+        verify(metricRecorder).recordResult(StudyTimerAction.RESUME, null);
+    }
+
+    @Test
+    void businessResultIsUnaffectedWhenMetricRecordingFails() {
+        OffsetDateTime startedAt = OffsetDateTime.parse("2026-05-11T15:00:00+09:00");
+        OffsetDateTime pausedAt = OffsetDateTime.parse("2026-05-11T15:03:20+09:00");
+        OffsetDateTime resumedAt = OffsetDateTime.parse("2026-05-11T15:04:10+09:00");
+        when(repository.findById(55L)).thenReturn(Optional.of(new StudyTimerSession(
+                55L, 1L, null, null, startedAt, null, 200, StudyTimerSessionStatus.PAUSED, pausedAt
+        )));
+        when(repository.save(any(StudyTimerSession.class)))
+                .thenReturn(new StudyTimerSession(
+                        55L, 1L, null, null, startedAt.plusSeconds(50), null, 200, StudyTimerSessionStatus.RUNNING
+                ));
+        doThrow(new RuntimeException("metric registry down"))
+                .when(metricRecorder).recordResult(StudyTimerAction.RESUME, null);
+
+        ResumeStudyTimerSessionUseCase.StudyTimerSessionResumeView result =
+                service.handle(new ResumeStudyTimerSessionCommand(1L, 55L, resumedAt));
+
         assertThat(result.sessionId()).isEqualTo(55L);
         assertThat(result.status()).isEqualTo("RUNNING");
         assertThat(result.accumulatedStudySeconds()).isEqualTo(200);

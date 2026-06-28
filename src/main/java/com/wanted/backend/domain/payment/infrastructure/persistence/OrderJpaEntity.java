@@ -12,6 +12,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Immutable;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @Immutable
@@ -32,4 +34,13 @@ public class OrderJpaEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_type", nullable = false)
     private PaymentType paymentType;
+
+    @Column(name = "status", nullable = false)
+    private String status;
+
+    @Column(name = "final_amount", nullable = false)
+    private Integer finalAmount;
+
+    @Column(name = "paid_at")
+    private LocalDateTime paidAt;
 }

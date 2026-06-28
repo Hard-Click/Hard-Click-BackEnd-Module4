@@ -1,10 +1,10 @@
 package com.wanted.backend.domain.notice.application.usecase;
 
 import com.wanted.backend.domain.notice.application.command.GetNoticeListCommand;
-import com.wanted.backend.domain.notice.presentation.response.NoticeDetailResponse;
-import com.wanted.backend.domain.notice.presentation.response.NoticeListResponse;
+import com.wanted.backend.domain.notice.application.result.NoticeDetailResult;
+import com.wanted.backend.domain.notice.application.result.NoticeListResult;
 
 public interface NoticeQueryUseCase {
-    NoticeListResponse getList(GetNoticeListCommand command);
-    NoticeDetailResponse getDetail(Long noticeId);
+    NoticeListResult getList(GetNoticeListCommand command);
+    NoticeDetailResult getDetail(Long noticeId, Long memberId);
 }

@@ -85,6 +85,12 @@ public class NoticeRepositoryAdapter implements NoticeRepository {
     }
 
     @Override
+    public Page<Notice> findAllCourseNotices(String keyword, Pageable pageable) {
+        return repository.findByTypeAndTitleContaining("COURSE", keyword, pageable)
+                .map(this::toDomain);
+    }
+
+    @Override
     public Page<Notice> findCourseNoticesByIds(List<Long> courseIds, String keyword, Pageable pageable) {
         return repository.findByCourseIdInAndTypeAndTitleContaining(
                         courseIds, "COURSE", keyword, pageable)

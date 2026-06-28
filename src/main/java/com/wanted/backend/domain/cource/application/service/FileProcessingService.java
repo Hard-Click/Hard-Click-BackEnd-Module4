@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -50,10 +51,8 @@ public class FileProcessingService {
         Thread.sleep(2000); // 실제 처리 시뮬레이션 (FFmpeg, AWS MediaConvert 등)
     }
 
-    /**
-     * 상태 전이 - 각 호출이 독립 트랜잭션으로 커밋되어 즉시 반영됨
-     */
-    private void updateStatus(Long lessonId, String status) {
+    @Transactional
+    void updateStatus(Long lessonId, String status) {
         Lesson lesson = lessonRepository.findById(lessonId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
         switch (status) {

@@ -4,6 +4,7 @@ import com.wanted.backend.domain.community.application.command.AcceptCommentComm
 import com.wanted.backend.domain.community.application.command.CreateCommentCommand;
 import com.wanted.backend.domain.community.application.command.DeleteCommentCommand;
 import com.wanted.backend.domain.community.application.command.UpdateCommentCommand;
+import com.wanted.backend.domain.community.application.result.CommentListResult;
 import com.wanted.backend.domain.community.application.usecase.CommentCommandUseCase;
 import com.wanted.backend.domain.community.application.usecase.CommentQueryUseCase;
 import com.wanted.backend.domain.community.presentation.request.CreateCommentRequest;
@@ -14,6 +15,7 @@ import com.wanted.backend.domain.community.presentation.response.UpdateCommentRe
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 
+@Tag(name = "Community Comment", description = "커뮤니티 댓글 API")
 @RestController
 @RequestMapping("/api")
 public class CommentController {
@@ -91,23 +94,21 @@ public class CommentController {
     @Operation(
             summary = "댓글 목록 조회",
             description = """
-            게시글의 댓글 목록을 조회합니다.
-            - 로그인한 회원만 조회 가능합니다.
-            - 댓글에 대댓글이 있을 경우 replies 필드에 중첩하여 반환합니다.
-            - 본인이 작성한 댓글은 isMine: true로 표시됩니다.
-            - 채택된 댓글은 isAccepted: true로 표시됩니다.
-            - 삭제된 댓글은 isDeleted: true로 표시됩니다.
-            """
+        게시글의 댓글 목록을 조회합니다.
+        - 로그인한 회원만 조회 가능합니다.
+        - 댓글에 대댓글이 있을 경우 replies 필드에 중첩하여 반환합니다.
+        - 본인이 작성한 댓글은 isMine: true로 표시됩니다.
+        - 채택된 댓글은 isAccepted: true로 표시됩니다.
+        - 삭제된 댓글은 isDeleted: true로 표시됩니다.
+        """
     )
     public ResponseEntity<ApiResponse<CommentListResponse>> getComments(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long postId) {
 
         boolean isAdmin = "ADMIN".equals(userDetails.getRole());
-        CommentListResponse response = commentQueryUseCase.getComments(
-                postId, userDetails.getMemberId(), isAdmin);
-
-        return ApiResponse.success("댓글 목록 조회 성공", response);
+        CommentListResult result = commentQueryUseCase.getComments(postId, userDetails.getMemberId(), isAdmin);
+        return ApiResponse.success("댓글 목록 조회 성공", CommentListResponse.from(result));
     }
 
     @PatchMapping(value = "/comments/{commentId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -144,13 +145,14 @@ public class CommentController {
     @Operation(
             summary = "댓글 삭제",
             description = """
-                본인이 작성한 댓글을 삭제합니다.
-                - 로그인한 회원만 삭제할 수 있습니다.
-                - 본인이 작성한 댓글인지 검증 후 삭제합니다.
-                - 채택된 댓글은 삭제할 수 없습니다.
-                - 대댓글이 존재하는 댓글은 즉시 삭제되지 않고 삭제 상태로 표시됩니다.
-                - 대댓글이 없는 댓글은 즉시 삭제됩니다.
-                """
+            댓글을 삭제합니다.
+            - 로그인한 회원만 삭제할 수 있습니다.
+            - 본인이 작성한 댓글인지 검증 후 삭제합니다.
+            - 채택된 댓글은 삭제할 수 없습니다.
+            - 대댓글이 존재하는 댓글은 즉시 삭제되지 않고 삭제 상태로 표시됩니다.
+            - 대댓글이 없는 댓글은 즉시 삭제됩니다.
+            - ADMIN은 모든 댓글을 삭제할 수 있습니다.
+            """
     )
     public ResponseEntity<ApiResponse<Void>> deleteComment(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -158,8 +160,8 @@ public class CommentController {
 
         commentCommandUseCase.delete(new DeleteCommentCommand(
                 userDetails.getMemberId(),
-                commentId
-        ));
+                commentId,
+                "ADMIN".equals(userDetails.getRole())));
 
         return ApiResponse.successNoContent("댓글이 삭제되었습니다.");
     }

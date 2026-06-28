@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.notice.presentation.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.wanted.backend.domain.notice.application.result.NoticeDetailResult;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
@@ -19,14 +20,14 @@ public record NoticeDetailResponse(
         @Schema(description = "공지사항 제목", example = "3주차 강의 업로드 안내")
         String title,
 
-        @Schema(description = "공지사항 내용", example = "3주차 강의가 업로드되었습니다. 수강 후 질문은 게시판을 이용해 주세요.")
+        @Schema(description = "공지사항 내용", example = "3주차 강의가 업로드되었습니다.")
         String content,
 
         @Schema(description = "상단 고정 여부", example = "false")
         boolean isPinned,
 
-        @Schema(description = "읽음 여부 (추후 구현 예정)", example = "false")
-        boolean isRead,         // 추후 구현 예정
+        @Schema(description = "읽음 여부", example = "false")
+        boolean isRead,
 
         @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss+09:00")
         @Schema(description = "작성일시", example = "2025-03-15T14:30:00")
@@ -36,13 +37,19 @@ public record NoticeDetailResponse(
         PreviousNotice previousNotice
 ) {
     public record PreviousNotice(
-
             @Schema(description = "이전 공지사항 ID", example = "4")
             Long noticeId,
-
             @Schema(description = "이전 공지사항 제목", example = "2주차 강의 업로드 안내")
             String title
-    ) {
+    ) {}
 
+    public static NoticeDetailResponse from(NoticeDetailResult result) {
+        PreviousNotice prev = result.previousNotice() != null
+                ? new PreviousNotice(result.previousNotice().noticeId(), result.previousNotice().title())
+                : null;
+        return new NoticeDetailResponse(
+                result.noticeId(), result.noticeType(), result.courseName(),
+                result.title(), result.content(), result.isPinned(),
+                result.isRead(), result.createdAt(), prev);
     }
 }

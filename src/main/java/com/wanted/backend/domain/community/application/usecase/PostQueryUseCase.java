@@ -1,9 +1,9 @@
 package com.wanted.backend.domain.community.application.usecase;
 
+import com.wanted.backend.domain.community.application.result.PostDetailResult;
+import com.wanted.backend.domain.community.application.result.PostListResult;
 import com.wanted.backend.domain.community.domain.model.BoardType;
 import com.wanted.backend.domain.community.domain.model.PostSortType;
-import com.wanted.backend.domain.community.presentation.response.PostDetailResponse;
-import com.wanted.backend.domain.community.presentation.response.PostListResponse;
 
 public interface PostQueryUseCase {
 
