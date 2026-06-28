@@ -1,4 +1,4 @@
-ackage com.wanted.backend.domain.wishlist.presentation;
+package com.wanted.backend.domain.wishlist.presentation;
 
 import com.wanted.backend.domain.wishlist.application.usecase.AddWishlistItemUseCase;
 import com.wanted.backend.domain.wishlist.application.usecase.GetWishlistUseCase;

@@ -1,4 +1,4 @@
-ackage com.wanted.backend.domain.order.presentation;
+package com.wanted.backend.domain.order.presentation;
 
 import com.wanted.backend.domain.order.application.usecase.CheckoutUseCase;
 import com.wanted.backend.domain.order.application.usecase.GetOrderUseCase;

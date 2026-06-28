@@ -1,4 +1,4 @@
-ackage com.wanted.backend.domain.identity.presentation.api;
+package com.wanted.backend.domain.identity.presentation.api;
 
 import com.wanted.backend.domain.identity.application.usecase.EmailVerificationUseCase;
 import com.wanted.backend.domain.identity.domain.model.EmailPurpose;

@@ -1,4 +1,4 @@
-ackage com.wanted.backend.domain.payment.presentation;
+package com.wanted.backend.domain.payment.presentation;
 
 import com.wanted.backend.domain.payment.application.usecase.GetMyPaymentHistoryUseCase;
 import com.wanted.backend.domain.payment.presentation.response.MyPaymentHistoryPageResponse;

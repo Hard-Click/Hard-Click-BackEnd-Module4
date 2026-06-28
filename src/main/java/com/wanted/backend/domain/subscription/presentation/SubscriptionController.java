@@ -1,4 +1,4 @@
-ackage com.wanted.backend.domain.subscription.presentation;
+package com.wanted.backend.domain.subscription.presentation;
 
 import com.wanted.backend.domain.subscription.application.usecase.CancelSubscriptionUseCase;
 import com.wanted.backend.domain.subscription.application.usecase.GetMySubscriptionUseCase;

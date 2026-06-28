@@ -1,4 +1,4 @@
-ackage com.wanted.backend.domain.community.presentation;
+package com.wanted.backend.domain.community.presentation;
 
 import com.wanted.backend.domain.community.presentation.request.CreateStudyRequest;
 import com.wanted.backend.domain.community.presentation.response.CreateStudyResponse;

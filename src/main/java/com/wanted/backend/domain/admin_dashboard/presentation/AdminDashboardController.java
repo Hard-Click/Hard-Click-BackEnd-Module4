@@ -1,4 +1,4 @@
-ackage com.wanted.backend.domain.admin_dashboard.presentation;
+package com.wanted.backend.domain.admin_dashboard.presentation;
 
 import com.wanted.backend.domain.admin_dashboard.application.dto.AdminDashboardResult;
 import com.wanted.backend.domain.admin_dashboard.application.usecase.GetAdminDashboardUseCase;

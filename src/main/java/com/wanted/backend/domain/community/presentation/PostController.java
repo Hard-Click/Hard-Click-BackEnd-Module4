@@ -1,4 +1,4 @@
-ackage com.wanted.backend.domain.community.presentation;
+package com.wanted.backend.domain.community.presentation;
 
 import com.wanted.backend.domain.community.application.command.CreatePostCommand;
 import com.wanted.backend.domain.community.application.command.DeletePostCommand;

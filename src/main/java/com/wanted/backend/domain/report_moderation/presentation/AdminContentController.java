@@ -1,4 +1,4 @@
-ackage com.wanted.backend.domain.report_moderation.presentation;
+package com.wanted.backend.domain.report_moderation.presentation;
 
 import com.wanted.backend.domain.community.domain.model.TargetType;
 import com.wanted.backend.domain.report_moderation.application.dto.AdminContentResult;
