@@ -1,4 +1,4 @@
-﻿package com.wanted.backend.domain.study_timer.presentation.api;
+ackage com.wanted.backend.domain.study_timer.presentation.api;
 
 import com.wanted.backend.domain.study_timer.application.command.EndStudyTimerSessionCommand;
 import com.wanted.backend.domain.study_timer.application.command.PauseStudyTimerSessionCommand;

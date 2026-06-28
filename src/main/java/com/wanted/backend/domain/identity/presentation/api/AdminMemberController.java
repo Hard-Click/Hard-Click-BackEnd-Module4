@@ -1,4 +1,4 @@
-﻿package com.wanted.backend.domain.identity.presentation.api;
+ackage com.wanted.backend.domain.identity.presentation.api;
 
 import com.wanted.backend.domain.identity.application.command.ChangeMemberStatusCommand;
 import com.wanted.backend.domain.identity.application.dto.AdminMemberListResult;

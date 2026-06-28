@@ -1,4 +1,4 @@
-﻿package com.wanted.backend.domain.ranking.presentation.api;
+ackage com.wanted.backend.domain.ranking.presentation.api;
 
 import com.wanted.backend.domain.ranking.application.query.GetAcceptedCommentRankingQuery;
 import com.wanted.backend.domain.ranking.application.query.GetLessonRankingQuery;
