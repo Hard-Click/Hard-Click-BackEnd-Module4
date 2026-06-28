@@ -2,6 +2,7 @@ package com.wanted.backend.domain.study_timer.presentation.api;
 
 import com.wanted.backend.domain.study_timer.application.query.GetDailyStudyTimeQuery;
 import com.wanted.backend.domain.study_timer.application.usecase.GetDailyStudyTimeUseCase;
+import com.wanted.backend.domain.study_timer.presentation.api.response.DailyStudyTimeResponse;
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -32,7 +34,7 @@ public class StudyTimerStatsController {
             summary = "일별 순공시간 조회",
             description = "현재 로그인 사용자의 기간별 일별 순공시간 합계를 조회합니다."
     )
-    public ResponseEntity<ApiResponse<List<GetDailyStudyTimeUseCase.DailyStudyTimeItem>>> daily(
+    public ResponseEntity<ApiResponse<List<DailyStudyTimeResponse>>> daily(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Parameter(description = "조회 시작 날짜(yyyy-MM-dd)", example = "2026-05-01")
             @RequestParam
@@ -50,6 +52,9 @@ public class StudyTimerStatsController {
                         endDate
                 ));
 
-        return ApiResponse.success("일별 순공시간을 조회했습니다.", result);
+        return ApiResponse.success(
+                "일별 순공시간을 조회했습니다.",
+                result.stream().map(DailyStudyTimeResponse::from).collect(Collectors.toList())
+        );
     }
 }

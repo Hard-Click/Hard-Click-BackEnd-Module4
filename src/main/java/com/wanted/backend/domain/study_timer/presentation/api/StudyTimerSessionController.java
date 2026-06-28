@@ -17,6 +17,12 @@ import com.wanted.backend.domain.study_timer.presentation.api.request.PauseStudy
 import com.wanted.backend.domain.study_timer.presentation.api.request.ResumeStudyTimerSessionRequest;
 import com.wanted.backend.domain.study_timer.presentation.api.request.SaveStudyTimerHeartbeatRequest;
 import com.wanted.backend.domain.study_timer.presentation.api.request.StartStudyTimerSessionRequest;
+import com.wanted.backend.domain.study_timer.presentation.api.response.CurrentStudyTimerSessionResponse;
+import com.wanted.backend.domain.study_timer.presentation.api.response.StudyTimerHeartbeatResponse;
+import com.wanted.backend.domain.study_timer.presentation.api.response.StudyTimerSessionEndResponse;
+import com.wanted.backend.domain.study_timer.presentation.api.response.StudyTimerSessionPauseResponse;
+import com.wanted.backend.domain.study_timer.presentation.api.response.StudyTimerSessionResumeResponse;
+import com.wanted.backend.domain.study_timer.presentation.api.response.StudyTimerSessionStartResponse;
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
@@ -55,7 +61,7 @@ public class StudyTimerSessionController {
             summary = "실행 중 순공시간 세션 조회",
             description = "현재 로그인 사용자의 실행 중인 순공시간 세션을 조회합니다. 실행 중인 세션이 없으면 data는 null입니다."
     )
-    public ResponseEntity<ApiResponse<GetCurrentStudyTimerSessionUseCase.CurrentStudyTimerSessionView>> current(
+    public ResponseEntity<ApiResponse<CurrentStudyTimerSessionResponse>> current(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         GetCurrentStudyTimerSessionUseCase.CurrentStudyTimerSessionView result =
@@ -63,7 +69,10 @@ public class StudyTimerSessionController {
                         userDetails.getMemberId()
                 ));
 
-        return ApiResponse.success("실행 중인 순공시간 세션을 조회했습니다.", result);
+        return ApiResponse.success(
+                "실행 중인 순공시간 세션을 조회했습니다.",
+                CurrentStudyTimerSessionResponse.from(result)
+        );
     }
 
     @PostMapping
@@ -71,7 +80,7 @@ public class StudyTimerSessionController {
             summary = "순공시간 세션 시작",
             description = "순공시간 측정을 시작하고 실행 중인 세션 정보를 반환합니다."
     )
-    public ResponseEntity<ApiResponse<StartStudyTimerSessionUseCase.StudyTimerSessionStartView>> start(
+    public ResponseEntity<ApiResponse<StudyTimerSessionStartResponse>> start(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody StartStudyTimerSessionRequest request
     ) {
@@ -81,7 +90,10 @@ public class StudyTimerSessionController {
                         request.startedAt()
                 ));
 
-        return ApiResponse.success("순공시간 측정을 시작했습니다.", result);
+        return ApiResponse.success(
+                "순공시간 측정을 시작했습니다.",
+                StudyTimerSessionStartResponse.from(result)
+        );
     }
 
     @PatchMapping("/{sessionId}/heartbeat")
@@ -89,7 +101,7 @@ public class StudyTimerSessionController {
             summary = "순공시간 하트비트 저장",
             description = "실행 중인 순공시간 세션의 중간 경과 시간을 저장합니다."
     )
-    public ResponseEntity<ApiResponse<SaveStudyTimerHeartbeatUseCase.StudyTimerHeartbeatView>> heartbeat(
+    public ResponseEntity<ApiResponse<StudyTimerHeartbeatResponse>> heartbeat(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Parameter(description = "하트비트를 저장할 세션 ID", example = "55")
             @Positive
@@ -103,7 +115,10 @@ public class StudyTimerSessionController {
                         request.heartbeatAt()
                 ));
 
-        return ApiResponse.success("순공시간 하트비트를 저장했습니다.", result);
+        return ApiResponse.success(
+                "순공시간 하트비트를 저장했습니다.",
+                StudyTimerHeartbeatResponse.from(result)
+        );
     }
 
     @PatchMapping("/{sessionId}/pause")
@@ -111,7 +126,7 @@ public class StudyTimerSessionController {
             summary = "순공시간 세션 일시정지",
             description = "실행 중인 순공시간 세션을 일시정지하고 누적 순공시간을 저장합니다."
     )
-    public ResponseEntity<ApiResponse<PauseStudyTimerSessionUseCase.StudyTimerSessionPauseView>> pause(
+    public ResponseEntity<ApiResponse<StudyTimerSessionPauseResponse>> pause(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Parameter(description = "일시정지할 세션 ID", example = "55")
             @Positive
@@ -125,7 +140,10 @@ public class StudyTimerSessionController {
                         request.pausedAt()
                 ));
 
-        return ApiResponse.success("순공시간 측정을 일시정지했습니다.", result);
+        return ApiResponse.success(
+                "순공시간 측정을 일시정지했습니다.",
+                StudyTimerSessionPauseResponse.from(result)
+        );
     }
 
     @PatchMapping("/{sessionId}/resume")
@@ -133,7 +151,7 @@ public class StudyTimerSessionController {
             summary = "순공시간 세션 재개",
             description = "일시정지된 순공시간 세션을 다시 실행 중 상태로 전환합니다."
     )
-    public ResponseEntity<ApiResponse<ResumeStudyTimerSessionUseCase.StudyTimerSessionResumeView>> resume(
+    public ResponseEntity<ApiResponse<StudyTimerSessionResumeResponse>> resume(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Parameter(description = "재개할 세션 ID", example = "55")
             @Positive
@@ -147,7 +165,10 @@ public class StudyTimerSessionController {
                         request.resumedAt()
                 ));
 
-        return ApiResponse.success("순공시간 측정을 재개했습니다.", result);
+        return ApiResponse.success(
+                "순공시간 측정을 재개했습니다.",
+                StudyTimerSessionResumeResponse.from(result)
+        );
     }
 
     @PatchMapping("/{sessionId}/end")
@@ -155,7 +176,7 @@ public class StudyTimerSessionController {
             summary = "순공시간 세션 종료",
             description = "실행 중인 순공시간 세션을 종료하고 최종 누적 순공시간을 저장합니다."
     )
-    public ResponseEntity<ApiResponse<EndStudyTimerSessionUseCase.StudyTimerSessionEndView>> end(
+    public ResponseEntity<ApiResponse<StudyTimerSessionEndResponse>> end(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Parameter(description = "종료할 세션 ID", example = "55")
             @Positive
@@ -169,6 +190,9 @@ public class StudyTimerSessionController {
                         request.endedAt()
                 ));
 
-        return ApiResponse.success("순공시간 측정을 종료했습니다.", result);
+        return ApiResponse.success(
+                "순공시간 측정을 종료했습니다.",
+                StudyTimerSessionEndResponse.from(result)
+        );
     }
 }
