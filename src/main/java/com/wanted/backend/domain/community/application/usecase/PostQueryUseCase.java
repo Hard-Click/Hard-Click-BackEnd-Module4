@@ -6,6 +6,8 @@ import com.wanted.backend.domain.community.domain.model.BoardType;
 import com.wanted.backend.domain.community.domain.model.PostSortType;
 
 public interface PostQueryUseCase {
-    PostListResult getList(BoardType boardType, PostSortType sort, String keyword, int page, boolean isAdmin);
+
+    // 게시글 목록 조회
+    PostListResult getList(BoardType boardType, PostSortType sort, String keyword, int page, boolean isAdmin, Long memberId);
     PostDetailResult getDetail(Long postId, Long memberId, boolean isAdmin);
 }

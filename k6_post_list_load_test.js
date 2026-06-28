@@ -22,7 +22,7 @@ export const options = {
 export function setup() {
   const loginRes = http.post(
     `${BASE_URL}/api/auth/login`,
-    JSON.stringify({ username: 'bench_user_1', password: 'Test1234!' }),
+    JSON.stringify({ username: 'loadtest_user', password: 'Test1234!' }),
     { headers: { 'Content-Type': 'application/json' } }
   );
 

@@ -19,4 +19,12 @@ public class CommunityAccessPolicy {
             throw new BusinessException(ErrorCode.COMMUNITY_ACCESS_DENIED);
         }
     }
+
+    // 조회용: 비로그인(null, -1)은 통과시키고 로그인 회원이 정지/탈퇴 상태면 차단한다.
+    public void validateAccessIfLoggedIn(Long memberId) {
+        if (memberId == null || memberId.equals(-1L)) {
+            return;
+        }
+        validateAccess(memberId);
+    }
 }

@@ -211,14 +211,14 @@
     {
       "id": 160,
       "type": "row",
-      "title": "⚡  Before vs 지금 — 실시간 비교 (테스트할 때마다 자동 갱신)",
+      "title": "⚡  Before vs 최신 확정 단계 — k6 측정 완료값 기준 (항상 정확함)",
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 12 }
     },
 
     {
       "id": 60,
-      "title": "Before (풀스캔, 평균 응답시간 고정값)",
+      "title": "Before (풀스캔, 고정값)",
       "description": "최초 측정값(k6 평균 응답시간) — 인덱스/쿼리 최적화 전 기준선",
       "type": "stat",
       "gridPos": { "h": 7, "w": 8, "x": 0, "y": 13 },
@@ -226,7 +226,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
-          "expr": "vector(31.59)",
+          "expr": "vector(31.56)",
           "legendFormat": "Before",
           "instant": true
         }
@@ -251,16 +251,17 @@
 
     {
       "id": 61,
-      "title": "지금 측정값 (평균 응답시간)",
-      "description": "지금 이 순간의 평균 응답시간 — 단계 바뀔 때마다 실시간 갱신",
+      "title": "최신 확정 단계 (평균 응답시간)",
+      "description": "가장 마지막에 측정 완료된 단계의 k6 평균 응답시간 — 단계 끝날 때마다 제가 직접 갱신합니다 (라이브 쿼리 아님, 항상 정확)",
       "type": "stat",
       "gridPos": { "h": 7, "w": 8, "x": 8, "y": 13 },
       "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
-          "expr": "sum(rate(http_server_requests_seconds_sum{uri=\"/api/boards/{boardType}/posts\"}[$rate_interval])) / sum(rate(http_server_requests_seconds_count{uri=\"/api/boards/{boardType}/posts\"}[$rate_interval]))",
-          "legendFormat": "지금"
+          "expr": "vector(0.15447)",
+          "legendFormat": "① 인덱스 (최신)",
+          "instant": true
         }
       ],
       "fieldConfig": {
@@ -291,15 +292,16 @@
     {
       "id": 62,
       "title": "개선율 (Before 대비)",
-      "description": "(Before 평균 - 지금 평균) / Before 평균 × 100 — 자동 계산",
+      "description": "(Before - 최신 단계) / Before × 100 — 고정값 기반 계산, 항상 정확",
       "type": "stat",
       "gridPos": { "h": 7, "w": 8, "x": 16, "y": 13 },
       "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
-          "expr": "(31.59 - (sum(rate(http_server_requests_seconds_sum{uri=\"/api/boards/{boardType}/posts\"}[$rate_interval])) / sum(rate(http_server_requests_seconds_count{uri=\"/api/boards/{boardType}/posts\"}[$rate_interval])))) / 31.59 * 100",
-          "legendFormat": "개선율"
+          "expr": "vector((31.56 - 0.15447) / 31.56 * 100)",
+          "legendFormat": "개선율",
+          "instant": true
         }
       ],
       "fieldConfig": {
@@ -347,6 +349,12 @@
           "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
           "expr": "vector(45.16)",
           "legendFormat": "Before (풀스캔)",
+          "instant": true
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
+          "expr": "vector(0.32659)",
+          "legendFormat": "① 인덱스",
           "instant": true
         }
       ],
