@@ -25,6 +25,8 @@ import org.springframework.http.HttpStatus;
     INVALID_LOGIN_INFO(HttpStatus.UNAUTHORIZED, "U003", "아이디 또는 비밀번호가 올바르지 않습니다."),
     ACCOUNT_LOCKED(HttpStatus.LOCKED, "U004", "비밀번호를 5회 연속 틀려 계정이 잠겼습니다."),
         ACCOUNT_NOT_LOCKED(HttpStatus.CONFLICT, "U017", "잠긴 계정이 아닙니다."),
+    SUSPENDED_MEMBER(HttpStatus.FORBIDDEN, "U015", "정지된 계정입니다."),
+    ACCOUNT_ALREADY_LOCKED(HttpStatus.FORBIDDEN, "U020", "이미 잠긴 계정입니다. 이메일 인증을 통해 잠금을 해제해주세요."),
     INSTRUCTOR_NOT_FOUND(HttpStatus.UNAUTHORIZED, "U005", "제공받은 계정 정보가 존재하지 않습니다."),
     DUPLICATE_USERNAME(HttpStatus.CONFLICT, "U006", "이미 사용 중인 아이디입니다."),
     FORBIDDEN_USERNAME(HttpStatus.BAD_REQUEST, "U007", "사용할 수 없는 아이디입니다."),
