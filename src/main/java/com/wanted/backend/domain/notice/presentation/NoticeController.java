@@ -1,6 +1,8 @@
 package com.wanted.backend.domain.notice.presentation;
 
 import com.wanted.backend.domain.notice.application.command.*;
+import com.wanted.backend.domain.notice.application.result.NoticeDetailResult;
+import com.wanted.backend.domain.notice.application.result.NoticeListResult;
 import com.wanted.backend.domain.notice.application.usecase.NoticeCommandUseCase;
 import com.wanted.backend.domain.notice.application.usecase.NoticeQueryUseCase;
 import com.wanted.backend.domain.notice.presentation.request.CreateGlobalNoticeRequest;
@@ -108,30 +110,29 @@ public class NoticeController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        NoticeListResponse response = noticeQueryUseCase.getList(
+        NoticeListResult result = noticeQueryUseCase.getList(
                 new GetNoticeListCommand(type, courseId, keyword, page, size,
                         userDetails.getMemberId(), userDetails.getRole()));
 
-        return ApiResponse.success("공지사항 목록 조회 성공", response);
+        return ApiResponse.success("공지사항 목록 조회 성공", NoticeListResponse.from(result));
     }
 
     @GetMapping("/notices/{noticeId}")
     @Operation(
             summary = "공지사항 상세 조회",
             description = """
-            공지사항 상세 내용을 조회합니다.
-            - 로그인한 회원만 조회 가능합니다.
-            - 이전 공지사항 ID와 제목을 함께 반환합니다.
-            """
+        공지사항 상세 내용을 조회합니다.
+        - 로그인한 회원만 조회 가능합니다.
+        - 이전 공지사항 ID와 제목을 함께 반환합니다.
+        """
     )
     public ResponseEntity<ApiResponse<NoticeDetailResponse>> getNotice(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long noticeId) {
 
-        Long memberId = userDetails.getMemberId();
-        NoticeDetailResponse response = noticeQueryUseCase.getDetail(noticeId, memberId);
+        NoticeDetailResult result = noticeQueryUseCase.getDetail(noticeId, userDetails.getMemberId());
 
-        return ApiResponse.success("공지사항 상세 조회 성공", response);
+        return ApiResponse.success("공지사항 상세 조회 성공", NoticeDetailResponse.from(result));
     }
 
     @PatchMapping("/notices/{noticeId}")

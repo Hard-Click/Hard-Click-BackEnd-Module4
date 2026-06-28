@@ -1,6 +1,8 @@
 package com.wanted.backend.domain.cource.application.service;
 
 import com.wanted.backend.domain.cource.application.command.UploadLessonVideoCommand;
+import com.wanted.backend.domain.cource.application.port.CourseVideoCatalogSyncPort;
+import com.wanted.backend.domain.cource.application.port.ThumbnailStoragePort;
 import com.wanted.backend.domain.cource.application.port.VideoStoragePort;
 import com.wanted.backend.domain.cource.domain.dto.CourseAuthorInfo;
 import com.wanted.backend.domain.cource.domain.model.CourseStatus;
@@ -41,22 +43,26 @@ class CourseCommandServiceTest {
         CourseRepository courseRepository = mock(CourseRepository.class);
         lessonRepository = mock(LessonRepository.class);
         videoStoragePort = mock(VideoStoragePort.class);
+        ThumbnailStoragePort thumbnailStoragePort = mock(ThumbnailStoragePort.class);
         FileProcessingService fileProcessingService = mock(FileProcessingService.class);
         ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
         NotificationRepository notificationRepository = mock(NotificationRepository.class);
+        CourseVideoCatalogSyncPort videoCatalogSyncPort = mock(CourseVideoCatalogSyncPort.class);
         Clock clock = Clock.fixed(Instant.parse("2026-06-27T00:00:00Z"), ZoneOffset.UTC);
 
         service = new CourseCommandService(
                 courseRepository,
                 lessonRepository,
                 videoStoragePort,
+                thumbnailStoragePort,
                 fileProcessingService,
                 eventPublisher,
                 // 실제 DB 없이도 TransactionTemplate의 트랜잭션 동기화(afterCommit)가 동작하게 해주는
                 // 리소스 없는 트랜잭션 매니저(테스트 더블) — 단위테스트 표준 패턴.
                 new ResourcelessTransactionManager(),
                 clock,
-                notificationRepository
+                notificationRepository,
+                videoCatalogSyncPort
         );
     }
 
@@ -87,7 +93,7 @@ class CourseCommandServiceTest {
         Lesson lesson = Lesson.create(5L, "1강", "설명", 0, null, Instant.now());
         when(lessonRepository.findById(lessonId)).thenReturn(Optional.of(lesson));
         when(lessonRepository.findCourseAuthorInfo(lessonId))
-                .thenReturn(Optional.of(new CourseAuthorInfo(authorId, CourseStatus.PUBLISHED)));
+                .thenReturn(Optional.of(new CourseAuthorInfo(100L, authorId, CourseStatus.PUBLISHED)));
         when(videoStoragePort.store(lessonId, "lecture.mp4", new byte[]{1, 2, 3}))
                 .thenReturn(new VideoStoragePort.StoredVideo("videos/10_uuid.mp4", "https://s3.example.com/presigned"));
         when(lessonRepository.save(any(Lesson.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -110,7 +116,7 @@ class CourseCommandServiceTest {
         Lesson lesson = Lesson.create(5L, "1강", "설명", 0, null, Instant.now());
         when(lessonRepository.findById(lessonId)).thenReturn(Optional.of(lesson));
         when(lessonRepository.findCourseAuthorInfo(lessonId))
-                .thenReturn(Optional.of(new CourseAuthorInfo(authorId, CourseStatus.PUBLISHED)));
+                .thenReturn(Optional.of(new CourseAuthorInfo(100L, authorId, CourseStatus.PUBLISHED)));
         when(videoStoragePort.store(lessonId, "lecture.mp4", new byte[]{1, 2, 3}))
                 .thenReturn(new VideoStoragePort.StoredVideo("videos/10_uuid.mp4", "https://s3.example.com/presigned"));
         when(lessonRepository.save(any(Lesson.class))).thenThrow(new RuntimeException("db down"));

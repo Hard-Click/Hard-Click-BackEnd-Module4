@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 @ExtendWith(MockitoExtension.class)
 class CommunityAccessPolicyTest {
@@ -47,5 +48,36 @@ class CommunityAccessPolicyTest {
         // when & then
         assertThatCode(() -> communityAccessPolicy.validateAccess(memberId))
                 .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("조회 검사: 비로그인(null)은 회원 상태 조회 없이 통과한다")
+    void validateAccessIfLoggedIn_skip_whenNull() {
+        // when & then
+        assertThatCode(() -> communityAccessPolicy.validateAccessIfLoggedIn(null))
+                .doesNotThrowAnyException();
+        verifyNoInteractions(memberAccessPort);
+    }
+
+    @Test
+    @DisplayName("조회 검사: 비회원(-1)은 회원 상태 조회 없이 통과한다")
+    void validateAccessIfLoggedIn_skip_whenAnonymous() {
+        // when & then
+        assertThatCode(() -> communityAccessPolicy.validateAccessIfLoggedIn(-1L))
+                .doesNotThrowAnyException();
+        verifyNoInteractions(memberAccessPort);
+    }
+
+    @Test
+    @DisplayName("조회 검사: 로그인한 정지/탈퇴 회원은 조회 시에도 차단된다")
+    void validateAccessIfLoggedIn_fail_whenSuspended() {
+        // given
+        Long memberId = 1L;
+        given(memberAccessPort.isSuspendedOrWithdrawn(memberId)).willReturn(true);
+
+        // when & then
+        assertThatThrownBy(() -> communityAccessPolicy.validateAccessIfLoggedIn(memberId))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.COMMUNITY_ACCESS_DENIED.getMessage());
     }
 }

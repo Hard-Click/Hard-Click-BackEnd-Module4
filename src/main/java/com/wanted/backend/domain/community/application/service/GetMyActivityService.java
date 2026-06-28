@@ -15,6 +15,7 @@ public class GetMyActivityService implements GetMyActivityUseCase {
 
     @Override
     public MyActivityView handle(Long memberId) {
+        // 내 활동은 본인 데이터 조회이므로 정지/탈퇴 회원도 허용한다. (인증 필수는 Security가 보장)
         MyActivityQueryPort.MyActivityData data = myActivityQueryPort.findByMemberId(memberId);
 
         return new MyActivityView(

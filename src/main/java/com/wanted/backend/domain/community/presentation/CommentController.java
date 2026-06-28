@@ -4,6 +4,7 @@ import com.wanted.backend.domain.community.application.command.AcceptCommentComm
 import com.wanted.backend.domain.community.application.command.CreateCommentCommand;
 import com.wanted.backend.domain.community.application.command.DeleteCommentCommand;
 import com.wanted.backend.domain.community.application.command.UpdateCommentCommand;
+import com.wanted.backend.domain.community.application.result.CommentListResult;
 import com.wanted.backend.domain.community.application.usecase.CommentCommandUseCase;
 import com.wanted.backend.domain.community.application.usecase.CommentQueryUseCase;
 import com.wanted.backend.domain.community.presentation.request.CreateCommentRequest;
@@ -93,23 +94,21 @@ public class CommentController {
     @Operation(
             summary = "댓글 목록 조회",
             description = """
-            게시글의 댓글 목록을 조회합니다.
-            - 로그인한 회원만 조회 가능합니다.
-            - 댓글에 대댓글이 있을 경우 replies 필드에 중첩하여 반환합니다.
-            - 본인이 작성한 댓글은 isMine: true로 표시됩니다.
-            - 채택된 댓글은 isAccepted: true로 표시됩니다.
-            - 삭제된 댓글은 isDeleted: true로 표시됩니다.
-            """
+        게시글의 댓글 목록을 조회합니다.
+        - 로그인한 회원만 조회 가능합니다.
+        - 댓글에 대댓글이 있을 경우 replies 필드에 중첩하여 반환합니다.
+        - 본인이 작성한 댓글은 isMine: true로 표시됩니다.
+        - 채택된 댓글은 isAccepted: true로 표시됩니다.
+        - 삭제된 댓글은 isDeleted: true로 표시됩니다.
+        """
     )
     public ResponseEntity<ApiResponse<CommentListResponse>> getComments(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long postId) {
 
         boolean isAdmin = "ADMIN".equals(userDetails.getRole());
-        CommentListResponse response = commentQueryUseCase.getComments(
-                postId, userDetails.getMemberId(), isAdmin);
-
-        return ApiResponse.success("댓글 목록 조회 성공", response);
+        CommentListResult result = commentQueryUseCase.getComments(postId, userDetails.getMemberId(), isAdmin);
+        return ApiResponse.success("댓글 목록 조회 성공", CommentListResponse.from(result));
     }
 
     @PatchMapping(value = "/comments/{commentId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
