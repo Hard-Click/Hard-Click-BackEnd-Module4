@@ -1,4 +1,4 @@
-package com.wanted.backend.domain.study_timer.presentation.api;
+﻿package com.wanted.backend.domain.study_timer.presentation.api;
 
 import com.wanted.backend.domain.study_timer.application.query.GetDailyStudyTimeQuery;
 import com.wanted.backend.domain.study_timer.application.usecase.GetDailyStudyTimeUseCase;
@@ -7,7 +7,6 @@ import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -37,9 +36,9 @@ public class StudyTimerStatsController {
             description = "현재 로그인 사용자의 기간별 일별 순공시간 합계를 조회합니다."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "일별 순공시간 조회 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 날짜 범위"),
-            @ApiResponse(responseCode = "401", description = "인증 필요")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "일별 순공시간 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 날짜 범위"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요")
     })
     public ResponseEntity<ApiResponse<List<DailyStudyTimeResponse>>> daily(
             @AuthenticationPrincipal CustomUserDetails userDetails,

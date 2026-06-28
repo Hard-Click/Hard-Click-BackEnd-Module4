@@ -1,4 +1,4 @@
-package com.wanted.backend.domain.community.presentation;
+﻿package com.wanted.backend.domain.community.presentation;
 
 import com.wanted.backend.domain.community.application.command.AcceptCommentCommand;
 import com.wanted.backend.domain.community.application.command.CreateCommentCommand;
@@ -16,7 +16,6 @@ import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -54,10 +53,10 @@ public class CommentController {
                 """
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "댓글 작성 성공"),
-            @ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
-            @ApiResponse(responseCode = "401", description = "인증 실패"),
-            @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "댓글 작성 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
     })
     public ResponseEntity<ApiResponse<CreateCommentResponse>> createComment(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -88,11 +87,11 @@ public class CommentController {
                 """
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "댓글 채택 성공"),
-            @ApiResponse(responseCode = "400", description = "채택 불가 조건 위반 (대댓글, 이미 채택된 게시글 등)"),
-            @ApiResponse(responseCode = "401", description = "인증 실패"),
-            @ApiResponse(responseCode = "403", description = "본인이 작성한 게시글이 아님"),
-            @ApiResponse(responseCode = "404", description = "댓글을 찾을 수 없음")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "댓글 채택 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "채택 불가 조건 위반 (대댓글, 이미 채택된 게시글 등)"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "본인이 작성한 게시글이 아님"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "댓글을 찾을 수 없음")
     })
     public ResponseEntity<ApiResponse<Void>> acceptComment(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -120,9 +119,9 @@ public class CommentController {
         """
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "댓글 목록 조회 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 실패"),
-            @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "댓글 목록 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
     })
     public ResponseEntity<ApiResponse<CommentListResponse>> getComments(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -149,11 +148,11 @@ public class CommentController {
                 """
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "댓글 수정 성공"),
-            @ApiResponse(responseCode = "400", description = "채택된 댓글은 수정 불가 또는 입력값 검증 실패"),
-            @ApiResponse(responseCode = "401", description = "인증 실패"),
-            @ApiResponse(responseCode = "403", description = "본인이 작성한 댓글이 아님"),
-            @ApiResponse(responseCode = "404", description = "댓글을 찾을 수 없음")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "댓글 수정 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "채택된 댓글은 수정 불가 또는 입력값 검증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "본인이 작성한 댓글이 아님"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "댓글을 찾을 수 없음")
     })
     public ResponseEntity<ApiResponse<UpdateCommentResponse>> updateComment(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -186,11 +185,11 @@ public class CommentController {
             """
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "댓글 삭제 성공"),
-            @ApiResponse(responseCode = "400", description = "채택된 댓글은 삭제 불가"),
-            @ApiResponse(responseCode = "401", description = "인증 실패"),
-            @ApiResponse(responseCode = "403", description = "본인이 작성한 댓글이 아님"),
-            @ApiResponse(responseCode = "404", description = "댓글을 찾을 수 없음")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "댓글 삭제 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "채택된 댓글은 삭제 불가"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "본인이 작성한 댓글이 아님"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "댓글을 찾을 수 없음")
     })
     public ResponseEntity<ApiResponse<Void>> deleteComment(
             @AuthenticationPrincipal CustomUserDetails userDetails,

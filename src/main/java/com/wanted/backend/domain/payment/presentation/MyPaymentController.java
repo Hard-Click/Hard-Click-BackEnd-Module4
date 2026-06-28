@@ -1,4 +1,4 @@
-package com.wanted.backend.domain.payment.presentation;
+﻿package com.wanted.backend.domain.payment.presentation;
 
 import com.wanted.backend.domain.payment.application.usecase.GetMyPaymentHistoryUseCase;
 import com.wanted.backend.domain.payment.presentation.response.MyPaymentHistoryPageResponse;
@@ -6,7 +6,6 @@ import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -32,8 +31,8 @@ public class MyPaymentController {
             description = "로그인한 사용자의 결제 내역을 페이지 단위로 조회합니다."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "결제 내역 조회 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 필요")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "결제 내역 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요")
     })
     public ResponseEntity<ApiResponse<MyPaymentHistoryPageResponse>> getMyPayment(
             @Parameter(description = "조회할 페이지 번호. 0부터 시작합니다.", example = "0")

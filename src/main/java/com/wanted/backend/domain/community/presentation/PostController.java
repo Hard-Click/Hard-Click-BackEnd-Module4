@@ -1,4 +1,4 @@
-package com.wanted.backend.domain.community.presentation;
+﻿package com.wanted.backend.domain.community.presentation;
 
 import com.wanted.backend.domain.community.application.command.CreatePostCommand;
 import com.wanted.backend.domain.community.application.command.DeletePostCommand;
@@ -16,7 +16,6 @@ import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -64,10 +63,10 @@ public class PostController {
                 """
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "게시글 작성 성공"),
-            @ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
-            @ApiResponse(responseCode = "401", description = "인증 실패"),
-            @ApiResponse(responseCode = "403", description = "커뮤니티 이용 제한 상태")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "게시글 작성 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "커뮤니티 이용 제한 상태")
     })
     public ResponseEntity<ApiResponse<CreatePostResponse>> createPost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -100,8 +99,8 @@ public class PostController {
                 """
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "게시글 목록 조회 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 실패")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "게시글 목록 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
     })
     public ResponseEntity<ApiResponse<PostListResponse>> getPostList(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -133,8 +132,8 @@ public class PostController {
                 """
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "전체 게시글 목록 조회 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 실패")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "전체 게시글 목록 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
     })
     public ResponseEntity<ApiResponse<UnifiedBoardListResponse>> getAllPostList(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -167,9 +166,9 @@ public class PostController {
                 """
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "게시글 상세 조회 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 실패"),
-            @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "게시글 상세 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
     })
     public ResponseEntity<ApiResponse<PostDetailResponse>> getPostDetail(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -195,11 +194,11 @@ public class PostController {
                 """
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "게시글 수정 성공"),
-            @ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
-            @ApiResponse(responseCode = "401", description = "인증 실패"),
-            @ApiResponse(responseCode = "403", description = "본인이 작성한 게시글이 아님"),
-            @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "게시글 수정 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "본인이 작성한 게시글이 아님"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
     })
     public ResponseEntity<ApiResponse<UpdatePostResponse>> updatePost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -231,10 +230,10 @@ public class PostController {
             """
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "게시글 삭제 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 실패"),
-            @ApiResponse(responseCode = "403", description = "본인이 작성한 게시글이 아님"),
-            @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "게시글 삭제 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "본인이 작성한 게시글이 아님"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
     })
     public ResponseEntity<ApiResponse<Void>> deletePost(
             @AuthenticationPrincipal CustomUserDetails userDetails,

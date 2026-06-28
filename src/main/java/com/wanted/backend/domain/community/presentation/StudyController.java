@@ -1,4 +1,4 @@
-package com.wanted.backend.domain.community.presentation;
+﻿package com.wanted.backend.domain.community.presentation;
 
 import com.wanted.backend.domain.community.presentation.request.CreateStudyRequest;
 import com.wanted.backend.domain.community.presentation.response.CreateStudyResponse;
@@ -9,7 +9,6 @@ import com.wanted.backend.global.domain.SubjectType;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -28,8 +27,8 @@ public class StudyController {
     @GetMapping
     @Operation(summary = "스터디 목록 조회", description = "스터디 모집 목록을 조회합니다. subject로 과목 필터링이 가능합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "스터디 목록 조회 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 실패")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "스터디 목록 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
     })
     public ResponseEntity<ApiResponse<StudyListResponse>> getStudyList(
             // SubjectType → String
@@ -51,9 +50,9 @@ public class StudyController {
     @GetMapping("/{groupId}")
     @Operation(summary = "스터디 상세 조회", description = "스터디 모집 글의 상세 내용을 조회합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "스터디 상세 조회 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 실패"),
-            @ApiResponse(responseCode = "404", description = "스터디를 찾을 수 없음")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "스터디 상세 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "스터디를 찾을 수 없음")
     })
     public ResponseEntity<ApiResponse<StudyDetailResponse>> getStudyDetail(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -77,9 +76,9 @@ public class StudyController {
     @PostMapping
     @Operation(summary = "스터디 모집 등록", description = "스터디 모집 글을 등록합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "스터디 모집 등록 성공"),
-            @ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
-            @ApiResponse(responseCode = "401", description = "인증 실패")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "스터디 모집 등록 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
     })
     public ResponseEntity<ApiResponse<CreateStudyResponse>> createStudy(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -91,10 +90,10 @@ public class StudyController {
     @PatchMapping("/{groupId}")
     @Operation(summary = "스터디 수정", description = "본인이 등록한 스터디 모집 글을 수정합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "스터디 수정 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 실패"),
-            @ApiResponse(responseCode = "403", description = "본인이 등록한 스터디가 아님"),
-            @ApiResponse(responseCode = "404", description = "스터디를 찾을 수 없음")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "스터디 수정 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "본인이 등록한 스터디가 아님"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "스터디를 찾을 수 없음")
     })
     public ResponseEntity<ApiResponse<Void>> updateStudy(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -108,10 +107,10 @@ public class StudyController {
     @DeleteMapping("/{groupId}")
     @Operation(summary = "스터디 삭제", description = "본인이 등록한 스터디 모집 글을 삭제합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "스터디 삭제 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 실패"),
-            @ApiResponse(responseCode = "403", description = "본인이 등록한 스터디가 아님"),
-            @ApiResponse(responseCode = "404", description = "스터디를 찾을 수 없음")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "스터디 삭제 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "본인이 등록한 스터디가 아님"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "스터디를 찾을 수 없음")
     })
     public ResponseEntity<ApiResponse<Void>> deleteStudy(
             @AuthenticationPrincipal CustomUserDetails userDetails,

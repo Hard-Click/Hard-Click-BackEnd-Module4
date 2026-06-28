@@ -1,4 +1,4 @@
-package com.wanted.backend.domain.payment.presentation;
+﻿package com.wanted.backend.domain.payment.presentation;
 
 import com.wanted.backend.domain.order.application.usecase.ConfirmOrderPaymentUseCase;
 import com.wanted.backend.domain.payment.presentation.request.PaymentConfirmRequest;
@@ -9,7 +9,6 @@ import com.wanted.backend.global.exception.ErrorCode;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -34,12 +33,12 @@ public class PaymentConfirmController {
             description = "Idempotency-Key 헤더 기준으로 동일 요청이 중복 처리되지 않도록 분산락+멱등키를 적용해 결제를 확정합니다."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "결제 확정 성공"),
-            @ApiResponse(responseCode = "200", description = "이미 처리된 결제 (멱등 응답)"),
-            @ApiResponse(responseCode = "400", description = "잘못된 입력값 또는 금액 불일치"),
-            @ApiResponse(responseCode = "401", description = "인증 필요"),
-            @ApiResponse(responseCode = "404", description = "주문을 찾을 수 없음"),
-            @ApiResponse(responseCode = "409", description = "이미 결제 완료된 주문")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "결제 확정 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "이미 처리된 결제 (멱등 응답)"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 입력값 또는 금액 불일치"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "주문을 찾을 수 없음"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "이미 결제 완료된 주문")
     })
     public ResponseEntity<ApiResponse<PaymentConfirmResponse>> confirm(
             @Valid @RequestBody PaymentConfirmRequest request,

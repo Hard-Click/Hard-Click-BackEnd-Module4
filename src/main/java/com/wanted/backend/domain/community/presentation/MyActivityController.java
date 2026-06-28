@@ -1,11 +1,10 @@
-package com.wanted.backend.domain.community.presentation;
+﻿package com.wanted.backend.domain.community.presentation;
 
 import com.wanted.backend.domain.community.application.usecase.GetMyActivityUseCase;
 import com.wanted.backend.domain.community.presentation.response.MyActivityResponse;
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -29,8 +28,8 @@ public class MyActivityController {
             description = "로그인한 사용자가 작성한 리뷰, 게시글, 댓글 목록을 조회합니다."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "내 활동 조회 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 실패")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "내 활동 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
     })
     public ResponseEntity<ApiResponse<MyActivityResponse>> getMyActivities(
             @AuthenticationPrincipal CustomUserDetails userDetails

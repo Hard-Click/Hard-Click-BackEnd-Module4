@@ -1,4 +1,4 @@
-package com.wanted.backend.domain.order.presentation;
+﻿package com.wanted.backend.domain.order.presentation;
 
 import com.wanted.backend.domain.order.application.usecase.CheckoutUseCase;
 import com.wanted.backend.domain.order.application.usecase.GetOrderUseCase;
@@ -13,7 +13,6 @@ import com.wanted.backend.global.exception.ErrorCode;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -50,11 +49,11 @@ public class OrderController {
                     "둘 다 없으면 장바구니 전체를 결제합니다."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "주문 준비 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 주문 타입 또는 입력값"),
-            @ApiResponse(responseCode = "401", description = "인증 필요"),
-            @ApiResponse(responseCode = "404", description = "강의 또는 장바구니 항목을 찾을 수 없음"),
-            @ApiResponse(responseCode = "409", description = "이미 결제 완료된 강의가 포함된 경우")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "주문 준비 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 주문 타입 또는 입력값"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "강의 또는 장바구니 항목을 찾을 수 없음"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "이미 결제 완료된 강의가 포함된 경우")
     })
     public ResponseEntity<ApiResponse<CheckoutResponse>> checkout(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -85,10 +84,10 @@ public class OrderController {
     @GetMapping("/{orderId}")
     @Operation(summary = "주문 상세 조회", description = "주문 상세/결제 내역/환불 화면용. 본인 주문만 조회 가능합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "주문 상세 조회 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 필요"),
-            @ApiResponse(responseCode = "403", description = "본인 주문이 아닌 경우"),
-            @ApiResponse(responseCode = "404", description = "주문을 찾을 수 없음")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "주문 상세 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "본인 주문이 아닌 경우"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "주문을 찾을 수 없음")
     })
     public ResponseEntity<ApiResponse<OrderDetailResponse>> getOrder(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -108,12 +107,12 @@ public class OrderController {
                     "Idempotency-Key 헤더 기준으로 동일 요청 재시도가 안전하게 처리됩니다."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "환불 처리 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 멱등키 형식"),
-            @ApiResponse(responseCode = "401", description = "인증 필요"),
-            @ApiResponse(responseCode = "403", description = "본인 주문이 아닌 경우"),
-            @ApiResponse(responseCode = "404", description = "주문 또는 강의 항목을 찾을 수 없음"),
-            @ApiResponse(responseCode = "409", description = "이미 환불된 항목이거나 환불 불가 상태")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "환불 처리 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 멱등키 형식"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "본인 주문이 아닌 경우"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "주문 또는 강의 항목을 찾을 수 없음"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "이미 환불된 항목이거나 환불 불가 상태")
     })
     public ResponseEntity<ApiResponse<Void>> refundOrderItem(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -154,12 +153,12 @@ public class OrderController {
                     "Idempotency-Key 헤더 기준으로 동일 요청 재시도가 안전하게 처리됩니다."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "구독 환불 처리 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 멱등키 형식"),
-            @ApiResponse(responseCode = "401", description = "인증 필요"),
-            @ApiResponse(responseCode = "403", description = "본인 주문이 아닌 경우"),
-            @ApiResponse(responseCode = "404", description = "주문을 찾을 수 없음"),
-            @ApiResponse(responseCode = "409", description = "구독 주문이 아니거나 환불 불가 상태")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "구독 환불 처리 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 멱등키 형식"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "본인 주문이 아닌 경우"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "주문을 찾을 수 없음"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "구독 주문이 아니거나 환불 불가 상태")
     })
     public ResponseEntity<ApiResponse<Void>> refundSubscription(
             @AuthenticationPrincipal CustomUserDetails userDetails,

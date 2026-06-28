@@ -1,4 +1,4 @@
-package com.wanted.backend.domain.notice.presentation;
+﻿package com.wanted.backend.domain.notice.presentation;
 
 import com.wanted.backend.domain.notice.application.command.*;
 import com.wanted.backend.domain.notice.application.result.NoticeDetailResult;
@@ -16,7 +16,6 @@ import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -51,11 +50,11 @@ public class NoticeController {
                 """
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "강의 공지사항 작성 성공"),
-            @ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
-            @ApiResponse(responseCode = "401", description = "인증 실패"),
-            @ApiResponse(responseCode = "403", description = "INSTRUCTOR 권한 없음 또는 본인 강의 아님"),
-            @ApiResponse(responseCode = "404", description = "강의를 찾을 수 없음")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "강의 공지사항 작성 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "INSTRUCTOR 권한 없음 또는 본인 강의 아님"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "강의를 찾을 수 없음")
     })
     public ResponseEntity<ApiResponse<CreateNoticeResponse>> createNotice(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -86,10 +85,10 @@ public class NoticeController {
                 """
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "전체 공지사항 작성 성공"),
-            @ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
-            @ApiResponse(responseCode = "401", description = "인증 실패"),
-            @ApiResponse(responseCode = "403", description = "ADMIN 권한 없음")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "전체 공지사항 작성 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "ADMIN 권한 없음")
     })
     public ResponseEntity<ApiResponse<CreateNoticeResponse>> createGlobalNotice(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -120,10 +119,10 @@ public class NoticeController {
                 """
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "공지사항 목록 조회 성공"),
-            @ApiResponse(responseCode = "400", description = "COURSE 타입인데 courseId 미전달"),
-            @ApiResponse(responseCode = "401", description = "인증 실패"),
-            @ApiResponse(responseCode = "403", description = "수강 중이지 않은 강의 공지 접근")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "공지사항 목록 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "COURSE 타입인데 courseId 미전달"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "수강 중이지 않은 강의 공지 접근")
     })
     public ResponseEntity<ApiResponse<NoticeListResponse>> getNotices(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -155,10 +154,10 @@ public class NoticeController {
         """
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "공지사항 상세 조회 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 실패"),
-            @ApiResponse(responseCode = "403", description = "접근 권한 없음"),
-            @ApiResponse(responseCode = "404", description = "공지사항을 찾을 수 없음")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "공지사항 상세 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "접근 권한 없음"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "공지사항을 찾을 수 없음")
     })
     public ResponseEntity<ApiResponse<NoticeDetailResponse>> getNotice(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -182,11 +181,11 @@ public class NoticeController {
                 """
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "공지사항 수정 성공"),
-            @ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
-            @ApiResponse(responseCode = "401", description = "인증 실패"),
-            @ApiResponse(responseCode = "403", description = "본인이 작성한 공지사항이 아님"),
-            @ApiResponse(responseCode = "404", description = "공지사항을 찾을 수 없음")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "공지사항 수정 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "본인이 작성한 공지사항이 아님"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "공지사항을 찾을 수 없음")
     })
     public ResponseEntity<ApiResponse<UpdateNoticeResponse>> updateNotice(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -215,10 +214,10 @@ public class NoticeController {
                 """
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "공지사항 삭제 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 실패"),
-            @ApiResponse(responseCode = "403", description = "본인이 작성한 공지사항이 아님"),
-            @ApiResponse(responseCode = "404", description = "공지사항을 찾을 수 없음")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "공지사항 삭제 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "본인이 작성한 공지사항이 아님"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "공지사항을 찾을 수 없음")
     })
     public ResponseEntity<ApiResponse<Void>> deleteNotice(
             @AuthenticationPrincipal CustomUserDetails userDetails,

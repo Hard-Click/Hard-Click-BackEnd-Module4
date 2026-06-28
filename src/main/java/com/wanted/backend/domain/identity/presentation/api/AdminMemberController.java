@@ -1,4 +1,4 @@
-package com.wanted.backend.domain.identity.presentation.api;
+﻿package com.wanted.backend.domain.identity.presentation.api;
 
 import com.wanted.backend.domain.identity.application.command.ChangeMemberStatusCommand;
 import com.wanted.backend.domain.identity.application.dto.AdminMemberListResult;
@@ -12,7 +12,6 @@ import com.wanted.backend.domain.identity.presentation.api.response.ChangeMember
 import com.wanted.backend.global.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -42,9 +41,9 @@ public class AdminMemberController {
             description = "관리자가 회원 목록을 조회하고, 이름/아이디/이메일 검색 및 역할/상태 필터를 적용합니다."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "회원 목록 조회 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 실패"),
-            @ApiResponse(responseCode = "403", description = "관리자 권한 없음")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "회원 목록 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "관리자 권한 없음")
     })
     public ResponseEntity<ApiResponse<AdminMemberListResponse>> getMembers(
             @Valid @ModelAttribute AdminMemberListRequest request
@@ -64,11 +63,11 @@ public class AdminMemberController {
             description = "관리자가 회원 상태를 ACTIVE 또는 SUSPENDED로 변경합니다. WITHDRAWN은 이 API에서 변경할 수 없습니다."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "회원 상태 변경 성공"),
-            @ApiResponse(responseCode = "400", description = "변경 불가 상태 (WITHDRAWN 등)"),
-            @ApiResponse(responseCode = "401", description = "인증 실패"),
-            @ApiResponse(responseCode = "403", description = "관리자 권한 없음"),
-            @ApiResponse(responseCode = "404", description = "회원을 찾을 수 없음")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "회원 상태 변경 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "변경 불가 상태 (WITHDRAWN 등)"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "관리자 권한 없음"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "회원을 찾을 수 없음")
     })
     public ResponseEntity<ApiResponse<ChangeMemberStatusResponse>> changeMemberStatus(
             @Parameter(description = "상태를 변경할 회원 ID", example = "1")

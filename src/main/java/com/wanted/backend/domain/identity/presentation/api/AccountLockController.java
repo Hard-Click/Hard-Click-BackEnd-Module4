@@ -1,4 +1,4 @@
-package com.wanted.backend.domain.identity.presentation.api;
+﻿package com.wanted.backend.domain.identity.presentation.api;
 
 import com.wanted.backend.domain.identity.application.AccountLockVerifyResult;
 import com.wanted.backend.domain.identity.application.command.AccountLockPasswordChangeCommand;
@@ -12,7 +12,6 @@ import com.wanted.backend.domain.identity.presentation.api.response.EmptyRespons
 import com.wanted.backend.domain.identity.presentation.api.response.PasswordChangeTokenResponse;
 import com.wanted.backend.global.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -38,9 +37,9 @@ public class AccountLockController {
             description = "계정 잠금 상태의 사용자 이메일로 인증번호를 발송합니다."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "인증번호 발송 성공"),
-            @ApiResponse(responseCode = "400", description = "이메일 형식 오류"),
-            @ApiResponse(responseCode = "404", description = "가입된 이메일이 없거나 계정 잠금 상태가 아님")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "인증번호 발송 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "이메일 형식 오류"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "가입된 이메일이 없거나 계정 잠금 상태가 아님")
     })
     @PostMapping("/email")
     public ResponseEntity<ApiResponse<EmptyResponse>> sendEmail(
@@ -55,8 +54,8 @@ public class AccountLockController {
             description = "계정 잠금 상태의 사용자가 이메일 인증번호를 검증하고 비밀번호 변경 토큰을 발급받습니다."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "인증 성공 및 비밀번호 변경 토큰 발급"),
-            @ApiResponse(responseCode = "400", description = "인증번호 불일치 또는 만료")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "인증 성공 및 비밀번호 변경 토큰 발급"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "인증번호 불일치 또는 만료")
     })
     @PostMapping("/verify")
     public ResponseEntity<ApiResponse<PasswordChangeTokenResponse>> verify(
@@ -78,8 +77,8 @@ public class AccountLockController {
             description = "계정 잠금 인증 후 발급받은 비밀번호 변경 토큰으로 새 비밀번호를 설정하고 계정 잠금을 해제합니다."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "비밀번호 변경 및 계정 잠금 해제 성공"),
-            @ApiResponse(responseCode = "400", description = "비밀번호 변경 토큰 유효하지 않거나 비밀번호 정책 미충족")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "비밀번호 변경 및 계정 잠금 해제 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "비밀번호 변경 토큰 유효하지 않거나 비밀번호 정책 미충족")
     })
     @PatchMapping("/password")
     public ResponseEntity<ApiResponse<EmptyResponse>> changePassword(

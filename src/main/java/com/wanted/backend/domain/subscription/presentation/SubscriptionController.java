@@ -1,4 +1,4 @@
-package com.wanted.backend.domain.subscription.presentation;
+﻿package com.wanted.backend.domain.subscription.presentation;
 
 import com.wanted.backend.domain.subscription.application.usecase.CancelSubscriptionUseCase;
 import com.wanted.backend.domain.subscription.application.usecase.GetMySubscriptionUseCase;
@@ -8,7 +8,6 @@ import com.wanted.backend.domain.subscription.presentation.response.Subscription
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +35,7 @@ public class SubscriptionController {
     @GetMapping("/plan")
     @Operation(summary = "구독 상품 정보 조회", description = "FLOWN 연간 패스의 가격과 혜택 정보를 조회합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "구독 상품 정보 조회 성공")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "구독 상품 정보 조회 성공")
     })
     public ResponseEntity<ApiResponse<SubscriptionPlanResponse>> getPlan() {
         return ApiResponse.success(
@@ -48,8 +47,8 @@ public class SubscriptionController {
     @GetMapping("/me")
     @Operation(summary = "내 구독 상태 조회", description = "로그인한 회원의 활성 구독 상태(결제일/남은 기간/결제금액)를 조회합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "내 구독 상태 조회 성공 (미구독 시 subscribed: false)"),
-            @ApiResponse(responseCode = "401", description = "인증 필요")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "내 구독 상태 조회 성공 (미구독 시 subscribed: false)"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요")
     })
     public ResponseEntity<ApiResponse<MySubscriptionResponse>> getMySubscription(
             @AuthenticationPrincipal CustomUserDetails userDetails
@@ -63,10 +62,10 @@ public class SubscriptionController {
     @DeleteMapping("/me")
     @Operation(summary = "구독 취소", description = "로그인한 회원의 활성 구독을 취소합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "구독 취소 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 필요"),
-            @ApiResponse(responseCode = "404", description = "활성 구독 없음"),
-            @ApiResponse(responseCode = "409", description = "이미 취소된 구독")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "구독 취소 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "활성 구독 없음"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "이미 취소된 구독")
     })
     public ResponseEntity<ApiResponse<Void>> cancel(
             @AuthenticationPrincipal CustomUserDetails userDetails

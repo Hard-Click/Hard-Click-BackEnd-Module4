@@ -1,4 +1,4 @@
-package com.wanted.backend.domain.community.presentation;
+﻿package com.wanted.backend.domain.community.presentation;
 
 import com.wanted.backend.domain.community.application.command.CreateReviewCommand;
 import com.wanted.backend.domain.community.application.command.DeleteReviewCommand;
@@ -16,7 +16,6 @@ import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -50,10 +49,10 @@ public class ReviewController {
                 """
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "리뷰 등록 성공"),
-            @ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
-            @ApiResponse(responseCode = "401", description = "인증 실패"),
-            @ApiResponse(responseCode = "409", description = "이미 리뷰를 작성한 강의")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "리뷰 등록 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "이미 리뷰를 작성한 강의")
     })
     public ResponseEntity<ApiResponse<CreateReviewResponse>> createReview(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -84,8 +83,8 @@ public class ReviewController {
                 """
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "리뷰 목록 조회 성공"),
-            @ApiResponse(responseCode = "404", description = "강의를 찾을 수 없음")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "리뷰 목록 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "강의를 찾을 수 없음")
     })
     public ResponseEntity<ApiResponse<ReviewListResponse>> getReviews(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -114,11 +113,11 @@ public class ReviewController {
                 """
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "리뷰 수정 성공"),
-            @ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
-            @ApiResponse(responseCode = "401", description = "인증 실패"),
-            @ApiResponse(responseCode = "403", description = "본인이 작성한 리뷰가 아님"),
-            @ApiResponse(responseCode = "404", description = "리뷰를 찾을 수 없음")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "리뷰 수정 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "본인이 작성한 리뷰가 아님"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "리뷰를 찾을 수 없음")
     })
     public ResponseEntity<ApiResponse<UpdateReviewResponse>> updateReview(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -146,10 +145,10 @@ public class ReviewController {
                 """
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "리뷰 삭제 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 실패"),
-            @ApiResponse(responseCode = "403", description = "본인이 작성한 리뷰가 아님"),
-            @ApiResponse(responseCode = "404", description = "리뷰를 찾을 수 없음")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "리뷰 삭제 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "본인이 작성한 리뷰가 아님"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "리뷰를 찾을 수 없음")
     })
     public ResponseEntity<ApiResponse<Void>> deleteReview(
             @AuthenticationPrincipal CustomUserDetails userDetails,

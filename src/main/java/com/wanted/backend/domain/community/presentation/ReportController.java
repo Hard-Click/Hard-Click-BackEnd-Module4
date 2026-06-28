@@ -1,4 +1,4 @@
-package com.wanted.backend.domain.community.presentation;
+﻿package com.wanted.backend.domain.community.presentation;
 
 import com.wanted.backend.domain.community.application.command.CreateReportCommand;
 import com.wanted.backend.domain.community.application.usecase.ReportCommandUseCase;
@@ -7,7 +7,6 @@ import com.wanted.backend.domain.community.presentation.response.CreateReportRes
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -37,10 +36,10 @@ public class ReportController {
                     """
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "신고 접수 성공"),
-            @ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
-            @ApiResponse(responseCode = "401", description = "인증 실패"),
-            @ApiResponse(responseCode = "409", description = "이미 신고한 대상")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "신고 접수 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "이미 신고한 대상")
     })
     public ResponseEntity<ApiResponse<CreateReportResponse>> createReport(
             @AuthenticationPrincipal CustomUserDetails userDetails,

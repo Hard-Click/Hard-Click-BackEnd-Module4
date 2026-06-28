@@ -1,4 +1,4 @@
-package com.wanted.backend.domain.ranking.presentation.api;
+﻿package com.wanted.backend.domain.ranking.presentation.api;
 
 import com.wanted.backend.domain.ranking.application.query.GetAcceptedCommentRankingQuery;
 import com.wanted.backend.domain.ranking.application.query.GetLessonRankingQuery;
@@ -21,7 +21,6 @@ import com.wanted.backend.global.exception.ErrorCode;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -50,8 +49,8 @@ public class RankingController {
             description = "기간별 순공시간 랭킹 목록을 조회합니다."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "순공시간 랭킹 조회 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 필요")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "순공시간 랭킹 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요")
     })
     public ResponseEntity<ApiResponse<StudyTimeRankingResponse>> studyTime(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -75,8 +74,8 @@ public class RankingController {
             description = "기간별 수강량 랭킹 목록을 조회합니다."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "수강량 랭킹 조회 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 필요")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "수강량 랭킹 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요")
     })
     public ResponseEntity<ApiResponse<LessonRankingResponse>> lessons(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -100,8 +99,8 @@ public class RankingController {
             description = "기간별 댓글 채택 수 랭킹 목록을 조회합니다."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "댓글 채택 수 랭킹 조회 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 필요")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "댓글 채택 수 랭킹 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요")
     })
     public ResponseEntity<ApiResponse<AcceptedCommentRankingResponse>> acceptedComments(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -125,8 +124,8 @@ public class RankingController {
             description = "마이페이지 랭킹 요약 영역에서 사용할 순공시간, 수강량, 댓글 채택 수 순위와 상위 퍼센트를 조회합니다."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "내 랭킹 요약 조회 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 필요")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "내 랭킹 요약 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요")
     })
     public ResponseEntity<ApiResponse<MyRankingSummaryResponse>> mySummary(
             @AuthenticationPrincipal CustomUserDetails userDetails
@@ -148,8 +147,8 @@ public class RankingController {
             description = "랭킹 탭에서 사용할 선택 기준별 내 순위, 전체 사용자 수, 상위 퍼센트를 조회합니다."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "내 랭킹 상세 조회 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 필요")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "내 랭킹 상세 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요")
     })
     public ResponseEntity<ApiResponse<MyRankingDetailResponse>> me(
             @AuthenticationPrincipal CustomUserDetails userDetails,
