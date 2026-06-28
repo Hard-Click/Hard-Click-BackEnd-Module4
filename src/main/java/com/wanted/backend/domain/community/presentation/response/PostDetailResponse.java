@@ -1,12 +1,12 @@
 package com.wanted.backend.domain.community.presentation.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.wanted.backend.domain.community.application.result.PostDetailResult;
 import com.wanted.backend.domain.community.domain.model.BoardType;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
 
 public record PostDetailResponse(
 
@@ -43,6 +43,12 @@ public record PostDetailResponse(
 
         @Schema(description = "과목 — QUESTION 게시판일 경우 SubjectType enum 값 반환, FREE 게시판은 null", example = "MATH_1")
         String subject
-
-
-) {}
+) {
+        public static PostDetailResponse from(PostDetailResult result) {
+                return new PostDetailResponse(
+                        result.postId(), result.boardType(), result.title(),
+                        result.authorName(), result.createdAt(), result.viewCount(),
+                        result.content(), result.isMyPost(), result.isAccepted(),
+                        result.fileUrls(), result.subject());
+        }
+}

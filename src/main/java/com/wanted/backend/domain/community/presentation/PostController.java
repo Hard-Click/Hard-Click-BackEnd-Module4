@@ -3,6 +3,8 @@ package com.wanted.backend.domain.community.presentation;
 import com.wanted.backend.domain.community.application.command.CreatePostCommand;
 import com.wanted.backend.domain.community.application.command.DeletePostCommand;
 import com.wanted.backend.domain.community.application.command.UpdatePostCommand;
+import com.wanted.backend.domain.community.application.result.PostDetailResult;
+import com.wanted.backend.domain.community.application.result.PostListResult;
 import com.wanted.backend.domain.community.application.usecase.PostCommandUseCase;
 import com.wanted.backend.domain.community.application.usecase.PostQueryUseCase;
 import com.wanted.backend.domain.community.domain.model.BoardType;
@@ -94,8 +96,8 @@ public class PostController {
             @RequestParam(defaultValue = "0") int page) {
 
         boolean isAdmin = "ADMIN".equals(userDetails.getRole());
-        PostListResponse response = postQueryUseCase.getList(boardType, sort, keyword, page, isAdmin);
-        return ApiResponse.success("게시글 목록 조회 성공", response);
+        PostListResult result = postQueryUseCase.getList(boardType, sort, keyword, page, isAdmin);
+        return ApiResponse.success("게시글 목록 조회 성공", PostListResponse.from(result));
     }
 
 
@@ -118,12 +120,12 @@ public class PostController {
             @RequestParam(defaultValue = "0") int page) {
 
         boolean isAdmin = "ADMIN".equals(userDetails.getRole());
-        PostListResponse postList = postQueryUseCase.getList(null, sort, keyword, page, isAdmin);
+        PostListResult result = postQueryUseCase.getList(null, sort, keyword, page, isAdmin);
         List<UnifiedBoardItemResponse> items = new ArrayList<>(
-                postList.posts().stream().map(UnifiedBoardItemResponse::fromPost).toList());
+                result.posts().stream().map(UnifiedBoardItemResponse::fromPostItem).toList());
         items.addAll(MOCK_STUDY_ITEMS);
         return ApiResponse.success("게시글 목록 조회 성공",
-                new UnifiedBoardListResponse(items, postList.currentPage(), postList.totalPages(), postList.totalCount()));
+                new UnifiedBoardListResponse(items, result.currentPage(), result.totalPages(), result.totalCount()));
     }
 
     @GetMapping("/posts/{postId}")
@@ -143,10 +145,8 @@ public class PostController {
             @PathVariable Long postId) {
 
         boolean isAdmin = "ADMIN".equals(userDetails.getRole());
-        PostDetailResponse response = postQueryUseCase.getDetail(
-                postId, userDetails.getMemberId(), isAdmin);
-
-        return ApiResponse.success("게시글 상세 조회 성공", response);
+        PostDetailResult result = postQueryUseCase.getDetail(postId, userDetails.getMemberId(), isAdmin);
+        return ApiResponse.success("게시글 상세 조회 성공", PostDetailResponse.from(result));
     }
 
 
