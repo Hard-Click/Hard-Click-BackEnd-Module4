@@ -1,11 +1,13 @@
 package com.wanted.backend.domain.community.application.service;
 
 import com.wanted.backend.domain.community.application.port.MemberNamePort;
+import com.wanted.backend.domain.community.application.result.RatingStatResult;
+import com.wanted.backend.domain.community.application.result.ReviewItemResult;
+import com.wanted.backend.domain.community.application.result.ReviewListResult;
 import com.wanted.backend.domain.community.application.usecase.ReviewQueryUseCase;
 import com.wanted.backend.domain.community.domain.model.Review;
 import com.wanted.backend.domain.community.domain.model.ReviewSortType;
 import com.wanted.backend.domain.community.domain.repository.ReviewRepository;
-import com.wanted.backend.domain.community.presentation.response.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,52 +31,41 @@ public class ReviewQueryService implements ReviewQueryUseCase {
     }
 
     @Override
-    public ReviewListResponse handle(Long courseId, Long memberId, ReviewSortType sort, int page) {
+    public ReviewListResult handle(Long courseId, Long memberId, ReviewSortType sort, int page) {
+        List<ReviewItemResult> items = new ArrayList<>();
 
-
-        List<ReviewItemResponse> items = new ArrayList<>();
-
-        //memberId 하드코딩 아니면 자기가 쓴거 List 최상위 노출
         if (!memberId.equals(-1L)) {
             reviewRepository.findByCourseIdAndMemberId(courseId, memberId)
-                    .ifPresent(r -> items.add(toItemResponse(r, memberId)));
+                    .ifPresent(r -> items.add(toItemResult(r, memberId)));
         }
 
-        //나머지 리뷰 페이징
         List<Review> others = !memberId.equals(-1L)
                 ? reviewRepository.findByCourseIdExcludeMember(courseId, memberId, sort, page, PAGE_SIZE)
                 : reviewRepository.findByCourseId(courseId, sort, page, PAGE_SIZE);
 
-        //이미 있는 리스트에 add 하는 값들
-        others.forEach(r -> items.add(toItemResponse(r, memberId)));
+        others.forEach(r -> items.add(toItemResult(r, memberId)));
 
-        // 3. 통계 조립
         int totalCount = reviewRepository.countByCourseId(courseId);
 
-        return new ReviewListResponse(
+        List<RatingStatResult> ratingStats = reviewRepository.countGroupByRating(courseId).stream()
+                .map(rc -> new RatingStatResult(rc.rating(), rc.count()))
+                .toList();
+
+        return new ReviewListResult(
                 reviewRepository.avgRatingByCourseId(courseId),
-                totalCount,
-                //list로 형변환 해서 받아온 값을 응답 객체인 RatingStatItem로 변환하는 작업
-                reviewRepository.countGroupByRating(courseId).stream()
-                        .map(rc -> new RatingStatItem(rc.rating(), rc.count()))
-                        .toList(),
-                items,
-                page,
-                (int) Math.ceil((double) totalCount / PAGE_SIZE)
-        );
+                totalCount, ratingStats, items, page,
+                (int) Math.ceil((double) totalCount / PAGE_SIZE));
     }
 
-    private ReviewItemResponse toItemResponse(Review review, Long currentMemberId) {
-        //바로 port를 호출하는 이유는 단순 다른 BC에서의 조회이기때문에 정책 클래스인 Policy 클래스 존재 필요 없음
+    private ReviewItemResult toItemResult(Review review, Long currentMemberId) {
         String name = memberNamePort.getNameByMemberId(review.getMemberId());
-        return new ReviewItemResponse(
+        return new ReviewItemResult(
                 review.getId(),
                 review.maskName(name),
                 name.substring(0, 1),
                 review.getRating(),
                 review.isAdminDeleted() ? ADMIN_DELETED_MESSAGE : review.getContent(),
                 review.getCreatedAt().toLocalDate(),
-                review.isOwner(currentMemberId)
-        );
+                review.isOwner(currentMemberId));
     }
 }
