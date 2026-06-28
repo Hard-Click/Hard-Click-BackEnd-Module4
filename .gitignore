@@ -45,3 +45,4 @@ logs/
 
 CLAUDE.md
 benchmark_post_list.sql
+k6_post_list_load_test.js

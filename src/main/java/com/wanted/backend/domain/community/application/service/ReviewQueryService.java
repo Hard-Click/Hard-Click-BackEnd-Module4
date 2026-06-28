@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.community.application.service;
 
+import com.wanted.backend.domain.community.application.policy.CommunityAccessPolicy;
 import com.wanted.backend.domain.community.application.port.MemberNamePort;
 import com.wanted.backend.domain.community.application.usecase.ReviewQueryUseCase;
 import com.wanted.backend.domain.community.domain.model.Review;
@@ -21,16 +22,20 @@ public class ReviewQueryService implements ReviewQueryUseCase {
 
     private final ReviewRepository reviewRepository;
     private final MemberNamePort memberNamePort;
+    private final CommunityAccessPolicy communityAccessPolicy;
 
     public ReviewQueryService(ReviewRepository reviewRepository,
-                              MemberNamePort memberNamePort) {
+                              MemberNamePort memberNamePort,
+                              CommunityAccessPolicy communityAccessPolicy) {
         this.reviewRepository = reviewRepository;
         this.memberNamePort = memberNamePort;
+        this.communityAccessPolicy = communityAccessPolicy;
     }
 
     @Override
     public ReviewListResponse handle(Long courseId, Long memberId, ReviewSortType sort, int page) {
-
+        // 비회원(-1)은 통과, 로그인한 정지/탈퇴 회원만 차단
+        communityAccessPolicy.validateAccessIfLoggedIn(memberId);
 
         List<ReviewItemResponse> items = new ArrayList<>();
 
