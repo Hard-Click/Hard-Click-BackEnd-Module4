@@ -1,10 +1,10 @@
 package com.wanted.backend.domain.notification.application.usecase;
 
-import com.wanted.backend.domain.notification.presentation.response.NotificationListResponse;
-import com.wanted.backend.domain.notification.presentation.response.NotificationReadResponse;
+import com.wanted.backend.domain.notification.application.result.NotificationListResult;
+import com.wanted.backend.domain.notification.application.result.NotificationReadResult;
 
 public interface NotificationQueryUseCase {
     int getUnreadCount(Long memberId);
-    NotificationListResponse getList(Long memberId, Long cursorId);
-    NotificationReadResponse markAsRead(Long memberId, Long notificationId);
+    NotificationListResult getList(Long memberId, Long cursorId);
+    NotificationReadResult markAsRead(Long memberId, Long notificationId);
 }

@@ -1,5 +1,7 @@
 package com.wanted.backend.domain.notification.presentation;
 
+import com.wanted.backend.domain.notification.application.result.NotificationListResult;
+import com.wanted.backend.domain.notification.application.result.NotificationReadResult;
 import com.wanted.backend.domain.notification.application.usecase.NotificationCommandUseCase;
 import com.wanted.backend.domain.notification.application.usecase.NotificationQueryUseCase;
 import com.wanted.backend.domain.notification.presentation.response.NotificationListResponse;
@@ -30,11 +32,9 @@ public class NotificationController {
     }
 
     @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    @Operation(
-            summary = "알림 SSE 구독",
+    @Operation(summary = "알림 SSE 구독",
             description = "실시간 알림 수신을 위한 SSE 연결을 맺습니다. " +
-                    "연결 직후 'connect' 이벤트가 오고, 이후 알림 발생 시 'notification' 이벤트가 옵니다."
-    )
+                    "연결 직후 'connect' 이벤트가 오고, 이후 알림 발생 시 'notification' 이벤트가 옵니다.")
     public ResponseEntity<SseEmitter> subscribe(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
@@ -52,7 +52,7 @@ public class NotificationController {
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         int count = notificationQueryUseCase.getUnreadCount(userDetails.getMemberId());
-        return ApiResponse.success("미확인 알림 개수 조회 완료", new UnreadCountResponse(count));
+        return ApiResponse.success("미확인 알림 개수 조회 완료", UnreadCountResponse.from(count));
     }
 
     @GetMapping
@@ -62,9 +62,9 @@ public class NotificationController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(required = false) Long cursorId) {
 
-        NotificationListResponse response = notificationQueryUseCase.getList(
+        NotificationListResult result = notificationQueryUseCase.getList(
                 userDetails.getMemberId(), cursorId);
-        return ApiResponse.success("알림 목록 조회 완료", response);
+        return ApiResponse.success("알림 목록 조회 완료", NotificationListResponse.from(result));
     }
 
     @PatchMapping("/{notiId}/read")
@@ -73,8 +73,8 @@ public class NotificationController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long notiId) {
 
-        NotificationReadResponse response = notificationQueryUseCase.markAsRead(
+        NotificationReadResult result = notificationQueryUseCase.markAsRead(
                 userDetails.getMemberId(), notiId);
-        return ApiResponse.success("알림 읽음 처리 완료", response);
+        return ApiResponse.success("알림 읽음 처리 완료", NotificationReadResponse.from(result));
     }
 }
