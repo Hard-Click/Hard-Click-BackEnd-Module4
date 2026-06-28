@@ -6,6 +6,8 @@ import com.wanted.backend.domain.enrollment_management.presentation.api.request.
 import com.wanted.backend.domain.enrollment_management.presentation.api.response.MyEnrollmentResponse;
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+@Tag(name = "Enrollment", description = "수강 등록 API")
 @RestController
 @RequestMapping("/api/enrollments")
 @RequiredArgsConstructor

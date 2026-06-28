@@ -16,23 +16,22 @@ CREATE TABLE IF NOT EXISTS course (
     updated_at TIMESTAMP NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS course_curriculum (
-    curriculum_id BIGINT NOT NULL PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS course_section (
+    id BIGINT NOT NULL PRIMARY KEY,
     course_id BIGINT NOT NULL,
     title VARCHAR(200) NOT NULL,
-    duration_minutes INT,
     order_index INT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS video (
-    video_id BIGINT NOT NULL PRIMARY KEY,
-    curriculum_id BIGINT NOT NULL,
+CREATE TABLE IF NOT EXISTS lesson (
+    id BIGINT NOT NULL PRIMARY KEY,
+    section_id BIGINT NOT NULL,
     title VARCHAR(200) NOT NULL,
-    video_url VARCHAR(500) NOT NULL,
+    order_index INT NOT NULL,
+    video_url VARCHAR(500),
     s3_key VARCHAR(1024),
-    is_preview TINYINT NOT NULL,
-    duration_seconds INT NOT NULL,
-    sort_order INT NOT NULL
+    duration_seconds INT,
+    created_at TIMESTAMP NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS video_progress (

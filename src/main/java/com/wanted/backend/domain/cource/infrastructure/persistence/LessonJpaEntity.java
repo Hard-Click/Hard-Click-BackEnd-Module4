@@ -31,8 +31,11 @@ public class LessonJpaEntity {
     @Column(name = "order_index", nullable = false)
     private int orderIndex;
 
-    @Column(name = "video_url")
+    @Column(name = "video_url", columnDefinition = "TEXT")
     private String videoUrl;
+
+    @Column(name = "s3_key")
+    private String s3Key;
 
     @Column(name = "duration_seconds")
     private Integer durationSeconds;
@@ -57,8 +60,9 @@ public class LessonJpaEntity {
         return entity;
     }
 
-    void update(String videoUrl, FileProcessingStatus status) {
+    void update(String videoUrl, String s3Key, FileProcessingStatus status) {
         if (videoUrl != null) this.videoUrl = videoUrl;
+        if (s3Key != null) this.s3Key = s3Key;
         if (status != null) this.fileProcessingStatus = status;
     }
 

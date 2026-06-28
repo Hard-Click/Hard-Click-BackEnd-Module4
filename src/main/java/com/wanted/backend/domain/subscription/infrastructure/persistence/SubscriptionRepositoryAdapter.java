@@ -24,6 +24,7 @@ public class SubscriptionRepositoryAdapter implements SubscriptionRepository {
     public Subscription save(Subscription subscription) {
         SubscriptionJpaEntity entity = new SubscriptionJpaEntity(
                 subscription.getMemberId(),
+                subscription.getOrderId(),
                 subscription.getPlanId(),
                 subscription.getPaymentMethod(),
                 subscription.getPaidAmount(),
@@ -69,6 +70,7 @@ public class SubscriptionRepositoryAdapter implements SubscriptionRepository {
         return Subscription.restore(
                 entity.getId(),
                 entity.getMemberId(),
+                entity.getOrderId(),
                 entity.getPlanId(),
                 entity.getPaymentMethod(),
                 entity.getPaidAmount(),

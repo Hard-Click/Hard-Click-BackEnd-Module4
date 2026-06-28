@@ -25,6 +25,8 @@ import org.springframework.http.HttpStatus;
     INVALID_LOGIN_INFO(HttpStatus.UNAUTHORIZED, "U003", "아이디 또는 비밀번호가 올바르지 않습니다."),
     ACCOUNT_LOCKED(HttpStatus.LOCKED, "U004", "비밀번호를 5회 연속 틀려 계정이 잠겼습니다."),
         ACCOUNT_NOT_LOCKED(HttpStatus.CONFLICT, "U017", "잠긴 계정이 아닙니다."),
+    SUSPENDED_MEMBER(HttpStatus.FORBIDDEN, "U015", "정지된 계정입니다."),
+    ACCOUNT_ALREADY_LOCKED(HttpStatus.FORBIDDEN, "U020", "이미 잠긴 계정입니다. 이메일 인증을 통해 잠금을 해제해주세요."),
     INSTRUCTOR_NOT_FOUND(HttpStatus.UNAUTHORIZED, "U005", "제공받은 계정 정보가 존재하지 않습니다."),
     DUPLICATE_USERNAME(HttpStatus.CONFLICT, "U006", "이미 사용 중인 아이디입니다."),
     FORBIDDEN_USERNAME(HttpStatus.BAD_REQUEST, "U007", "사용할 수 없는 아이디입니다."),
@@ -141,6 +143,7 @@ import org.springframework.http.HttpStatus;
     ORDER_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "ORD007", "주문 항목을 찾을 수 없습니다."),
     ORDER_ITEM_ALREADY_REFUNDED(HttpStatus.CONFLICT, "ORD008", "이미 환불된 주문 항목입니다."),
     ORDER_ENROLLMENT_REVOKE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "ORD009", "수강 권한 박탈에 실패했습니다."),
+    ORDER_INVALID_STATUS(HttpStatus.INTERNAL_SERVER_ERROR, "ORD010", "알 수 없는 주문 상태입니다."),
     // 순공 세션 관련 예외
     STUDY_TIMER_SESSION_ALREADY_RUNNING(HttpStatus.CONFLICT, "ST001", "이미 실행 중인 순공시간 세션이 있습니다."),
     STUDY_TIMER_SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "ST002", "존재하지 않는 순공시간 세션입니다."),

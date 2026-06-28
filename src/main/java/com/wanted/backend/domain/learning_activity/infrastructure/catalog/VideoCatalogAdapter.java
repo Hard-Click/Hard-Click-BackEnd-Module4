@@ -2,8 +2,6 @@ package com.wanted.backend.domain.learning_activity.infrastructure.catalog;
 
 import com.wanted.backend.domain.learning_activity.application.port.VideoCatalogPort;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoAccessInfo;
-import com.wanted.backend.domain.learning_activity.infrastructure.curriculum.CourseCurriculumReferenceEntity;
-import com.wanted.backend.domain.learning_activity.infrastructure.curriculum.CourseCurriculumReferenceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,40 +13,41 @@ import java.util.Optional;
 @Transactional(readOnly = true)
 public class VideoCatalogAdapter implements VideoCatalogPort {
 
-    private final CatalogVideoReferenceRepository videoRepository;
-    private final CourseCurriculumReferenceRepository curriculumRepository;
+    private final LessonReferenceRepository lessonRepository;
+    private final CourseSectionReferenceRepository sectionRepository;
     private final CatalogCourseReferenceRepository courseRepository;
 
     @Override
     public Optional<VideoAccessInfo> findByVideoId(Long videoId) {
-        return videoRepository.findById(videoId)
+        // 재생 영상의 식별자(videoId)는 이제 lesson.id다 — lesson -> course_section -> course 순으로
+        // 필요한 참조 정보를 조합한다. 레포지토리는 단순 조회만, 조합 로직은 어댑터에 둔다.
+        return lessonRepository.findById(videoId)
                 .flatMap(this::toDomain);
     }
 
-    private Optional<VideoAccessInfo> toDomain(CatalogVideoReferenceEntity video) {
-        // videos -> course_curriculum -> course 순서로 필요한 참조 정보를 조합합니다.
-        // 레포지토리는 단순 조회만 담당하고, 조합 로직은 어댑터에 둡니다.
-        return curriculumRepository.findById(video.getCurriculumId())
-                .flatMap(curriculum -> courseRepository.findById(curriculum.getCourseId())
-                        .map(course -> toDomain(video, curriculum, course)));
+    private Optional<VideoAccessInfo> toDomain(LessonReferenceEntity lesson) {
+        return sectionRepository.findById(lesson.getSectionId())
+                .flatMap(section -> courseRepository.findById(section.getCourseId())
+                        .map(course -> toDomain(lesson, section, course)));
     }
 
     private VideoAccessInfo toDomain(
-            CatalogVideoReferenceEntity video,
-            CourseCurriculumReferenceEntity curriculum,
+            LessonReferenceEntity lesson,
+            CourseSectionReferenceEntity section,
             CatalogCourseReferenceEntity course
     ) {
-        boolean isPreview = Boolean.TRUE.equals(video.getPreview());
+        // 강의 상세 조회(CourseQueryService)와 동일한 휴리스틱: 첫 섹션의 첫 레슨을 미리보기로 취급한다.
+        boolean isPreview = section.getOrderIndex() == 0 && lesson.getOrderIndex() == 0;
 
         return new VideoAccessInfo(
-                video.getId(),
-                curriculum.getCourseId(),
+                lesson.getId(),
+                section.getCourseId(),
                 course.getStatus(),
                 course.getPrice(),
                 isPreview,
-                video.getS3Key(),
-                video.getStreamingUrl(),
-                video.getDurationSeconds()
+                lesson.getS3Key(),
+                lesson.getVideoUrl(),
+                lesson.getDurationSeconds()
         );
     }
 }

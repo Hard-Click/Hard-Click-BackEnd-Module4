@@ -15,11 +15,13 @@ import com.wanted.backend.domain.community.presentation.response.UpdateReviewRes
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Review", description = "강의 리뷰 API")
 @RestController
 @RequestMapping("/api/courses/{courseId}/reviews")
 public class ReviewController {

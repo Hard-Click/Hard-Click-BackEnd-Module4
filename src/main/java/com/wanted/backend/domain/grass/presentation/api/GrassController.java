@@ -14,6 +14,13 @@ import com.wanted.backend.domain.grass.application.usecase.GetMonthlyGrassUseCas
 import com.wanted.backend.domain.grass.application.usecase.GetStudyStreakUseCase;
 import com.wanted.backend.domain.grass.application.usecase.GetStudyTimeGrassUseCase;
 import com.wanted.backend.domain.grass.application.usecase.GetYearlyGrassUseCase;
+import com.wanted.backend.domain.grass.presentation.api.response.DailyGrassDetailResponse;
+import com.wanted.backend.domain.grass.presentation.api.response.GrassViewResponse;
+import com.wanted.backend.domain.grass.presentation.api.response.LessonGrassResponse;
+import com.wanted.backend.domain.grass.presentation.api.response.MonthlyGrassResponse;
+import com.wanted.backend.domain.grass.presentation.api.response.StudyStreakResponse;
+import com.wanted.backend.domain.grass.presentation.api.response.StudyTimeGrassResponse;
+import com.wanted.backend.domain.grass.presentation.api.response.YearlyGrassResponse;
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
@@ -52,7 +59,7 @@ public class GrassController {
             summary = "잔디 보기 모드 전환 조회",
             description = "월별 또는 연간 보기 모드에 맞는 잔디 데이터를 조회합니다."
     )
-    public ResponseEntity<ApiResponse<GetGrassViewUseCase.GrassView>> grass(
+    public ResponseEntity<ApiResponse<GrassViewResponse>> grass(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam String view,
             @RequestParam Integer year,
@@ -71,7 +78,7 @@ public class GrassController {
                         month
                 ));
 
-        return ApiResponse.success("잔디 데이터를 조회했습니다.", result);
+        return ApiResponse.success("잔디 데이터를 조회했습니다.", GrassViewResponse.from(result));
     }
 
     @GetMapping("/lessons")
@@ -79,7 +86,7 @@ public class GrassController {
             summary = "수강량 잔디 조회",
             description = "현재 로그인 사용자의 날짜별 수강량 기준 잔디 데이터를 조회합니다."
     )
-    public ResponseEntity<ApiResponse<List<GetLessonGrassUseCase.LessonGrassView>>> lessons(
+    public ResponseEntity<ApiResponse<List<LessonGrassResponse>>> lessons(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Long memberId = userDetails != null ? userDetails.getMemberId() : null;
@@ -92,7 +99,10 @@ public class GrassController {
                         memberId
                 ));
 
-        return ApiResponse.success("수강량 잔디 데이터를 조회했습니다.", result);
+        return ApiResponse.success(
+                "수강량 잔디 데이터를 조회했습니다.",
+                result.stream().map(LessonGrassResponse::from).toList()
+        );
     }
 
     @GetMapping("/study-time")
@@ -100,7 +110,7 @@ public class GrassController {
             summary = "순공시간 잔디 조회",
             description = "현재 로그인 사용자의 날짜별 순공시간 기준 잔디 데이터를 조회합니다."
     )
-    public ResponseEntity<ApiResponse<List<GetStudyTimeGrassUseCase.StudyTimeGrassView>>> studyTime(
+    public ResponseEntity<ApiResponse<List<StudyTimeGrassResponse>>> studyTime(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Long memberId = userDetails != null ? userDetails.getMemberId() : null;
@@ -113,7 +123,10 @@ public class GrassController {
                         memberId
                 ));
 
-        return ApiResponse.success("순공시간 잔디 데이터를 조회했습니다.", result);
+        return ApiResponse.success(
+                "순공시간 잔디 데이터를 조회했습니다.",
+                result.stream().map(StudyTimeGrassResponse::from).toList()
+        );
     }
 
     @GetMapping("/monthly")
@@ -121,7 +134,7 @@ public class GrassController {
             summary = "월별 잔디 조회",
             description = "현재 로그인 사용자의 특정 월 날짜별 학습 값 기준 월별 잔디 데이터를 조회합니다."
     )
-    public ResponseEntity<ApiResponse<GetMonthlyGrassUseCase.MonthlyGrassView>> monthly(
+    public ResponseEntity<ApiResponse<MonthlyGrassResponse>> monthly(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam Integer year,
             @RequestParam Integer month
@@ -138,7 +151,7 @@ public class GrassController {
                         month
                 ));
 
-        return ApiResponse.success("월별 잔디 데이터를 조회했습니다.", result);
+        return ApiResponse.success("월별 잔디 데이터를 조회했습니다.", MonthlyGrassResponse.from(result));
     }
 
     @GetMapping("/days/{date}")
@@ -146,7 +159,7 @@ public class GrassController {
             summary = "특정 날짜 잔디 상세 조회",
             description = "현재 로그인 사용자의 특정 날짜 수강량, 순공시간, 학습 여부를 조회합니다."
     )
-    public ResponseEntity<ApiResponse<GetDailyGrassDetailUseCase.DailyGrassDetailView>> dailyDetail(
+    public ResponseEntity<ApiResponse<DailyGrassDetailResponse>> dailyDetail(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
@@ -163,7 +176,7 @@ public class GrassController {
                         date
                 ));
 
-        return ApiResponse.success("잔디 상세 정보를 조회했습니다.", result);
+        return ApiResponse.success("잔디 상세 정보를 조회했습니다.", DailyGrassDetailResponse.from(result));
     }
 
     @GetMapping("/streak")
@@ -171,7 +184,7 @@ public class GrassController {
             summary = "연속 학습일 조회",
             description = "현재 로그인 사용자의 오늘 기준 연속 학습일을 조회합니다."
     )
-    public ResponseEntity<ApiResponse<GetStudyStreakUseCase.StudyStreakView>> streak(
+    public ResponseEntity<ApiResponse<StudyStreakResponse>> streak(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Long memberId = userDetails != null ? userDetails.getMemberId() : null;
@@ -184,7 +197,7 @@ public class GrassController {
                         memberId
                 ));
 
-        return ApiResponse.success("연속 학습일을 조회했습니다.", result);
+        return ApiResponse.success("연속 학습일을 조회했습니다.", StudyStreakResponse.from(result));
     }
 
     @GetMapping("/yearly")
@@ -192,7 +205,7 @@ public class GrassController {
             summary = "연간 잔디 조회",
             description = "현재 로그인 사용자의 특정 연도 날짜별 학습 값 기준 연간 잔디 데이터를 조회합니다."
     )
-    public ResponseEntity<ApiResponse<GetYearlyGrassUseCase.YearlyGrassView>> yearly(
+    public ResponseEntity<ApiResponse<YearlyGrassResponse>> yearly(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam Integer year
     ) {
@@ -207,6 +220,6 @@ public class GrassController {
                         year
                 ));
 
-        return ApiResponse.success("연간 잔디 데이터를 조회했습니다.", result);
+        return ApiResponse.success("연간 잔디 데이터를 조회했습니다.", YearlyGrassResponse.from(result));
     }
 }

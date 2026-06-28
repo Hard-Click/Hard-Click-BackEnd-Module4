@@ -18,7 +18,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/members/me/courses/completed")
-@Tag(name = "My Completed Courses", description = "마이페이지 완료 강의 목록 API")
+@Tag(name = "My Completed Course", description = "마이페이지 완료 강의 목록 API")
 public class MyCompletedCourseController {
 
     private final GetMyCompletedCoursesUseCase getMyCompletedCoursesUseCase;
