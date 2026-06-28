@@ -1,11 +1,11 @@
 package com.wanted.backend.domain.community.presentation.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.wanted.backend.domain.community.application.result.CommentResult;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
 
 public record CommentResponse(
 
@@ -40,5 +40,11 @@ public record CommentResponse(
         @Schema(description = "대댓글 목록")
         List<CommentResponse> replies
 ) {
-
+        public static CommentResponse from(CommentResult result) {
+                return new CommentResponse(
+                        result.commentId(), result.authorName(), result.authorInitial(),
+                        result.content(), result.createdAt(), result.isAccepted(),
+                        result.isMine(), result.isDeleted(), result.imageUrl(),
+                        result.replies().stream().map(CommentResponse::from).toList());
+        }
 }
