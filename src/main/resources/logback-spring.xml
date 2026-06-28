@@ -125,11 +125,11 @@
 
         <!-- 외부 라이브러리 로그 -->
         <logger name="org.springframework" level="INFO"/>
-        <logger name="org.springframework.web" level="DEBUG"/>
-        <logger name="org.springframework.transaction" level="DEBUG"/>
+        <logger name="org.springframework.web" level="WARN"/>
+        <logger name="org.springframework.transaction" level="WARN"/>
         <logger name="org.hibernate" level="INFO"/>
-        <logger name="org.hibernate.SQL" level="DEBUG"/>
-        <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE"/>
+        <logger name="org.hibernate.SQL" level="WARN"/>
+        <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="WARN"/>
     </springProfile>
 
     <!-- ===================================================== -->

@@ -13,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -32,18 +34,27 @@ public class ReviewQueryService implements ReviewQueryUseCase {
 
     @Override
     public ReviewListResult handle(Long courseId, Long memberId, ReviewSortType sort, int page) {
-        List<ReviewItemResult> items = new ArrayList<>();
-
+        List<Review> myReview = new ArrayList<>();
         if (!memberId.equals(-1L)) {
             reviewRepository.findByCourseIdAndMemberId(courseId, memberId)
-                    .ifPresent(r -> items.add(toItemResult(r, memberId)));
+                    .ifPresent(myReview::add);
         }
 
         List<Review> others = !memberId.equals(-1L)
                 ? reviewRepository.findByCourseIdExcludeMember(courseId, memberId, sort, page, PAGE_SIZE)
                 : reviewRepository.findByCourseId(courseId, sort, page, PAGE_SIZE);
 
-        others.forEach(r -> items.add(toItemResult(r, memberId)));
+        List<Review> allReviews = new ArrayList<>(myReview);
+        allReviews.addAll(others);
+
+        List<Long> memberIds = allReviews.stream()
+                .map(Review::getMemberId)
+                .collect(Collectors.toList());
+        Map<Long, String> nameMap = memberNamePort.getNamesByMemberIds(memberIds);
+
+        List<ReviewItemResult> items = new ArrayList<>();
+        myReview.forEach(r -> items.add(toItemResult(r, memberId, nameMap)));
+        others.forEach(r -> items.add(toItemResult(r, memberId, nameMap)));
 
         int totalCount = reviewRepository.countByCourseId(courseId);
 
@@ -57,15 +68,16 @@ public class ReviewQueryService implements ReviewQueryUseCase {
                 (int) Math.ceil((double) totalCount / PAGE_SIZE));
     }
 
-    private ReviewItemResult toItemResult(Review review, Long currentMemberId) {
-        String name = memberNamePort.getNameByMemberId(review.getMemberId());
+    private ReviewItemResult toItemResult(Review review, Long currentMemberId, Map<Long, String> nameMap) {
+        String name = nameMap.getOrDefault(review.getMemberId(), "");
         return new ReviewItemResult(
                 review.getId(),
                 review.maskName(name),
-                name.substring(0, 1),
+                name.isEmpty() ? "" : name.substring(0, 1),
                 review.getRating(),
                 review.isAdminDeleted() ? ADMIN_DELETED_MESSAGE : review.getContent(),
                 review.getCreatedAt().toLocalDate(),
                 review.isOwner(currentMemberId));
     }
+
 }
