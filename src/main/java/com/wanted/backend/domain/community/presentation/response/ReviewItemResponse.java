@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.community.presentation.response;
 
+import com.wanted.backend.domain.community.application.result.ReviewItemResult;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDate;
@@ -27,5 +28,9 @@ public record ReviewItemResponse(
         @Schema(description = "본인이 작성한 리뷰 여부", example = "false")
         boolean isMyReview
 ) {
-
+        public static ReviewItemResponse from(ReviewItemResult result) {
+                return new ReviewItemResponse(
+                        result.reviewId(), result.authorName(), result.authorInitial(),
+                        result.rating(), result.content(), result.createdDate(), result.isMyReview());
+        }
 }

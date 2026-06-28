@@ -1,10 +1,10 @@
 package com.wanted.backend.domain.notice.presentation.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.wanted.backend.domain.notice.application.result.NoticeItemResult;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
-
 
 public record NoticeItemResponse(
 
@@ -23,13 +23,16 @@ public record NoticeItemResponse(
         @Schema(description = "상단 고정 여부", example = "false")
         boolean isPinned,
 
-        @Schema(description = "읽음 여부 (추후 구현 예정)", example = "false")
-        boolean isRead,       // 추후 구현 예정
+        @Schema(description = "읽음 여부", example = "false")
+        boolean isRead,
 
         @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss+09:00")
         @Schema(description = "작성일시", example = "2025-03-15T14:30:00")
         LocalDateTime createdAt
-
 ) {
-
+        public static NoticeItemResponse from(NoticeItemResult result) {
+                return new NoticeItemResponse(
+                        result.noticeId(), result.noticeType(), result.courseName(),
+                        result.title(), result.isPinned(), result.isRead(), result.createdAt());
+        }
 }

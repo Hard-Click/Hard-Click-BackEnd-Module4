@@ -3,6 +3,7 @@ package com.wanted.backend.domain.community.presentation;
 import com.wanted.backend.domain.community.application.command.CreateReviewCommand;
 import com.wanted.backend.domain.community.application.command.DeleteReviewCommand;
 import com.wanted.backend.domain.community.application.command.UpdateReviewCommand;
+import com.wanted.backend.domain.community.application.result.ReviewListResult;
 import com.wanted.backend.domain.community.application.usecase.ReviewCommandUseCase;
 import com.wanted.backend.domain.community.application.usecase.ReviewQueryUseCase;
 import com.wanted.backend.domain.community.domain.model.ReviewSortType;
@@ -78,13 +79,9 @@ public class ReviewController {
             @RequestParam(defaultValue = "latest") ReviewSortType sort,
             @RequestParam(defaultValue = "0") int page) {
 
-        //비회원도 조회가 가능하도록
         Long currentMemberId = userDetails != null ? userDetails.getMemberId() : -1L;
-
-        ReviewListResponse response = reviewQueryUseCase.handle(
-                courseId, currentMemberId, sort, page);
-
-        return ApiResponse.success("리뷰 목록 조회 성공", response);
+        ReviewListResult result = reviewQueryUseCase.handle(courseId, currentMemberId, sort, page);
+        return ApiResponse.success("리뷰 목록 조회 성공", ReviewListResponse.from(result));
     }
 
 

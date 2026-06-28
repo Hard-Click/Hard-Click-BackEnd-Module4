@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.community.presentation.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.wanted.backend.domain.community.application.result.PostItemResult;
 import com.wanted.backend.domain.community.domain.model.BoardType;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -29,8 +30,10 @@ public record PostItemResponse(
 
         @Schema(description = "댓글수", example = "8")
         int commentCount
-
-
 ) {
-
+        public static PostItemResponse from(PostItemResult result) {
+                return new PostItemResponse(
+                        result.postId(), result.boardType(), result.title(),
+                        result.authorName(), result.createdAt(), result.viewCount(), result.commentCount());
+        }
 }
