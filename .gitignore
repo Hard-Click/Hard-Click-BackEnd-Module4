@@ -50,3 +50,4 @@ k6/
 monitoring/grafana/provisioning/dashboards/json/
 CLAUDE.md
 benchmark_post_list.sql
+k6_post_list_load_test.js

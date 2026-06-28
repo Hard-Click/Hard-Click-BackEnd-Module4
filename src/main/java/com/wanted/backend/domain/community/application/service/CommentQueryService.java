@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.community.application.service;
 
+import com.wanted.backend.domain.community.application.policy.CommunityAccessPolicy;
 import com.wanted.backend.domain.community.application.port.CommunityFileStoragePort;
 import com.wanted.backend.domain.community.application.port.MemberNamePort;
 import com.wanted.backend.domain.community.application.result.CommentListResult;
@@ -21,17 +22,22 @@ public class CommentQueryService implements CommentQueryUseCase {
     private final CommentRepository commentRepository;
     private final MemberNamePort memberNamePort;
     private final CommunityFileStoragePort fileStoragePort;
+    private final CommunityAccessPolicy communityAccessPolicy;
 
     public CommentQueryService(CommentRepository commentRepository,
                                MemberNamePort memberNamePort,
-                               CommunityFileStoragePort fileStoragePort) {
+                               CommunityFileStoragePort fileStoragePort,
+                               CommunityAccessPolicy communityAccessPolicy) {
         this.commentRepository = commentRepository;
         this.memberNamePort = memberNamePort;
         this.fileStoragePort = fileStoragePort;
+        this.communityAccessPolicy = communityAccessPolicy;
     }
 
     @Override
     public CommentListResult getComments(Long postId, Long memberId, boolean isAdmin) {
+        communityAccessPolicy.validateAccessIfLoggedIn(memberId);
+
         List<Comment> parentComments = commentRepository.findByPostIdAndParentIdIsNull(postId);
 
         List<CommentResult> comments = parentComments.stream()

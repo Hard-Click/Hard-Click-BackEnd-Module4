@@ -98,7 +98,7 @@ public class PostController {
             @RequestParam(defaultValue = "0") int page) {
 
         boolean isAdmin = "ADMIN".equals(userDetails.getRole());
-        PostListResult result = postQueryUseCase.getList(boardType, sort, keyword, page, isAdmin);
+        PostListResult result = postQueryUseCase.getList(boardType, sort, keyword, page, isAdmin, userDetails.getMemberId());
         return ApiResponse.success("게시글 목록 조회 성공", PostListResponse.from(result));
     }
 
@@ -122,7 +122,7 @@ public class PostController {
             @RequestParam(defaultValue = "0") int page) {
 
         boolean isAdmin = "ADMIN".equals(userDetails.getRole());
-        PostListResult result = postQueryUseCase.getList(null, sort, keyword, page, isAdmin);
+        PostListResult result = postQueryUseCase.getList(null, sort, keyword, page, isAdmin, userDetails.getMemberId());
         List<UnifiedBoardItemResponse> items = new ArrayList<>(
                 result.posts().stream().map(UnifiedBoardItemResponse::fromPostItem).toList());
         items.addAll(MOCK_STUDY_ITEMS);

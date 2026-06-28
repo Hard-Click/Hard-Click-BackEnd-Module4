@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.community.application.service;
 
+import com.wanted.backend.domain.community.application.policy.CommunityAccessPolicy;
 import com.wanted.backend.domain.community.application.port.MemberNamePort;
 import com.wanted.backend.domain.community.application.result.RatingStatResult;
 import com.wanted.backend.domain.community.application.result.ReviewItemResult;
@@ -25,16 +26,22 @@ public class ReviewQueryService implements ReviewQueryUseCase {
 
     private final ReviewRepository reviewRepository;
     private final MemberNamePort memberNamePort;
+    private final CommunityAccessPolicy communityAccessPolicy;
 
     public ReviewQueryService(ReviewRepository reviewRepository,
-                              MemberNamePort memberNamePort) {
+                              MemberNamePort memberNamePort,
+                              CommunityAccessPolicy communityAccessPolicy) {
         this.reviewRepository = reviewRepository;
         this.memberNamePort = memberNamePort;
+        this.communityAccessPolicy = communityAccessPolicy;
     }
 
     @Override
     public ReviewListResult handle(Long courseId, Long memberId, ReviewSortType sort, int page) {
         List<Review> myReview = new ArrayList<>();
+        // 비회원(-1)은 통과, 로그인한 정지/탈퇴 회원만 차단
+        communityAccessPolicy.validateAccessIfLoggedIn(memberId);
+
         if (!memberId.equals(-1L)) {
             reviewRepository.findByCourseIdAndMemberId(courseId, memberId)
                     .ifPresent(myReview::add);
@@ -79,5 +86,4 @@ public class ReviewQueryService implements ReviewQueryUseCase {
                 review.getCreatedAt().toLocalDate(),
                 review.isOwner(currentMemberId));
     }
-
 }
