@@ -16,6 +16,8 @@ import com.wanted.backend.domain.identity.presentation.api.response.SignupRespon
 import com.wanted.backend.global.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +42,11 @@ public class IdentityController {
             summary = "로그인",
             description = "아이디와 비밀번호로 로그인하고 Access Token과 Refresh Token을 발급합니다."
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "로그인 성공"),
+            @ApiResponse(responseCode = "401", description = "아이디 또는 비밀번호 불일치"),
+            @ApiResponse(responseCode = "403", description = "계정 잠금 또는 정지 상태")
+    })
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
         AuthToken token = authCommandUseCase.login(request.username(), request.password());
@@ -63,6 +70,10 @@ public class IdentityController {
             summary = "Access Token 재발급",
             description = "Refresh Token을 검증하고 새로운 Access Token을 발급합니다."
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Access Token 재발급 성공"),
+            @ApiResponse(responseCode = "401", description = "유효하지 않거나 만료된 Refresh Token")
+    })
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<RefreshTokenResponse>> refresh(@Valid @RequestBody RefreshTokenRequest request) {
         AuthToken token = authCommandUseCase.refresh(request.refreshToken());
@@ -77,6 +88,9 @@ public class IdentityController {
             summary = "아이디 중복 확인",
             description = "회원가입에 사용할 아이디가 이미 사용 중인지 확인합니다."
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "중복 확인 완료")
+    })
     @GetMapping("/check-username")
     public ResponseEntity<ApiResponse<DuplicateCheckResponse>> checkUsername(
             @Parameter(description = "중복 확인할 아이디", example = "testuser")
@@ -92,6 +106,9 @@ public class IdentityController {
             summary = "이메일 중복 확인",
             description = "회원가입에 사용할 이메일이 이미 사용 중인지 확인합니다."
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "중복 확인 완료")
+    })
     @GetMapping("/check-email")
     public ResponseEntity<ApiResponse<DuplicateCheckResponse>> checkEmail(
             @Parameter(description = "중복 확인할 이메일", example = "user@example.com")
@@ -107,6 +124,11 @@ public class IdentityController {
             summary = "회원가입",
             description = "이메일 인증을 완료한 사용자 정보를 기반으로 회원가입을 처리합니다."
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "회원가입 성공"),
+            @ApiResponse(responseCode = "400", description = "입력값 검증 실패 또는 이메일 인증 토큰 유효하지 않음"),
+            @ApiResponse(responseCode = "409", description = "아이디 또는 이메일 중복")
+    })
     @PostMapping("/signup")
     public ResponseEntity<ApiResponse<SignupResponse>> signup(@Valid @RequestBody SignupRequest request) {
         Long memberId = signupCommandUseCase.signup(new SignupCommand(
@@ -132,6 +154,10 @@ public class IdentityController {
             summary = "로그아웃",
             description = "Refresh Token을 삭제하여 로그아웃 처리합니다."
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "로그아웃 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패 (Access Token 없거나 만료)")
+    })
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<EmptyResponse>> logout(@Valid @RequestBody LogoutRequest request) {
         authCommandUseCase.logout(request.refreshToken());

@@ -26,6 +26,7 @@ import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -57,13 +58,13 @@ public class GrassController {
     @GetMapping
     @Operation(
             summary = "잔디 보기 모드 전환 조회",
-            description = "월별 또는 연간 보기 모드에 맞는 잔디 데이터를 조회합니다."
+            description = "월별 또는 연간 보기 모드에 맞는 잔디 데이터를 조회합니다. view=monthly이면 year+month 필수, view=yearly이면 year만 필요합니다. 로그인 필요."
     )
     public ResponseEntity<ApiResponse<GrassViewResponse>> grass(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestParam String view,
-            @RequestParam Integer year,
-            @RequestParam(required = false) Integer month
+            @Parameter(description = "보기 모드 (monthly / yearly)", example = "monthly") @RequestParam String view,
+            @Parameter(description = "조회할 연도", example = "2026") @RequestParam Integer year,
+            @Parameter(description = "조회할 월 (monthly 모드에서만 사용)", example = "6") @RequestParam(required = false) Integer month
     ) {
         Long memberId = userDetails != null ? userDetails.getMemberId() : null;
         if (memberId == null) {
@@ -84,7 +85,7 @@ public class GrassController {
     @GetMapping("/lessons")
     @Operation(
             summary = "수강량 잔디 조회",
-            description = "현재 로그인 사용자의 날짜별 수강량 기준 잔디 데이터를 조회합니다."
+            description = "현재 로그인 사용자의 날짜별 수강량 기준 잔디 데이터를 조회합니다. 로그인 필요."
     )
     public ResponseEntity<ApiResponse<List<LessonGrassResponse>>> lessons(
             @AuthenticationPrincipal CustomUserDetails userDetails
@@ -108,7 +109,7 @@ public class GrassController {
     @GetMapping("/study-time")
     @Operation(
             summary = "순공시간 잔디 조회",
-            description = "현재 로그인 사용자의 날짜별 순공시간 기준 잔디 데이터를 조회합니다."
+            description = "현재 로그인 사용자의 날짜별 순공시간 기준 잔디 데이터를 조회합니다. 로그인 필요."
     )
     public ResponseEntity<ApiResponse<List<StudyTimeGrassResponse>>> studyTime(
             @AuthenticationPrincipal CustomUserDetails userDetails
@@ -132,12 +133,12 @@ public class GrassController {
     @GetMapping("/monthly")
     @Operation(
             summary = "월별 잔디 조회",
-            description = "현재 로그인 사용자의 특정 월 날짜별 학습 값 기준 월별 잔디 데이터를 조회합니다."
+            description = "현재 로그인 사용자의 특정 월 날짜별 학습 값 기준 월별 잔디 데이터를 조회합니다. 로그인 필요."
     )
     public ResponseEntity<ApiResponse<MonthlyGrassResponse>> monthly(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestParam Integer year,
-            @RequestParam Integer month
+            @Parameter(description = "조회할 연도", example = "2026") @RequestParam Integer year,
+            @Parameter(description = "조회할 월 (1~12)", example = "6") @RequestParam Integer month
     ) {
         Long memberId = userDetails != null ? userDetails.getMemberId() : null;
         if (memberId == null) {
@@ -157,10 +158,11 @@ public class GrassController {
     @GetMapping("/days/{date}")
     @Operation(
             summary = "특정 날짜 잔디 상세 조회",
-            description = "현재 로그인 사용자의 특정 날짜 수강량, 순공시간, 학습 여부를 조회합니다."
+            description = "현재 로그인 사용자의 특정 날짜 수강량, 순공시간, 학습 여부를 조회합니다. 로그인 필요."
     )
     public ResponseEntity<ApiResponse<DailyGrassDetailResponse>> dailyDetail(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "조회할 날짜 (ISO 8601 형식: yyyy-MM-dd)", example = "2026-06-29")
             @PathVariable
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate date
@@ -182,7 +184,7 @@ public class GrassController {
     @GetMapping("/streak")
     @Operation(
             summary = "연속 학습일 조회",
-            description = "현재 로그인 사용자의 오늘 기준 연속 학습일을 조회합니다."
+            description = "현재 로그인 사용자의 오늘 기준 연속 학습일을 조회합니다. 로그인 필요."
     )
     public ResponseEntity<ApiResponse<StudyStreakResponse>> streak(
             @AuthenticationPrincipal CustomUserDetails userDetails
@@ -203,11 +205,11 @@ public class GrassController {
     @GetMapping("/yearly")
     @Operation(
             summary = "연간 잔디 조회",
-            description = "현재 로그인 사용자의 특정 연도 날짜별 학습 값 기준 연간 잔디 데이터를 조회합니다."
+            description = "현재 로그인 사용자의 특정 연도 날짜별 학습 값 기준 연간 잔디 데이터를 조회합니다. 로그인 필요."
     )
     public ResponseEntity<ApiResponse<YearlyGrassResponse>> yearly(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestParam Integer year
+            @Parameter(description = "조회할 연도", example = "2026") @RequestParam Integer year
     ) {
         Long memberId = userDetails != null ? userDetails.getMemberId() : null;
         if (memberId == null) {

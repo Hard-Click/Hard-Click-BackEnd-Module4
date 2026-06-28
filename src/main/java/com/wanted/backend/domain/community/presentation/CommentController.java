@@ -15,6 +15,9 @@ import com.wanted.backend.domain.community.presentation.response.UpdateCommentRe
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
@@ -50,6 +53,12 @@ public class CommentController {
                 - 요청 타입은 multipart/form-data 입니다.
                 """
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "댓글 작성 성공"),
+            @ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
+    })
     public ResponseEntity<ApiResponse<CreateCommentResponse>> createComment(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestPart("data") @Valid CreateCommentRequest request,
@@ -78,8 +87,16 @@ public class CommentController {
                 - 게시글당 하나의 댓글만 채택 가능하며, 채택 취소는 불가능합니다.
                 """
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "댓글 채택 성공"),
+            @ApiResponse(responseCode = "400", description = "채택 불가 조건 위반 (대댓글, 이미 채택된 게시글 등)"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "403", description = "본인이 작성한 게시글이 아님"),
+            @ApiResponse(responseCode = "404", description = "댓글을 찾을 수 없음")
+    })
     public ResponseEntity<ApiResponse<Void>> acceptComment(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "채택할 댓글 ID", example = "12")
             @PathVariable Long commentId) {
 
         commentCommandUseCase.accept(new AcceptCommentCommand(
@@ -102,8 +119,14 @@ public class CommentController {
         - 삭제된 댓글은 isDeleted: true로 표시됩니다.
         """
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "댓글 목록 조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
+    })
     public ResponseEntity<ApiResponse<CommentListResponse>> getComments(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "댓글을 조회할 게시글 ID", example = "37")
             @PathVariable Long postId) {
 
         boolean isAdmin = "ADMIN".equals(userDetails.getRole());
@@ -125,8 +148,16 @@ public class CommentController {
                 - 요청 타입은 multipart/form-data 입니다.
                 """
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "댓글 수정 성공"),
+            @ApiResponse(responseCode = "400", description = "채택된 댓글은 수정 불가 또는 입력값 검증 실패"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "403", description = "본인이 작성한 댓글이 아님"),
+            @ApiResponse(responseCode = "404", description = "댓글을 찾을 수 없음")
+    })
     public ResponseEntity<ApiResponse<UpdateCommentResponse>> updateComment(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "수정할 댓글 ID", example = "12")
             @PathVariable Long commentId,
             @RequestPart("data") @Valid UpdateCommentRequest request,
             @RequestPart(value = "file", required = false) MultipartFile file) {
@@ -154,8 +185,16 @@ public class CommentController {
             - ADMIN은 모든 댓글을 삭제할 수 있습니다.
             """
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "댓글 삭제 성공"),
+            @ApiResponse(responseCode = "400", description = "채택된 댓글은 삭제 불가"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "403", description = "본인이 작성한 댓글이 아님"),
+            @ApiResponse(responseCode = "404", description = "댓글을 찾을 수 없음")
+    })
     public ResponseEntity<ApiResponse<Void>> deleteComment(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "삭제할 댓글 ID", example = "12")
             @PathVariable Long commentId) {
 
         commentCommandUseCase.delete(new DeleteCommentCommand(

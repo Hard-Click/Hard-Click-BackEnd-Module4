@@ -42,7 +42,7 @@ public record CourseListItemResponse(
         @Schema(description = "수강생 수", example = "12543")
         int studentCount,
 
-        @Schema(description = "등록일시")
+        @Schema(description = "등록일시", example = "2026-01-15T09:00:00Z")
         Instant createdAt,
 
         @Schema(description = "강의 상태 (DRAFT / PUBLISHED)", example = "PUBLISHED")

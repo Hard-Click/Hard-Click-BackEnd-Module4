@@ -13,7 +13,7 @@ public record LoginResponse(
         @Schema(description = "회원 ID", example = "1")
         Long memberId,
 
-        @Schema(description = "회원 권한", example = "ROLE_STUDENT")
+        @Schema(description = "회원 권한 (STUDENT, INSTRUCTOR, ADMIN)", example = "STUDENT")
         String role
 ) {
 }

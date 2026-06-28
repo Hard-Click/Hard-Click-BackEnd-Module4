@@ -15,6 +15,8 @@ import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -49,6 +51,10 @@ public class UserProfileController {
             summary = "내 프로필 조회",
             description = "로그인한 사용자의 아이디, 이름, 이메일, 프로필 이미지를 조회합니다."
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "프로필 조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패")
+    })
     public ResponseEntity<ApiResponse<ProfileQueryUseCase.MyProfileView>> getMyProfile(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
@@ -60,6 +66,11 @@ public class UserProfileController {
 
     @PatchMapping("/me/password")
     @Operation(summary = "비밀번호 변경", description = "로그인한 사용자의 비밀번호를 수정합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "비밀번호 변경 성공"),
+            @ApiResponse(responseCode = "400", description = "현재 비밀번호 불일치 또는 새 비밀번호 정책 미충족"),
+            @ApiResponse(responseCode = "401", description = "인증 실패")
+    })
     public ResponseEntity<ApiResponse<EmptyResponse>> updatePassword(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody UpdatePasswordRequest request
@@ -74,6 +85,11 @@ public class UserProfileController {
             summary = "현재 비밀번호 검증",
             description = "비밀번호 변경이나 회원 탈퇴 없이, 로그인한 사용자의 현재 비밀번호 일치 여부만 확인합니다."
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "비밀번호 검증 성공"),
+            @ApiResponse(responseCode = "400", description = "현재 비밀번호 불일치"),
+            @ApiResponse(responseCode = "401", description = "인증 실패")
+    })
     public ResponseEntity<ApiResponse<EmptyResponse>> verifyPassword(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody VerifyPasswordRequest request
@@ -88,6 +104,11 @@ public class UserProfileController {
             summary = "내 프로필 수정",
             description = "로그인한 사용자의 프로필 이미지와 비밀번호를 수정합니다."
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "프로필 수정 성공"),
+            @ApiResponse(responseCode = "400", description = "현재 비밀번호 불일치 또는 이미지 개수 초과"),
+            @ApiResponse(responseCode = "401", description = "인증 실패")
+    })
     public ResponseEntity<ApiResponse<ProfileCommandUseCase.MyProfileUpdateView>> updateMyProfile(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @ModelAttribute UpdateMyProfileRequest request
@@ -113,6 +134,11 @@ public class UserProfileController {
             summary = "프로필 이미지 수정",
             description = "로그인한 사용자의 프로필 이미지를 수정합니다."
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "프로필 이미지 수정 성공"),
+            @ApiResponse(responseCode = "400", description = "파일 형식 오류"),
+            @ApiResponse(responseCode = "401", description = "인증 실패")
+    })
     public ResponseEntity<ApiResponse<ProfileImageResponse>> updateProfileImage(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestPart("profileImage") MultipartFile profileImage
@@ -138,6 +164,11 @@ public class UserProfileController {
             summary = "회원 탈퇴",
             description = "로그인한 사용자의 현재 비밀번호를 확인한 뒤 회원 상태를 탈퇴로 변경하고 Refresh Token을 삭제합니다."
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "회원 탈퇴 성공"),
+            @ApiResponse(responseCode = "400", description = "현재 비밀번호 불일치"),
+            @ApiResponse(responseCode = "401", description = "인증 실패")
+    })
     public ResponseEntity<ApiResponse<EmptyResponse>> withdraw(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody WithdrawMemberRequest request

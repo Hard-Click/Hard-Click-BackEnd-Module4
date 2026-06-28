@@ -13,7 +13,9 @@ import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
+@Schema(description = "강의 수정 요청")
 public record UpdateCourseRequest(
+        @Schema(description = "강의명", example = "2027 수능 수학Ⅱ 미적분 실전 킬러 특강 (개정판)")
         @NotBlank(message = "강의명은 필수입니다.")
         String title,
 
@@ -21,25 +23,36 @@ public record UpdateCourseRequest(
         @NotNull(message = "과목은 필수입니다.")
         SubjectType subject,
 
+        @Schema(description = "강의 설명", example = "수능 수학Ⅱ 미적분 단원의 킬러 문제를 완전 정복하는 특강입니다.")
         @NotBlank(message = "강의 설명은 필수입니다.")
         String description,
 
+        @Schema(description = "썸네일 이미지 URL", example = "https://example.com/thumbnail.png")
         String thumbnailUrl,
 
+        @Schema(description = "가격 유형 (FREE / PAID)", example = "PAID")
         @NotNull(message = "가격 유형은 필수입니다.")
         PriceType priceType,
 
+        @Schema(description = "가격 (원, 무료 강의는 0)", example = "89000")
         @Min(value = 0, message = "가격은 0 이상이어야 합니다.")
         int price,
 
+        @Schema(description = "섹션(챕터) 목록. 강의 수정은 전체 커리큘럼 교체 방식이므로 기존 커리큘럼을 모두 포함해 보내야 합니다. 전체 삭제 시 빈 배열 [] 전달.")
         @NotNull(message = "커리큘럼(sections)은 필수입니다. 강의 수정은 전체 커리큘럼 교체 방식이므로 기존 커리큘럼을 모두 포함해 보내야 합니다. (전체 삭제가 필요하면 빈 배열 []을 전달)")
         @Valid
         List<UpdateSectionRequest> sections,
 
+        @Schema(description = "학습 목표 목록", example = "[\"미적분 킬러 문제 유형을 파악한다\"]")
         List<String> learningObjectives,
+
+        @Schema(description = "추천 대상 목록", example = "[\"수능 수학 3~4등급이며 1등급을 목표로 하는 수험생\"]")
         List<String> targetAudience,
+
+        @Schema(description = "기술 태그 목록", example = "[\"미분법\", \"적분법\", \"극한\"]")
         List<String> techTags,
 
+        @Schema(description = "난이도 (입문 / 중급 / 심화)", example = "중급")
         @NotNull(message = "난이도는 필수입니다.")
         CourseLevel level
 ) {

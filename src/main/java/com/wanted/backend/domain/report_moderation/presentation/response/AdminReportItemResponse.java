@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
 
+@Schema(description = "신고 목록 항목")
 public record AdminReportItemResponse(
         @Schema(description = "신고 ID", example = "101")
         Long reportId,

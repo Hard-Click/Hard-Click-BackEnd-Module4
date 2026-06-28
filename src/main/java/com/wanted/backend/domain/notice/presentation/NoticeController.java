@@ -15,6 +15,9 @@ import com.wanted.backend.domain.notice.presentation.response.UpdateNoticeRespon
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -47,8 +50,16 @@ public class NoticeController {
                 - isPinned: true 설정 시 상단에 고정됩니다.
                 """
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "강의 공지사항 작성 성공"),
+            @ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "403", description = "INSTRUCTOR 권한 없음 또는 본인 강의 아님"),
+            @ApiResponse(responseCode = "404", description = "강의를 찾을 수 없음")
+    })
     public ResponseEntity<ApiResponse<CreateNoticeResponse>> createNotice(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "공지사항을 작성할 강의 ID", example = "5")
             @PathVariable Long courseId,
             @Valid @RequestBody CreateNoticeRequest request) {
 
@@ -74,6 +85,12 @@ public class NoticeController {
                 - isPinned: true 설정 시 상단에 고정됩니다.
                 """
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "전체 공지사항 작성 성공"),
+            @ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "403", description = "ADMIN 권한 없음")
+    })
     public ResponseEntity<ApiResponse<CreateNoticeResponse>> createGlobalNotice(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody CreateGlobalNoticeRequest request) {
@@ -102,12 +119,23 @@ public class NoticeController {
                 - 상단 고정 공지사항이 우선 노출됩니다.
                 """
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "공지사항 목록 조회 성공"),
+            @ApiResponse(responseCode = "400", description = "COURSE 타입인데 courseId 미전달"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "403", description = "수강 중이지 않은 강의 공지 접근")
+    })
     public ResponseEntity<ApiResponse<NoticeListResponse>> getNotices(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "공지사항 타입 (GLOBAL: 전체 공지, COURSE: 강의 공지)", example = "GLOBAL")
             @RequestParam String type,
+            @Parameter(description = "강의 공지 조회 시 강의 ID (COURSE 타입일 때 필수)", example = "5")
             @RequestParam(required = false) Long courseId,
+            @Parameter(description = "제목 검색 키워드", example = "업로드")
             @RequestParam(required = false) String keyword,
+            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
             @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "페이지당 조회 수", example = "10")
             @RequestParam(defaultValue = "10") int size) {
 
         NoticeListResult result = noticeQueryUseCase.getList(
@@ -126,8 +154,15 @@ public class NoticeController {
         - 이전 공지사항 ID와 제목을 함께 반환합니다.
         """
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "공지사항 상세 조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "403", description = "접근 권한 없음"),
+            @ApiResponse(responseCode = "404", description = "공지사항을 찾을 수 없음")
+    })
     public ResponseEntity<ApiResponse<NoticeDetailResponse>> getNotice(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "조회할 공지사항 ID", example = "5")
             @PathVariable Long noticeId) {
 
         NoticeDetailResult result = noticeQueryUseCase.getDetail(noticeId, userDetails.getMemberId());
@@ -146,8 +181,16 @@ public class NoticeController {
                 - isPinned 값을 변경하여 상단 고정 여부를 수정할 수 있습니다.
                 """
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "공지사항 수정 성공"),
+            @ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "403", description = "본인이 작성한 공지사항이 아님"),
+            @ApiResponse(responseCode = "404", description = "공지사항을 찾을 수 없음")
+    })
     public ResponseEntity<ApiResponse<UpdateNoticeResponse>> updateNotice(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "수정할 공지사항 ID", example = "5")
             @PathVariable Long noticeId,
             @Valid @RequestBody UpdateNoticeRequest request) {
 
@@ -171,8 +214,15 @@ public class NoticeController {
                 - 본인이 작성한 공지사항인지 검증 후 삭제합니다.
                 """
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "공지사항 삭제 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "403", description = "본인이 작성한 공지사항이 아님"),
+            @ApiResponse(responseCode = "404", description = "공지사항을 찾을 수 없음")
+    })
     public ResponseEntity<ApiResponse<Void>> deleteNotice(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "삭제할 공지사항 ID", example = "5")
             @PathVariable Long noticeId) {
 
         noticeCommandUseCase.delete(new DeleteNoticeCommand(

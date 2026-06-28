@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
 
+@Schema(description = "신고 상세 응답")
 public record AdminReportDetailResponse(
         @Schema(description = "신고 ID", example = "101")
         Long reportId,
@@ -73,8 +74,11 @@ public record AdminReportDetailResponse(
         );
     }
 
+    @Schema(description = "신고 사유별 횟수")
     public record ReasonCountResponse(
+            @Schema(description = "신고 사유", example = "SPAM")
             String reason,
+            @Schema(description = "해당 사유 신고 횟수", example = "3")
             int count
     ) {
         private static ReasonCountResponse from(AdminReportDetailResult.ReasonCount reasonCount) {

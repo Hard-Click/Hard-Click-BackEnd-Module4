@@ -15,6 +15,9 @@ import com.wanted.backend.domain.community.presentation.response.UpdateReviewRes
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -46,8 +49,15 @@ public class ReviewController {
                 - 로그인한 회원만 등록할 수 있습니다.
                 """
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "리뷰 등록 성공"),
+            @ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "409", description = "이미 리뷰를 작성한 강의")
+    })
     public ResponseEntity<ApiResponse<CreateReviewResponse>> createReview(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "리뷰를 등록할 강의 ID", example = "10")
             @PathVariable Long courseId,
             @Valid @RequestBody CreateReviewRequest request) {
 
@@ -73,10 +83,17 @@ public class ReviewController {
                 - 본인이 작성한 리뷰는 isMyReview: true로 표시됩니다(최상단 정렬).
                 """
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "리뷰 목록 조회 성공"),
+            @ApiResponse(responseCode = "404", description = "강의를 찾을 수 없음")
+    })
     public ResponseEntity<ApiResponse<ReviewListResponse>> getReviews(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "리뷰를 조회할 강의 ID", example = "10")
             @PathVariable Long courseId,
+            @Parameter(description = "정렬 기준 (latest: 최신순, rating: 별점순)", example = "latest")
             @RequestParam(defaultValue = "latest") ReviewSortType sort,
+            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
             @RequestParam(defaultValue = "0") int page) {
 
         Long currentMemberId = userDetails != null ? userDetails.getMemberId() : -1L;
@@ -96,8 +113,16 @@ public class ReviewController {
                 - 로그인한 회원만 수정할 수 있습니다.
                 """
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "리뷰 수정 성공"),
+            @ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "403", description = "본인이 작성한 리뷰가 아님"),
+            @ApiResponse(responseCode = "404", description = "리뷰를 찾을 수 없음")
+    })
     public ResponseEntity<ApiResponse<UpdateReviewResponse>> updateReview(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "수정할 리뷰 ID", example = "42")
             @PathVariable Long reviewId,
             @Valid @RequestBody UpdateReviewRequest request) {
 
@@ -120,8 +145,15 @@ public class ReviewController {
                 - 로그인한 회원만 삭제할 수 있습니다.
                 """
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "리뷰 삭제 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "403", description = "본인이 작성한 리뷰가 아님"),
+            @ApiResponse(responseCode = "404", description = "리뷰를 찾을 수 없음")
+    })
     public ResponseEntity<ApiResponse<Void>> deleteReview(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "삭제할 리뷰 ID", example = "42")
             @PathVariable Long reviewId) {
 
         reviewCommandUseCase.delete(new DeleteReviewCommand(
