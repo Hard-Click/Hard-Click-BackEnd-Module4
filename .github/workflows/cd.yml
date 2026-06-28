@@ -43,7 +43,7 @@ jobs:
 
             mkdir -p ~/hard-click
 
-            curl -fsSL https://raw.githubusercontent.com/Hard-Click/Hard-Click-BackEnd-Module4/develop/docker-compose.prod.yml \
+            curl -fsSL https://raw.githubusercontent.com/Hard-Click/Hard-Click-BackEnd-Module4/main/docker-compose.prod.yml \
               -o ~/hard-click/docker-compose.prod.yml
 
             cat > ~/hard-click/.env << 'ENVEOF'
