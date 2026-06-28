@@ -1,6 +1,5 @@
 package com.wanted.backend.domain.community.application.service;
 
-import com.wanted.backend.domain.community.application.policy.CommunityAccessPolicy;
 import com.wanted.backend.domain.community.application.port.MyActivityQueryPort;
 import com.wanted.backend.domain.community.application.usecase.GetMyActivityUseCase;
 import lombok.RequiredArgsConstructor;
@@ -13,12 +12,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class GetMyActivityService implements GetMyActivityUseCase {
 
     private final MyActivityQueryPort myActivityQueryPort;
-    private final CommunityAccessPolicy communityAccessPolicy;
 
     @Override
     public MyActivityView handle(Long memberId) {
-        communityAccessPolicy.validateAccessIfLoggedIn(memberId);
-
+        // 내 활동은 본인 데이터 조회이므로 정지/탈퇴 회원도 허용한다. (인증 필수는 Security가 보장)
         MyActivityQueryPort.MyActivityData data = myActivityQueryPort.findByMemberId(memberId);
 
         return new MyActivityView(
