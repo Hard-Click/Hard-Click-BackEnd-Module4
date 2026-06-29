@@ -1,7 +1,8 @@
 package com.wanted.backend.domain.grass.application.query;
 
 public record GetStudyTimeGrassQuery(
-        Long memberId
+        Long memberId,
+        Integer year
 ) {
     public GetStudyTimeGrassQuery {
         if (memberId == null) {

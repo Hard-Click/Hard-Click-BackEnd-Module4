@@ -4,6 +4,7 @@ import com.wanted.backend.domain.grass.application.query.GetStudyTimeGrassQuery;
 import com.wanted.backend.domain.grass.application.usecase.GetStudyTimeGrassUseCase;
 import com.wanted.backend.domain.grass.domain.model.StudyTimeGrassStat;
 import com.wanted.backend.domain.grass.domain.policy.StudyTimeGrassLevelPolicy;
+import com.wanted.backend.domain.grass.domain.policy.YearlyGrassPeriodPolicy;
 import com.wanted.backend.domain.grass.domain.repository.StudyTimeGrassRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,9 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 class GetStudyTimeGrassServiceTest {
 
@@ -31,6 +34,7 @@ class GetStudyTimeGrassServiceTest {
         service = new GetStudyTimeGrassService(
                 repository,
                 new StudyTimeGrassLevelPolicy(List.of(1, 1800, 3600, 7200)),
+                new YearlyGrassPeriodPolicy(),
                 clock
         );
     }
@@ -47,7 +51,7 @@ class GetStudyTimeGrassServiceTest {
         ));
 
         List<GetStudyTimeGrassUseCase.StudyTimeGrassView> result =
-                service.handle(new GetStudyTimeGrassQuery(1L));
+                service.handle(new GetStudyTimeGrassQuery(1L, null));
 
         assertThat(result).hasSize(365);
         assertThat(result.subList(0, 4))
@@ -73,6 +77,7 @@ class GetStudyTimeGrassServiceTest {
         GetStudyTimeGrassService leapYearService = new GetStudyTimeGrassService(
                 repository,
                 new StudyTimeGrassLevelPolicy(List.of(1, 1800, 3600, 7200)),
+                new YearlyGrassPeriodPolicy(),
                 leapYearClock
         );
 
@@ -85,7 +90,7 @@ class GetStudyTimeGrassServiceTest {
         ));
 
         List<GetStudyTimeGrassUseCase.StudyTimeGrassView> result =
-                leapYearService.handle(new GetStudyTimeGrassQuery(1L));
+                leapYearService.handle(new GetStudyTimeGrassQuery(1L, null));
 
         assertThat(result).hasSize(366);
         assertThat(result.get(0).date()).isEqualTo(LocalDate.parse("2024-01-01"));
@@ -107,7 +112,7 @@ class GetStudyTimeGrassServiceTest {
         ));
 
         List<GetStudyTimeGrassUseCase.StudyTimeGrassView> result =
-                service.handle(new GetStudyTimeGrassQuery(1L));
+                service.handle(new GetStudyTimeGrassQuery(1L, null));
 
         assertThat(result.get(1).studySeconds()).isEqualTo(1900);
         assertThat(result.get(1).level()).isEqualTo(2);
@@ -115,8 +120,44 @@ class GetStudyTimeGrassServiceTest {
     }
 
     @Test
+    void returnsPastYearStudyTimeGrassForFullYearRange() {
+        LocalDate startDate = LocalDate.parse("2025-01-01");
+        LocalDate endDate = LocalDate.parse("2025-12-31");
+        when(repository.findByMemberIdAndDateBetween(1L, startDate, endDate))
+                .thenReturn(List.of(
+                        new StudyTimeGrassStat(1L, LocalDate.parse("2025-12-31"), 7200)
+                ));
+
+        List<GetStudyTimeGrassUseCase.StudyTimeGrassView> result =
+                service.handle(new GetStudyTimeGrassQuery(1L, 2025));
+
+        assertThat(result).hasSize(365);
+        assertThat(result.get(0).date()).isEqualTo(startDate);
+        assertThat(result.get(364).date()).isEqualTo(endDate);
+        assertThat(result.get(364).studySeconds()).isEqualTo(7200);
+        assertThat(result).allMatch(view -> !view.isFuture());
+
+        verify(repository).findByMemberIdAndDateBetween(1L, startDate, endDate);
+    }
+
+    @Test
+    void returnsEmptyFutureYearStudyTimeGrassWithoutQuerying() {
+        List<GetStudyTimeGrassUseCase.StudyTimeGrassView> result =
+                service.handle(new GetStudyTimeGrassQuery(1L, 2027));
+
+        assertThat(result).hasSize(365);
+        assertThat(result).allMatch(view -> view.studySeconds() == 0 && view.isFuture());
+
+        verify(repository, never()).findByMemberIdAndDateBetween(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any()
+        );
+    }
+
+    @Test
     void rejectsNullMemberId() {
-        assertThatThrownBy(() -> service.handle(new GetStudyTimeGrassQuery(null)))
+        assertThatThrownBy(() -> service.handle(new GetStudyTimeGrassQuery(null, null)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("회원 ID는 필수입니다.");
     }

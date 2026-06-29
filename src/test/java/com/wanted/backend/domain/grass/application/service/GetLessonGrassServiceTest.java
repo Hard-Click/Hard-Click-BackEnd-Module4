@@ -4,6 +4,7 @@ import com.wanted.backend.domain.grass.application.query.GetLessonGrassQuery;
 import com.wanted.backend.domain.grass.application.usecase.GetLessonGrassUseCase;
 import com.wanted.backend.domain.grass.domain.model.LessonGrassStat;
 import com.wanted.backend.domain.grass.domain.policy.LessonGrassLevelPolicy;
+import com.wanted.backend.domain.grass.domain.policy.YearlyGrassPeriodPolicy;
 import com.wanted.backend.domain.grass.domain.repository.LessonGrassRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,7 +35,7 @@ class GetLessonGrassServiceTest {
                 Instant.parse("2026-01-03T00:00:00Z"),
                 ZoneId.of("Asia/Seoul")
         );
-        service = new GetLessonGrassService(repository, new LessonGrassLevelPolicy(4), clock);
+        service = new GetLessonGrassService(repository, new LessonGrassLevelPolicy(4), new YearlyGrassPeriodPolicy(), clock);
     }
 
     @Test
@@ -48,7 +49,7 @@ class GetLessonGrassServiceTest {
                 ));
 
         List<GetLessonGrassUseCase.LessonGrassView> result =
-                service.handle(new GetLessonGrassQuery(1L));
+                service.handle(new GetLessonGrassQuery(1L, null));
 
         assertThat(result).hasSize(365);
         assertThat(result.subList(0, 4))
@@ -81,7 +82,7 @@ class GetLessonGrassServiceTest {
                 ));
 
         List<GetLessonGrassUseCase.LessonGrassView> result =
-                service.handle(new GetLessonGrassQuery(1L));
+                service.handle(new GetLessonGrassQuery(1L, null));
 
         assertThat(result.get(1).watchedLessonCount()).isEqualTo(3);
         assertThat(result.get(1).level()).isEqualTo(3);
@@ -89,8 +90,44 @@ class GetLessonGrassServiceTest {
     }
 
     @Test
+    void returnsPastYearLessonGrassForFullYearRange() {
+        LocalDate startDate = LocalDate.parse("2025-01-01");
+        LocalDate endDate = LocalDate.parse("2025-12-31");
+        when(repository.findByMemberIdAndDateBetween(1L, startDate, endDate))
+                .thenReturn(List.of(
+                        new LessonGrassStat(1L, LocalDate.parse("2025-12-31"), 3)
+                ));
+
+        List<GetLessonGrassUseCase.LessonGrassView> result =
+                service.handle(new GetLessonGrassQuery(1L, 2025));
+
+        assertThat(result).hasSize(365);
+        assertThat(result.get(0).date()).isEqualTo(startDate);
+        assertThat(result.get(364).date()).isEqualTo(endDate);
+        assertThat(result.get(364).watchedLessonCount()).isEqualTo(3);
+        assertThat(result).allMatch(view -> !view.isFuture());
+
+        verify(repository).findByMemberIdAndDateBetween(1L, startDate, endDate);
+    }
+
+    @Test
+    void returnsEmptyFutureYearLessonGrassWithoutQuerying() {
+        List<GetLessonGrassUseCase.LessonGrassView> result =
+                service.handle(new GetLessonGrassQuery(1L, 2027));
+
+        assertThat(result).hasSize(365);
+        assertThat(result).allMatch(view -> view.watchedLessonCount() == 0 && view.isFuture());
+
+        verify(repository, never()).findByMemberIdAndDateBetween(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any()
+        );
+    }
+
+    @Test
     void rejectsNullMemberId() {
-        assertThatThrownBy(() -> service.handle(new GetLessonGrassQuery(null)))
+        assertThatThrownBy(() -> service.handle(new GetLessonGrassQuery(null, null)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("회원 ID는 필수입니다.");
 

@@ -8,7 +8,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "reviews", indexes = {
-        @Index(name = "idx_reviews_course_id", columnList = "course_id")
+        @Index(name = "idx_reviews_course_id", columnList = "course_id"),
+        @Index(name = "idx_reviews_course_rating", columnList = "course_id, rating")
 })
 @Getter
 public class ReviewJpaEntity {
