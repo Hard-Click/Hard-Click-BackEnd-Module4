@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 public record PostItemResult(
         Long postId,
         BoardType boardType,
+        String subject,
         String title,
         String authorName,
         LocalDateTime createdAt,
