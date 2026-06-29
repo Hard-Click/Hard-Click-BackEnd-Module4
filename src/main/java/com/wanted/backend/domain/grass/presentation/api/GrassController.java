@@ -88,7 +88,8 @@ public class GrassController {
             description = "현재 로그인 사용자의 날짜별 수강량 기준 잔디 데이터를 조회합니다. 로그인 필요."
     )
     public ResponseEntity<ApiResponse<List<LessonGrassResponse>>> lessons(
-            @AuthenticationPrincipal CustomUserDetails userDetails
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "조회할 연도 (미지정 시 올해)", example = "2026") @RequestParam(required = false) Integer year
     ) {
         Long memberId = userDetails != null ? userDetails.getMemberId() : null;
         if (memberId == null) {
@@ -97,7 +98,8 @@ public class GrassController {
 
         List<GetLessonGrassUseCase.LessonGrassView> result =
                 getLessonGrassUseCase.handle(new GetLessonGrassQuery(
-                        memberId
+                        memberId,
+                        year
                 ));
 
         return ApiResponse.success(
@@ -112,7 +114,8 @@ public class GrassController {
             description = "현재 로그인 사용자의 날짜별 순공시간 기준 잔디 데이터를 조회합니다. 로그인 필요."
     )
     public ResponseEntity<ApiResponse<List<StudyTimeGrassResponse>>> studyTime(
-            @AuthenticationPrincipal CustomUserDetails userDetails
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "조회할 연도 (미지정 시 올해)", example = "2026") @RequestParam(required = false) Integer year
     ) {
         Long memberId = userDetails != null ? userDetails.getMemberId() : null;
         if (memberId == null) {
@@ -121,7 +124,8 @@ public class GrassController {
 
         List<GetStudyTimeGrassUseCase.StudyTimeGrassView> result =
                 getStudyTimeGrassUseCase.handle(new GetStudyTimeGrassQuery(
-                        memberId
+                        memberId,
+                        year
                 ));
 
         return ApiResponse.success(
