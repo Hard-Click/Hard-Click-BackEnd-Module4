@@ -21,6 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -69,8 +72,15 @@ public class PostQueryService implements PostQueryUseCase {
                 ? postRepository.countByBoardType(boardType, keyword)
                 : postRepository.countAll(keyword);
 
+        // 작성자명 + 댓글 수 일괄 조회 — N+1 제거
+        Set<Long> authorIds = posts.stream().map(Post::getAuthorId).collect(Collectors.toSet());
+        Map<Long, String> nameMap = memberNamePort.getNamesByMemberIds(authorIds);
+
+        List<Long> postIds = posts.stream().map(Post::getId).toList();
+        Map<Long, Long> commentCountMap = commentRepository.countsByPostIds(postIds);
+
         List<PostItemResult> items = posts.stream()
-                .map(post -> toItemResult(post, isAdmin))
+                .map(post -> toItemResult(post, isAdmin, nameMap, commentCountMap))
                 .toList();
 
         return new PostListResult(
@@ -136,10 +146,11 @@ public class PostQueryService implements PostQueryUseCase {
                 post.getSubject());
     }
 
-    private PostItemResult toItemResult(Post post, boolean isAdmin) {
-        String name = memberNamePort.getNameByMemberId(post.getAuthorId());
+    private PostItemResult toItemResult(Post post, boolean isAdmin,
+                                        Map<Long, String> nameMap, Map<Long, Long> commentCountMap) {
+        String name = nameMap.getOrDefault(post.getAuthorId(), "");
         String displayName = isAdmin ? name : Review.maskName(name);
-        int commentCount = commentRepository.countByPostId(post.getId());
+        int commentCount = commentCountMap.getOrDefault(post.getId(), 0L).intValue();
         return new PostItemResult(
                 post.getId(), post.getBoardType(), post.getTitle(),
                 displayName, post.getCreatedAt(), post.getViewCount(), commentCount);

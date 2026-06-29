@@ -3,7 +3,9 @@ package com.wanted.backend.domain.community.domain.repository;
 import com.wanted.backend.domain.community.domain.model.Comment;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 
@@ -34,6 +36,12 @@ public interface CommentRepository {
 
     //게시글 대댓글 목록 조회
     List<Comment> findByParentId(Long parentId);
+
+    // 대댓글 일괄 조회 — N+1 제거
+    List<Comment> findByParentIdIn(Collection<Long> parentIds);
+
+    // 게시글 목록용 댓글 수 일괄 조회 — N+1 제거
+    Map<Long, Long> countsByPostIds(Collection<Long> postIds);
 
     // 대댓글 존재 여부 (삭제 방식 결정용)
     boolean existsByParentId(Long commentId);

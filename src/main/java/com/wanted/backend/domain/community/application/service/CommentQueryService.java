@@ -13,7 +13,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -38,29 +42,45 @@ public class CommentQueryService implements CommentQueryUseCase {
     public CommentListResult getComments(Long postId, Long memberId, boolean isAdmin) {
         communityAccessPolicy.validateAccessIfLoggedIn(memberId);
 
+        // 1. 부모 댓글 전체 조회 (1 query)
         List<Comment> parentComments = commentRepository.findByPostIdAndParentIdIsNull(postId);
+        if (parentComments.isEmpty()) {
+            return new CommentListResult(0, List.of());
+        }
 
+        // 2. 대댓글 일괄 조회 (1 IN query — parent_id 인덱스 필요)
+        List<Long> parentIds = parentComments.stream().map(Comment::getId).toList();
+        Map<Long, List<Comment>> repliesByParentId = commentRepository.findByParentIdIn(parentIds)
+                .stream()
+                .collect(Collectors.groupingBy(Comment::getParentId));
+
+        // 3. 모든 authorId 수집 후 이름 일괄 조회 (1 IN query)
+        Set<Long> allAuthorIds = new HashSet<>();
+        parentComments.stream().filter(c -> !c.isDeleted()).forEach(c -> allAuthorIds.add(c.getAuthorId()));
+        repliesByParentId.values().forEach(replies ->
+                replies.stream().filter(r -> !r.isDeleted()).forEach(r -> allAuthorIds.add(r.getAuthorId())));
+        Map<Long, String> nameMap = memberNamePort.getNamesByMemberIds(allAuthorIds);
+
+        // 4. 메모리에서 조립
         List<CommentResult> comments = parentComments.stream()
                 .sorted(Comparator
                         .comparing(Comment::isAccepted).reversed()
                         .thenComparing(Comparator.comparing(Comment::getCreatedAt).reversed()))
-                .map(comment -> toResult(comment, memberId, isAdmin))
+                .map(comment -> toResult(comment, memberId, isAdmin,
+                        repliesByParentId.getOrDefault(comment.getId(), List.of()), nameMap))
                 .toList();
 
         return new CommentListResult(commentRepository.countByPostId(postId), comments);
     }
 
-    private CommentResult toResult(Comment comment, Long currentMemberId, boolean isAdmin) {
-        String rawName = comment.isDeleted()
-                ? null
-                : memberNamePort.getNameByMemberId(comment.getAuthorId());
-
+    private CommentResult toResult(Comment comment, Long currentMemberId, boolean isAdmin,
+                                   List<Comment> replies, Map<Long, String> nameMap) {
+        String rawName = comment.isDeleted() ? null : nameMap.get(comment.getAuthorId());
         String authorName = rawName == null ? "" : (isAdmin ? rawName : Review.maskName(rawName));
         String authorInitial = rawName == null ? "" : rawName.substring(0, 1);
 
-        List<CommentResult> replies = commentRepository.findByParentId(comment.getId())
-                .stream()
-                .map(reply -> toResult(reply, currentMemberId, isAdmin))
+        List<CommentResult> replyResults = replies.stream()
+                .map(reply -> toResult(reply, currentMemberId, isAdmin, List.of(), nameMap))
                 .toList();
 
         return new CommentResult(
@@ -73,6 +93,6 @@ public class CommentQueryService implements CommentQueryUseCase {
                 comment.getAuthorId().equals(currentMemberId),
                 comment.isDeleted(),
                 fileStoragePort.presignUrl(comment.getImageUrl()),
-                replies);
+                replyResults);
     }
 }
