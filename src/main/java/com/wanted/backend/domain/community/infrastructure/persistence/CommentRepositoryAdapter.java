@@ -8,8 +8,11 @@ import com.wanted.backend.global.exception.ErrorCode;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
 public class CommentRepositoryAdapter implements CommentRepository {
@@ -106,6 +109,28 @@ public class CommentRepositoryAdapter implements CommentRepository {
                 .stream()
                 .map(this::toDomain)
                 .toList();
+    }
+
+    @Override
+    public List<Comment> findByParentIdIn(Collection<Long> parentIds) {
+        if (parentIds.isEmpty()) {
+            return List.of();
+        }
+        return repository.findByParentIdInOrderByCreatedAtAsc(parentIds)
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    public Map<Long, Long> countsByPostIds(Collection<Long> postIds) {
+        if (postIds.isEmpty()) {
+            return Map.of();
+        }
+        return repository.countsByPostIds(postIds).stream()
+                .collect(Collectors.toMap(
+                        SpringDataCommentRepository.CommentCountRow::getPostId,
+                        SpringDataCommentRepository.CommentCountRow::getCnt));
     }
 
     @Override
