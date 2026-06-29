@@ -89,7 +89,7 @@ public class AdminPaymentQueryAdapter implements AdminPaymentQueryPort {
     }
 
     private AdminPaymentData toData(PaymentJpaEntity payment, OrderJpaEntity order, PaymentMemberReferenceEntity member) {
-        PaymentType paymentType = order == null ? null : order.getPaymentType();
+        PaymentType paymentType = order == null ? null : toPaymentType(order.getPaymentType());
         return new AdminPaymentData(
                 payment.getId(),
                 payment.getOrderId(),
@@ -101,5 +101,14 @@ public class AdminPaymentQueryAdapter implements AdminPaymentQueryPort {
                 PaymentStatus.from(payment.getStatus()),
                 payment.getPaidAt()
         );
+    }
+
+    private PaymentType toPaymentType(String raw) {
+        if (raw == null) return null;
+        try {
+            return PaymentType.valueOf(raw);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 }
