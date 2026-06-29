@@ -152,7 +152,8 @@ public class PostQueryService implements PostQueryUseCase {
         String displayName = isAdmin ? name : Review.maskName(name);
         int commentCount = commentCountMap.getOrDefault(post.getId(), 0L).intValue();
         return new PostItemResult(
-                post.getId(), post.getBoardType(), post.getTitle(),
-                displayName, post.getCreatedAt(), post.getViewCount(), commentCount);
+                post.getId(), post.getBoardType(), post.getSubject(),
+                post.getTitle(), displayName, post.getCreatedAt(),
+                post.getViewCount(), commentCount);
     }
 }
