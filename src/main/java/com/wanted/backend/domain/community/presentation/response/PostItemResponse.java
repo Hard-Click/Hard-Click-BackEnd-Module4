@@ -15,7 +15,9 @@ public record PostItemResponse(
         @Schema(description = "게시판 타입 (FREE: 자유게시판, QUESTION: 질문게시판)", example = "FREE")
         BoardType boardType,
 
-        @Schema(description = "과목 — QUESTION 게시판일 경우 SubjectType enum 값 반환, FREE 게시판은 null", example = "MATH_1")
+        @Schema(description = "과목 — QUESTION 게시판일 경우 SubjectType enum 값 반환, FREE 게시판은 null",
+                example = "MATH_1",
+                nullable = true)
         String subject,
 
         @Schema(description = "게시글 제목", example = "Spring Security 질문드립니다.")
