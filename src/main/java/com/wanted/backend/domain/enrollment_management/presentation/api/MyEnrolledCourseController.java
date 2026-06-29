@@ -26,8 +26,8 @@ public class MyEnrolledCourseController {
 
     @GetMapping
     @Operation(
-            summary = "내 수강 강의 목록 조회" ,
-            description = "로그인한 사용자가 수강 중인 강의 목록을 진도율과 이어보기 정보와 함께 조회합니다"
+            summary = "내 수강 강의 목록 조회",
+            description = "로그인한 사용자가 수강 중인 강의 목록을 진도율과 이어보기 정보(마지막 영상 ID, 재생 위치)와 함께 조회합니다. 로그인 필요."
     )
     public ResponseEntity<ApiResponse<List<MyEnrolledCourseResponse>>> getMyEnrolledCourses(
             @AuthenticationPrincipal CustomUserDetails userDetails

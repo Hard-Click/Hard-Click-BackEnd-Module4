@@ -11,6 +11,7 @@ import com.wanted.backend.domain.report_moderation.presentation.response.AdminCo
 import com.wanted.backend.global.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -41,6 +42,12 @@ public class AdminContentController {
             summary = "신고 대상 콘텐츠 조회",
             description = "관리자가 신고 대상이 된 게시글, 댓글, 리뷰의 내용을 조회합니다."
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "콘텐츠 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "ADMIN 권한 없음"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "콘텐츠를 찾을 수 없음")
+    })
     public ResponseEntity<ApiResponse<AdminContentResponse>> getContent(
             @Parameter(description = "콘텐츠 타입", example = "POST")
             @PathVariable TargetType contentType,
@@ -62,6 +69,13 @@ public class AdminContentController {
             summary = "콘텐츠 상태 변경",
             description = "관리자가 신고 대상이 된 게시글, 댓글, 리뷰를 관리자 삭제(ADMIN_DELETED) 처리합니다."
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "콘텐츠 상태 변경 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 상태값"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "ADMIN 권한 없음"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "콘텐츠를 찾을 수 없음")
+    })
     public ResponseEntity<ApiResponse<AdminContentStatusResponse>> changeStatus(
             @Parameter(description = "콘텐츠 타입", example = "POST")
             @PathVariable TargetType contentType,

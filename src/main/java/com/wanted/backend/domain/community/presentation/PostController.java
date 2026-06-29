@@ -15,6 +15,8 @@ import com.wanted.backend.domain.community.presentation.response.*;
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
@@ -60,6 +62,12 @@ public class PostController {
                 - 요청 타입은 multipart/form-data 입니다.
                 """
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "게시글 작성 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "커뮤니티 이용 제한 상태")
+    })
     public ResponseEntity<ApiResponse<CreatePostResponse>> createPost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestPart("data") @Valid CreatePostRequest request,
@@ -90,11 +98,19 @@ public class PostController {
                 - 페이지 기본값: 0
                 """
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "게시글 목록 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
+    })
     public ResponseEntity<ApiResponse<PostListResponse>> getPostList(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "게시판 타입 (FREE: 자유게시판, QUESTION: 질문게시판)", example = "FREE")
             @PathVariable(required = false) BoardType boardType,
+            @Parameter(description = "정렬 기준 (latest: 최신순, views: 조회수순, comments: 댓글수순)", example = "latest")
             @RequestParam(defaultValue = "latest") PostSortType sort,
+            @Parameter(description = "제목 검색 키워드", example = "Spring Security")
             @RequestParam(required = false) String keyword,
+            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
             @RequestParam(defaultValue = "0") int page) {
 
         boolean isAdmin = "ADMIN".equals(userDetails.getRole());
@@ -115,10 +131,17 @@ public class PostController {
                 - 페이지 기본값: 0
                 """
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "전체 게시글 목록 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
+    })
     public ResponseEntity<ApiResponse<UnifiedBoardListResponse>> getAllPostList(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "정렬 기준 (latest: 최신순, views: 조회수순, comments: 댓글수순)", example = "latest")
             @RequestParam(defaultValue = "latest") PostSortType sort,
+            @Parameter(description = "제목 검색 키워드", example = "Spring Security")
             @RequestParam(required = false) String keyword,
+            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
             @RequestParam(defaultValue = "0") int page) {
 
         boolean isAdmin = "ADMIN".equals(userDetails.getRole());
@@ -142,8 +165,14 @@ public class PostController {
                 - 첨부 파일 URL 목록을 함께 반환합니다.
                 """
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "게시글 상세 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
+    })
     public ResponseEntity<ApiResponse<PostDetailResponse>> getPostDetail(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "조회할 게시글 ID", example = "37")
             @PathVariable Long postId) {
 
         boolean isAdmin = "ADMIN".equals(userDetails.getRole());
@@ -164,8 +193,16 @@ public class PostController {
                 - 요청 타입은 multipart/form-data 입니다.
                 """
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "게시글 수정 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "본인이 작성한 게시글이 아님"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
+    })
     public ResponseEntity<ApiResponse<UpdatePostResponse>> updatePost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "수정할 게시글 ID", example = "37")
             @PathVariable Long postId,
             @RequestPart("data") @Valid UpdatePostRequest request,
             @RequestPart(value = "files", required = false) List<MultipartFile> files) {
@@ -192,8 +229,15 @@ public class PostController {
             - ADMIN은 모든 게시글을 삭제할 수 있습니다.
             """
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "게시글 삭제 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "본인이 작성한 게시글이 아님"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
+    })
     public ResponseEntity<ApiResponse<Void>> deletePost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "삭제할 게시글 ID", example = "37")
             @PathVariable Long postId) {
 
         postCommandUseCase.delete(new DeletePostCommand(

@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
 
+@Schema(description = "신고 목록 응답")
 public record AdminReportListResponse(
         @Schema(description = "신고 목록")
         List<AdminReportItemResponse> content,
