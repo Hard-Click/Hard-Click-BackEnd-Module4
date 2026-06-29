@@ -12,6 +12,7 @@ import com.wanted.backend.domain.identity.domain.repository.RefreshTokenReposito
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -44,13 +46,20 @@ public class ProfileCommandService implements ProfileCommandUseCase {
         member.updateProfile(profileImageKey, encodedPassword, LocalDateTime.now());
         Member saved = memberRepository.save(member);
 
+        String profileImageUrl = null;
+        if (saved.getProfileImageUrl() != null) {
+            try {
+                profileImageUrl = profileImageStoragePort.presignUrl(saved.getProfileImageUrl());
+            } catch (Exception e) {
+                log.error("[PROFILE_PRESIGN_FAILED] 업로드 후 presignUrl 실패. key={}", saved.getProfileImageUrl(), e);
+            }
+        }
+
         return new MyProfileUpdateView(
                 saved.getId(),
                 saved.getName(),
                 saved.getEmail(),
-                saved.getProfileImageUrl() == null
-                        ? null
-                        : profileImageStoragePort.presignUrl(saved.getProfileImageUrl())
+                profileImageUrl
         );
     }
 

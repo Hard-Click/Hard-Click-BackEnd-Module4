@@ -37,6 +37,10 @@ public enum CourseLevel {
                 return level;
             }
         }
-        throw new IllegalArgumentException("유효하지 않은 난이도입니다: " + value + " (가능: 입문, 중급, 심화)");
+        // FE가 "초급"으로 보내는 경우 BEGINNER로 매핑 (UI 레이블 불일치 대응)
+        if ("초급".equals(value)) {
+            return BEGINNER;
+        }
+        throw new IllegalArgumentException("유효하지 않은 난이도입니다: " + value + " (가능: 입문, 초급, 중급, 심화)");
     }
 }

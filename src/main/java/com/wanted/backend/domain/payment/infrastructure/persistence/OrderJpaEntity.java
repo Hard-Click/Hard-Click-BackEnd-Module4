@@ -1,10 +1,7 @@
 package com.wanted.backend.domain.payment.infrastructure.persistence;
 
-import com.wanted.backend.domain.payment.domain.model.PaymentType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
@@ -31,9 +28,8 @@ public class OrderJpaEntity {
     @Column(name = "order_no", nullable = false)
     private String orderNo;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "payment_type", nullable = false)
-    private PaymentType paymentType;
+    private String paymentType;
 
     @Column(name = "status", nullable = false)
     private String status;
