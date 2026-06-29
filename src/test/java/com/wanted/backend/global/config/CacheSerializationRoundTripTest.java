@@ -27,15 +27,17 @@ import com.wanted.backend.domain.grass.domain.repository.LessonGrassRepository;
 import com.wanted.backend.domain.grass.domain.repository.MonthlyGrassRepository;
 import com.wanted.backend.domain.grass.domain.repository.YearlyGrassRepository;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.RedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
 
+import java.nio.ByteBuffer;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -136,10 +138,16 @@ class CacheSerializationRoundTripTest {
     // AdminDashboardQueryAdapterCacheSerializationTest(@DataJpaTest)에서 다룬다.
 
     /**
-     * RedisConfig가 grassMonthly/grassYearly/grassView/grassLessons 캐시에 쓰는
-     * 타입 고정 Jackson2JsonRedisSerializer도 EVERYTHING 직렬화와 동일하게
-     * 라운드트립이 깨지지 않는지 검증한다 (성능 개선용 직렬화 교체이지, 정합성을 깨면 안 됨).
+     * RedisConfig.buildGrassCacheConfigs()가 실제로 만드는 캐시 이름별 직렬화 설정을 그대로 호출해서
+     * 검증한다. 테스트에서 직렬화 설정을 따로 재구성하면 RedisConfig의 캐시 이름·타입 매핑이
+     * 어긋나도(예: 캐시 이름 오타, 잘못된 타입) 테스트가 못 잡으므로, 프로덕션 코드와 같은
+     * 메서드를 거치도록 한다.
      */
+    private static final Map<String, RedisCacheConfiguration> GRASS_CACHE_CONFIGS = RedisConfig.buildGrassCacheConfigs(
+            RedisCacheConfiguration.defaultCacheConfig(),
+            buildPlainObjectMapper()
+    );
+
     @Test
     void typedSerializerRoundTripsMonthlyGrassView() {
         MonthlyGrassRepository repository = mock(MonthlyGrassRepository.class);
@@ -153,7 +161,7 @@ class CacheSerializationRoundTripTest {
 
         GetMonthlyGrassUseCase.MonthlyGrassView original = service.handle(new GetMonthlyGrassQuery(1L, 2026, 6));
 
-        assertRoundTripsTyped(original, GetMonthlyGrassUseCase.MonthlyGrassView.class);
+        assertRoundTripsViaCacheConfig("grassMonthly:v3", original);
     }
 
     @Test
@@ -169,7 +177,7 @@ class CacheSerializationRoundTripTest {
 
         GetYearlyGrassUseCase.YearlyGrassView original = service.handle(new GetYearlyGrassQuery(1L, 2026));
 
-        assertRoundTripsTyped(original, GetYearlyGrassUseCase.YearlyGrassView.class);
+        assertRoundTripsViaCacheConfig("grassYearly:v3", original);
     }
 
     @Test
@@ -185,7 +193,7 @@ class CacheSerializationRoundTripTest {
 
         GetGrassViewUseCase.GrassView original = service.handle(new GetGrassViewQuery(1L, "monthly", 2026, 6));
 
-        assertRoundTripsTyped(original, GetGrassViewUseCase.GrassView.class);
+        assertRoundTripsViaCacheConfig("grassView:v3", original);
     }
 
     @Test
@@ -198,24 +206,22 @@ class CacheSerializationRoundTripTest {
 
         List<GetLessonGrassUseCase.LessonGrassView> original = service.handle(new GetLessonGrassQuery(1L, null));
 
-        ObjectMapper plainObjectMapper = buildPlainObjectMapper();
-        RedisSerializer<List<GetLessonGrassUseCase.LessonGrassView>> typedSerializer = new Jackson2JsonRedisSerializer<>(
-                plainObjectMapper,
-                (com.fasterxml.jackson.databind.JavaType) plainObjectMapper.getTypeFactory()
-                        .constructCollectionType(List.class, GetLessonGrassUseCase.LessonGrassView.class)
-        );
-
-        byte[] serialized = typedSerializer.serialize(original);
-        Object deserialized = typedSerializer.deserialize(serialized);
-
-        assertThat(deserialized).isEqualTo(original);
+        assertRoundTripsViaCacheConfig("grassLessons:v3", original);
     }
 
-    private <T> void assertRoundTripsTyped(T original, Class<T> type) {
-        Jackson2JsonRedisSerializer<T> typedSerializer = new Jackson2JsonRedisSerializer<>(buildPlainObjectMapper(), type);
+    /**
+     * RedisConfig.buildGrassCacheConfigs()가 cacheName에 대해 실제로 등록한
+     * SerializationPair로 직렬화 -> 역직렬화해서, 그 결과가 원본과 같은지 검증한다.
+     */
+    private void assertRoundTripsViaCacheConfig(String cacheName, Object original) {
+        RedisCacheConfiguration cacheConfig = GRASS_CACHE_CONFIGS.get(cacheName);
+        assertThat(cacheConfig)
+                .as("RedisConfig.buildGrassCacheConfigs()에 '%s' 캐시 설정이 없습니다", cacheName)
+                .isNotNull();
 
-        byte[] serialized = typedSerializer.serialize(original);
-        T deserialized = typedSerializer.deserialize(serialized);
+        RedisSerializationContext.SerializationPair<Object> pair = cacheConfig.getValueSerializationPair();
+        ByteBuffer serialized = pair.write(original);
+        Object deserialized = pair.read(serialized);
 
         assertThat(deserialized).isEqualTo(original);
     }

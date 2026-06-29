@@ -66,24 +66,40 @@ public class RedisConfig {
         // 박아넣는 EVERYTHING 직렬화 대신 타입을 고정한 가벼운 직렬화를 쓴다.
         // 365일치를 통째로 캐싱하는 yearly/lessons는 페이로드가 커서, EVERYTHING 직렬화의
         // 역직렬화 비용이 캐시의 이득을 상회해 "캐시를 켰는데 더 느려지는" 역효과가 있었다(부하 측정으로 확인).
-        ObjectMapper plainObjectMapper = objectMapper.copy();
-        Map<String, RedisCacheConfiguration> grassCacheConfigs = Map.of(
-                "grassMonthly:v2", configuration.serializeValuesWith(
+        Map<String, RedisCacheConfiguration> grassCacheConfigs = buildGrassCacheConfigs(configuration, objectMapper.copy());
+
+        return RedisCacheManager.builder(connectionFactory)
+                .cacheDefaults(configuration)
+                .withInitialCacheConfigurations(grassCacheConfigs)
+                .build();
+    }
+
+    /**
+     * 잔디 캐시별 타입 고정 직렬화 설정을 만든다. CacheSerializationRoundTripTest가 이 메서드를
+     * 직접 호출해서, 실제 캐시 매니저가 쓰는 것과 동일한 설정으로 라운드트립을 검증한다
+     * (테스트에서 직렬화 설정을 따로 재구성하면 캐시 이름·타입이 어긋나도 테스트가 못 잡는다).
+     */
+    static Map<String, RedisCacheConfiguration> buildGrassCacheConfigs(
+            RedisCacheConfiguration baseConfig,
+            ObjectMapper plainObjectMapper
+    ) {
+        return Map.of(
+                "grassMonthly:v3", baseConfig.serializeValuesWith(
                         RedisSerializationContext.SerializationPair.fromSerializer(
                                 new Jackson2JsonRedisSerializer<>(plainObjectMapper, GetMonthlyGrassUseCase.MonthlyGrassView.class)
                         )
                 ),
-                "grassYearly:v2", configuration.serializeValuesWith(
+                "grassYearly:v3", baseConfig.serializeValuesWith(
                         RedisSerializationContext.SerializationPair.fromSerializer(
                                 new Jackson2JsonRedisSerializer<>(plainObjectMapper, GetYearlyGrassUseCase.YearlyGrassView.class)
                         )
                 ),
-                "grassView:v2", configuration.serializeValuesWith(
+                "grassView:v3", baseConfig.serializeValuesWith(
                         RedisSerializationContext.SerializationPair.fromSerializer(
                                 new Jackson2JsonRedisSerializer<>(plainObjectMapper, GetGrassViewUseCase.GrassView.class)
                         )
                 ),
-                "grassLessons:v2", configuration.serializeValuesWith(
+                "grassLessons:v3", baseConfig.serializeValuesWith(
                         RedisSerializationContext.SerializationPair.fromSerializer(
                                 new Jackson2JsonRedisSerializer<>(
                                         plainObjectMapper,
@@ -93,10 +109,5 @@ public class RedisConfig {
                         )
                 )
         );
-
-        return RedisCacheManager.builder(connectionFactory)
-                .cacheDefaults(configuration)
-                .withInitialCacheConfigurations(grassCacheConfigs)
-                .build();
     }
 }
