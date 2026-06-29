@@ -90,6 +90,42 @@ class GetLessonGrassServiceTest {
     }
 
     @Test
+    void returnsPastYearLessonGrassForFullYearRange() {
+        LocalDate startDate = LocalDate.parse("2025-01-01");
+        LocalDate endDate = LocalDate.parse("2025-12-31");
+        when(repository.findByMemberIdAndDateBetween(1L, startDate, endDate))
+                .thenReturn(List.of(
+                        new LessonGrassStat(1L, LocalDate.parse("2025-12-31"), 3)
+                ));
+
+        List<GetLessonGrassUseCase.LessonGrassView> result =
+                service.handle(new GetLessonGrassQuery(1L, 2025));
+
+        assertThat(result).hasSize(365);
+        assertThat(result.get(0).date()).isEqualTo(startDate);
+        assertThat(result.get(364).date()).isEqualTo(endDate);
+        assertThat(result.get(364).watchedLessonCount()).isEqualTo(3);
+        assertThat(result).allMatch(view -> !view.isFuture());
+
+        verify(repository).findByMemberIdAndDateBetween(1L, startDate, endDate);
+    }
+
+    @Test
+    void returnsEmptyFutureYearLessonGrassWithoutQuerying() {
+        List<GetLessonGrassUseCase.LessonGrassView> result =
+                service.handle(new GetLessonGrassQuery(1L, 2027));
+
+        assertThat(result).hasSize(365);
+        assertThat(result).allMatch(view -> view.watchedLessonCount() == 0 && view.isFuture());
+
+        verify(repository, never()).findByMemberIdAndDateBetween(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any()
+        );
+    }
+
+    @Test
     void rejectsNullMemberId() {
         assertThatThrownBy(() -> service.handle(new GetLessonGrassQuery(null, null)))
                 .isInstanceOf(IllegalArgumentException.class)

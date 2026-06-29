@@ -30,7 +30,7 @@ public class GetLessonGrassService implements GetLessonGrassUseCase {
     private final Clock clock;
 
     @Override
-    @Cacheable(cacheNames = "grassLessons:v2", key = "#query.memberId() + ':' + (#query.year() != null ? #query.year() : T(java.time.LocalDate).now(@clock).getYear()) + ':' + T(java.time.LocalDate).now(@clock)")
+    @Cacheable(cacheNames = "grassLessons:v2", key = "#root.target.resolveCacheKey(#query)")
     public List<LessonGrassView> handle(GetLessonGrassQuery query) {
         LocalDate today = LocalDate.now(clock);
         int year = query.year() != null ? query.year() : today.getYear();
@@ -56,6 +56,17 @@ public class GetLessonGrassService implements GetLessonGrassUseCase {
                     );
                 })
                 .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    /**
+     * 과거 연도는 오늘 날짜가 바뀌어도 결과가 달라지지 않으므로 연도만으로 키를 고정하고,
+     * 현재(또는 미래) 연도만 오늘 날짜를 키에 포함해 day 단위로 갱신한다.
+     */
+    public String resolveCacheKey(GetLessonGrassQuery query) {
+        LocalDate today = LocalDate.now(clock);
+        int year = query.year() != null ? query.year() : today.getYear();
+        String key = query.memberId() + ":" + year;
+        return year >= today.getYear() ? key + ":" + today : key;
     }
 
     private List<LessonGrassStat> findStats(GetLessonGrassQuery query, YearlyGrassPeriod period) {

@@ -18,7 +18,9 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 class GetStudyTimeGrassServiceTest {
 
@@ -115,6 +117,42 @@ class GetStudyTimeGrassServiceTest {
         assertThat(result.get(1).studySeconds()).isEqualTo(1900);
         assertThat(result.get(1).level()).isEqualTo(2);
         assertThat(result.get(1).isFuture()).isFalse();
+    }
+
+    @Test
+    void returnsPastYearStudyTimeGrassForFullYearRange() {
+        LocalDate startDate = LocalDate.parse("2025-01-01");
+        LocalDate endDate = LocalDate.parse("2025-12-31");
+        when(repository.findByMemberIdAndDateBetween(1L, startDate, endDate))
+                .thenReturn(List.of(
+                        new StudyTimeGrassStat(1L, LocalDate.parse("2025-12-31"), 7200)
+                ));
+
+        List<GetStudyTimeGrassUseCase.StudyTimeGrassView> result =
+                service.handle(new GetStudyTimeGrassQuery(1L, 2025));
+
+        assertThat(result).hasSize(365);
+        assertThat(result.get(0).date()).isEqualTo(startDate);
+        assertThat(result.get(364).date()).isEqualTo(endDate);
+        assertThat(result.get(364).studySeconds()).isEqualTo(7200);
+        assertThat(result).allMatch(view -> !view.isFuture());
+
+        verify(repository).findByMemberIdAndDateBetween(1L, startDate, endDate);
+    }
+
+    @Test
+    void returnsEmptyFutureYearStudyTimeGrassWithoutQuerying() {
+        List<GetStudyTimeGrassUseCase.StudyTimeGrassView> result =
+                service.handle(new GetStudyTimeGrassQuery(1L, 2027));
+
+        assertThat(result).hasSize(365);
+        assertThat(result).allMatch(view -> view.studySeconds() == 0 && view.isFuture());
+
+        verify(repository, never()).findByMemberIdAndDateBetween(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any()
+        );
     }
 
     @Test
