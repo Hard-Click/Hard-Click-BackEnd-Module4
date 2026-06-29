@@ -3,10 +3,12 @@ package com.wanted.backend.domain.order.application.service;
 import com.wanted.backend.domain.order.application.dto.OrderDetailResult;
 import com.wanted.backend.domain.order.application.port.OrderCourseQueryPort;
 import com.wanted.backend.domain.order.application.port.OrderEnrollmentStatusPort;
+import com.wanted.backend.domain.order.application.port.OrderSubscriptionPlanPort;
 import com.wanted.backend.domain.order.application.usecase.GetOrderUseCase;
 import com.wanted.backend.domain.order.domain.model.Order;
 import com.wanted.backend.domain.order.domain.model.OrderItem;
 import com.wanted.backend.domain.order.domain.model.OrderStatus;
+import com.wanted.backend.domain.order.domain.model.OrderType;
 import com.wanted.backend.domain.order.domain.repository.OrderRepository;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
@@ -26,6 +28,7 @@ public class GetOrderService implements GetOrderUseCase {
     private final OrderRepository orderRepository;
     private final OrderEnrollmentStatusPort orderEnrollmentStatusPort;
     private final OrderCourseQueryPort orderCourseQueryPort;
+    private final OrderSubscriptionPlanPort orderSubscriptionPlanPort;
 
     @Override
     public OrderDetailResult getOrder(Long memberId, Long orderId) {
@@ -37,7 +40,14 @@ public class GetOrderService implements GetOrderUseCase {
             throw new BusinessException(ErrorCode.ORDER_ACCESS_DENIED);
         }
 
-        List<Long> courseIds = order.getItems().stream()
+        // SUBSCRIPTION 주문은 order_items에 행이 없으므로 플랜 정보로 합성
+        List<OrderItem> rawItems = order.getItems();
+        if (order.getType() == OrderType.SUBSCRIPTION && rawItems.isEmpty()) {
+            OrderSubscriptionPlanPort.PlanInfo plan = orderSubscriptionPlanPort.getAnnualPass();
+            rawItems = List.of(OrderItem.create(null, plan.name(), order.getTotalAmount()));
+        }
+
+        List<Long> courseIds = rawItems.stream()
                 .map(OrderItem::getCourseId)
                 .filter(java.util.Objects::nonNull)
                 .toList();
@@ -57,7 +67,7 @@ public class GetOrderService implements GetOrderUseCase {
                 order.getStatus() == OrderStatus.PAID
                         || order.getStatus() == OrderStatus.PARTIAL_REFUNDED;
 
-        List<OrderDetailResult.Item> items = order.getItems().stream()
+        List<OrderDetailResult.Item> items = rawItems.stream()
                 .map(item -> {
 
                     boolean refundable =
