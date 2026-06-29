@@ -91,7 +91,11 @@ public class RefundOrderItemService implements RefundOrderItemUseCase {
 
             // Step 3: DB 상태 갱신 (orderRepository.refundItem 자체 @Transactional)
             orderRepository.refundItem(orderId, courseId, newStatus);
-            enrollmentRevocationPort.revoke(memberId, courseId);
+            try {
+                enrollmentRevocationPort.revoke(memberId, courseId);
+            } catch (RuntimeException e) {
+                log.error("[REFUND_REVOKE_FAILED] DB 환불 완료됐지만 수강권 박탈 실패 — 수동 보정 필요. orderId: {}, courseId: {}", orderId, courseId, e);
+            }
 
         } finally {
             try {

@@ -79,7 +79,7 @@ public class ReviewQueryService implements ReviewQueryUseCase {
         String name = nameMap.getOrDefault(review.getMemberId(), "");
         return new ReviewItemResult(
                 review.getId(),
-                review.maskName(name),
+                Review.maskName(name),
                 name.isEmpty() ? "" : name.substring(0, 1),
                 review.getRating(),
                 review.isAdminDeleted() ? ADMIN_DELETED_MESSAGE : review.getContent(),

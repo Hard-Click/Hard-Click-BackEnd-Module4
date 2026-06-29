@@ -68,7 +68,11 @@ public class RefundSubscriptionService implements RefundSubscriptionUseCase {
             }
 
             orderRepository.refundSubscription(orderId);
-            cancelSubscriptionUseCase.handle(memberId);
+            try {
+                cancelSubscriptionUseCase.handle(memberId);
+            } catch (RuntimeException e) {
+                log.error("[SUBSCRIPTION_CANCEL_FAILED] DB 환불 완료됐지만 구독 취소 실패 — 수동 보정 필요. orderId: {}, memberId: {}", orderId, memberId, e);
+            }
 
         } finally {
             try {
