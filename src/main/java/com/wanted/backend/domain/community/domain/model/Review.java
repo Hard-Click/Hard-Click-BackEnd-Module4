@@ -46,6 +46,7 @@ public class Review {
     }
 
     public static String maskName(String name) {
+        if (name == null || name.isEmpty()) return "알 수 없음";
         if (name.length() == 1) return name;
         if (name.length() == 2) return name.charAt(0) + "*";
         return name.charAt(0) + "*" + name.charAt(name.length() - 1);
