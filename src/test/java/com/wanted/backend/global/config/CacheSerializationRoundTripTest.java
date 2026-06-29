@@ -72,11 +72,11 @@ class CacheSerializationRoundTripTest {
     void roundTripsLessonGrassViewList() {
         LessonGrassRepository repository = mock(LessonGrassRepository.class);
         Clock clock = Clock.fixed(Instant.parse("2026-01-03T00:00:00Z"), ZoneId.of("Asia/Seoul"));
-        GetLessonGrassService service = new GetLessonGrassService(repository, new LessonGrassLevelPolicy(4), clock);
+        GetLessonGrassService service = new GetLessonGrassService(repository, new LessonGrassLevelPolicy(4), new YearlyGrassPeriodPolicy(), clock);
         when(repository.findByMemberIdAndDateBetween(1L, LocalDate.parse("2026-01-01"), LocalDate.parse("2026-01-03")))
                 .thenReturn(List.of(new LessonGrassStat(1L, LocalDate.parse("2026-01-02"), 3)));
 
-        List<GetLessonGrassUseCase.LessonGrassView> original = service.handle(new GetLessonGrassQuery(1L));
+        List<GetLessonGrassUseCase.LessonGrassView> original = service.handle(new GetLessonGrassQuery(1L, null));
 
         assertRoundTrips(original);
     }
