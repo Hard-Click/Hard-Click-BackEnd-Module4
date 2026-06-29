@@ -45,7 +45,8 @@ public class CourseVideoCatalogSyncAdapter implements CourseVideoCatalogSyncPort
         em.createNativeQuery("""
                 INSERT INTO video (video_id, curriculum_id, s3_key, duration_seconds, sort_order, is_preview)
                 SELECT l.id, l.section_id, l.s3_key, l.duration_seconds, l.order_index,
-                       (cs.order_index = 0 AND l.order_index = 0)
+                       (cs.order_index = (SELECT MIN(cs2.order_index) FROM course_section cs2 WHERE cs2.course_id = :courseId)
+                        AND l.order_index = (SELECT MIN(l2.order_index) FROM lesson l2 WHERE l2.section_id = cs.id))
                 FROM lesson l
                 JOIN course_section cs ON l.section_id = cs.id
                 WHERE cs.course_id = :courseId

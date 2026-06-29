@@ -3,6 +3,8 @@ package com.wanted.backend.domain.identity.presentation.api;
 import com.wanted.backend.domain.identity.application.usecase.MemberStatusStreamUseCase;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.CacheControl;
@@ -28,6 +30,10 @@ public class MemberStatusStreamController {
             summary = "내 회원 상태 실시간 조회",
             description = "회원 상태 변경 시 MEMBER_STATUS_CHANGED SSE 이벤트를 전송합니다."
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "SSE 연결 성공 (text/event-stream)"),
+            @ApiResponse(responseCode = "401", description = "인증 실패")
+    })
     public ResponseEntity<SseEmitter> connect(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {

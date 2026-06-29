@@ -83,6 +83,14 @@ public class OrderRepositoryAdapter implements OrderRepository {
         itemEntity.markRefunded();
     }
 
+    @Override
+    @Transactional
+    public void refundSubscription(Long orderId) {
+        OrderEntity orderEntity = orderRepository.findById(orderId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+        orderEntity.updateStatus(OrderStatus.REFUNDED);
+    }
+
     private Order toDomain(OrderEntity e, List<OrderItemEntity> itemEntities) {
         List<OrderItem> items = itemEntities.stream()
                 .map(i -> OrderItem.restore(i.getId(), i.getCourseId(), i.getTitle(), i.getPrice(), i.isRefunded()))

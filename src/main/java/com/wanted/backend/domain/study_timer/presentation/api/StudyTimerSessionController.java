@@ -27,6 +27,7 @@ import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -61,6 +62,10 @@ public class StudyTimerSessionController {
             summary = "실행 중 순공시간 세션 조회",
             description = "현재 로그인 사용자의 실행 중인 순공시간 세션을 조회합니다. 실행 중인 세션이 없으면 data는 null입니다."
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "실행 중 세션 조회 성공 (세션 없으면 data: null)"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요")
+    })
     public ResponseEntity<ApiResponse<CurrentStudyTimerSessionResponse>> current(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
@@ -80,6 +85,12 @@ public class StudyTimerSessionController {
             summary = "순공시간 세션 시작",
             description = "순공시간 측정을 시작하고 실행 중인 세션 정보를 반환합니다."
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "세션 시작 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 시작 시각"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "이미 실행 중인 세션이 존재함")
+    })
     public ResponseEntity<ApiResponse<StudyTimerSessionStartResponse>> start(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody StartStudyTimerSessionRequest request
@@ -101,6 +112,14 @@ public class StudyTimerSessionController {
             summary = "순공시간 하트비트 저장",
             description = "실행 중인 순공시간 세션의 중간 경과 시간을 저장합니다."
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "하트비트 저장 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 하트비트 시각"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "본인 세션이 아님"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "세션이 실행 중 상태가 아님")
+    })
     public ResponseEntity<ApiResponse<StudyTimerHeartbeatResponse>> heartbeat(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Parameter(description = "하트비트를 저장할 세션 ID", example = "55")
@@ -126,6 +145,14 @@ public class StudyTimerSessionController {
             summary = "순공시간 세션 일시정지",
             description = "실행 중인 순공시간 세션을 일시정지하고 누적 순공시간을 저장합니다."
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "세션 일시정지 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 일시정지 시각"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "본인 세션이 아님"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "세션이 실행 중 상태가 아님")
+    })
     public ResponseEntity<ApiResponse<StudyTimerSessionPauseResponse>> pause(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Parameter(description = "일시정지할 세션 ID", example = "55")
@@ -151,6 +178,14 @@ public class StudyTimerSessionController {
             summary = "순공시간 세션 재개",
             description = "일시정지된 순공시간 세션을 다시 실행 중 상태로 전환합니다."
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "세션 재개 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 재개 시각"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "본인 세션이 아님"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "세션이 일시정지 상태가 아님")
+    })
     public ResponseEntity<ApiResponse<StudyTimerSessionResumeResponse>> resume(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Parameter(description = "재개할 세션 ID", example = "55")
@@ -176,6 +211,14 @@ public class StudyTimerSessionController {
             summary = "순공시간 세션 종료",
             description = "실행 중인 순공시간 세션을 종료하고 최종 누적 순공시간을 저장합니다."
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "세션 종료 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 종료 시각"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "본인 세션이 아님"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "이미 종료된 세션")
+    })
     public ResponseEntity<ApiResponse<StudyTimerSessionEndResponse>> end(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Parameter(description = "종료할 세션 ID", example = "55")

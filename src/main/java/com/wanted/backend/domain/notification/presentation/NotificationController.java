@@ -10,6 +10,8 @@ import com.wanted.backend.domain.notification.presentation.response.UnreadCountR
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
@@ -37,6 +39,10 @@ public class NotificationController {
     @Operation(summary = "알림 SSE 구독",
             description = "실시간 알림 수신을 위한 SSE 연결을 맺습니다. " +
                     "연결 직후 'connect' 이벤트가 오고, 이후 알림 발생 시 'notification' 이벤트가 옵니다.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "SSE 연결 성공 (text/event-stream)"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
+    })
     public ResponseEntity<SseEmitter> subscribe(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
@@ -50,6 +56,10 @@ public class NotificationController {
     @GetMapping("/unread-count")
     @Operation(summary = "미확인 알림 개수 조회",
             description = "로그인한 회원의 읽지 않은 알림 개수를 반환합니다.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "미확인 알림 개수 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
+    })
     public ResponseEntity<ApiResponse<UnreadCountResponse>> getUnreadCount(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
@@ -60,8 +70,13 @@ public class NotificationController {
     @GetMapping
     @Operation(summary = "알림 목록 조회",
             description = "커서 기반으로 반환합니다. 첫 요청 시 cursorId 생략.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "알림 목록 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
+    })
     public ResponseEntity<ApiResponse<NotificationListResponse>> getNotifications(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "커서 기반 페이징 ID (첫 요청 시 생략)", example = "55")
             @RequestParam(required = false) Long cursorId) {
 
         NotificationListResult result = notificationQueryUseCase.getList(
@@ -71,8 +86,14 @@ public class NotificationController {
 
     @PatchMapping("/{notiId}/read")
     @Operation(summary = "알림 읽음 처리", description = "알림을 읽음 상태로 변경합니다.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "알림 읽음 처리 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "알림을 찾을 수 없음")
+    })
     public ResponseEntity<ApiResponse<NotificationReadResponse>> markAsRead(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "읽음 처리할 알림 ID", example = "55")
             @PathVariable Long notiId) {
 
         NotificationReadResult result = notificationQueryUseCase.markAsRead(
