@@ -155,8 +155,7 @@ public class GlobalExceptionHandler {
             DataIntegrityViolationException e,
             HttpServletRequest request) {
 
-        String rootMessage = e.getMostSpecificCause().getMessage();
-        log.warn("[DataIntegrity Error] Path: {}, Cause: {}", request.getRequestURI(), rootMessage);
+        log.warn("[DataIntegrity Error] Path: {}, ExceptionType: {}", request.getRequestURI(), e.getMostSpecificCause().getClass().getSimpleName());
 
         ErrorResponse response = ErrorResponse.create()
                 .errorCode(ErrorCode.INVALID_INPUT_VALUE.getCode())
