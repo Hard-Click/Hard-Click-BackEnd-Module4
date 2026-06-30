@@ -83,6 +83,16 @@ public class S3ProfileImageStorageAdapter implements ProfileImageStoragePort {
         return s3UrlPresigner.publicUrl(key);
     }
 
+    @Override
+    public void delete(String key) {
+        try {
+            String resolvedKey = s3UrlPresigner.extractKey(key);
+            s3Client.deleteObject(r -> r.bucket(bucket).key(resolvedKey));
+        } catch (Exception e) {
+            log.warn("S3 프로필 이미지 삭제 실패: {}", key, e);
+        }
+    }
+
     private void validate(MultipartFile file) {
         if (file.getSize() > maxFileSize) {
             throw new BusinessException(ErrorCode.FILE_SIZE_EXCEEDED);
