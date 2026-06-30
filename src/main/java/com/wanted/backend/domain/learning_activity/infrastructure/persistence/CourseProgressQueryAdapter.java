@@ -5,6 +5,7 @@ import com.wanted.backend.domain.learning_activity.infrastructure.catalog.Course
 import com.wanted.backend.domain.learning_activity.infrastructure.catalog.CourseSectionReferenceRepository;
 import com.wanted.backend.domain.learning_activity.infrastructure.catalog.LessonReferenceEntity;
 import com.wanted.backend.domain.learning_activity.infrastructure.catalog.LessonReferenceRepository;
+import com.wanted.backend.domain.learning_activity.infrastructure.catalog.PreviewLessonPolicy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,7 +45,7 @@ public class CourseProgressQueryAdapter implements CourseProgressQueryPort {
 
         List<LessonProgressData> lessons = sections.stream()
                 .flatMap(section -> lessonsBySectionId.getOrDefault(section.getId(), List.of()).stream()
-                        .filter(lesson -> !isPreviewLesson(section, lesson)))
+                        .filter(lesson -> !PreviewLessonPolicy.isPreview(section, lesson)))
                 .map(lesson -> {
                     VideoProgressJpaEntity progress = progressByVideoId.get(lesson.getId());
                     return new LessonProgressData(
@@ -56,9 +57,5 @@ public class CourseProgressQueryAdapter implements CourseProgressQueryPort {
                 .toList();
 
         return new CourseProgressData(courseId, lessons);
-    }
-
-    private boolean isPreviewLesson(CourseSectionReferenceEntity section, LessonReferenceEntity lesson) {
-        return section.getOrderIndex() == 0 && lesson.getOrderIndex() == 0;
     }
 }

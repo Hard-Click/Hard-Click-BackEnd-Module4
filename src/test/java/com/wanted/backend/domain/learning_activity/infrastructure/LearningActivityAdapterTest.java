@@ -151,6 +151,16 @@ class LearningActivityAdapterTest {
     }
 
     @Test
+    void 강의_진도_조회_어댑터가_미리보기_레슨만_있으면_빈_진도_목록을_반환한다() {
+        // 강의 21은 레슨이 미리보기(섹션 0, 레슨 0) 하나뿐이다 — 분모 보정 후 lessons가 비어야 한다.
+        CourseProgressQueryPort.CourseProgressData progress =
+                courseProgressQueryAdapter.findByMemberIdAndCourseId(1L, 21L);
+
+        assertThat(progress.courseId()).isEqualTo(21L);
+        assertThat(progress.lessons()).isEmpty();
+    }
+
+    @Test
     void 영상_진도_저장소_어댑터가_마지막_재생_위치를_저장한다() {
         VideoProgress progress = VideoProgress.empty(1L, 20L, 10L)
                 .updateLastPosition(142);
