@@ -74,11 +74,11 @@ public class GlobalExceptionHandler {
         log.warn("[File Size Error] Path: {}, Message: {}", request.getRequestURI(), e.getMessage());
 
         ErrorResponse response = ErrorResponse.create()
-                .errorCode(ErrorCode.FILE_SIZE_EXCEEDED.getCode())
-                .message("업로드 파일 크기가 제한(1GB)을 초과했습니다.")
+                .errorCode(ErrorCode.VIDEO_FILE_SIZE_EXCEEDED.getCode())
+                .message(ErrorCode.VIDEO_FILE_SIZE_EXCEEDED.getMessage())
                 .path(request.getRequestURI());
 
-        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(response);
+        return ResponseEntity.status(ErrorCode.VIDEO_FILE_SIZE_EXCEEDED.getStatus()).body(response);
     }
 
     /**

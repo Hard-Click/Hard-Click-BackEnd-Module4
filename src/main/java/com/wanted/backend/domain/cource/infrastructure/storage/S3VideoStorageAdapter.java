@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
@@ -16,6 +17,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * 강의 영상 업로드용 presigned PUT URL을 발급한다. FE가 이 URL로 S3에 직접 업로드한다
+ * (서버 메모리/네트워크를 거치지 않음 — t3.small에서 대용량 영상 OOM 방지).
+ */
 @Slf4j
 @Component
 public class S3VideoStorageAdapter implements VideoStoragePort {
@@ -45,12 +50,15 @@ public class S3VideoStorageAdapter implements VideoStoragePort {
     @Override
     public PresignedUpload generatePresignedPutUrl(Long lessonId, String originalFilename) {
         String ext = extractAllowedExtension(originalFilename);
+        // 원본 파일명을 그대로 쓰지 않고 UUID 기반 키 생성 (경로 조작·중복·덮어쓰기 방지)
         String s3Key = KEY_PREFIX + "/" + lessonId + "_" + UUID.randomUUID() + "." + ext;
+
+        String contentType = CONTENT_TYPES.getOrDefault(ext, "application/octet-stream");
 
         PutObjectRequest putRequest = PutObjectRequest.builder()
                 .bucket(bucket)
                 .key(s3Key)
-                .contentType(CONTENT_TYPES.getOrDefault(ext, "application/octet-stream"))
+                .contentType(contentType)
                 .build();
 
         PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
@@ -59,7 +67,8 @@ public class S3VideoStorageAdapter implements VideoStoragePort {
                 .build();
 
         String presignedUrl = s3Presigner.presignPutObject(presignRequest).url().toString();
-        return new PresignedUpload(presignedUrl, s3Key);
+        // FE는 서명에 포함된 것과 동일한 Content-Type 헤더로 PUT해야 서명 검증이 통과한다.
+        return new PresignedUpload(presignedUrl, s3Key, contentType);
     }
 
     @Override
@@ -68,6 +77,15 @@ public class S3VideoStorageAdapter implements VideoStoragePort {
             s3Client.deleteObject(r -> r.bucket(bucket).key(s3Key));
         } catch (Exception e) {
             log.warn("S3 영상 삭제 실패: {}", s3Key, e);
+        }
+    }
+
+    @Override
+    public long getObjectSize(String s3Key) {
+        try {
+            return s3Client.headObject(r -> r.bucket(bucket).key(s3Key)).contentLength();
+        } catch (NoSuchKeyException e) {
+            throw new BusinessException(ErrorCode.VIDEO_UPLOAD_NOT_FOUND);
         }
     }
 

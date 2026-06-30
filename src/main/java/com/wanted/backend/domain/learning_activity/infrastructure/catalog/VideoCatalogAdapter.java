@@ -21,6 +21,8 @@ public class VideoCatalogAdapter implements VideoCatalogPort {
 
     @Override
     public Optional<VideoAccessInfo> findByVideoId(Long videoId) {
+        // 재생 영상의 식별자(videoId)는 이제 lesson.id다 — lesson -> course_section -> course 순으로
+        // 필요한 참조 정보를 조합한다. 레포지토리는 단순 조회만, 조합 로직은 어댑터에 둔다.
         return lessonRepository.findById(videoId)
                 .flatMap(this::toDomain);
     }
@@ -36,12 +38,14 @@ public class VideoCatalogAdapter implements VideoCatalogPort {
             CourseSectionReferenceEntity section,
             CatalogCourseReferenceEntity course
     ) {
+        // 강의 상세 조회(CourseQueryService)와 동일한 휴리스틱: 첫 섹션의 첫 레슨을 미리보기로 취급한다.
         boolean isPreview = section.getOrderIndex() == 0 && lesson.getOrderIndex() == 0;
 
-        // s3Key가 있으면 presigned GET URL을 실시간 발급, 없으면 null
-        String streamingUrl = lesson.getS3Key() != null
+        // s3Key가 있으면 presigned GET URL을 실시간 발급(만료 문제 해소).
+        // s3Key가 없는 레거시 레슨은 기존에 저장된 video_url을 그대로 폴백으로 사용한다.
+        String streamingUrl = (lesson.getS3Key() != null && !lesson.getS3Key().isBlank())
                 ? videoPlayUrlPort.generateUrl(lesson.getS3Key())
-                : null;
+                : lesson.getVideoUrl();
 
         return new VideoAccessInfo(
                 lesson.getId(),

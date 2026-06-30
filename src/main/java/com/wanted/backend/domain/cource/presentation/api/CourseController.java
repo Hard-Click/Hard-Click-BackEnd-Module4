@@ -52,7 +52,7 @@ public class CourseController {
     }
 
     @GetMapping("/{courseId}")
-    @Operation(summary = "강의 상세 조회", description = "강의 상세 정보와 커리큘럼, 미리보기 여부를 반환합니다.")
+    @Operation(summary = "강의 상세 조회", description = "강의 상세 정보와 커리큘럼, 미리보기 여부를 반환합니다. 비로그인 시 isEnrolled 는 false 처리됩니다.")
     public ResponseEntity<ApiResponse<CourseDetailResponse>> getCourseDetail(
             @Parameter(description = "강의 ID", example = "1") @PathVariable Long courseId,
             @AuthenticationPrincipal CustomUserDetails userDetails
@@ -133,7 +133,7 @@ public class CourseController {
         VideoStoragePort.PresignedUpload result = courseCommandUseCase.requestVideoUpload(
                 new RequestVideoUploadCommand(lessonId, userDetails.getMemberId(), filename));
         return ApiResponse.success("presigned URL 발급 성공",
-                new PresignedUploadResponse(lessonId, result.presignedUrl(), result.s3Key()));
+                new PresignedUploadResponse(lessonId, result.presignedUrl(), result.s3Key(), result.contentType()));
     }
 
     @PatchMapping("/lessons/{lessonId}/video")

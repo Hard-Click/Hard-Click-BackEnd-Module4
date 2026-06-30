@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -83,7 +84,12 @@ public class CourseCommandService implements CourseCommandUseCase {
         Course saved = courseRepository.save(course);
         saved.pullDomainEvents().forEach(eventPublisher::publishEvent);
 
+        eventPublisher.publishEvent(CourseCreatedEvent.of(
+                saved.getId(), command.authorId(), saved.getTitle()));
+
+        // 커밋 후 재생 스키마(course_curriculum/video)로 미러링
         registerVideoCatalogSync(saved.getId());
+
         return saved.getId();
     }
 
@@ -121,6 +127,8 @@ public class CourseCommandService implements CourseCommandUseCase {
                 command.techTags(), command.level());
 
         courseRepository.save(course);
+
+        // 섹션/레슨 변경을 재생 스키마(course_curriculum/video)에 반영
         registerVideoCatalogSync(command.courseId());
     }
 
@@ -160,7 +168,13 @@ public class CourseCommandService implements CourseCommandUseCase {
         courseRepository.save(course);
     }
 
+    // S3VideoStorageAdapter.generatePresignedPutUrl()이 발급하는 키 prefix와 맞춰, confirm 시
+    // 임의의(다른 레슨/외부) S3 키가 첨부되는 것을 막는다.
+    private static final String VIDEO_KEY_PREFIX = "videos/";
+    private static final long MAX_VIDEO_BYTES = 1024L * 1024 * 1024; // 1GB — application.yaml 멀티파트 한도와 동일
+
     @Override
+    @Transactional(readOnly = true)
     public VideoStoragePort.PresignedUpload requestVideoUpload(RequestVideoUploadCommand command) {
         CourseAuthorInfo courseInfo = lessonRepository.findCourseAuthorInfo(command.lessonId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
@@ -188,7 +202,20 @@ public class CourseCommandService implements CourseCommandUseCase {
             throw new BusinessException(ErrorCode.COURSE_ACCESS_DENIED);
         }
 
-        // video_url에 s3Key 저장 후 COMPLETED로 전이 (presigned URL 직접 업로드는 별도 처리 단계 없음)
+        // 이 레슨용으로 발급된 키가 맞는지 prefix로 확인 — 임의의 s3Key를 붙이는 것을 차단한다.
+        String expectedPrefix = VIDEO_KEY_PREFIX + command.lessonId() + "_";
+        if (!command.s3Key().startsWith(expectedPrefix)) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
+        // presigned PUT 자체는 크기를 제한할 수 없으므로, 실제로 업로드된 객체 크기를 confirm 시점에 검증한다.
+        long size = videoStoragePort.getObjectSize(command.s3Key());
+        if (size > MAX_VIDEO_BYTES) {
+            videoStoragePort.delete(command.s3Key());
+            throw new BusinessException(ErrorCode.VIDEO_FILE_SIZE_EXCEEDED);
+        }
+
+        // video_url에는 s3Key를 저장하고 COMPLETED로 전이 — presigned URL 직접 업로드는 별도 처리 단계 없음
         lesson.attachVideo(command.s3Key(), command.s3Key());
         lesson.completeProcessing();
         lessonRepository.save(lesson);
@@ -197,6 +224,7 @@ public class CourseCommandService implements CourseCommandUseCase {
     }
 
     @Override
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public String uploadCourseThumbnail(UploadCourseThumbnailCommand command) {
         Course course = courseRepository.findById(command.courseId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.COURSE_NOT_FOUND));
@@ -221,6 +249,7 @@ public class CourseCommandService implements CourseCommandUseCase {
             throw e;
         }
 
+        // 이전 썸네일 S3 객체 정리 (http(s) URL이면 외부 이미지이므로 삭제 안 함)
         if (oldKey != null && !oldKey.startsWith("http")) {
             thumbnailStoragePort.delete(oldKey);
         }
@@ -228,6 +257,7 @@ public class CourseCommandService implements CourseCommandUseCase {
         return stored.presignedUrl();
     }
 
+    // 커밋 이후 작성 스키마(course_section/lesson)를 재생 스키마(course_curriculum/video)로 미러링한다.
     private void registerVideoCatalogSync(Long courseId) {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
