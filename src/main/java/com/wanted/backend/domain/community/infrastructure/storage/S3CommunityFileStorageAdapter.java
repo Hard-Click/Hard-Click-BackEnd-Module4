@@ -69,11 +69,12 @@ public class S3CommunityFileStorageAdapter implements CommunityFileStoragePort {
     }
 
     /**
-     * 저장된 key를 조회용 Presigned URL로 변환한다(응답 직전 호출).
+     * 저장된 key를 공개 조회 URL로 변환한다(응답 직전 호출). 만료가 없어 STS 토큰 수명과
+     * presigned URL 유효기간 불일치로 인한 ExpiredToken 문제가 발생하지 않는다.
      */
     @Override
     public String presignUrl(String key) {
-        return s3UrlPresigner.presign(key);
+        return s3UrlPresigner.publicUrl(key);
     }
 
     @Override

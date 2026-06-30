@@ -172,6 +172,8 @@ public class CourseCommandService implements CourseCommandUseCase {
     // 임의의(다른 레슨/외부) S3 키가 첨부되는 것을 막는다.
     private static final String VIDEO_KEY_PREFIX = "videos/";
     private static final long MAX_VIDEO_BYTES = 1024L * 1024 * 1024; // 1GB — application.yaml 멀티파트 한도와 동일
+    private static final int VIDEO_CATALOG_SYNC_MAX_ATTEMPTS = 3;
+    private static final long VIDEO_CATALOG_SYNC_RETRY_DELAY_MS = 200L;
 
     @Override
     @Transactional(readOnly = true)
@@ -258,17 +260,43 @@ public class CourseCommandService implements CourseCommandUseCase {
     }
 
     // 커밋 이후 작성 스키마(course_section/lesson)를 재생 스키마(course_curriculum/video)로 미러링한다.
+    // 실패 시 재생 API가 VIDEO_NOT_FOUND를 반환하게 되므로, 일시적 오류를 흡수하기 위해 짧게 재시도하고
+    // 최종 실패는 ERROR로 남겨 수동 재동기화가 필요함을 알 수 있게 한다.
     private void registerVideoCatalogSync(Long courseId) {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                try {
-                    new TransactionTemplate(transactionManager).executeWithoutResult(status ->
-                            videoCatalogSyncPort.syncByCourse(courseId));
-                } catch (Exception e) {
-                    log.warn("video catalog 미러링 실패(courseId={}) — 강의 등록은 정상 처리됨", courseId, e);
+                // videoCatalogSyncPort.syncByCourse()가 REQUIRES_NEW로 자체 트랜잭션 경계를
+                // 갖고 있으므로 여기서는 별도 TransactionTemplate으로 한 번 더 감싸지 않는다.
+                for (int attempt = 1; attempt <= VIDEO_CATALOG_SYNC_MAX_ATTEMPTS; attempt++) {
+                    try {
+                        videoCatalogSyncPort.syncByCourse(courseId);
+                        return;
+                    } catch (Exception e) {
+                        if (attempt == VIDEO_CATALOG_SYNC_MAX_ATTEMPTS) {
+                            log.error("video catalog 미러링 실패(courseId={}, attempts={}) — 재생 API에서 영상이 조회되지 않을 수 있어 수동 재동기화가 필요함",
+                                    courseId, attempt, e);
+                        } else {
+                            log.warn("video catalog 미러링 재시도(courseId={}, attempt={}/{})",
+                                    courseId, attempt, VIDEO_CATALOG_SYNC_MAX_ATTEMPTS, e);
+                            if (!sleepBeforeRetry()) {
+                                return;
+                            }
+                        }
+                    }
                 }
             }
         });
+    }
+
+    // 인터럽트(배포/종료 등) 시 false를 반환해 재시도 루프를 즉시 중단시킨다 — 불필요한 DB 부하와 종료 지연 방지.
+    private boolean sleepBeforeRetry() {
+        try {
+            Thread.sleep(VIDEO_CATALOG_SYNC_RETRY_DELAY_MS);
+            return true;
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
     }
 }
