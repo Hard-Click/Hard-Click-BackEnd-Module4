@@ -100,6 +100,8 @@ import org.springframework.http.HttpStatus;
     FILE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST, "F002", "파일 크기는 5MB 이하여야 합니다."),
     FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "F003", "파일 업로드에 실패했습니다."),
     PROFILE_IMAGE_COUNT_EXCEEDED(HttpStatus.BAD_REQUEST, "F004", "프로필 이미지는 1개만 업로드 가능합니다."),
+    VIDEO_FILE_SIZE_EXCEEDED(HttpStatus.PAYLOAD_TOO_LARGE, "F005", "영상 파일 크기는 1GB 이하여야 합니다."),
+    VIDEO_UPLOAD_NOT_FOUND(HttpStatus.BAD_REQUEST, "F006", "업로드된 영상을 찾을 수 없습니다. presign 발급 후 업로드를 먼저 완료해주세요."),
 
     //댓글 예외
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "C001", "존재하지 않는 댓글입니다."),

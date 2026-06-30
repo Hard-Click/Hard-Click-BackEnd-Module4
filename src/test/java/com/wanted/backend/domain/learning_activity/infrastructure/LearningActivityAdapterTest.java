@@ -110,6 +110,16 @@ class LearningActivityAdapterTest {
     }
 
     @Test
+    void 영상_카탈로그_어댑터가_s3Key_없는_레거시_레슨은_video_url로_폴백한다() {
+        Optional<VideoAccessInfo> result = videoCatalogAdapter.findByVideoId(11L);
+
+        assertThat(result).isPresent();
+        VideoAccessInfo accessInfo = result.get();
+        assertThat(accessInfo.s3Key()).isNull();
+        assertThat(accessInfo.streamingUrl()).isEqualTo("https://legacy.example.com/video.m3u8");
+    }
+
+    @Test
     void 영상_진도_저장소_어댑터가_진도_정보를_조회한다() {
         Optional<VideoProgress> result = videoProgressRepositoryAdapter.findByMemberIdAndVideoId(1L, 10L);
 
@@ -130,10 +140,10 @@ class LearningActivityAdapterTest {
                 courseProgressQueryAdapter.findByMemberIdAndCourseId(1L, 20L);
 
         assertThat(progress.courseId()).isEqualTo(20L);
-        assertThat(progress.lessons()).hasSize(1);
-        assertThat(progress.lessons().get(0).videoId()).isEqualTo(10L);
-        assertThat(progress.lessons().get(0).completed()).isTrue();
-        assertThat(progress.lessons().get(0).lastPositionSeconds()).isEqualTo(42);
+        assertThat(progress.lessons()).hasSize(2);
+        var lesson10 = progress.lessons().stream().filter(l -> l.videoId() == 10L).findFirst().orElseThrow();
+        assertThat(lesson10.completed()).isTrue();
+        assertThat(lesson10.lastPositionSeconds()).isEqualTo(42);
     }
 
     @Test

@@ -11,5 +11,8 @@ public record PresignedUploadResponse(
         String presignedUrl,
 
         @Schema(description = "업로드 완료 후 confirm 요청에 사용할 S3 키", example = "videos/3_uuid.mp4")
-        String s3Key
+        String s3Key,
+
+        @Schema(description = "PUT 요청 시 Content-Type 헤더에 그대로 사용해야 하는 값 (서명에 포함됨)", example = "video/mp4")
+        String contentType
 ) {}

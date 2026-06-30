@@ -133,7 +133,7 @@ public class CourseController {
         VideoStoragePort.PresignedUpload result = courseCommandUseCase.requestVideoUpload(
                 new RequestVideoUploadCommand(lessonId, userDetails.getMemberId(), filename));
         return ApiResponse.success("presigned URL 발급 성공",
-                new PresignedUploadResponse(lessonId, result.presignedUrl(), result.s3Key()));
+                new PresignedUploadResponse(lessonId, result.presignedUrl(), result.s3Key(), result.contentType()));
     }
 
     @PatchMapping("/lessons/{lessonId}/video")
