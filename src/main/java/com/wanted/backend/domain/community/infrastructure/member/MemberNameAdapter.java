@@ -29,8 +29,11 @@ public class MemberNameAdapter implements MemberNamePort {
 
     @Override
     public Map<Long, String> getNamesByMemberIds(Collection<Long> memberIds) {
+        if (memberIds.isEmpty()) {
+            return Map.of();
+        }
         Map<Long, String> namesByMemberId = new HashMap<>();
-        memberReferenceRepository.findAllById(memberIds)
+        memberReferenceRepository.findByIdIn(memberIds)
                 .forEach(entity -> namesByMemberId.put(entity.getId(), entity.getName()));
         return namesByMemberId;
     }
