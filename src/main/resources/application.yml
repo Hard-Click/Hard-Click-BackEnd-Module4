@@ -1,0 +1,23 @@
+spring:
+  profiles:
+    include: secret
+  servlet:
+    multipart:
+      max-file-size: 1GB
+      max-request-size: 1GB
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    show-sql: false
+
+server:
+  port: 8080
+  tomcat:
+    max-swallow-size: -1
+
+aws:
+  s3:
+    bucket: ${S3_BUCKET:hard-click-videos}
+    region: ${S3_REGION:ap-northeast-2}
+    presigned-url-expiry-minutes: 60

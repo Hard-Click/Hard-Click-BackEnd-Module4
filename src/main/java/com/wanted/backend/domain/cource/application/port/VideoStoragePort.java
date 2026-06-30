@@ -1,11 +1,10 @@
 package com.wanted.backend.domain.cource.application.port;
 
 public interface VideoStoragePort {
-    StoredVideo store(Long lessonId, String originalFilename, byte[] data);
+    PresignedUpload generatePresignedPutUrl(Long lessonId, String originalFilename);
 
-    // store() 이후 DB 저장이 실패했을 때, 이미 업로드된 객체가 orphan으로 남지 않도록 정리한다.
-    void delete(String key);
+    // 업로드 완료 전 실패했을 때 orphan 객체 정리
+    void delete(String s3Key);
 
-    record StoredVideo(String key, String presignedUrl) {
-    }
+    record PresignedUpload(String presignedUrl, String s3Key) {}
 }
