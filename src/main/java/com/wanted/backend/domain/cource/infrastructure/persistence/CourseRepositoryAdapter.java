@@ -97,8 +97,9 @@ public class CourseRepositoryAdapter implements CourseRepository {
 
     @Override
     public PageResult<CourseListItem> findByAuthor(Long authorId, int page, int size) {
-        Specification<CourseJpaEntity> spec = (root, query, cb) ->
-                cb.equal(root.get("authorId"), authorId);
+        Specification<CourseJpaEntity> spec = (root, query, cb) -> cb.and(
+                cb.equal(root.get("authorId"), authorId),
+                cb.notEqual(root.get("status"), CourseStatus.DELETED));
 
         Page<CourseJpaEntity> result = jpaRepository.findAll(
                 spec, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
