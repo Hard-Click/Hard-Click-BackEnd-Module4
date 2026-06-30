@@ -15,6 +15,7 @@ import com.wanted.backend.domain.cource.domain.model.CourseSortType;
 import com.wanted.backend.domain.cource.domain.model.CourseStatus;
 import com.wanted.backend.domain.cource.domain.model.PageResult;
 import com.wanted.backend.domain.cource.domain.repository.CourseRepository;
+import com.wanted.backend.global.config.S3UrlPresigner;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,7 @@ public class CourseQueryService implements CourseQueryUseCase {
     private final ReviewStatsPort reviewStatsPort;
     private final EnrollmentStatsPort enrollmentStatsPort;
     private final InstructorStatsPort instructorStatsPort;
+    private final S3UrlPresigner s3UrlPresigner;
 
     @Override
     public CourseListResult getList(CourseListQuery query) {
@@ -85,7 +87,7 @@ public class CourseQueryService implements CourseQueryUseCase {
                 .map(item -> {
                     ReviewStatsPort.Stats stats = reviewStatsMap.getOrDefault(item.courseId(), ReviewStatsPort.Stats.EMPTY);
                     return new CourseListResult.Item(
-                            item.courseId(), item.title(), item.subject(), item.thumbnailUrl(),
+                            item.courseId(), item.title(), item.subject(), s3UrlPresigner.publicUrl(item.thumbnailUrl()),
                             item.priceType(), item.price(),
                             nameMap.getOrDefault(item.authorId(), "알 수 없음"),
                             stats.avgRating(), stats.reviewCount(),
@@ -126,7 +128,7 @@ public class CourseQueryService implements CourseQueryUseCase {
                 .map(item -> {
                     ReviewStatsPort.Stats stats = reviewStatsMap.getOrDefault(item.courseId(), ReviewStatsPort.Stats.EMPTY);
                     return new CourseListResult.Item(
-                            item.courseId(), item.title(), item.subject(), item.thumbnailUrl(),
+                            item.courseId(), item.title(), item.subject(), s3UrlPresigner.publicUrl(item.thumbnailUrl()),
                             item.priceType(), item.price(),
                             nameMap.getOrDefault(item.authorId(), "알 수 없음"),
                             stats.avgRating(), stats.reviewCount(),
@@ -176,7 +178,7 @@ public class CourseQueryService implements CourseQueryUseCase {
 
         return new CourseDetailResult(
                 course.getId(), course.getTitle(), course.getSubject(),
-                course.getDescription(), course.getThumbnailUrl(),
+                course.getDescription(), s3UrlPresigner.publicUrl(course.getThumbnailUrl()),
                 course.getPriceType(), course.getPrice(), course.getStatus(),
                 instructorName,
                 reviewStatsPort.avgRating(course.getId()),

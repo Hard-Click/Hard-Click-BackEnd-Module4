@@ -12,6 +12,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -63,6 +64,21 @@ public class GlobalExceptionHandler {
                 .details(details);
 
         return ResponseEntity.status(ErrorCode.INVALID_INPUT_VALUE.getStatus()).body(response);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleMaxUploadSizeExceeded(
+            MaxUploadSizeExceededException e,
+            HttpServletRequest request) {
+
+        log.warn("[File Size Error] Path: {}, Message: {}", request.getRequestURI(), e.getMessage());
+
+        ErrorResponse response = ErrorResponse.create()
+                .errorCode(ErrorCode.VIDEO_FILE_SIZE_EXCEEDED.getCode())
+                .message(ErrorCode.VIDEO_FILE_SIZE_EXCEEDED.getMessage())
+                .path(request.getRequestURI());
+
+        return ResponseEntity.status(ErrorCode.VIDEO_FILE_SIZE_EXCEEDED.getStatus()).body(response);
     }
 
     /**
