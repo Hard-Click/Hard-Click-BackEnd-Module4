@@ -21,3 +21,7 @@ aws:
     bucket: ${S3_BUCKET:hard-click-videos}
     region: ${S3_REGION:ap-northeast-2}
     presigned-url-expiry-minutes: 60
+
+community:
+  image:
+    max-size: 5242880
