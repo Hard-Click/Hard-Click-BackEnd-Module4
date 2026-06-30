@@ -30,7 +30,7 @@ public class GetLessonGrassService implements GetLessonGrassUseCase {
     private final Clock clock;
 
     @Override
-    @Cacheable(cacheNames = "grassLessons:v2", key = "#root.target.resolveCacheKey(#query)")
+    @Cacheable(cacheNames = "grassLessons:v3", key = "#root.target.resolveCacheKey(#query)")
     public List<LessonGrassView> handle(GetLessonGrassQuery query) {
         LocalDate today = LocalDate.now(clock);
         int year = query.year() != null ? query.year() : today.getYear();
