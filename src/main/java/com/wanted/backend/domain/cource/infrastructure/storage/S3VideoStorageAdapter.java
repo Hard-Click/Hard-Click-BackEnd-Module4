@@ -6,11 +6,10 @@ import com.wanted.backend.global.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
 import java.time.Duration;
 import java.util.Map;
@@ -18,21 +17,17 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * 강의 영상을 AWS S3에 저장하고 재생용 Presigned URL을 반환한다.
- * 커뮤니티/프로필 이미지 어댑터와 동일한 패턴(S3Client put + Presigner get).
- * Presigned URL은 SigV4 최대치인 7일 만료를 사용한다.
+ * 강의 영상 업로드용 presigned PUT URL을 발급한다. FE가 이 URL로 S3에 직접 업로드한다
+ * (서버 메모리/네트워크를 거치지 않음 — t3.small에서 대용량 영상 OOM 방지).
  */
 @Slf4j
 @Component
 public class S3VideoStorageAdapter implements VideoStoragePort {
 
     private static final String KEY_PREFIX = "videos";
-    private static final Duration PRESIGNED_URL_EXPIRY = Duration.ofDays(7);
+    private static final Duration PRESIGNED_PUT_EXPIRY = Duration.ofMinutes(15);
 
-    // 허용 확장자 whitelist (기존 Local 어댑터와 동일)
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("mp4", "mov", "webm", "m4v");
-
-    // 확장자 → Content-Type (브라우저 스트리밍을 위해 명시)
     private static final Map<String, String> CONTENT_TYPES = Map.of(
             "mp4", "video/mp4",
             "mov", "video/quicktime",
@@ -52,41 +47,32 @@ public class S3VideoStorageAdapter implements VideoStoragePort {
     }
 
     @Override
-    public StoredVideo store(Long lessonId, String originalFilename, byte[] data) {
-        if (data == null || data.length == 0) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
-        }
-
+    public PresignedUpload generatePresignedPutUrl(Long lessonId, String originalFilename) {
         String ext = extractAllowedExtension(originalFilename);
         // 원본 파일명을 그대로 쓰지 않고 UUID 기반 키 생성 (경로 조작·중복·덮어쓰기 방지)
-        String key = KEY_PREFIX + "/" + lessonId + "_" + UUID.randomUUID() + "." + ext;
+        String s3Key = KEY_PREFIX + "/" + lessonId + "_" + UUID.randomUUID() + "." + ext;
 
-        s3Client.putObject(
-                PutObjectRequest.builder()
-                        .bucket(bucket)
-                        .key(key)
-                        .contentType(CONTENT_TYPES.getOrDefault(ext, "application/octet-stream"))
-                        .contentLength((long) data.length)
-                        .build(),
-                RequestBody.fromBytes(data)
-        );
+        PutObjectRequest putRequest = PutObjectRequest.builder()
+                .bucket(bucket)
+                .key(s3Key)
+                .contentType(CONTENT_TYPES.getOrDefault(ext, "application/octet-stream"))
+                .build();
 
-        String presignedUrl = s3Presigner.presignGetObject(GetObjectPresignRequest.builder()
-                        .signatureDuration(PRESIGNED_URL_EXPIRY)
-                        .getObjectRequest(r -> r.bucket(bucket).key(key))
-                        .build())
-                .url()
-                .toString();
+        PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
+                .signatureDuration(PRESIGNED_PUT_EXPIRY)
+                .putObjectRequest(putRequest)
+                .build();
 
-        return new StoredVideo(key, presignedUrl);
+        String presignedUrl = s3Presigner.presignPutObject(presignRequest).url().toString();
+        return new PresignedUpload(presignedUrl, s3Key);
     }
 
     @Override
-    public void delete(String key) {
+    public void delete(String s3Key) {
         try {
-            s3Client.deleteObject(r -> r.bucket(bucket).key(key));
+            s3Client.deleteObject(r -> r.bucket(bucket).key(s3Key));
         } catch (Exception e) {
-            log.warn("S3 영상 삭제 실패: {}", key, e);
+            log.warn("S3 영상 삭제 실패: {}", s3Key, e);
         }
     }
 

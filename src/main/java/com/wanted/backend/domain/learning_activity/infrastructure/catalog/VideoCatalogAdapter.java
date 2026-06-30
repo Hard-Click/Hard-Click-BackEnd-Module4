@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.learning_activity.infrastructure.catalog;
 
 import com.wanted.backend.domain.learning_activity.application.port.VideoCatalogPort;
+import com.wanted.backend.domain.learning_activity.application.port.VideoPlayUrlPort;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoAccessInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,7 @@ public class VideoCatalogAdapter implements VideoCatalogPort {
     private final LessonReferenceRepository lessonRepository;
     private final CourseSectionReferenceRepository sectionRepository;
     private final CatalogCourseReferenceRepository courseRepository;
+    private final VideoPlayUrlPort videoPlayUrlPort;
 
     @Override
     public Optional<VideoAccessInfo> findByVideoId(Long videoId) {
@@ -39,6 +41,11 @@ public class VideoCatalogAdapter implements VideoCatalogPort {
         // 강의 상세 조회(CourseQueryService)와 동일한 휴리스틱: 첫 섹션의 첫 레슨을 미리보기로 취급한다.
         boolean isPreview = section.getOrderIndex() == 0 && lesson.getOrderIndex() == 0;
 
+        // s3Key가 있으면 presigned GET URL을 실시간 발급, 없으면 null
+        String streamingUrl = lesson.getS3Key() != null
+                ? videoPlayUrlPort.generateUrl(lesson.getS3Key())
+                : null;
+
         return new VideoAccessInfo(
                 lesson.getId(),
                 section.getCourseId(),
@@ -46,7 +53,7 @@ public class VideoCatalogAdapter implements VideoCatalogPort {
                 course.getPrice(),
                 isPreview,
                 lesson.getS3Key(),
-                lesson.getVideoUrl(),
+                streamingUrl,
                 lesson.getDurationSeconds()
         );
     }

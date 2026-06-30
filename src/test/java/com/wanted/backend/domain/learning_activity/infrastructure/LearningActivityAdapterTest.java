@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.learning_activity.infrastructure;
 
 import com.wanted.backend.domain.learning_activity.application.port.CourseProgressQueryPort;
+import com.wanted.backend.domain.learning_activity.application.port.VideoPlayUrlPort;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoAccessInfo;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoProgress;
 import com.wanted.backend.domain.learning_activity.infrastructure.catalog.CatalogCourseReferenceEntity;
@@ -24,6 +25,8 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.test.context.jdbc.Sql;
@@ -58,13 +61,22 @@ import static org.assertj.core.api.Assertions.assertThat;
         EnrollmentAccessAdapter.class,
         SubscriptionAccessAdapter.class,
         CourseProgressQueryAdapter.class,
-        VideoProgressRepositoryAdapter.class
+        VideoProgressRepositoryAdapter.class,
+        LearningActivityAdapterTest.TestConfig.class
 })
 @Sql(scripts = {
         "/sql/learning_activity_adapter_schema.sql",
         "/sql/learning_activity_adapter_data.sql"
 })
 class LearningActivityAdapterTest {
+
+    @TestConfiguration
+    static class TestConfig {
+        @Bean
+        VideoPlayUrlPort videoPlayUrlPort() {
+            return s3Key -> "https://stream.example.com/" + s3Key;
+        }
+    }
 
     @Autowired
     private VideoCatalogAdapter videoCatalogAdapter;
@@ -93,7 +105,7 @@ class LearningActivityAdapterTest {
         assertThat(accessInfo.coursePrice()).isEqualTo(10000);
         assertThat(accessInfo.preview()).isTrue();
         assertThat(accessInfo.s3Key()).isEqualTo("videos/10.mp4");
-        assertThat(accessInfo.streamingUrl()).isEqualTo("https://stream.example.com/video.m3u8");
+        assertThat(accessInfo.streamingUrl()).isEqualTo("https://stream.example.com/videos/10.mp4");
         assertThat(accessInfo.durationSeconds()).isEqualTo(300);
     }
 

@@ -1,16 +1,17 @@
 package com.wanted.backend.domain.cource.application.service;
 
-import com.wanted.backend.domain.cource.application.command.UploadLessonVideoCommand;
+import com.wanted.backend.domain.cource.application.command.ConfirmVideoUploadCommand;
+import com.wanted.backend.domain.cource.application.command.RequestVideoUploadCommand;
 import com.wanted.backend.domain.cource.application.port.CourseVideoCatalogSyncPort;
 import com.wanted.backend.domain.cource.application.port.ThumbnailStoragePort;
 import com.wanted.backend.domain.cource.application.port.VideoStoragePort;
 import com.wanted.backend.domain.cource.domain.dto.CourseAuthorInfo;
 import com.wanted.backend.domain.cource.domain.model.CourseStatus;
-import com.wanted.backend.domain.cource.domain.model.FileProcessingStatus;
 import com.wanted.backend.domain.cource.domain.model.Lesson;
 import com.wanted.backend.domain.cource.domain.repository.CourseRepository;
 import com.wanted.backend.domain.cource.domain.repository.LessonRepository;
 import com.wanted.backend.domain.notification.domain.repository.NotificationRepository;
+import com.wanted.backend.global.exception.BusinessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -18,6 +19,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.AbstractPlatformTransactionManager;
 import org.springframework.transaction.support.DefaultTransactionStatus;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -28,7 +30,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -36,7 +37,9 @@ class CourseCommandServiceTest {
 
     private LessonRepository lessonRepository;
     private VideoStoragePort videoStoragePort;
+    private CourseVideoCatalogSyncPort videoCatalogSyncPort;
     private CourseCommandService service;
+    private ResourcelessTransactionManager transactionManager;
 
     @BeforeEach
     void setUp() {
@@ -44,22 +47,21 @@ class CourseCommandServiceTest {
         lessonRepository = mock(LessonRepository.class);
         videoStoragePort = mock(VideoStoragePort.class);
         ThumbnailStoragePort thumbnailStoragePort = mock(ThumbnailStoragePort.class);
-        FileProcessingService fileProcessingService = mock(FileProcessingService.class);
         ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
         NotificationRepository notificationRepository = mock(NotificationRepository.class);
-        CourseVideoCatalogSyncPort videoCatalogSyncPort = mock(CourseVideoCatalogSyncPort.class);
+        videoCatalogSyncPort = mock(CourseVideoCatalogSyncPort.class);
         Clock clock = Clock.fixed(Instant.parse("2026-06-27T00:00:00Z"), ZoneOffset.UTC);
+        // 실제 DB 없이도 TransactionTemplate의 트랜잭션 동기화(afterCommit)가 동작하게 해주는
+        // 리소스 없는 트랜잭션 매니저(테스트 더블) — 단위테스트 표준 패턴.
+        transactionManager = new ResourcelessTransactionManager();
 
         service = new CourseCommandService(
                 courseRepository,
                 lessonRepository,
                 videoStoragePort,
                 thumbnailStoragePort,
-                fileProcessingService,
                 eventPublisher,
-                // 실제 DB 없이도 TransactionTemplate의 트랜잭션 동기화(afterCommit)가 동작하게 해주는
-                // 리소스 없는 트랜잭션 매니저(테스트 더블) — 단위테스트 표준 패턴.
-                new ResourcelessTransactionManager(),
+                transactionManager,
                 clock,
                 notificationRepository,
                 videoCatalogSyncPort
@@ -87,45 +89,51 @@ class CourseCommandServiceTest {
     }
 
     @Test
-    void 영상_업로드_시_presignedUrl과_s3Key가_레슨에_같이_저장된다() {
+    void 영상_업로드_presignedURL을_발급한다() {
         Long lessonId = 10L;
         Long authorId = 1L;
-        Lesson lesson = Lesson.create(5L, "1강", "설명", 0, null, Instant.now());
-        when(lessonRepository.findById(lessonId)).thenReturn(Optional.of(lesson));
         when(lessonRepository.findCourseAuthorInfo(lessonId))
                 .thenReturn(Optional.of(new CourseAuthorInfo(100L, authorId, CourseStatus.PUBLISHED)));
-        when(videoStoragePort.store(lessonId, "lecture.mp4", new byte[]{1, 2, 3}))
-                .thenReturn(new VideoStoragePort.StoredVideo("videos/10_uuid.mp4", "https://s3.example.com/presigned"));
-        when(lessonRepository.save(any(Lesson.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(videoStoragePort.generatePresignedPutUrl(lessonId, "lecture.mp4"))
+                .thenReturn(new VideoStoragePort.PresignedUpload("https://s3.example.com/presigned", "videos/10_uuid.mp4"));
 
-        String result = service.uploadLessonVideo(new UploadLessonVideoCommand(lessonId, authorId, "lecture.mp4", new byte[]{1, 2, 3}));
+        VideoStoragePort.PresignedUpload result = service.requestVideoUpload(
+                new RequestVideoUploadCommand(lessonId, authorId, "lecture.mp4"));
 
-        assertThat(result).isEqualTo("https://s3.example.com/presigned");
-        ArgumentCaptor<Lesson> captor = ArgumentCaptor.forClass(Lesson.class);
-        verify(lessonRepository).save(captor.capture());
-        assertThat(captor.getValue().getVideoUrl()).isEqualTo("https://s3.example.com/presigned");
-        assertThat(captor.getValue().getS3Key()).isEqualTo("videos/10_uuid.mp4");
-        assertThat(captor.getValue().getFileProcessingStatus()).isEqualTo(FileProcessingStatus.PENDING);
-        verify(videoStoragePort, never()).delete(any());
+        assertThat(result.presignedUrl()).isEqualTo("https://s3.example.com/presigned");
+        assertThat(result.s3Key()).isEqualTo("videos/10_uuid.mp4");
     }
 
     @Test
-    void db_저장이_실패하면_업로드된_S3_객체를_보상_삭제한다() {
+    void 영상_업로드_요청_시_강의_작성자가_아니면_거부한다() {
+        Long lessonId = 10L;
+        when(lessonRepository.findCourseAuthorInfo(lessonId))
+                .thenReturn(Optional.of(new CourseAuthorInfo(100L, 1L, CourseStatus.PUBLISHED)));
+
+        assertThatThrownBy(() -> service.requestVideoUpload(
+                new RequestVideoUploadCommand(lessonId, 999L, "lecture.mp4")))
+                .isInstanceOf(BusinessException.class);
+    }
+
+    @Test
+    void 영상_업로드_확인_시_s3Key가_레슨에_저장되고_카탈로그_동기화가_트리거된다() {
         Long lessonId = 10L;
         Long authorId = 1L;
+        Long courseId = 100L;
         Lesson lesson = Lesson.create(5L, "1강", "설명", 0, null, Instant.now());
         when(lessonRepository.findById(lessonId)).thenReturn(Optional.of(lesson));
         when(lessonRepository.findCourseAuthorInfo(lessonId))
-                .thenReturn(Optional.of(new CourseAuthorInfo(100L, authorId, CourseStatus.PUBLISHED)));
-        when(videoStoragePort.store(lessonId, "lecture.mp4", new byte[]{1, 2, 3}))
-                .thenReturn(new VideoStoragePort.StoredVideo("videos/10_uuid.mp4", "https://s3.example.com/presigned"));
-        when(lessonRepository.save(any(Lesson.class))).thenThrow(new RuntimeException("db down"));
+                .thenReturn(Optional.of(new CourseAuthorInfo(courseId, authorId, CourseStatus.PUBLISHED)));
+        when(lessonRepository.save(any(Lesson.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        assertThatThrownBy(() -> service.uploadLessonVideo(
-                new UploadLessonVideoCommand(lessonId, authorId, "lecture.mp4", new byte[]{1, 2, 3})))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("db down");
+        // 실제로는 @Transactional 프록시가 메서드 전체를 트랜잭션으로 감싸므로,
+        // 단위테스트에서도 동일하게 트랜잭션 안에서 호출해야 afterCommit 동기화 등록이 가능하다.
+        new TransactionTemplate(transactionManager).executeWithoutResult(status ->
+                service.confirmVideoUpload(new ConfirmVideoUploadCommand(lessonId, authorId, "videos/10_uuid.mp4")));
 
-        verify(videoStoragePort).delete("videos/10_uuid.mp4");
+        ArgumentCaptor<Lesson> captor = ArgumentCaptor.forClass(Lesson.class);
+        verify(lessonRepository).save(captor.capture());
+        assertThat(captor.getValue().getS3Key()).isEqualTo("videos/10_uuid.mp4");
+        verify(videoCatalogSyncPort).syncByCourse(courseId);
     }
 }

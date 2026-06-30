@@ -1,10 +1,11 @@
 package com.wanted.backend.domain.cource.application.service;
 
 import com.wanted.backend.domain.cource.application.command.ChangeCourseStatusCommand;
+import com.wanted.backend.domain.cource.application.command.ConfirmVideoUploadCommand;
 import com.wanted.backend.domain.cource.application.command.CreateCourseCommand;
+import com.wanted.backend.domain.cource.application.command.RequestVideoUploadCommand;
 import com.wanted.backend.domain.cource.application.command.UpdateCourseCommand;
 import com.wanted.backend.domain.cource.application.command.UploadCourseThumbnailCommand;
-import com.wanted.backend.domain.cource.application.command.UploadLessonVideoCommand;
 import com.wanted.backend.domain.cource.application.port.CourseVideoCatalogSyncPort;
 import com.wanted.backend.domain.cource.application.port.ThumbnailStoragePort;
 import com.wanted.backend.domain.cource.application.port.VideoStoragePort;
@@ -45,7 +46,6 @@ public class CourseCommandService implements CourseCommandUseCase {
     private final LessonRepository lessonRepository;
     private final VideoStoragePort videoStoragePort;
     private final ThumbnailStoragePort thumbnailStoragePort;
-    private final FileProcessingService fileProcessingService;
     private final ApplicationEventPublisher eventPublisher;
     private final PlatformTransactionManager transactionManager;
     private final Clock clock;
@@ -169,12 +169,7 @@ public class CourseCommandService implements CourseCommandUseCase {
     }
 
     @Override
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public String uploadLessonVideo(UploadLessonVideoCommand command) {
-        Lesson lesson = lessonRepository.findById(command.lessonId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
-
-        // 삭제된 강의 차단 + 강의 작성자 본인만 영상 업로드 가능
+    public VideoStoragePort.PresignedUpload requestVideoUpload(RequestVideoUploadCommand command) {
         CourseAuthorInfo courseInfo = lessonRepository.findCourseAuthorInfo(command.lessonId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
         if (courseInfo.isDeleted()) {
@@ -184,22 +179,28 @@ public class CourseCommandService implements CourseCommandUseCase {
             throw new BusinessException(ErrorCode.COURSE_ACCESS_DENIED);
         }
 
-        // S3 업로드(네트워크 블로킹 호출)는 트랜잭션 밖에서 수행해 DB 커넥션을 점유하지 않는다.
-        VideoStoragePort.StoredVideo storedVideo = videoStoragePort.store(
-                command.lessonId(),
-                command.originalFilename(),
-                command.videoData()
-        );
+        return videoStoragePort.generatePresignedPutUrl(command.lessonId(), command.originalFilename());
+    }
 
-        try {
-            persistUploadedVideo(lesson, storedVideo, command.lessonId(), courseInfo.courseId());
-        } catch (RuntimeException e) {
-            // DB 저장이 실패하면 이미 업로드된 S3 객체가 orphan으로 남지 않도록 보상 삭제한다.
-            videoStoragePort.delete(storedVideo.key());
-            throw e;
+    @Override
+    public void confirmVideoUpload(ConfirmVideoUploadCommand command) {
+        Lesson lesson = lessonRepository.findById(command.lessonId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+
+        CourseAuthorInfo courseInfo = lessonRepository.findCourseAuthorInfo(command.lessonId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+        if (courseInfo.isDeleted()) {
+            throw new BusinessException(ErrorCode.COURSE_NOT_FOUND);
+        }
+        if (!courseInfo.authorId().equals(command.requesterId())) {
+            throw new BusinessException(ErrorCode.COURSE_ACCESS_DENIED);
         }
 
-        return storedVideo.presignedUrl();
+        // video_url에는 s3Key를 저장한다 — 재생 시 VideoCatalogAdapter가 presigned GET URL로 변환한다.
+        lesson.attachVideo(command.s3Key(), command.s3Key());
+        lessonRepository.save(lesson);
+
+        registerVideoCatalogSync(courseInfo.courseId());
     }
 
     @Override
@@ -234,29 +235,6 @@ public class CourseCommandService implements CourseCommandUseCase {
         }
 
         return stored.presignedUrl();
-    }
-
-    // lesson 갱신 + 커밋 후 비동기 처리 트리거만 짧은 트랜잭션으로 묶는다.
-    // (uploadLessonVideo 자체는 NOT_SUPPORTED라 트랜잭션이 없어, 별도로 새 트랜잭션을 열어야
-    // afterCommit 동기화가 유효하다.)
-    private void persistUploadedVideo(Lesson lesson, VideoStoragePort.StoredVideo storedVideo,
-                                      Long lessonId, Long courseId) {
-        new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
-            lesson.attachVideo(storedVideo.presignedUrl(), storedVideo.key());
-            lessonRepository.save(lesson);
-
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    fileProcessingService.process(lessonId);
-                    try {
-                        videoCatalogSyncPort.syncByCourse(courseId);
-                    } catch (Exception e) {
-                        log.warn("video catalog 미러링 실패(courseId={}) — 영상 업로드는 정상 처리됨", courseId, e);
-                    }
-                }
-            });
-        });
     }
 
     // 커밋 이후 작성 스키마(course_section/lesson)를 재생 스키마(course_curriculum/video)로 미러링한다.
