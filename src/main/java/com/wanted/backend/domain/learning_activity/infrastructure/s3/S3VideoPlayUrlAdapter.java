@@ -16,10 +16,10 @@ public class S3VideoPlayUrlAdapter implements VideoPlayUrlPort {
 
     private final S3Presigner s3Presigner;
 
-    @Value("${app.s3.bucket}")
+    @Value("${aws.s3.bucket}")
     private String bucket;
 
-    @Value("${app.s3.presigned-url-expiry-minutes:60}")
+    @Value("${aws.s3.presigned-url-expiry-minutes:60}")
     private int expiryMinutes;
 
     @Override

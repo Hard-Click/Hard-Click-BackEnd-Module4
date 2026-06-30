@@ -38,8 +38,9 @@ public class FileUploadService implements FileUploadUseCase {
 
         String prefix = switch (command.fileType().toUpperCase()) {
             case "POST" -> "posts";
+            case "COMMENT" -> "comments";
             case "COURSE" -> "courses";
-            default -> "comments";
+            default -> throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         };
         String fileKey = storagePort.store(command.file(), prefix, maxFileSize);
 

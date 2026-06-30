@@ -188,8 +188,9 @@ public class CourseCommandService implements CourseCommandUseCase {
             throw new BusinessException(ErrorCode.COURSE_ACCESS_DENIED);
         }
 
-        // video_url에 s3Key 저장 → 재생 시 VideoCatalogAdapter가 presigned GET URL로 변환
+        // video_url에 s3Key 저장 후 COMPLETED로 전이 (presigned URL 직접 업로드는 별도 처리 단계 없음)
         lesson.attachVideo(command.s3Key(), command.s3Key());
+        lesson.completeProcessing();
         lessonRepository.save(lesson);
 
         registerVideoCatalogSync(courseInfo.courseId());
