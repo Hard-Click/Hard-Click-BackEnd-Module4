@@ -40,11 +40,19 @@ public class ProfileCommandService implements ProfileCommandUseCase {
 
         validateHasUpdatableValue(command);
 
+        String oldProfileImageKey = member.getProfileImageUrl();
         String profileImageKey = storeProfileImage(command.profileImage());
         String encodedPassword = resolveEncodedPassword(command, member);
 
         member.updateProfile(profileImageKey, encodedPassword, LocalDateTime.now());
         Member saved = memberRepository.save(member);
+
+        // 새 프로필 이미지로 교체된 경우, 더 이상 참조되지 않는 이전 이미지를 S3에서 정리한다
+        // (공개 URL이라 만료가 없어 방치하면 영구적으로 접근 가능한 상태로 남음)
+        if (profileImageKey != null && oldProfileImageKey != null
+                && !oldProfileImageKey.startsWith("http")) {
+            profileImageStoragePort.delete(oldProfileImageKey);
+        }
 
         String profileImageUrl = null;
         if (saved.getProfileImageUrl() != null) {
