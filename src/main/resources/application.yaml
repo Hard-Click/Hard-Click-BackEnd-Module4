@@ -57,6 +57,11 @@ spring:
   config:
     import: optional:classpath:application-secret.yaml
 
+  servlet:
+    multipart:
+      max-file-size: 1GB
+      max-request-size: 1GB
+
 jwt:
   secret: ${JWT_SECRET}
   access-token-expiration-ms: ${JWT_ACCESS_EXPIRATION:1800000}
@@ -82,6 +87,7 @@ server:
       min-spare: 50
     accept-count: 500
     max-connections: 10000
+    max-swallow-size: -1
 
 identity:
   redis:
