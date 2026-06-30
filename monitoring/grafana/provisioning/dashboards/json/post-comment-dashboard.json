@@ -10,7 +10,7 @@
   "graphTooltip": 1,
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "time": { "from": "now-6h", "to": "now" },
+  "time": { "from": "now-15m", "to": "now" },
   "timepicker": {
     "refresh_intervals": ["5s", "10s", "30s", "1m", "5m"]
   },
@@ -80,7 +80,7 @@
       "gridPos": { "h": 4, "w": 24, "x": 0, "y": 0 },
       "options": {
         "mode": "markdown",
-        "content": "## 📋 게시글·댓글 목록 N+1 최적화 — 실시간 측정 대시보드\n이 대시보드는 `GET /api/boards/{boardType}/posts?sort=comments` 게시글 목록 조회의 N+1 / 인덱스 부재 문제를 **Before → ① 인덱스 → ② Batch IN → ③ JOIN → ④ 비정규화** 4가지 방법으로 단계별 개선하는 과정을 실시간으로 보여줍니다. SLO 목표: **P95 ≤ 1초, 에러율 < 1%**"
+        "content": "## 📋 게시글·댓글 목록 N+1 최적화 — 실시간 측정 대시보드\n이 대시보드는 `GET /api/boards/posts?sort=comments` 게시글 목록 조회의 N+1 / 인덱스 부재 문제를 **Before → ① 인덱스 → ② Batch IN → ③ JOIN → ④ 비정규화** 4가지 방법으로 단계별 개선하는 과정을 실시간으로 보여줍니다. SLO 목표: **P95 ≤ 1초, 에러율 < 1%**"
       },
       "fieldConfig": { "defaults": {}, "overrides": [] }
     },
@@ -103,7 +103,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
-          "expr": "sum(rate(http_server_requests_seconds_sum{uri=\"/api/boards/{boardType}/posts\"}[$rate_interval])) / sum(rate(http_server_requests_seconds_count{uri=\"/api/boards/{boardType}/posts\"}[$rate_interval]))",
+          "expr": "sum(rate(http_server_requests_seconds_sum{uri=\"/api/boards/posts\"}[$rate_interval])) / sum(rate(http_server_requests_seconds_count{uri=\"/api/boards/posts\"}[$rate_interval]))",
           "legendFormat": "평균"
         }
       ],
@@ -144,7 +144,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
-          "expr": "sum(rate(http_server_requests_seconds_count{uri=\"/api/boards/{boardType}/posts\", status!=\"200\"}[$rate_interval])) / sum(rate(http_server_requests_seconds_count{uri=\"/api/boards/{boardType}/posts\"}[$rate_interval])) * 100",
+          "expr": "sum(rate(http_server_requests_seconds_count{uri=\"/api/boards/posts\", status!=\"200\"}[$rate_interval])) / sum(rate(http_server_requests_seconds_count{uri=\"/api/boards/posts\"}[$rate_interval])) * 100",
           "legendFormat": "에러율"
         }
       ],
@@ -183,7 +183,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
-          "expr": "sum(rate(http_server_requests_seconds_count{uri=\"/api/boards/{boardType}/posts\"}[$rate_interval]))",
+          "expr": "sum(rate(http_server_requests_seconds_count{uri=\"/api/boards/posts\"}[$rate_interval]))",
           "legendFormat": "req/s"
         }
       ],
@@ -405,12 +405,12 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
-          "expr": "sum(rate(http_server_requests_seconds_sum{uri=\"/api/boards/{boardType}/posts\"}[$rate_interval])) / sum(rate(http_server_requests_seconds_count{uri=\"/api/boards/{boardType}/posts\"}[$rate_interval]))",
+          "expr": "sum(rate(http_server_requests_seconds_sum{uri=\"/api/boards/posts\"}[$rate_interval])) / sum(rate(http_server_requests_seconds_count{uri=\"/api/boards/posts\"}[$rate_interval]))",
           "legendFormat": "평균 응답시간"
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus_ds" },
-          "expr": "max(http_server_requests_seconds{uri=\"/api/boards/{boardType}/posts\", quantile=\"0.95\"})",
+          "expr": "max(http_server_requests_seconds{uri=\"/api/boards/posts\", quantile=\"0.95\"})",
           "legendFormat": "P95 (SLO 기준)"
         }
       ],

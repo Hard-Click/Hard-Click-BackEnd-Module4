@@ -18,6 +18,7 @@ spring:
     hikari:
       maximum-pool-size: 10
       minimum-idle: 10
+      pool-name: HikariPool-1
 
   jpa:
     hibernate:
