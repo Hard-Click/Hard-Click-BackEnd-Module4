@@ -7,6 +7,7 @@ import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -34,6 +35,11 @@ public class StudyTimerStatsController {
             summary = "일별 순공시간 조회",
             description = "현재 로그인 사용자의 기간별 일별 순공시간 합계를 조회합니다."
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "일별 순공시간 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 날짜 범위"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요")
+    })
     public ResponseEntity<ApiResponse<List<DailyStudyTimeResponse>>> daily(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Parameter(description = "조회 시작 날짜(yyyy-MM-dd)", example = "2026-05-01")

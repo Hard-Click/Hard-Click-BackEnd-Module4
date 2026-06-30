@@ -5,5 +5,6 @@ public enum OrderStatus {
     PAID,
     PARTIAL_REFUNDED,
     REFUNDED,
-    CANCELED
+    CANCELED,
+    FAILED
 }

@@ -19,4 +19,6 @@ public interface OrderRepository {
     void markPaid(String orderNo, LocalDateTime paidAt, String paymentKey);
 
     void refundItem(Long orderId, Long courseId, OrderStatus newOrderStatus);
+
+    void refundSubscription(Long orderId);
 }

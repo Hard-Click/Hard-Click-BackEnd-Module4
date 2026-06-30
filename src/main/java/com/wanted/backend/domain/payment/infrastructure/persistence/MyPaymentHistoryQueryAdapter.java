@@ -2,6 +2,7 @@ package com.wanted.backend.domain.payment.infrastructure.persistence;
 
 import com.wanted.backend.domain.payment.application.port.MyPaymentHistoryQueryPort;
 import com.wanted.backend.domain.payment.domain.model.PaymentStatus;
+import com.wanted.backend.domain.payment.domain.model.PaymentType;
 import com.wanted.backend.domain.payment.infrastructure.subscription.PaymentSubscriptionReferenceEntity;
 import com.wanted.backend.domain.payment.infrastructure.subscription.PaymentSubscriptionReferenceRepository;
 import lombok.RequiredArgsConstructor;
@@ -12,10 +13,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
@@ -51,7 +52,7 @@ public class MyPaymentHistoryQueryAdapter implements MyPaymentHistoryQueryPort {
                         order.getId(),
                         order.getId(),
                         order.getOrderNo(),
-                        order.getPaymentType(),
+                        toPaymentType(order.getPaymentType()),
                         order.getFinalAmount(),
                         toPaymentStatus(order.getStatus()),
                         order.getPaidAt(),
@@ -65,6 +66,7 @@ public class MyPaymentHistoryQueryAdapter implements MyPaymentHistoryQueryPort {
 
     private Map<Long, List<Long>> findCourseIdsByOrderId(Collection<Long> orderIds) {
         return orderItemRepository.findByOrderIdIn(orderIds).stream()
+                .filter(item -> item.getOrderId() != null)
                 .collect(Collectors.groupingBy(
                         OrderItemJpaEntity::getOrderId,
                         Collectors.mapping(OrderItemJpaEntity::getCourseId, Collectors.toList())
@@ -72,12 +74,22 @@ public class MyPaymentHistoryQueryAdapter implements MyPaymentHistoryQueryPort {
     }
 
     private Map<Long, Long> findSubscriptionPlanIdByOrderId(Collection<Long> orderIds) {
-        return subscriptionRepository.findByOrderIdIn(orderIds).stream()
-                .collect(Collectors.toMap(
-                        PaymentSubscriptionReferenceEntity::getOrderId,
-                        PaymentSubscriptionReferenceEntity::getPlanId,
-                        (first, second) -> first
-                ));
+        Map<Long, Long> result = new HashMap<>();
+        subscriptionRepository.findByOrderIdIn(orderIds).forEach(sub -> {
+            if (sub.getOrderId() != null && sub.getPlanId() != null) {
+                result.putIfAbsent(sub.getOrderId(), sub.getPlanId());
+            }
+        });
+        return result;
+    }
+
+    private PaymentType toPaymentType(String raw) {
+        if (raw == null) return PaymentType.COURSE;
+        try {
+            return PaymentType.valueOf(raw);
+        } catch (IllegalArgumentException e) {
+            return PaymentType.COURSE;
+        }
     }
 
     private PaymentStatus toPaymentStatus(String orderStatus) {

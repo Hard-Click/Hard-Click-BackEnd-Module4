@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 
 import java.util.List;
 
+@Schema(description = "내 결제 내역 페이지 응답")
 public record MyPaymentHistoryPageResponse(
         @Schema(description = "현재 페이지의 결제 내역 목록")
         List<MyPaymentHistoryResponse> content,

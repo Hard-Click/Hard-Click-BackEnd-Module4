@@ -142,7 +142,9 @@ public class ConfirmOrderPaymentService implements ConfirmOrderPaymentUseCase {
                         .filter(java.util.Objects::nonNull)
                         .toList();
                 for (OrderItem item : order.getItems()) {
-                    grantEnrollment(order.getMemberId(), item.getCourseId());
+                    if (item.getCourseId() != null) {
+                        grantEnrollment(order.getMemberId(), item.getCourseId());
+                    }
                 }
                 orderCartDeletePort.deleteByMemberIdAndCourseIds(order.getMemberId(), purchasedCourseIds);
             }

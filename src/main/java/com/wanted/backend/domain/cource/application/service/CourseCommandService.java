@@ -21,6 +21,7 @@ import com.wanted.backend.domain.notification.domain.repository.NotificationRepo
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -34,6 +35,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -247,8 +249,11 @@ public class CourseCommandService implements CourseCommandUseCase {
                 @Override
                 public void afterCommit() {
                     fileProcessingService.process(lessonId);
-                    // 업로드된 영상(s3_key)을 재생 스키마(video)로 반영
-                    videoCatalogSyncPort.syncByCourse(courseId);
+                    try {
+                        videoCatalogSyncPort.syncByCourse(courseId);
+                    } catch (Exception e) {
+                        log.warn("video catalog 미러링 실패(courseId={}) — 영상 업로드는 정상 처리됨", courseId, e);
+                    }
                 }
             });
         });
@@ -259,7 +264,12 @@ public class CourseCommandService implements CourseCommandUseCase {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                videoCatalogSyncPort.syncByCourse(courseId);
+                try {
+                    new TransactionTemplate(transactionManager).executeWithoutResult(status ->
+                            videoCatalogSyncPort.syncByCourse(courseId));
+                } catch (Exception e) {
+                    log.warn("video catalog 미러링 실패(courseId={}) — 강의 등록은 정상 처리됨", courseId, e);
+                }
             }
         });
     }

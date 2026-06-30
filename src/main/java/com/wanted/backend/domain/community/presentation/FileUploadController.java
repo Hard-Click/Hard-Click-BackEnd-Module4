@@ -6,6 +6,8 @@ import com.wanted.backend.domain.community.presentation.response.FileUploadRespo
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -37,8 +39,14 @@ public class FileUploadController {
                 - 요청 타입은 multipart/form-data 입니다.
                 """
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "파일 업로드 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "허용되지 않는 파일 형식"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
+    })
     public ResponseEntity<ApiResponse<FileUploadResponse>> uploadFile(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "업로드 목적 구분 (예: post, comment)", example = "post")
             @RequestParam("fileType") String fileType,
             @RequestPart("file") MultipartFile file) {
 

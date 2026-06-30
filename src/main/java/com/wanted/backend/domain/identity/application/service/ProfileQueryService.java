@@ -7,9 +7,11 @@ import com.wanted.backend.domain.identity.domain.repository.MemberRepository;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -34,8 +36,14 @@ public class ProfileQueryService implements ProfileQueryUseCase {
     }
 
     private String resolveProfileImageUrl(String profileImageKey) {
-        return profileImageKey == null || profileImageKey.isBlank()
-                ? DEFAULT_PROFILE_IMAGE_URL
-                : profileImageStoragePort.presignUrl(profileImageKey);
+        if (profileImageKey == null || profileImageKey.isBlank()) {
+            return DEFAULT_PROFILE_IMAGE_URL;
+        }
+        try {
+            return profileImageStoragePort.presignUrl(profileImageKey);
+        } catch (Exception e) {
+            log.error("[PROFILE_PRESIGN_FAILED] presignUrl 실패, 기본 이미지로 대체. key={}", profileImageKey, e);
+            return DEFAULT_PROFILE_IMAGE_URL;
+        }
     }
 }

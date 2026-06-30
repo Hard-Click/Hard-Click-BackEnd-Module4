@@ -26,7 +26,7 @@ public class MyCompletedCourseController {
     @GetMapping
     @Operation(
             summary = "완료 강의 목록 조회",
-            description = "로그인한 사용자가 수강 완료한 강의 목록을 조회합니다."
+            description = "로그인한 사용자가 수강 완료(진도율 100%)한 강의 목록을 완료 일시와 함께 조회합니다. 로그인 필요."
     )
     public ResponseEntity<ApiResponse<List<MyCompletedCourseResponse>>> getMyCompletedCourses(
             @AuthenticationPrincipal CustomUserDetails userDetails

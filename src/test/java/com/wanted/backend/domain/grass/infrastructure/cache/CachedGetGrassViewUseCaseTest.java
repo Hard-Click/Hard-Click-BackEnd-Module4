@@ -40,7 +40,7 @@ class CachedGetGrassViewUseCaseTest {
         Cacheable cacheable = handleMethod.getAnnotation(Cacheable.class);
 
         assertThat(cacheable).isNotNull();
-        assertThat(cacheable.cacheNames()).containsExactly("grassView:v2");
+        assertThat(cacheable.cacheNames()).containsExactly("grassView:v3");
         assertThat(cacheable.key())
                 .contains("#query.memberId()")
                 .contains("#query.view()")
