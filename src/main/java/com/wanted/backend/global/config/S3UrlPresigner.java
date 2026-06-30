@@ -22,10 +22,28 @@ public class S3UrlPresigner {
     @Value("${aws.s3.bucket}")
     private String bucket;
 
+    @Value("${aws.s3.region}")
+    private String region;
+
     private final S3Presigner s3Presigner;
 
     public S3UrlPresigner(S3Presigner s3Presigner) {
         this.s3Presigner = s3Presigner;
+    }
+
+    /**
+     * key를 만료 없는 공개 S3 URL로 변환한다. 버킷이 해당 prefix에 대해 public read로
+     * 열려 있어야 한다(썸네일/프로필/커뮤니티 이미지처럼 접근 제어가 필요 없는 비민감 자산용).
+     * 영상처럼 수강권 검증이 필요한 자산에는 사용하지 않는다 — presign()을 그대로 쓴다.
+     */
+    public String publicUrl(String key) {
+        if (key == null || key.isBlank()) {
+            return key;
+        }
+        if (key.startsWith("http://") || key.startsWith("https://")) {
+            return key;
+        }
+        return "https://%s.s3.%s.amazonaws.com/%s".formatted(bucket, region, key);
     }
 
     /**

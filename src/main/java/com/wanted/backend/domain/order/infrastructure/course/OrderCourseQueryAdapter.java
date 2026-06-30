@@ -27,7 +27,7 @@ public class OrderCourseQueryAdapter implements OrderCourseQueryPort {
                         c.getId(),
                         c.getTitle(),
                         c.getPrice() != null ? c.getPrice() : 0,
-                        s3UrlPresigner.presign(c.getThumbnailUrl())))
+                        s3UrlPresigner.publicUrl(c.getThumbnailUrl())))
                 .toList();
     }
 }
