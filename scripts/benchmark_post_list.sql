@@ -179,3 +179,102 @@ SELECT COUNT(*) FROM comments WHERE post_id = (SELECT MIN(post_id) FROM posts);
 -- FROM posts p
 -- ORDER BY p.post_id
 -- LIMIT 20;
+
+
+-- ================================================================
+-- [F] 댓글 상세 조회 N+1 벤치마크 (담당: 박종준 — Batch IN + Map)
+--  위 [A]에서 만든 데이터셋은 post_id/author_id가 둘 다 (n % 5000)에서 파생돼
+--  같은 글 안에서 작성자가 거의 겹치지 않아(한 글 = 거의 한 작성자) 댓글 상세
+--  화면의 N+1(작성자 다양성 + 대댓글)을 보여주기엔 부적합하다.
+--  같은 members/posts 풀을 그대로 재사용해, 댓글 상세 조회에서 N+1이 터지는
+--  핫포스트 1건만 별도로 만든다.
+-- ================================================================
+SET FOREIGN_KEY_CHECKS = 0;
+
+DELETE FROM comments WHERE post_id = (SELECT post_id FROM posts WHERE title = '박종준 벤치마크 핫포스트' LIMIT 1);
+DELETE FROM posts WHERE title = '박종준 벤치마크 핫포스트';
+
+INSERT INTO posts
+(author_id, board_type, title, content, view_count, status, is_accepted, created_at, updated_at)
+VALUES (
+    (SELECT MIN(member_id) FROM members WHERE username LIKE 'bench_user_%'),
+    'FREE', '박종준 벤치마크 핫포스트', '댓글 상세 N+1 측정용 핫포스트', 99999, 'ACTIVE', 0,
+    NOW(), NOW()
+);
+
+DROP TEMPORARY TABLE IF EXISTS seq_500;
+CREATE TEMPORARY TABLE seq_500 AS
+WITH RECURSIVE seq AS (
+    SELECT 1 AS n
+    UNION ALL
+    SELECT n + 1 FROM seq WHERE n < 500
+)
+SELECT n FROM seq;
+
+-- F-1. 부모 댓글 500건 — 작성자를 매번 다른 사람으로 배정해 이름 배치조회 N+1 재현
+INSERT INTO comments
+(post_id, author_id, parent_id, content, is_accepted, is_deleted, status, accept_count, created_at, updated_at)
+SELECT
+    (SELECT post_id FROM posts WHERE title = '박종준 벤치마크 핫포스트' LIMIT 1),
+    (SELECT MIN(member_id) FROM members WHERE username LIKE 'bench_user_%') + (n % 5000),
+    NULL,
+    CONCAT('박종준 벤치마크 댓글 ', n),
+    0, 0, 'ACTIVE', 0,
+    NOW() - INTERVAL (500 - n) SECOND,
+    NOW() - INTERVAL (500 - n) SECOND
+FROM seq_500;
+
+-- F-2. 대댓글 2,000건 — 부모 댓글마다 평균 4개씩, 작성자도 매번 다르게 배정
+DROP TEMPORARY TABLE IF EXISTS seq_2000;
+CREATE TEMPORARY TABLE seq_2000 AS
+WITH RECURSIVE seq AS (
+    SELECT 1 AS n
+    UNION ALL
+    SELECT n + 1 FROM seq WHERE n < 2000
+)
+SELECT n FROM seq;
+
+INSERT INTO comments
+(post_id, author_id, parent_id, content, is_accepted, is_deleted, status, accept_count, created_at, updated_at)
+SELECT
+    (SELECT post_id FROM posts WHERE title = '박종준 벤치마크 핫포스트' LIMIT 1),
+    (SELECT MIN(member_id) FROM members WHERE username LIKE 'bench_user_%') + ((n * 7) % 5000),
+    (SELECT MIN(comment_id) FROM comments WHERE content LIKE '박종준 벤치마크 댓글 %') + (n % 500),
+    CONCAT('박종준 벤치마크 대댓글 ', n),
+    0, 0, 'ACTIVE', 0,
+    NOW() - INTERVAL (2000 - n) SECOND,
+    NOW() - INTERVAL (2000 - n) SECOND
+FROM seq_2000;
+
+DROP TEMPORARY TABLE IF EXISTS seq_500, seq_2000;
+SET FOREIGN_KEY_CHECKS = 1;
+ANALYZE TABLE posts, comments;
+
+SET @hot_post_id = (SELECT post_id FROM posts WHERE title = '박종준 벤치마크 핫포스트' LIMIT 1);
+SELECT @hot_post_id AS hot_post_id,
+       (SELECT COUNT(*) FROM comments WHERE post_id = @hot_post_id AND parent_id IS NULL) AS top_level,
+       (SELECT COUNT(*) FROM comments WHERE post_id = @hot_post_id AND parent_id IS NOT NULL) AS replies;
+
+-- [F-3] BEFORE — 댓글 1건당 개별 조회 (대댓글 1건 + 작성자 1건) 플랜
+EXPLAIN ANALYZE
+SELECT * FROM comments WHERE parent_id = (
+    SELECT MIN(comment_id) FROM comments WHERE post_id = @hot_post_id AND parent_id IS NULL
+);
+
+EXPLAIN ANALYZE
+SELECT member_id, name FROM members WHERE member_id = (
+    SELECT author_id FROM comments WHERE post_id = @hot_post_id AND parent_id IS NULL LIMIT 1
+);
+
+-- [F-4] AFTER — Batch IN 1회로 같은 작업
+SET @parent_ids = (SELECT GROUP_CONCAT(comment_id) FROM comments WHERE post_id = @hot_post_id AND parent_id IS NULL);
+SET @sql1 = CONCAT('EXPLAIN ANALYZE SELECT * FROM comments WHERE parent_id IN (', @parent_ids, ')');
+PREPARE stmt1 FROM @sql1;
+EXECUTE stmt1;
+DEALLOCATE PREPARE stmt1;
+
+SET @author_ids = (SELECT GROUP_CONCAT(DISTINCT author_id) FROM comments WHERE post_id = @hot_post_id);
+SET @sql2 = CONCAT('EXPLAIN ANALYZE SELECT member_id, name FROM members WHERE member_id IN (', @author_ids, ')');
+PREPARE stmt2 FROM @sql2;
+EXECUTE stmt2;
+DEALLOCATE PREPARE stmt2;
