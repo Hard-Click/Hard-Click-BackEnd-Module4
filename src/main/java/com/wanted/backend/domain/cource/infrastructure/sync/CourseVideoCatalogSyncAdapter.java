@@ -4,6 +4,7 @@ import com.wanted.backend.domain.cource.application.port.CourseVideoCatalogSyncP
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -21,7 +22,7 @@ public class CourseVideoCatalogSyncAdapter implements CourseVideoCatalogSyncPort
     private EntityManager em;
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void syncByCourse(Long courseId) {
         upsertCurriculum(courseId);
         upsertVideo(courseId);
