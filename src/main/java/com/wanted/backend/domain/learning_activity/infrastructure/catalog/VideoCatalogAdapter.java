@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.learning_activity.infrastructure.catalog;
 
 import com.wanted.backend.domain.learning_activity.application.port.VideoCatalogPort;
+import com.wanted.backend.domain.learning_activity.application.port.VideoPlayUrlPort;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoAccessInfo;
 import com.wanted.backend.domain.learning_activity.infrastructure.curriculum.CourseCurriculumReferenceEntity;
 import com.wanted.backend.domain.learning_activity.infrastructure.curriculum.CourseCurriculumReferenceRepository;
@@ -18,6 +19,7 @@ public class VideoCatalogAdapter implements VideoCatalogPort {
     private final CatalogVideoReferenceRepository videoRepository;
     private final CourseCurriculumReferenceRepository curriculumRepository;
     private final CatalogCourseReferenceRepository courseRepository;
+    private final VideoPlayUrlPort videoPlayUrlPort;
 
     @Override
     public Optional<VideoAccessInfo> findByVideoId(Long videoId) {
@@ -42,13 +44,17 @@ public class VideoCatalogAdapter implements VideoCatalogPort {
         boolean isPreview = Integer.valueOf(0).equals(video.getOrderIndex())
                 && Integer.valueOf(0).equals(curriculum.getOrderIndex());
 
+        String streamingUrl = video.getStreamingUrl() != null
+                ? videoPlayUrlPort.generateUrl(video.getStreamingUrl())
+                : null;
+
         return new VideoAccessInfo(
                 video.getId(),
                 curriculum.getCourseId(),
                 course.getStatus(),
                 course.getPrice(),
                 isPreview,
-                video.getStreamingUrl(),
+                streamingUrl,
                 video.getDurationSeconds()
         );
     }

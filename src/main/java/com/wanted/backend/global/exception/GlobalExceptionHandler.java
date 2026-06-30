@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -39,6 +40,21 @@ public class GlobalExceptionHandler {
                 .details(details);
 
         return ResponseEntity.status(ErrorCode.INVALID_INPUT_VALUE.getStatus()).body(response);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleMaxUploadSizeExceeded(
+            MaxUploadSizeExceededException e,
+            HttpServletRequest request) {
+
+        log.warn("[File Size Error] Path: {}, Message: {}", request.getRequestURI(), e.getMessage());
+
+        ErrorResponse response = ErrorResponse.create()
+                .errorCode(ErrorCode.FILE_SIZE_EXCEEDED.getCode())
+                .message("업로드 파일 크기가 제한(1GB)을 초과했습니다.")
+                .path(request.getRequestURI());
+
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(response);
     }
 
     /**

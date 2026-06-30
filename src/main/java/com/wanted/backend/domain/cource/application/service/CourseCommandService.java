@@ -1,9 +1,10 @@
 package com.wanted.backend.domain.cource.application.service;
 
 import com.wanted.backend.domain.cource.application.command.ChangeCourseStatusCommand;
+import com.wanted.backend.domain.cource.application.command.ConfirmVideoUploadCommand;
 import com.wanted.backend.domain.cource.application.command.CreateCourseCommand;
+import com.wanted.backend.domain.cource.application.command.RequestVideoUploadCommand;
 import com.wanted.backend.domain.cource.application.command.UpdateCourseCommand;
-import com.wanted.backend.domain.cource.application.command.UploadLessonVideoCommand;
 import com.wanted.backend.domain.cource.application.port.VideoStoragePort;
 import com.wanted.backend.domain.cource.application.usecase.CourseCommandUseCase;
 import com.wanted.backend.domain.cource.domain.dto.CourseAuthorInfo;
@@ -19,8 +20,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -34,7 +33,6 @@ public class CourseCommandService implements CourseCommandUseCase {
     private final CourseRepository courseRepository;
     private final LessonRepository lessonRepository;
     private final VideoStoragePort videoStoragePort;
-    private final FileProcessingService fileProcessingService;
     private final ApplicationEventPublisher eventPublisher;
     private final Clock clock;
 
@@ -144,11 +142,7 @@ public class CourseCommandService implements CourseCommandUseCase {
     }
 
     @Override
-    public String uploadLessonVideo(UploadLessonVideoCommand command) {
-        Lesson lesson = lessonRepository.findById(command.lessonId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
-
-        // 삭제된 강의 차단 + 강의 작성자 본인만 영상 업로드 가능
+    public VideoStoragePort.PresignedUpload requestVideoUpload(RequestVideoUploadCommand command) {
         CourseAuthorInfo courseInfo = lessonRepository.findCourseAuthorInfo(command.lessonId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
         if (courseInfo.isDeleted()) {
@@ -158,24 +152,24 @@ public class CourseCommandService implements CourseCommandUseCase {
             throw new BusinessException(ErrorCode.COURSE_ACCESS_DENIED);
         }
 
-        String videoUrl = videoStoragePort.store(
-                command.lessonId(),
-                command.originalFilename(),
-                command.videoData()
-        );
+        return videoStoragePort.generatePresignedPutUrl(command.lessonId(), command.originalFilename());
+    }
 
-        lesson.attachVideo(videoUrl);
+    @Override
+    public void confirmVideoUpload(ConfirmVideoUploadCommand command) {
+        Lesson lesson = lessonRepository.findById(command.lessonId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+
+        CourseAuthorInfo courseInfo = lessonRepository.findCourseAuthorInfo(command.lessonId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+        if (courseInfo.isDeleted()) {
+            throw new BusinessException(ErrorCode.COURSE_NOT_FOUND);
+        }
+        if (!courseInfo.authorId().equals(command.requesterId())) {
+            throw new BusinessException(ErrorCode.COURSE_ACCESS_DENIED);
+        }
+
+        lesson.attachVideo(command.s3Key());
         lessonRepository.save(lesson);
-
-        // 트랜잭션 커밋 후 비동기 처리 시작
-        Long lessonId = command.lessonId();
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-                fileProcessingService.process(lessonId);
-            }
-        });
-
-        return videoUrl;
     }
 }
