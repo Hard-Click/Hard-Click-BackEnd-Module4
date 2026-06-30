@@ -18,7 +18,8 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "comments", indexes = {
         @Index(name = "idx_comments_post_id", columnList = "post_id"),
-        @Index(name = "idx_comments_author_id", columnList = "author_id")
+        @Index(name = "idx_comments_author_id", columnList = "author_id"),
+        @Index(name = "idx_comments_parent_id", columnList = "parent_id")
 })
 @Getter
 public class CommentJpaEntity {
