@@ -135,15 +135,19 @@ class LearningActivityAdapterTest {
     }
 
     @Test
-    void 강의_진도_조회_어댑터가_강의_진도_정보를_조회한다() {
+    void 강의_진도_조회_어댑터가_미리보기_레슨을_제외하고_강의_진도_정보를_조회한다() {
+        // 레슨 10(섹션 0, 레슨 0)은 미리보기라 진도 집계에서 제외되어야 한다 — VideoCatalogAdapter의
+        // "첫 섹션 첫 레슨" 휴리스틱과 동일한 기준. 레슨 11만 남는다.
         CourseProgressQueryPort.CourseProgressData progress =
                 courseProgressQueryAdapter.findByMemberIdAndCourseId(1L, 20L);
 
         assertThat(progress.courseId()).isEqualTo(20L);
-        assertThat(progress.lessons()).hasSize(2);
-        var lesson10 = progress.lessons().stream().filter(l -> l.videoId() == 10L).findFirst().orElseThrow();
-        assertThat(lesson10.completed()).isTrue();
-        assertThat(lesson10.lastPositionSeconds()).isEqualTo(42);
+        assertThat(progress.lessons()).hasSize(1);
+        assertThat(progress.lessons()).noneMatch(l -> l.videoId() == 10L);
+
+        var lesson11 = progress.lessons().stream().filter(l -> l.videoId() == 11L).findFirst().orElseThrow();
+        assertThat(lesson11.completed()).isFalse();
+        assertThat(lesson11.lastPositionSeconds()).isZero();
     }
 
     @Test

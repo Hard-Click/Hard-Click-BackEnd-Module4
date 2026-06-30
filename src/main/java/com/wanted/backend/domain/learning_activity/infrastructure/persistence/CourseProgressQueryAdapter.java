@@ -43,7 +43,8 @@ public class CourseProgressQueryAdapter implements CourseProgressQueryPort {
                         (existing, duplicate) -> existing));
 
         List<LessonProgressData> lessons = sections.stream()
-                .flatMap(section -> lessonsBySectionId.getOrDefault(section.getId(), List.of()).stream())
+                .flatMap(section -> lessonsBySectionId.getOrDefault(section.getId(), List.of()).stream()
+                        .filter(lesson -> !isPreviewLesson(section, lesson)))
                 .map(lesson -> {
                     VideoProgressJpaEntity progress = progressByVideoId.get(lesson.getId());
                     return new LessonProgressData(
@@ -55,5 +56,9 @@ public class CourseProgressQueryAdapter implements CourseProgressQueryPort {
                 .toList();
 
         return new CourseProgressData(courseId, lessons);
+    }
+
+    private boolean isPreviewLesson(CourseSectionReferenceEntity section, LessonReferenceEntity lesson) {
+        return section.getOrderIndex() == 0 && lesson.getOrderIndex() == 0;
     }
 }
