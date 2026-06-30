@@ -34,7 +34,5 @@ public class PlayableVideoProgressReader {
     public record PlayableVideoProgress(
             VideoAccessInfo accessInfo,
             VideoProgress progress
-    ) {
-    }
-
+    ) {}
 }

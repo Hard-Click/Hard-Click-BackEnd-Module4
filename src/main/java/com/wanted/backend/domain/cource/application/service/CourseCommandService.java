@@ -215,8 +215,9 @@ public class CourseCommandService implements CourseCommandUseCase {
             throw new BusinessException(ErrorCode.VIDEO_FILE_SIZE_EXCEEDED);
         }
 
-        // video_url에는 s3Key를 저장한다 — 재생 시 VideoCatalogAdapter가 presigned GET URL로 변환한다.
+        // video_url에는 s3Key를 저장하고 COMPLETED로 전이 — presigned URL 직접 업로드는 별도 처리 단계 없음
         lesson.attachVideo(command.s3Key(), command.s3Key());
+        lesson.completeProcessing();
         lessonRepository.save(lesson);
 
         registerVideoCatalogSync(courseInfo.courseId());
