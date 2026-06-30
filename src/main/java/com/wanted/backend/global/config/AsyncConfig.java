@@ -14,8 +14,8 @@ public class AsyncConfig {
     @Bean(name = "fileProcessingExecutor")
     public Executor fileProcessingExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(8);
-        executor.setMaxPoolSize(20);
+        executor.setCorePoolSize(4);
+        executor.setMaxPoolSize(10);
         executor.setQueueCapacity(100);
         executor.setThreadNamePrefix("FileProcessing-");
         executor.initialize();
@@ -25,8 +25,8 @@ public class AsyncConfig {
     @Bean(name = "notificationExecutor")
     public Executor notificationExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(8);
-        executor.setMaxPoolSize(20);
+        executor.setCorePoolSize(4);
+        executor.setMaxPoolSize(10);
         executor.setQueueCapacity(200);
         executor.setThreadNamePrefix("Notification-");
         executor.setWaitForTasksToCompleteOnShutdown(true);
