@@ -3,6 +3,7 @@ package com.wanted.backend.domain.community.domain.repository;
 import com.wanted.backend.domain.community.domain.model.BoardType;
 import com.wanted.backend.domain.community.domain.model.Post;
 import com.wanted.backend.domain.community.domain.model.PostSortType;
+import com.wanted.backend.domain.community.domain.model.PostSummary;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,6 +23,11 @@ public interface PostRepository {
 
     // 전체 목록 페이징 조회
     List<Post> findAll(PostSortType sort, String keyword, int page, int size);
+
+    // 댓글순 정렬 — JOIN + DTO Projection으로 작성자명/댓글수까지 한 쿼리에 채워서 반환 (방법③)
+    List<PostSummary> findSummaryByBoardTypeOrderByCommentCount(BoardType boardType, String keyword, int page, int size);
+
+    List<PostSummary> findAllSummaryOrderByCommentCount(String keyword, int page, int size);
 
     // 게시판 타입별 전체 수 (페이징 계산용)
     int countByBoardType(BoardType boardType, String keyword);

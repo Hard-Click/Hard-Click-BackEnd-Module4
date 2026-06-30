@@ -36,7 +36,12 @@ public class FileUploadService implements FileUploadUseCase {
     public FileUploadResponse handle(FileUploadCommand command) {
         communityAccessPolicy.validateAccess(command.uploaderId());
 
-        String prefix = "POST".equals(command.fileType()) ? "posts" : "comments";
+        String prefix = switch (command.fileType().toUpperCase()) {
+            case "POST" -> "posts";
+            case "COMMENT" -> "comments";
+            case "COURSE" -> "courses";
+            default -> throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        };
         String fileKey = storagePort.store(command.file(), prefix, maxFileSize);
 
         try {

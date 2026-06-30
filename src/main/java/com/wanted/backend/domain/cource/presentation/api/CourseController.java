@@ -1,22 +1,23 @@
 package com.wanted.backend.domain.cource.presentation.api;
 
 import com.wanted.backend.domain.cource.application.command.ChangeCourseStatusCommand;
+import com.wanted.backend.domain.cource.application.command.ConfirmVideoUploadCommand;
+import com.wanted.backend.domain.cource.application.command.RequestVideoUploadCommand;
 import com.wanted.backend.domain.cource.application.command.UploadCourseThumbnailCommand;
-import com.wanted.backend.domain.cource.application.command.UploadLessonVideoCommand;
 import com.wanted.backend.domain.cource.application.dto.CourseDetailResult;
 import com.wanted.backend.domain.cource.application.dto.CourseListResult;
+import com.wanted.backend.domain.cource.application.port.VideoStoragePort;
 import com.wanted.backend.domain.cource.application.usecase.CourseCommandUseCase;
 import com.wanted.backend.domain.cource.application.usecase.CourseQueryUseCase;
 import com.wanted.backend.domain.cource.domain.model.CourseStatus;
 import com.wanted.backend.domain.cource.presentation.api.request.CourseListRequest;
-import com.wanted.backend.domain.cource.domain.model.FileProcessingStatus;
 import com.wanted.backend.domain.cource.presentation.api.request.CreateCourseRequest;
 import com.wanted.backend.domain.cource.presentation.api.request.UpdateCourseRequest;
 import com.wanted.backend.domain.cource.presentation.api.response.CourseDetailResponse;
 import com.wanted.backend.domain.cource.presentation.api.response.CourseListResponse;
 import com.wanted.backend.domain.cource.presentation.api.response.CreateCourseResponse;
+import com.wanted.backend.domain.cource.presentation.api.response.PresignedUploadResponse;
 import com.wanted.backend.domain.cource.presentation.api.response.UploadCourseThumbnailResponse;
-import com.wanted.backend.domain.cource.presentation.api.response.UploadLessonVideoResponse;
 import com.wanted.backend.global.common.ApiResponse;
 import com.wanted.backend.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
@@ -120,17 +121,31 @@ public class CourseController {
                 new UploadCourseThumbnailResponse(courseId, thumbnailUrl));
     }
 
-    @PostMapping(value = "/lessons/{lessonId}/video", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "레슨 영상 업로드", description = "레슨 ID에 해당하는 영상 파일을 업로드합니다. multipart/form-data 형식으로 전송.")
-    public ResponseEntity<ApiResponse<UploadLessonVideoResponse>> uploadLessonVideo(
+    @PostMapping("/lessons/{lessonId}/video/presign")
+    @Operation(summary = "영상 업로드 presigned URL 발급",
+            description = "S3에 직접 PUT 업로드하기 위한 presigned URL을 발급합니다. " +
+                          "FE는 이 URL로 파일을 PUT한 뒤 /lessons/{id}/video로 confirm 호출. INSTRUCTOR 권한 필요.")
+    public ResponseEntity<ApiResponse<PresignedUploadResponse>> requestVideoUpload(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Parameter(description = "레슨 ID", example = "3") @PathVariable Long lessonId,
-            @RequestPart("file") MultipartFile file
-    ) throws IOException {
-        String videoUrl = courseCommandUseCase.uploadLessonVideo(
-                new UploadLessonVideoCommand(lessonId, userDetails.getMemberId(), file.getOriginalFilename(), file.getBytes())
-        );
-        return ApiResponse.success("영상이 업로드되었습니다.",
-                new UploadLessonVideoResponse(lessonId, videoUrl, FileProcessingStatus.PENDING));
+            @Parameter(description = "원본 파일명 (확장자 포함)", example = "lecture_01.mp4") @RequestParam String filename
+    ) {
+        VideoStoragePort.PresignedUpload result = courseCommandUseCase.requestVideoUpload(
+                new RequestVideoUploadCommand(lessonId, userDetails.getMemberId(), filename));
+        return ApiResponse.success("presigned URL 발급 성공",
+                new PresignedUploadResponse(lessonId, result.presignedUrl(), result.s3Key(), result.contentType()));
+    }
+
+    @PatchMapping("/lessons/{lessonId}/video")
+    @Operation(summary = "영상 업로드 완료 등록",
+            description = "FE가 S3에 직접 업로드 완료 후 s3Key를 전달하면 레슨에 영상을 등록합니다. INSTRUCTOR 권한 필요.")
+    public ResponseEntity<ApiResponse<Void>> confirmVideoUpload(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "레슨 ID", example = "3") @PathVariable Long lessonId,
+            @Parameter(description = "업로드된 S3 키", example = "videos/3_uuid.mp4") @RequestParam String s3Key
+    ) {
+        courseCommandUseCase.confirmVideoUpload(
+                new ConfirmVideoUploadCommand(lessonId, userDetails.getMemberId(), s3Key));
+        return ApiResponse.successNoContent("영상이 등록되었습니다.");
     }
 }

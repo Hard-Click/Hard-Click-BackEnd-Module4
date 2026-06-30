@@ -14,6 +14,7 @@ import com.wanted.backend.domain.notification.domain.repository.NotificationRepo
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -47,6 +48,7 @@ public class PostCommandService implements PostCommandUseCase {
     }
 
     @Override
+    @CacheEvict(cacheNames = "postCount:v1", allEntries = true)
     public Long create(CreatePostCommand command) {
         communityAccessPolicy.validateAccess(command.authorId());
 
@@ -82,6 +84,7 @@ public class PostCommandService implements PostCommandUseCase {
     }
 
     @Override
+    @CacheEvict(cacheNames = "postCount:v1", allEntries = true)
     public void delete(DeletePostCommand command) {
         communityAccessPolicy.validateAccess(command.memberId());
 

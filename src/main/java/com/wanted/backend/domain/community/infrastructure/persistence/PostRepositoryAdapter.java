@@ -4,6 +4,7 @@ import com.wanted.backend.domain.community.domain.model.BoardType;
 import com.wanted.backend.domain.community.domain.model.Post;
 import com.wanted.backend.domain.community.domain.model.PostSortType;
 import com.wanted.backend.domain.community.domain.model.PostStatus;
+import com.wanted.backend.domain.community.domain.model.PostSummary;
 import com.wanted.backend.domain.community.domain.repository.PostRepository;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
@@ -94,6 +95,47 @@ public class PostRepositoryAdapter implements PostRepository {
                 .stream()
                 .map(this::toDomain)
                 .toList();
+    }
+
+    // 방법③: JOIN + DTO Projection — 상관 서브쿼리 대신 LEFT JOIN + GROUP BY로 작성자명/댓글수까지
+    // 한 쿼리에서 채워 반환한다. 호출부(PostQueryService)가 별도 Batch IN을 또 돌릴 필요가 없다.
+    @Override
+    public List<PostSummary> findSummaryByBoardTypeOrderByCommentCount(BoardType boardType, String keyword, int page, int size) {
+        return em.createQuery("""
+                SELECT new com.wanted.backend.domain.community.domain.model.PostSummary(
+                    p.id, p.boardType, p.subject, p.title, m.name, p.createdAt, p.viewCount, COUNT(c.id))
+                FROM PostJpaEntity p
+                JOIN MemberReferenceEntity m ON m.id = p.authorId
+                LEFT JOIN CommentJpaEntity c ON c.postId = p.id
+                WHERE p.boardType = :boardType AND p.title LIKE :keyword AND p.status = :status
+                GROUP BY p.id, p.boardType, p.subject, p.title, m.name, p.createdAt, p.viewCount
+                ORDER BY COUNT(c.id) DESC
+                """, PostSummary.class)
+                .setParameter("boardType", boardType)
+                .setParameter("keyword", "%" + (keyword != null ? keyword : "") + "%")
+                .setParameter("status", PostStatus.ACTIVE)
+                .setFirstResult(page * size)
+                .setMaxResults(size)
+                .getResultList();
+    }
+
+    @Override
+    public List<PostSummary> findAllSummaryOrderByCommentCount(String keyword, int page, int size) {
+        return em.createQuery("""
+                SELECT new com.wanted.backend.domain.community.domain.model.PostSummary(
+                    p.id, p.boardType, p.subject, p.title, m.name, p.createdAt, p.viewCount, COUNT(c.id))
+                FROM PostJpaEntity p
+                JOIN MemberReferenceEntity m ON m.id = p.authorId
+                LEFT JOIN CommentJpaEntity c ON c.postId = p.id
+                WHERE p.title LIKE :keyword AND p.status = :status
+                GROUP BY p.id, p.boardType, p.subject, p.title, m.name, p.createdAt, p.viewCount
+                ORDER BY COUNT(c.id) DESC
+                """, PostSummary.class)
+                .setParameter("keyword", "%" + (keyword != null ? keyword : "") + "%")
+                .setParameter("status", PostStatus.ACTIVE)
+                .setFirstResult(page * size)
+                .setMaxResults(size)
+                .getResultList();
     }
 
     @Override

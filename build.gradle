@@ -40,12 +40,13 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
     implementation 'org.springframework.boot:spring-boot-starter-mail'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
 
     // AWS SDK v2 — S3 파일 스토리지
     implementation platform('software.amazon.awssdk:bom:2.26.12')
     implementation 'software.amazon.awssdk:s3'
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'software.amazon.awssdk:sts'
 }
 
 tasks.named('test') {
