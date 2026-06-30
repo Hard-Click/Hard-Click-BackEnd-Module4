@@ -265,7 +265,8 @@ public class CourseCommandService implements CourseCommandUseCase {
             @Override
             public void afterCommit() {
                 try {
-                    videoCatalogSyncPort.syncByCourse(courseId);
+                    new TransactionTemplate(transactionManager).executeWithoutResult(status ->
+                            videoCatalogSyncPort.syncByCourse(courseId));
                 } catch (Exception e) {
                     log.warn("video catalog 미러링 실패(courseId={}) — 강의 등록은 정상 처리됨", courseId, e);
                 }
