@@ -266,10 +266,11 @@ public class CourseCommandService implements CourseCommandUseCase {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
+                // videoCatalogSyncPort.syncByCourse()가 REQUIRES_NEW로 자체 트랜잭션 경계를
+                // 갖고 있으므로 여기서는 별도 TransactionTemplate으로 한 번 더 감싸지 않는다.
                 for (int attempt = 1; attempt <= VIDEO_CATALOG_SYNC_MAX_ATTEMPTS; attempt++) {
                     try {
-                        new TransactionTemplate(transactionManager).executeWithoutResult(status ->
-                                videoCatalogSyncPort.syncByCourse(courseId));
+                        videoCatalogSyncPort.syncByCourse(courseId);
                         return;
                     } catch (Exception e) {
                         if (attempt == VIDEO_CATALOG_SYNC_MAX_ATTEMPTS) {
@@ -278,7 +279,9 @@ public class CourseCommandService implements CourseCommandUseCase {
                         } else {
                             log.warn("video catalog 미러링 재시도(courseId={}, attempt={}/{})",
                                     courseId, attempt, VIDEO_CATALOG_SYNC_MAX_ATTEMPTS, e);
-                            sleepBeforeRetry();
+                            if (!sleepBeforeRetry()) {
+                                return;
+                            }
                         }
                     }
                 }
@@ -286,11 +289,14 @@ public class CourseCommandService implements CourseCommandUseCase {
         });
     }
 
-    private void sleepBeforeRetry() {
+    // 인터럽트(배포/종료 등) 시 false를 반환해 재시도 루프를 즉시 중단시킨다 — 불필요한 DB 부하와 종료 지연 방지.
+    private boolean sleepBeforeRetry() {
         try {
             Thread.sleep(VIDEO_CATALOG_SYNC_RETRY_DELAY_MS);
+            return true;
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
+            return false;
         }
     }
 }
