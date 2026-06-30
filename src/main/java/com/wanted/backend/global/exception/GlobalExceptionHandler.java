@@ -3,6 +3,7 @@ package com.wanted.backend.global.exception;
 import com.wanted.backend.domain.cource.domain.model.InvalidCoursePriceException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -141,6 +142,25 @@ public class GlobalExceptionHandler {
         ErrorResponse response = ErrorResponse.create()
                 .errorCode(ErrorCode.INVALID_INPUT_VALUE.getCode())
                 .message(message)
+                .path(request.getRequestURI());
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    /**
+     * DB 제약 조건 위반 (unique, not null, data too long 등) → 400
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolationException(
+            DataIntegrityViolationException e,
+            HttpServletRequest request) {
+
+        String rootMessage = e.getMostSpecificCause().getMessage();
+        log.warn("[DataIntegrity Error] Path: {}, Cause: {}", request.getRequestURI(), rootMessage);
+
+        ErrorResponse response = ErrorResponse.create()
+                .errorCode(ErrorCode.INVALID_INPUT_VALUE.getCode())
+                .message("입력값이 DB 제약 조건을 위반했습니다.")
                 .path(request.getRequestURI());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
