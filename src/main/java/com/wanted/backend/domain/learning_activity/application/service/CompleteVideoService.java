@@ -3,6 +3,7 @@ package com.wanted.backend.domain.learning_activity.application.service;
 import com.wanted.backend.domain.learning_activity.application.command.MemberVideoCommand;
 import com.wanted.backend.domain.learning_activity.application.policy.VideoCompletionPolicy;
 import com.wanted.backend.domain.learning_activity.application.usecase.CompleteVideoUseCase;
+import com.wanted.backend.domain.learning_activity.domain.event.VideoCompletedEvent;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoAccessInfo;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoProgress;
 import com.wanted.backend.domain.learning_activity.domain.repository.VideoProgressRepository;
@@ -10,6 +11,7 @@ import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +29,7 @@ public class CompleteVideoService implements CompleteVideoUseCase {
     private final VideoProgressRepository videoProgressRepository;
     private final VideoCompletionPolicy videoCompletionPolicy;
     private final LearningActivityMetricRecorder metricRecorder;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public void handle(MemberVideoCommand command) {
@@ -45,6 +48,7 @@ public class CompleteVideoService implements CompleteVideoUseCase {
             }
 
             videoProgressRepository.save(progress.complete(LocalDateTime.now()));
+            eventPublisher.publishEvent(VideoCompletedEvent.of(memberId, videoId, accessInfo.courseId()));
             errorCode = null;
         } catch (BusinessException e) {
             errorCode = e.getErrorCode().name();

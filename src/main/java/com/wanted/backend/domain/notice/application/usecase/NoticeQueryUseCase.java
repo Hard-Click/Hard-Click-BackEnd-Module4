@@ -6,5 +6,5 @@ import com.wanted.backend.domain.notice.application.result.NoticeListResult;
 
 public interface NoticeQueryUseCase {
     NoticeListResult getList(GetNoticeListCommand command);
-    NoticeDetailResult getDetail(Long noticeId, Long memberId);
+    NoticeDetailResult getDetail(Long noticeId, Long memberId, String role);
 }
