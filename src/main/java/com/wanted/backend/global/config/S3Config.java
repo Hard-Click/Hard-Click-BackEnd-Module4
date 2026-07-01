@@ -45,8 +45,16 @@ public class S3Config {
      * 무효화된다. 전용 키가 설정되지 않은 환경(로컬 등)에서는 기존 DefaultCredentialsProvider로 폴백한다.
      */
     AwsCredentialsProvider presignCredentialsProvider() {
-        if (presignAccessKey.isBlank() || presignSecretKey.isBlank()) {
+        boolean accessKeyBlank = presignAccessKey.isBlank();
+        boolean secretKeyBlank = presignSecretKey.isBlank();
+
+        if (accessKeyBlank && secretKeyBlank) {
             return DefaultCredentialsProvider.create();
+        }
+        if (accessKeyBlank || secretKeyBlank) {
+            throw new IllegalStateException(
+                    "aws.s3.presign.access-key and aws.s3.presign.secret-key must be configured together."
+            );
         }
         return StaticCredentialsProvider.create(
                 AwsBasicCredentials.create(presignAccessKey, presignSecretKey)

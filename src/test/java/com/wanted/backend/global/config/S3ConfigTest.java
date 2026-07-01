@@ -7,6 +7,7 @@ import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class S3ConfigTest {
 
@@ -32,5 +33,27 @@ class S3ConfigTest {
         AwsCredentialsProvider provider = s3Config.presignCredentialsProvider();
 
         assertThat(provider).isInstanceOf(DefaultCredentialsProvider.class);
+    }
+
+    @Test
+    void presignCredentialsProvider_throwsOnStartup_whenOnlyAccessKeySet() {
+        S3Config s3Config = new S3Config();
+        ReflectionTestUtils.setField(s3Config, "presignAccessKey", "AKIATESTACCESSKEY");
+        ReflectionTestUtils.setField(s3Config, "presignSecretKey", "");
+
+        assertThatThrownBy(s3Config::presignCredentialsProvider)
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("must be configured together");
+    }
+
+    @Test
+    void presignCredentialsProvider_throwsOnStartup_whenOnlySecretKeySet() {
+        S3Config s3Config = new S3Config();
+        ReflectionTestUtils.setField(s3Config, "presignAccessKey", "");
+        ReflectionTestUtils.setField(s3Config, "presignSecretKey", "test-secret-key");
+
+        assertThatThrownBy(s3Config::presignCredentialsProvider)
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("must be configured together");
     }
 }
