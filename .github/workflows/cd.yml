@@ -55,6 +55,8 @@ jobs:
             S3_BUCKET=${{ secrets.S3_BUCKET }}
             MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
             TOSS_SECRET_KEY=${{ secrets.TOSS_SECRET_KEY }}
+            S3_PRESIGN_ACCESS_KEY=${{ secrets.S3_PRESIGN_ACCESS_KEY }}
+            S3_PRESIGN_SECRET_KEY=${{ secrets.S3_PRESIGN_SECRET_KEY }}
             ENVEOF
 
             cd ~/hard-click
