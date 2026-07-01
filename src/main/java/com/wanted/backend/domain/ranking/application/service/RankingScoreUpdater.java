@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.ranking.application.service;
 
 import com.wanted.backend.domain.community.domain.event.CommentAcceptedEvent;
+import com.wanted.backend.domain.learning_activity.domain.event.VideoCompletedEvent;
 import com.wanted.backend.domain.ranking.application.port.RankingScoreWriter;
 import com.wanted.backend.domain.ranking.domain.model.RankingMetric;
 import com.wanted.backend.domain.ranking.domain.model.RankingPeriod;
@@ -39,6 +40,23 @@ public class RankingScoreUpdater {
                         event.memberId(),
                         1L
                 );
+            } catch (Exception exception) {
+                log.error(
+                        "[Ranking] lesson score increment failed. memberId={}, period={}, videoId={}",
+                        event.memberId(),
+                        period.value(),
+                        event.videoId(),
+                        exception
+                );
+            }
+        }
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void handle(CommentAcceptedEvent event) {
+        for (RankingPeriod period : RankingPeriod.values()) {
+            try {
+                rankingScoreWriter.incrementScore(RankingMetric.ACCEPTED_COMMENT, period, event.commentAuthorId(), 1L);
             } catch (Exception exception) {
                 log.error(
                         "[Ranking] accepted-comment score increment failed. memberId={}, period={}, commentId={}",

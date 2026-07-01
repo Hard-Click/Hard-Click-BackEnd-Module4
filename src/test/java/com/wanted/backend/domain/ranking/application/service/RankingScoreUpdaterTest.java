@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.ranking.application.service;
 
 import com.wanted.backend.domain.community.domain.event.CommentAcceptedEvent;
+import com.wanted.backend.domain.learning_activity.domain.event.VideoCompletedEvent;
 import com.wanted.backend.domain.ranking.application.port.RankingScoreWriter;
 import com.wanted.backend.domain.ranking.domain.model.RankingMetric;
 import com.wanted.backend.domain.ranking.domain.model.RankingPeriod;
@@ -99,6 +100,31 @@ class RankingScoreUpdaterTest {
         verify(rankingScoreWriter).incrementScore(RankingMetric.ACCEPTED_COMMENT, RankingPeriod.DAILY, 1L, 1L);
         verify(rankingScoreWriter).incrementScore(RankingMetric.ACCEPTED_COMMENT, RankingPeriod.WEEKLY, 1L, 1L);
         verify(rankingScoreWriter).incrementScore(RankingMetric.ACCEPTED_COMMENT, RankingPeriod.MONTHLY, 1L, 1L);
+    }
+
+    @Test
+    void incrementsLessonScoresForAllPeriods() {
+        VideoCompletedEvent event = VideoCompletedEvent.of(1L, 10L, 20L);
+
+        updater.handle(event);
+
+        verify(rankingScoreWriter).incrementScore(RankingMetric.LESSON, RankingPeriod.DAILY, 1L, 1L);
+        verify(rankingScoreWriter).incrementScore(RankingMetric.LESSON, RankingPeriod.WEEKLY, 1L, 1L);
+        verify(rankingScoreWriter).incrementScore(RankingMetric.LESSON, RankingPeriod.MONTHLY, 1L, 1L);
+    }
+
+    @Test
+    void keepsUpdatingOtherPeriodsWhenLessonRedisUpdateFails() {
+        VideoCompletedEvent event = VideoCompletedEvent.of(1L, 10L, 20L);
+        doThrow(new RuntimeException("redis down"))
+                .when(rankingScoreWriter)
+                .incrementScore(RankingMetric.LESSON, RankingPeriod.DAILY, 1L, 1L);
+
+        updater.handle(event);
+
+        verify(rankingScoreWriter).incrementScore(RankingMetric.LESSON, RankingPeriod.DAILY, 1L, 1L);
+        verify(rankingScoreWriter).incrementScore(RankingMetric.LESSON, RankingPeriod.WEEKLY, 1L, 1L);
+        verify(rankingScoreWriter).incrementScore(RankingMetric.LESSON, RankingPeriod.MONTHLY, 1L, 1L);
     }
 
     @Test
