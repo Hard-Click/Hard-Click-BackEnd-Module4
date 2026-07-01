@@ -2,6 +2,8 @@ package com.wanted.backend.domain.study_timer.infrastructure.persistence;
 
 import com.wanted.backend.domain.study_timer.domain.model.DailyStudyStat;
 import com.wanted.backend.domain.study_timer.domain.repository.DailyStudyStatsRepository;
+import com.wanted.backend.global.exception.BusinessException;
+import com.wanted.backend.global.exception.ErrorCode;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -11,6 +13,7 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -29,8 +32,9 @@ public class DailyStudyStatsRepositoryAdapter implements DailyStudyStatsReposito
             Integer additionalStudySeconds
     ) {
         LocalDateTime now = LocalDateTime.now(clock);
-        // 오버플로우 사전 검증 — 현재 값을 먼저 읽어 도메인 검증을 통과시킨 뒤 원자적 upsert 실행
-        DailyStudyStat current = repository.findByMemberIdAndStatDate(memberId, studyDate)
+        // 오버플로우 사전 검증 — 호출 전 memberLockPort.lock()이 FOR UPDATE로 직렬화하므로 동시성 안전
+        Optional<DailyStudyStatsJpaEntity> existingEntity = repository.findByMemberIdAndStatDate(memberId, studyDate);
+        DailyStudyStat current = existingEntity
                 .map(this::toDomain)
                 .orElseGet(() -> new DailyStudyStat(memberId, studyDate, 0));
         current.increaseStudySeconds(additionalStudySeconds);   // 오버플로우 시 예외
@@ -49,11 +53,11 @@ public class DailyStudyStatsRepositoryAdapter implements DailyStudyStatsReposito
                 .setParameter("delta", additionalStudySeconds)
                 .setParameter("now", now)
                 .executeUpdate();
-        entityManager.flush();
-        entityManager.clear();
+        // clear() 대신 해당 엔티티만 detach — 같은 트랜잭션 내 다른 관리 엔티티를 건드리지 않는다
+        existingEntity.ifPresent(entityManager::detach);
         return repository.findByMemberIdAndStatDate(memberId, studyDate)
                 .map(this::toDomain)
-                .orElseThrow();
+                .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_TIMER_DAILY_STAT_INVALID));
     }
 
     @Override
