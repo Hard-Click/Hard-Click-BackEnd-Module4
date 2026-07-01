@@ -29,6 +29,16 @@ public interface PostRepository {
 
     List<PostSummary> findAllSummaryOrderByCommentCount(String keyword, int page, int size);
 
+    // 댓글순 정렬 — comment_count 컬럼을 그대로 읽기만 함, COUNT/JOIN 없음 (방법④: 비정규화)
+    List<PostSummary> findSummaryByBoardTypeOrderByCommentCountDenormalized(BoardType boardType, String keyword, int page, int size);
+
+    List<PostSummary> findAllSummaryOrderByCommentCountDenormalized(String keyword, int page, int size);
+
+    // 댓글 생성/삭제 시 posts.comment_count 동기화 (방법④)
+    void incrementCommentCount(Long postId);
+
+    void decrementCommentCount(Long postId);
+
     // 게시판 타입별 전체 수 (페이징 계산용)
     int countByBoardType(BoardType boardType, String keyword);
 

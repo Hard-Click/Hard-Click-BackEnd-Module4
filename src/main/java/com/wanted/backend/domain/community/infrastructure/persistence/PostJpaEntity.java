@@ -9,7 +9,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "posts", indexes = {
-        @Index(name = "idx_posts_board_status_created", columnList = "board_type, status, created_at")
+        @Index(name = "idx_posts_board_status_created", columnList = "board_type, status, created_at"),
+        @Index(name = "idx_posts_board_status_count", columnList = "board_type, status, comment_count")
 })
 @Getter
 public class PostJpaEntity {
@@ -44,6 +45,10 @@ public class PostJpaEntity {
 
     @Column(name = "is_accepted", nullable = false)
     private boolean isAccepted;
+
+    // 방법④: 비정규화 — 댓글 생성/삭제 시 동기화, 조회 시 COUNT 서브쿼리 제거용
+    @Column(name = "comment_count", nullable = false)
+    private int commentCount;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
