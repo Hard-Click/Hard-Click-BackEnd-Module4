@@ -164,7 +164,7 @@ public class NoticeController {
             @Parameter(description = "조회할 공지사항 ID", example = "5")
             @PathVariable Long noticeId) {
 
-        NoticeDetailResult result = noticeQueryUseCase.getDetail(noticeId, userDetails.getMemberId());
+        NoticeDetailResult result = noticeQueryUseCase.getDetail(noticeId, userDetails.getMemberId(), userDetails.getRole());
 
         return ApiResponse.success("공지사항 상세 조회 성공", NoticeDetailResponse.from(result));
     }
