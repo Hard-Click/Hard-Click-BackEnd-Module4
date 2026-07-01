@@ -371,13 +371,14 @@ VALUES
 INSERT IGNORE INTO subjects (name) VALUES
 ('미적분'), ('독서'), ('화학Ⅰ'), ('영어Ⅰ'), ('확통'), ('물리Ⅰ');
 
--- subject_id 캐싱 (이미 존재하는 과목도 올바른 ID를 참조하도록 SELECT 사용)
-SET @s_미적분 = (SELECT id FROM subjects WHERE name = '미적분');
-SET @s_독서   = (SELECT id FROM subjects WHERE name = '독서');
-SET @s_화학   = (SELECT id FROM subjects WHERE name = '화학Ⅰ');
-SET @s_영어   = (SELECT id FROM subjects WHERE name = '영어Ⅰ');
-SET @s_확통   = (SELECT id FROM subjects WHERE name = '확통');
-SET @s_물리   = (SELECT id FROM subjects WHERE name = '물리Ⅰ');
+-- subject_id 캐싱 (ASCII 변수명: 한글 변수명은 curl 다운로드 시 인코딩 깨짐)
+-- @s1=미적분 @s2=독서 @s3=화학Ⅰ @s4=영어Ⅰ @s5=확통 @s6=물리Ⅰ
+SET @s1 = (SELECT id FROM subjects WHERE name = '미적분');
+SET @s2 = (SELECT id FROM subjects WHERE name = '독서');
+SET @s3 = (SELECT id FROM subjects WHERE name = '화학Ⅰ');
+SET @s4 = (SELECT id FROM subjects WHERE name = '영어Ⅰ');
+SET @s5 = (SELECT id FROM subjects WHERE name = '확통');
+SET @s6 = (SELECT id FROM subjects WHERE name = '물리Ⅰ');
 
 -- ============================================================
 -- 10. 신고 처리·이용제한 데모용 멤버 (6명)
@@ -419,37 +420,37 @@ INSERT IGNORE INTO posts
      view_count, status, is_accepted, created_at, updated_at)
 VALUES
 -- 미적분 ①: 해결된 질문 (댓글 3개 + 채택 1개 → 섹션 13에서 추가)
-(9006, 9005, 'QUESTION', @s_미적분,
+(9006, 9005, 'QUESTION', @s1,
  '미적분 극한값 계산 도와주세요',
  'lim(x→0) (sin x / x) 를 L''Hopital 없이 증명하는 방법을 모르겠습니다. 샌드위치 정리를 써야 하나요?',
  12, 'ACTIVE', 1, DATE_SUB(NOW(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 5 DAY)),
 
 -- 미적분 ②: 미해결 + 이미지 첨부 (post_files → 섹션 12에서 추가)
-(9007, 9006, 'QUESTION', @s_미적분,
+(9007, 9006, 'QUESTION', @s1,
  '연쇄법칙 적용 과정이 이해가 안 돼요 [이미지 첨부]',
  '교재 p.147 예제 3번인데 f(g(x)) 미분할 때 어디서 틀렸는지 봐주세요. 이미지 첨부했습니다.',
  8, 'ACTIVE', 0, DATE_SUB(NOW(), INTERVAL 4 DAY), DATE_SUB(NOW(), INTERVAL 4 DAY)),
 
 -- 독서: 미해결
-(9008, 9007, 'QUESTION', @s_독서,
+(9008, 9007, 'QUESTION', @s2,
  '박경리 토지 1부 주제를 한 문장으로 요약하면?',
  '수행평가에서 토지 1부 핵심 주제를 요약하라고 하는데 어떻게 쓰면 좋을까요?',
  5, 'ACTIVE', 0, DATE_SUB(NOW(), INTERVAL 3 DAY), DATE_SUB(NOW(), INTERVAL 3 DAY)),
 
 -- 화학Ⅰ: 해결된 질문
-(9009, 9008, 'QUESTION', @s_화학,
+(9009, 9008, 'QUESTION', @s3,
  '몰 농도 계산 공식이 헷갈려요',
  '0.5 M NaCl 용액 500 mL를 만들려면 NaCl이 몇 g 필요한가요? 풀이 과정 알려주세요.',
  9, 'ACTIVE', 1, DATE_SUB(NOW(), INTERVAL 3 DAY), DATE_SUB(NOW(), INTERVAL 3 DAY)),
 
 -- 영어Ⅰ: 미해결
-(9010, 9009, 'QUESTION', @s_영어,
+(9010, 9009, 'QUESTION', @s4,
  '수동태 전환할 때 by 생략 조건이 뭔가요?',
  '"The window was broken." 처럼 행위자를 모르거나 중요하지 않을 때 by 절을 생략한다고 배웠는데 예외가 있나요?',
  4, 'ACTIVE', 0, DATE_SUB(NOW(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY)),
 
 -- 확통: 미해결
-(9011, 9010, 'QUESTION', @s_확통,
+(9011, 9010, 'QUESTION', @s5,
  '조건부 확률 P(A|B) 계산 헷갈립니다',
  'P(A)=0.3, P(B)=0.4, P(A∩B)=0.12 일 때 P(A|B)와 P(B|A)를 구해야 하는데 공식이 헷갈려요.',
  6, 'ACTIVE', 0, DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY));
