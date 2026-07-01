@@ -76,8 +76,9 @@ public class CommentQueryService implements CommentQueryUseCase {
     private CommentResult toResult(Comment comment, Long currentMemberId, boolean isAdmin,
                                    List<Comment> replies, Map<Long, String> nameMap) {
         String rawName = comment.isDeleted() ? null : nameMap.get(comment.getAuthorId());
-        String authorName = rawName == null ? "" : (isAdmin ? rawName : Review.maskName(rawName));
-        String authorInitial = rawName == null ? "" : rawName.substring(0, 1);
+        boolean hasName = rawName != null && !rawName.isEmpty();
+        String authorName = hasName ? (isAdmin ? rawName : Review.maskName(rawName)) : "";
+        String authorInitial = hasName ? rawName.substring(0, 1) : "";
 
         List<CommentResult> replyResults = replies.stream()
                 .map(reply -> toResult(reply, currentMemberId, isAdmin, List.of(), nameMap))
