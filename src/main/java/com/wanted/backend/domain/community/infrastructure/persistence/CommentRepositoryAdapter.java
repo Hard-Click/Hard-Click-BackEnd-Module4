@@ -5,7 +5,10 @@ import com.wanted.backend.domain.community.domain.repository.CommentRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
@@ -108,6 +111,15 @@ public class CommentRepositoryAdapter implements CommentRepository {
     @Override
     public int countByPostId(Long postId) {
         return repository.countByPostId(postId);
+    }
+
+    @Override
+    public Map<Long, Long> countsByPostIds(Collection<Long> postIds) {
+        if (postIds.isEmpty()) return Map.of();
+        Map<Long, Long> result = new HashMap<>();
+        repository.countsByPostIds(postIds)
+                .forEach(row -> result.put(row.getPostId(), row.getCnt()));
+        return result;
     }
 
 }

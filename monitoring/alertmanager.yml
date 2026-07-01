@@ -1,0 +1,25 @@
+global:
+  slack_api_url: "${SLACK_WEBHOOK_URL}"
+
+route:
+  receiver: slack-unified
+  group_by: [alertname]
+  group_wait: 0s          # 시연 즉시 반응 — prod에서는 30s 권장
+  group_interval: 30s
+  repeat_interval: 30m
+
+  routes:
+    - match_re:
+        env: test|dev
+      receiver: slack-unified
+
+receivers:
+  - name: slack-unified
+    slack_configs:
+      - channel: "#hard-click-alert"
+        title: "[{{ .CommonLabels.domain | toUpper }}] {{ .CommonLabels.severity | toUpper }} — {{ .CommonAnnotations.summary }}"
+        text: |
+          *환경:* `{{ .CommonLabels.env }}`  *도메인:* `{{ .CommonLabels.domain }}`
+          {{ .CommonAnnotations.description }}
+        color: '{{ if eq .CommonLabels.severity "critical" }}danger{{ else }}warning{{ end }}'
+        send_resolved: true

@@ -9,11 +9,15 @@ services:
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
+      - MAIL_USERNAME=${MAIL_USERNAME}
       - MAIL_PASSWORD=${MAIL_PASSWORD}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - INFLUX_TOKEN=${INFLUX_TOKEN}
+      - SPRING_PROFILES_ACTIVE=prod
+      - S3_BUCKET=${S3_BUCKET}
+      - AWS_REGION=${AWS_REGION:-ap-northeast-2}
+      - TOSS_SECRET_KEY=${TOSS_SECRET_KEY}
     depends_on:
       mysql:
         condition: service_healthy
@@ -46,16 +50,6 @@ services:
       - redis-data:/data
     restart: unless-stopped
 
-  influxdb:
-    image: influxdb:2
-    container_name: hard-click-influxdb
-    ports:
-      - "8086:8086"
-    volumes:
-      - influxdb-data:/var/lib/influxdb2
-    restart: unless-stopped
-
 volumes:
   mysql-data:
   redis-data:
-  influxdb-data:

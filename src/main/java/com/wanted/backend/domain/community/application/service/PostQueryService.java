@@ -12,12 +12,13 @@ import com.wanted.backend.domain.community.presentation.response.PostItemRespons
 import com.wanted.backend.domain.community.presentation.response.PostListResponse;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -25,6 +26,10 @@ import java.util.List;
 public class PostQueryService implements PostQueryUseCase {
 
     private static final int PAGE_SIZE = 10;
+
+    // benchmark.method=before|method2|method3 (기본값 method3)
+    @Value("${benchmark.method:method3}")
+    private String benchmarkMethod;
 
     private final PostRepository postRepository;
     private final PostFileRepository postFileRepository;
@@ -44,36 +49,84 @@ public class PostQueryService implements PostQueryUseCase {
     }
 
     @Override
-    public PostListResponse getList(BoardType boardType, PostSortType sort,
-                                    String keyword, int page) {
+    public PostListResponse getList(BoardType boardType, PostSortType sort, String keyword, int page) {
+        int totalCount = boardType != null
+                ? postRepository.countByBoardType(boardType, keyword)
+                : postRepository.countAll(keyword);
+        int totalPages = (int) Math.ceil((double) totalCount / PAGE_SIZE);
+
+        return switch (benchmarkMethod) {
+            case "method3" -> getListMethod3(boardType, sort, keyword, page, totalCount, totalPages);
+            case "method2" -> getListMethod2(boardType, sort, keyword, page, totalCount, totalPages);
+            default        -> getListBefore(boardType, sort, keyword, page, totalCount, totalPages);
+        };
+    }
+
+    // ── 방법③: JOIN + DTO Projection (1쿼리, 상관 서브쿼리 제거) ──────────────────────
+    private PostListResponse getListMethod3(BoardType boardType, PostSortType sort,
+                                            String keyword, int page, int total, int totalPages) {
+        if (sort == PostSortType.comments) {
+            List<PostSummary> summaries = boardType != null
+                    ? postRepository.findSummariesByBoardType(boardType, keyword, page, PAGE_SIZE)
+                    : postRepository.findAllSummaries(keyword, page, PAGE_SIZE);
+
+            List<PostItemResponse> items = summaries.stream()
+                    .map(s -> new PostItemResponse(
+                            s.getId(), s.getBoardType(), s.getTitle(),
+                            Review.maskName(s.getAuthorName()),
+                            s.getCreatedAt(), s.getViewCount(), (int) s.getCommentCount()))
+                    .collect(Collectors.toList());
+
+            return new PostListResponse(items, page, totalPages, total);
+        }
+        // comments 외 정렬: 방법②와 동일 (배치 IN)
+        return getListMethod2(boardType, sort, keyword, page, total, totalPages);
+    }
+
+    // ── 방법②: Batch IN + Map (3쿼리, N+1 제거) ────────────────────────────────────
+    private PostListResponse getListMethod2(BoardType boardType, PostSortType sort,
+                                            String keyword, int page, int total, int totalPages) {
         List<Post> posts = boardType != null
                 ? postRepository.findByBoardType(boardType, sort, keyword, page, PAGE_SIZE)
                 : postRepository.findAll(sort, keyword, page, PAGE_SIZE);
 
-        int totalCount = boardType != null
-                ? postRepository.countByBoardType(boardType, keyword)
-                : postRepository.countAll(keyword);
+        Set<Long> authorIds = posts.stream().map(Post::getAuthorId).collect(Collectors.toSet());
+        Map<Long, String> nameMap = memberNamePort.getNamesByMemberIds(authorIds);
+
+        List<Long> postIds = posts.stream().map(Post::getId).toList();
+        Map<Long, Long> cntMap = commentRepository.countsByPostIds(postIds);
+
+        List<PostItemResponse> items = posts.stream()
+                .map(p -> new PostItemResponse(
+                        p.getId(), p.getBoardType(), p.getTitle(),
+                        Review.maskName(nameMap.getOrDefault(p.getAuthorId(), "")),
+                        p.getCreatedAt(), p.getViewCount(),
+                        cntMap.getOrDefault(p.getId(), 0L).intValue()))
+                .collect(Collectors.toList());
+
+        return new PostListResponse(items, page, totalPages, total);
+    }
+
+    // ── Before: N+1 원본 (21쿼리) ────────────────────────────────────────────────
+    private PostListResponse getListBefore(BoardType boardType, PostSortType sort,
+                                           String keyword, int page, int total, int totalPages) {
+        List<Post> posts = boardType != null
+                ? postRepository.findByBoardType(boardType, sort, keyword, page, PAGE_SIZE)
+                : postRepository.findAll(sort, keyword, page, PAGE_SIZE);
 
         List<PostItemResponse> items = posts.stream()
                 .map(this::toItemResponse)
                 .toList();
 
-        return new PostListResponse(
-                items,
-                page,
-                (int) Math.ceil((double) totalCount / PAGE_SIZE),
-                totalCount
-        );
+        return new PostListResponse(items, page, totalPages, total);
     }
 
     @Override
     @Transactional
     public PostDetailResponse getDetail(Long postId, Long memberId) {
-
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
 
-        // memberId가 null이면 조회수 트래킹 스킵
         if (memberId != null) {
             LocalDateTime thirtyMinutesAgo = LocalDateTime.now().minusMinutes(30);
             boolean alreadyViewed = viewLogRepository
@@ -94,30 +147,17 @@ public class PostQueryService implements PostQueryUseCase {
                 .toList();
 
         return new PostDetailResponse(
-                post.getId(),
-                post.getBoardType(),
-                post.getTitle(),
-                Review.maskName(name),
-                post.getCreatedAt(),
-                post.getViewCount(),
-                post.getContent(),
-                post.isOwner(memberId),   // Post 도메인 모델에 위임
-                post.isAccepted(),
-                fileUrls
-        );
+                post.getId(), post.getBoardType(), post.getTitle(),
+                Review.maskName(name), post.getCreatedAt(), post.getViewCount(),
+                post.getContent(), post.isOwner(memberId), post.isAccepted(), fileUrls);
     }
 
+    // Before N+1: 게시글 1건마다 2쿼리 (이름 1 + 댓글수 1)
     private PostItemResponse toItemResponse(Post post) {
         String name = memberNamePort.getNameByMemberId(post.getAuthorId());
         int commentCount = commentRepository.countByPostId(post.getId());
         return new PostItemResponse(
-                post.getId(),
-                post.getBoardType(),
-                post.getTitle(),
-                Review.maskName(name),
-                post.getCreatedAt(),
-                post.getViewCount(),
-                commentCount
-        );
+                post.getId(), post.getBoardType(), post.getTitle(),
+                Review.maskName(name), post.getCreatedAt(), post.getViewCount(), commentCount);
     }
 }

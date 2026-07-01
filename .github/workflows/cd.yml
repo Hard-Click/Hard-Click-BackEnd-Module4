@@ -3,7 +3,8 @@ name: CD
 on:
   push:
     branches:
-      - develop
+      - main
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -51,9 +52,17 @@ jobs:
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
             REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+            S3_BUCKET=${{ secrets.S3_BUCKET }}
+            MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
+            TOSS_SECRET_KEY=${{ secrets.TOSS_SECRET_KEY }}
             ENVEOF
 
             cd ~/hard-click
             docker compose -f docker-compose.prod.yml pull app
-            docker compose -f docker-compose.prod.yml up -d
+
+            # docker-compose가 관리하지 않는 동일 이름의 컨테이너(수동 docker run 등)가 남아있으면
+            # "Conflict. The container name ... is already in use" 에러로 up -d가 조용히 실패하므로 먼저 제거한다.
+            docker rm -f hard-click-app 2>/dev/null || true
+
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
             docker image prune -f

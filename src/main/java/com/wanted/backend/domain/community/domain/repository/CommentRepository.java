@@ -3,7 +3,9 @@ package com.wanted.backend.domain.community.domain.repository;
 import com.wanted.backend.domain.community.domain.model.Comment;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 
@@ -41,4 +43,7 @@ public interface CommentRepository {
 
     //댓글 수 조회
     int countByPostId(Long postId);
+
+    // 방법②: Batch IN — N번 COUNT 조회 → 1번 GROUP BY 쿼리
+    Map<Long, Long> countsByPostIds(Collection<Long> postIds);
 }

@@ -1,7 +1,10 @@
 package com.wanted.backend.domain.community.infrastructure.persistence;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,4 +28,12 @@ public interface SpringDataCommentRepository
     //댓글 수 조회
     int countByPostId(Long postId);
 
+    // 방법②: Batch GROUP BY — N번 COUNT → 1번 GROUP BY 쿼리
+    @Query("SELECT c.postId AS postId, COUNT(c) AS cnt FROM CommentJpaEntity c WHERE c.postId IN :postIds GROUP BY c.postId")
+    List<CommentCountRow> countsByPostIds(@Param("postIds") Collection<Long> postIds);
+
+    interface CommentCountRow {
+        Long getPostId();
+        Long getCnt();
+    }
 }

@@ -10,7 +10,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     show-sql: false
     properties:
       hibernate:
@@ -47,6 +47,11 @@ jwt:
 server:
   port: 8080
 
+aws:
+  s3:
+    region: ${AWS_S3_REGION:ap-northeast-2}
+    bucket: ${S3_BUCKET:hard-click-files}
+
 identity:
   email:
     allowed-domain: gmail.com
@@ -54,6 +59,11 @@ identity:
     upload-dir: uploads/profiles
     url: /uploads/profiles
     max-size: 5242880
+
+toss:
+  payments:
+    base-url: ${TOSS_API_BASE_URL:https://api.tosspayments.com}
+    secret-key: ${TOSS_SECRET_KEY:}
 
 community:
   image:
@@ -73,10 +83,15 @@ management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: health, prometheus, metrics
   endpoint:
     health:
       show-details: when-authorized
   metrics:
     tags:
       application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true

@@ -3,6 +3,7 @@ package com.wanted.backend.domain.community.domain.repository;
 import com.wanted.backend.domain.community.domain.model.BoardType;
 import com.wanted.backend.domain.community.domain.model.Post;
 import com.wanted.backend.domain.community.domain.model.PostSortType;
+import com.wanted.backend.domain.community.domain.model.PostSummary;
 
 import java.util.List;
 import java.util.Optional;
@@ -34,4 +35,8 @@ public interface PostRepository {
 
     //게시글 삭제
     void deleteById(Long postId);
+
+    // 방법③: JOIN + DTO Projection — 게시글+작성자명+댓글수 1쿼리
+    List<PostSummary> findSummariesByBoardType(BoardType boardType, String keyword, int page, int size);
+    List<PostSummary> findAllSummaries(String keyword, int page, int size);
 }
