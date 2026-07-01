@@ -57,6 +57,8 @@ jobs:
             TOSS_SECRET_KEY=${{ secrets.TOSS_SECRET_KEY }}
             S3_PRESIGN_ACCESS_KEY=${{ secrets.S3_PRESIGN_ACCESS_KEY }}
             S3_PRESIGN_SECRET_KEY=${{ secrets.S3_PRESIGN_SECRET_KEY }}
+            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
             ENVEOF
 
             cd ~/hard-click
