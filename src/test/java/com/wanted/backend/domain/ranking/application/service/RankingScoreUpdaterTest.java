@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.ranking.application.service;
 
+import com.wanted.backend.domain.community.domain.event.CommentAcceptedEvent;
 import com.wanted.backend.domain.ranking.application.port.RankingScoreWriter;
 import com.wanted.backend.domain.ranking.domain.model.RankingMetric;
 import com.wanted.backend.domain.ranking.domain.model.RankingPeriod;
@@ -73,6 +74,31 @@ class RankingScoreUpdaterTest {
         updater.handle(event);
 
         verifyNoInteractions(rankingScoreWriter);
+    }
+
+    @Test
+    void incrementsAcceptedCommentScoresForAllPeriods() {
+        CommentAcceptedEvent event = CommentAcceptedEvent.of(1L, 50L, 100L);
+
+        updater.handle(event);
+
+        verify(rankingScoreWriter).incrementScore(RankingMetric.ACCEPTED_COMMENT, RankingPeriod.DAILY, 1L, 1L);
+        verify(rankingScoreWriter).incrementScore(RankingMetric.ACCEPTED_COMMENT, RankingPeriod.WEEKLY, 1L, 1L);
+        verify(rankingScoreWriter).incrementScore(RankingMetric.ACCEPTED_COMMENT, RankingPeriod.MONTHLY, 1L, 1L);
+    }
+
+    @Test
+    void keepsUpdatingOtherPeriodsWhenAcceptedCommentRedisUpdateFails() {
+        CommentAcceptedEvent event = CommentAcceptedEvent.of(1L, 50L, 100L);
+        doThrow(new RuntimeException("redis down"))
+                .when(rankingScoreWriter)
+                .incrementScore(RankingMetric.ACCEPTED_COMMENT, RankingPeriod.DAILY, 1L, 1L);
+
+        updater.handle(event);
+
+        verify(rankingScoreWriter).incrementScore(RankingMetric.ACCEPTED_COMMENT, RankingPeriod.DAILY, 1L, 1L);
+        verify(rankingScoreWriter).incrementScore(RankingMetric.ACCEPTED_COMMENT, RankingPeriod.WEEKLY, 1L, 1L);
+        verify(rankingScoreWriter).incrementScore(RankingMetric.ACCEPTED_COMMENT, RankingPeriod.MONTHLY, 1L, 1L);
     }
 
     @Test
