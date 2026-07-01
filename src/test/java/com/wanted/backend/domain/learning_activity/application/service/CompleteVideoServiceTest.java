@@ -3,6 +3,7 @@ package com.wanted.backend.domain.learning_activity.application.service;
 import com.wanted.backend.domain.learning_activity.application.command.MemberVideoCommand;
 import com.wanted.backend.domain.learning_activity.application.policy.VideoCompletionPolicy;
 import com.wanted.backend.domain.learning_activity.application.port.VideoCatalogPort;
+import com.wanted.backend.domain.learning_activity.domain.event.VideoCompletedEvent;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoAccessInfo;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoProgress;
 import com.wanted.backend.domain.learning_activity.domain.repository.VideoProgressRepository;
@@ -11,6 +12,7 @@ import com.wanted.backend.global.exception.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.Optional;
 
@@ -20,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -29,6 +32,7 @@ class CompleteVideoServiceTest {
     private VideoProgressRepository videoProgressRepository;
     private VideoAccessService videoAccessService;
     private LearningActivityMetricRecorder metricRecorder;
+    private ApplicationEventPublisher eventPublisher;
     private CompleteVideoService service;
 
     @BeforeEach
@@ -37,13 +41,15 @@ class CompleteVideoServiceTest {
         videoProgressRepository = mock(VideoProgressRepository.class);
         videoAccessService = mock(VideoAccessService.class);
         metricRecorder = mock(LearningActivityMetricRecorder.class);
+        eventPublisher = mock(ApplicationEventPublisher.class);
         PlayableVideoProgressReader playableVideoProgressReader =
                 new PlayableVideoProgressReader(videoCatalogPort, videoProgressRepository, videoAccessService);
         service = new CompleteVideoService(
                 playableVideoProgressReader,
                 videoProgressRepository,
                 new VideoCompletionPolicy(),
-                metricRecorder
+                metricRecorder,
+                eventPublisher
         );
     }
 
@@ -122,6 +128,35 @@ class CompleteVideoServiceTest {
                 .isEqualTo(ErrorCode.VIDEO_NOT_FOUND);
 
         verify(metricRecorder).recordResult(LearningActivityAction.COMPLETE_VIDEO, "VIDEO_NOT_FOUND");
+    }
+
+    @Test
+    void 영상_완료_처리_성공_시_VideoCompletedEvent를_발행한다() {
+        VideoAccessInfo accessInfo = accessInfo();
+        VideoProgress progress = new VideoProgress(100L, 1L, 20L, 10L, 42, 270, false, null);
+        when(videoCatalogPort.findByVideoId(10L)).thenReturn(Optional.of(accessInfo));
+        when(videoProgressRepository.findByMemberIdAndVideoId(1L, 10L)).thenReturn(Optional.of(progress));
+
+        service.handle(new MemberVideoCommand(1L, 10L));
+
+        ArgumentCaptor<VideoCompletedEvent> captor = ArgumentCaptor.forClass(VideoCompletedEvent.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        assertThat(captor.getValue().memberId()).isEqualTo(1L);
+        assertThat(captor.getValue().videoId()).isEqualTo(10L);
+        assertThat(captor.getValue().courseId()).isEqualTo(20L);
+    }
+
+    @Test
+    void 시청_시간이_부족하면_VideoCompletedEvent를_발행하지_않는다() {
+        VideoAccessInfo accessInfo = accessInfo();
+        VideoProgress progress = new VideoProgress(100L, 1L, 20L, 10L, 42, 269, false, null);
+        when(videoCatalogPort.findByVideoId(10L)).thenReturn(Optional.of(accessInfo));
+        when(videoProgressRepository.findByMemberIdAndVideoId(1L, 10L)).thenReturn(Optional.of(progress));
+
+        assertThatThrownBy(() -> service.handle(new MemberVideoCommand(1L, 10L)))
+                .isInstanceOf(BusinessException.class);
+
+        verify(eventPublisher, never()).publishEvent(any());
     }
 
     private VideoAccessInfo accessInfo() {

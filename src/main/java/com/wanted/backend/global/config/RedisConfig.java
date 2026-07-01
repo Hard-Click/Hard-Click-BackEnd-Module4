@@ -68,9 +68,15 @@ public class RedisConfig {
         // 역직렬화 비용이 캐시의 이득을 상회해 "캐시를 켰는데 더 느려지는" 역효과가 있었다(부하 측정으로 확인).
         Map<String, RedisCacheConfiguration> grassCacheConfigs = buildGrassCacheConfigs(configuration, objectMapper.copy());
 
+        // 게시글 수 캐시는 글이 계속 생성/삭제되므로 짧은 TTL로 정확성과 부하 감소를 절충한다.
+        Map<String, RedisCacheConfiguration> postCacheConfigs = Map.of(
+                "postCount:v1", configuration.entryTtl(Duration.ofSeconds(30))
+        );
+
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(configuration)
                 .withInitialCacheConfigurations(grassCacheConfigs)
+                .withInitialCacheConfigurations(postCacheConfigs)
                 .build();
     }
 

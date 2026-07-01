@@ -1,10 +1,11 @@
 package com.wanted.backend.domain.cource.application.service;
 
 import com.wanted.backend.domain.cource.application.command.ChangeCourseStatusCommand;
+import com.wanted.backend.domain.cource.application.command.ConfirmVideoUploadCommand;
 import com.wanted.backend.domain.cource.application.command.CreateCourseCommand;
+import com.wanted.backend.domain.cource.application.command.RequestVideoUploadCommand;
 import com.wanted.backend.domain.cource.application.command.UpdateCourseCommand;
 import com.wanted.backend.domain.cource.application.command.UploadCourseThumbnailCommand;
-import com.wanted.backend.domain.cource.application.command.UploadLessonVideoCommand;
 import com.wanted.backend.domain.cource.application.port.CourseVideoCatalogSyncPort;
 import com.wanted.backend.domain.cource.application.port.ThumbnailStoragePort;
 import com.wanted.backend.domain.cource.application.port.VideoStoragePort;
@@ -45,7 +46,6 @@ public class CourseCommandService implements CourseCommandUseCase {
     private final LessonRepository lessonRepository;
     private final VideoStoragePort videoStoragePort;
     private final ThumbnailStoragePort thumbnailStoragePort;
-    private final FileProcessingService fileProcessingService;
     private final ApplicationEventPublisher eventPublisher;
     private final PlatformTransactionManager transactionManager;
     private final Clock clock;
@@ -168,13 +168,16 @@ public class CourseCommandService implements CourseCommandUseCase {
         courseRepository.save(course);
     }
 
-    @Override
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public String uploadLessonVideo(UploadLessonVideoCommand command) {
-        Lesson lesson = lessonRepository.findById(command.lessonId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+    // S3VideoStorageAdapter.generatePresignedPutUrl()이 발급하는 키 prefix와 맞춰, confirm 시
+    // 임의의(다른 레슨/외부) S3 키가 첨부되는 것을 막는다.
+    private static final String VIDEO_KEY_PREFIX = "videos/";
+    private static final long MAX_VIDEO_BYTES = 1024L * 1024 * 1024; // 1GB — application.yaml 멀티파트 한도와 동일
+    private static final int VIDEO_CATALOG_SYNC_MAX_ATTEMPTS = 3;
+    private static final long VIDEO_CATALOG_SYNC_RETRY_DELAY_MS = 200L;
 
-        // 삭제된 강의 차단 + 강의 작성자 본인만 영상 업로드 가능
+    @Override
+    @Transactional(readOnly = true)
+    public VideoStoragePort.PresignedUpload requestVideoUpload(RequestVideoUploadCommand command) {
         CourseAuthorInfo courseInfo = lessonRepository.findCourseAuthorInfo(command.lessonId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
         if (courseInfo.isDeleted()) {
@@ -184,22 +187,42 @@ public class CourseCommandService implements CourseCommandUseCase {
             throw new BusinessException(ErrorCode.COURSE_ACCESS_DENIED);
         }
 
-        // S3 업로드(네트워크 블로킹 호출)는 트랜잭션 밖에서 수행해 DB 커넥션을 점유하지 않는다.
-        VideoStoragePort.StoredVideo storedVideo = videoStoragePort.store(
-                command.lessonId(),
-                command.originalFilename(),
-                command.videoData()
-        );
+        return videoStoragePort.generatePresignedPutUrl(command.lessonId(), command.originalFilename());
+    }
 
-        try {
-            persistUploadedVideo(lesson, storedVideo, command.lessonId(), courseInfo.courseId());
-        } catch (RuntimeException e) {
-            // DB 저장이 실패하면 이미 업로드된 S3 객체가 orphan으로 남지 않도록 보상 삭제한다.
-            videoStoragePort.delete(storedVideo.key());
-            throw e;
+    @Override
+    public void confirmVideoUpload(ConfirmVideoUploadCommand command) {
+        Lesson lesson = lessonRepository.findById(command.lessonId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+
+        CourseAuthorInfo courseInfo = lessonRepository.findCourseAuthorInfo(command.lessonId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+        if (courseInfo.isDeleted()) {
+            throw new BusinessException(ErrorCode.COURSE_NOT_FOUND);
+        }
+        if (!courseInfo.authorId().equals(command.requesterId())) {
+            throw new BusinessException(ErrorCode.COURSE_ACCESS_DENIED);
         }
 
-        return storedVideo.presignedUrl();
+        // 이 레슨용으로 발급된 키가 맞는지 prefix로 확인 — 임의의 s3Key를 붙이는 것을 차단한다.
+        String expectedPrefix = VIDEO_KEY_PREFIX + command.lessonId() + "_";
+        if (!command.s3Key().startsWith(expectedPrefix)) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
+        // presigned PUT 자체는 크기를 제한할 수 없으므로, 실제로 업로드된 객체 크기를 confirm 시점에 검증한다.
+        long size = videoStoragePort.getObjectSize(command.s3Key());
+        if (size > MAX_VIDEO_BYTES) {
+            videoStoragePort.delete(command.s3Key());
+            throw new BusinessException(ErrorCode.VIDEO_FILE_SIZE_EXCEEDED);
+        }
+
+        // video_url에는 s3Key를 저장하고 COMPLETED로 전이 — presigned URL 직접 업로드는 별도 처리 단계 없음
+        lesson.attachVideo(command.s3Key(), command.s3Key());
+        lesson.completeProcessing();
+        lessonRepository.save(lesson);
+
+        registerVideoCatalogSync(courseInfo.courseId());
     }
 
     @Override
@@ -236,41 +259,44 @@ public class CourseCommandService implements CourseCommandUseCase {
         return stored.presignedUrl();
     }
 
-    // lesson 갱신 + 커밋 후 비동기 처리 트리거만 짧은 트랜잭션으로 묶는다.
-    // (uploadLessonVideo 자체는 NOT_SUPPORTED라 트랜잭션이 없어, 별도로 새 트랜잭션을 열어야
-    // afterCommit 동기화가 유효하다.)
-    private void persistUploadedVideo(Lesson lesson, VideoStoragePort.StoredVideo storedVideo,
-                                      Long lessonId, Long courseId) {
-        new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
-            lesson.attachVideo(storedVideo.presignedUrl(), storedVideo.key());
-            lessonRepository.save(lesson);
-
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    fileProcessingService.process(lessonId);
-                    try {
-                        videoCatalogSyncPort.syncByCourse(courseId);
-                    } catch (Exception e) {
-                        log.warn("video catalog 미러링 실패(courseId={}) — 영상 업로드는 정상 처리됨", courseId, e);
-                    }
-                }
-            });
-        });
-    }
-
     // 커밋 이후 작성 스키마(course_section/lesson)를 재생 스키마(course_curriculum/video)로 미러링한다.
+    // 실패 시 재생 API가 VIDEO_NOT_FOUND를 반환하게 되므로, 일시적 오류를 흡수하기 위해 짧게 재시도하고
+    // 최종 실패는 ERROR로 남겨 수동 재동기화가 필요함을 알 수 있게 한다.
     private void registerVideoCatalogSync(Long courseId) {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                try {
-                    new TransactionTemplate(transactionManager).executeWithoutResult(status ->
-                            videoCatalogSyncPort.syncByCourse(courseId));
-                } catch (Exception e) {
-                    log.warn("video catalog 미러링 실패(courseId={}) — 강의 등록은 정상 처리됨", courseId, e);
+                // videoCatalogSyncPort.syncByCourse()가 REQUIRES_NEW로 자체 트랜잭션 경계를
+                // 갖고 있으므로 여기서는 별도 TransactionTemplate으로 한 번 더 감싸지 않는다.
+                for (int attempt = 1; attempt <= VIDEO_CATALOG_SYNC_MAX_ATTEMPTS; attempt++) {
+                    try {
+                        videoCatalogSyncPort.syncByCourse(courseId);
+                        return;
+                    } catch (Exception e) {
+                        if (attempt == VIDEO_CATALOG_SYNC_MAX_ATTEMPTS) {
+                            log.error("video catalog 미러링 실패(courseId={}, attempts={}) — 재생 API에서 영상이 조회되지 않을 수 있어 수동 재동기화가 필요함",
+                                    courseId, attempt, e);
+                        } else {
+                            log.warn("video catalog 미러링 재시도(courseId={}, attempt={}/{})",
+                                    courseId, attempt, VIDEO_CATALOG_SYNC_MAX_ATTEMPTS, e);
+                            if (!sleepBeforeRetry()) {
+                                return;
+                            }
+                        }
+                    }
                 }
             }
         });
+    }
+
+    // 인터럽트(배포/종료 등) 시 false를 반환해 재시도 루프를 즉시 중단시킨다 — 불필요한 DB 부하와 종료 지연 방지.
+    private boolean sleepBeforeRetry() {
+        try {
+            Thread.sleep(VIDEO_CATALOG_SYNC_RETRY_DELAY_MS);
+            return true;
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
     }
 }

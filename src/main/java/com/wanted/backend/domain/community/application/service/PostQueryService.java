@@ -12,6 +12,7 @@ import com.wanted.backend.domain.community.domain.repository.CommentRepository;
 import com.wanted.backend.domain.community.domain.repository.PostFileRepository;
 import com.wanted.backend.domain.community.domain.repository.PostRepository;
 import com.wanted.backend.domain.community.domain.repository.ViewLogRepository;
+import com.wanted.backend.domain.community.infrastructure.cache.PostCountCache;
 import com.wanted.backend.global.exception.BusinessException;
 import com.wanted.backend.global.exception.ErrorCode;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -40,6 +41,7 @@ public class PostQueryService implements PostQueryUseCase {
     private final CommunityFileStoragePort fileStoragePort;
     private final MeterRegistry meterRegistry;
     private final CommunityAccessPolicy communityAccessPolicy;
+    private final PostCountCache postCountCache;
 
     public PostQueryService(PostRepository postRepository,
                             PostFileRepository postFileRepository,
@@ -48,7 +50,8 @@ public class PostQueryService implements PostQueryUseCase {
                             CommentRepository commentRepository,
                             CommunityFileStoragePort fileStoragePort,
                             MeterRegistry meterRegistry,
-                            CommunityAccessPolicy communityAccessPolicy) {
+                            CommunityAccessPolicy communityAccessPolicy,
+                            PostCountCache postCountCache) {
         this.postRepository = postRepository;
         this.postFileRepository = postFileRepository;
         this.viewLogRepository = viewLogRepository;
@@ -57,6 +60,7 @@ public class PostQueryService implements PostQueryUseCase {
         this.fileStoragePort = fileStoragePort;
         this.meterRegistry = meterRegistry;
         this.communityAccessPolicy = communityAccessPolicy;
+        this.postCountCache = postCountCache;
     }
 
     @Override
@@ -64,13 +68,33 @@ public class PostQueryService implements PostQueryUseCase {
                                   String keyword, int page, boolean isAdmin, Long memberId) {
         communityAccessPolicy.validateAccessIfLoggedIn(memberId);
 
+        int totalCount = postCountCache.count(boardType, keyword);
+
+        // 댓글순 정렬은 방법③(JOIN + DTO Projection)으로 작성자명/댓글수까지 한 쿼리에 받아온다.
+        // 그 외 정렬은 기존 방법②(Batch IN + Map)를 그대로 쓴다.
+        List<PostItemResult> items = sort == PostSortType.comments
+                ? getListByCommentCount(boardType, keyword, page, isAdmin)
+                : getListByBatchIn(boardType, sort, keyword, page, isAdmin);
+
+        return new PostListResult(
+                items, page,
+                (int) Math.ceil((double) totalCount / PAGE_SIZE),
+                totalCount);
+    }
+
+    private List<PostItemResult> getListByCommentCount(BoardType boardType, String keyword, int page, boolean isAdmin) {
+        List<PostSummary> summaries = boardType != null
+                ? postRepository.findSummaryByBoardTypeOrderByCommentCount(boardType, keyword, page, PAGE_SIZE)
+                : postRepository.findAllSummaryOrderByCommentCount(keyword, page, PAGE_SIZE);
+
+        return summaries.stream().map(s -> toItemResult(s, isAdmin)).toList();
+    }
+
+    private List<PostItemResult> getListByBatchIn(BoardType boardType, PostSortType sort,
+                                                   String keyword, int page, boolean isAdmin) {
         List<Post> posts = boardType != null
                 ? postRepository.findByBoardType(boardType, sort, keyword, page, PAGE_SIZE)
                 : postRepository.findAll(sort, keyword, page, PAGE_SIZE);
-
-        int totalCount = boardType != null
-                ? postRepository.countByBoardType(boardType, keyword)
-                : postRepository.countAll(keyword);
 
         // 작성자명 + 댓글 수 일괄 조회 — N+1 제거
         Set<Long> authorIds = posts.stream().map(Post::getAuthorId).collect(Collectors.toSet());
@@ -79,14 +103,9 @@ public class PostQueryService implements PostQueryUseCase {
         List<Long> postIds = posts.stream().map(Post::getId).toList();
         Map<Long, Long> commentCountMap = commentRepository.countsByPostIds(postIds);
 
-        List<PostItemResult> items = posts.stream()
+        return posts.stream()
                 .map(post -> toItemResult(post, isAdmin, nameMap, commentCountMap))
                 .toList();
-
-        return new PostListResult(
-                items, page,
-                (int) Math.ceil((double) totalCount / PAGE_SIZE),
-                totalCount);
     }
 
     @Override
@@ -156,5 +175,14 @@ public class PostQueryService implements PostQueryUseCase {
                 post.getBoardType() == BoardType.QUESTION ? post.getSubject() : null,
                 post.getTitle(), displayName, post.getCreatedAt(),
                 post.getViewCount(), commentCount);
+    }
+
+    private PostItemResult toItemResult(PostSummary summary, boolean isAdmin) {
+        String displayName = isAdmin ? summary.authorName() : Review.maskName(summary.authorName());
+        return new PostItemResult(
+                summary.postId(), summary.boardType(),
+                summary.boardType() == BoardType.QUESTION ? summary.subject() : null,
+                summary.title(), displayName, summary.createdAt(),
+                summary.viewCount(), (int) summary.commentCount());
     }
 }

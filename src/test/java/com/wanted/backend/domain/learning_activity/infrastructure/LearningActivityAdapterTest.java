@@ -1,6 +1,7 @@
 package com.wanted.backend.domain.learning_activity.infrastructure;
 
 import com.wanted.backend.domain.learning_activity.application.port.CourseProgressQueryPort;
+import com.wanted.backend.domain.learning_activity.application.port.VideoPlayUrlPort;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoAccessInfo;
 import com.wanted.backend.domain.learning_activity.domain.model.VideoProgress;
 import com.wanted.backend.domain.learning_activity.infrastructure.catalog.CatalogCourseReferenceEntity;
@@ -24,6 +25,8 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.test.context.jdbc.Sql;
@@ -58,13 +61,22 @@ import static org.assertj.core.api.Assertions.assertThat;
         EnrollmentAccessAdapter.class,
         SubscriptionAccessAdapter.class,
         CourseProgressQueryAdapter.class,
-        VideoProgressRepositoryAdapter.class
+        VideoProgressRepositoryAdapter.class,
+        LearningActivityAdapterTest.TestConfig.class
 })
 @Sql(scripts = {
         "/sql/learning_activity_adapter_schema.sql",
         "/sql/learning_activity_adapter_data.sql"
 })
 class LearningActivityAdapterTest {
+
+    @TestConfiguration
+    static class TestConfig {
+        @Bean
+        VideoPlayUrlPort videoPlayUrlPort() {
+            return s3Key -> "https://stream.example.com/" + s3Key;
+        }
+    }
 
     @Autowired
     private VideoCatalogAdapter videoCatalogAdapter;
@@ -93,8 +105,18 @@ class LearningActivityAdapterTest {
         assertThat(accessInfo.coursePrice()).isEqualTo(10000);
         assertThat(accessInfo.preview()).isTrue();
         assertThat(accessInfo.s3Key()).isEqualTo("videos/10.mp4");
-        assertThat(accessInfo.streamingUrl()).isEqualTo("https://stream.example.com/video.m3u8");
+        assertThat(accessInfo.streamingUrl()).isEqualTo("https://stream.example.com/videos/10.mp4");
         assertThat(accessInfo.durationSeconds()).isEqualTo(300);
+    }
+
+    @Test
+    void 영상_카탈로그_어댑터가_s3Key_없는_레거시_레슨은_video_url로_폴백한다() {
+        Optional<VideoAccessInfo> result = videoCatalogAdapter.findByVideoId(11L);
+
+        assertThat(result).isPresent();
+        VideoAccessInfo accessInfo = result.get();
+        assertThat(accessInfo.s3Key()).isNull();
+        assertThat(accessInfo.streamingUrl()).isEqualTo("https://legacy.example.com/video.m3u8");
     }
 
     @Test
@@ -113,15 +135,29 @@ class LearningActivityAdapterTest {
     }
 
     @Test
-    void 강의_진도_조회_어댑터가_강의_진도_정보를_조회한다() {
+    void 강의_진도_조회_어댑터가_미리보기_레슨을_제외하고_강의_진도_정보를_조회한다() {
+        // 레슨 10(섹션 0, 레슨 0)은 미리보기라 진도 집계에서 제외되어야 한다 — VideoCatalogAdapter의
+        // "첫 섹션 첫 레슨" 휴리스틱과 동일한 기준. 레슨 11만 남는다.
         CourseProgressQueryPort.CourseProgressData progress =
                 courseProgressQueryAdapter.findByMemberIdAndCourseId(1L, 20L);
 
         assertThat(progress.courseId()).isEqualTo(20L);
         assertThat(progress.lessons()).hasSize(1);
-        assertThat(progress.lessons().get(0).videoId()).isEqualTo(10L);
-        assertThat(progress.lessons().get(0).completed()).isTrue();
-        assertThat(progress.lessons().get(0).lastPositionSeconds()).isEqualTo(42);
+        assertThat(progress.lessons()).noneMatch(l -> l.videoId() == 10L);
+
+        var lesson11 = progress.lessons().stream().filter(l -> l.videoId() == 11L).findFirst().orElseThrow();
+        assertThat(lesson11.completed()).isFalse();
+        assertThat(lesson11.lastPositionSeconds()).isZero();
+    }
+
+    @Test
+    void 강의_진도_조회_어댑터가_미리보기_레슨만_있으면_빈_진도_목록을_반환한다() {
+        // 강의 21은 레슨이 미리보기(섹션 0, 레슨 0) 하나뿐이다 — 분모 보정 후 lessons가 비어야 한다.
+        CourseProgressQueryPort.CourseProgressData progress =
+                courseProgressQueryAdapter.findByMemberIdAndCourseId(1L, 21L);
+
+        assertThat(progress.courseId()).isEqualTo(21L);
+        assertThat(progress.lessons()).isEmpty();
     }
 
     @Test
