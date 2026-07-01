@@ -138,6 +138,52 @@ public class PostRepositoryAdapter implements PostRepository {
                 .getResultList();
     }
 
+    // 방법④: 비정규화 — comment_count 컬럼을 그대로 읽기만 함. COUNT 서브쿼리도, CommentJpaEntity JOIN도 없음.
+    @Override
+    public List<PostSummary> findSummaryByBoardTypeOrderByCommentCountDenormalized(BoardType boardType, String keyword, int page, int size) {
+        return em.createQuery("""
+                SELECT new com.wanted.backend.domain.community.domain.model.PostSummary(
+                    p.id, p.boardType, p.subject, p.title, m.name, p.createdAt, p.viewCount, p.commentCount)
+                FROM PostJpaEntity p
+                JOIN MemberReferenceEntity m ON m.id = p.authorId
+                WHERE p.boardType = :boardType AND p.title LIKE :keyword AND p.status = :status
+                ORDER BY p.commentCount DESC
+                """, PostSummary.class)
+                .setParameter("boardType", boardType)
+                .setParameter("keyword", "%" + (keyword != null ? keyword : "") + "%")
+                .setParameter("status", PostStatus.ACTIVE)
+                .setFirstResult(page * size)
+                .setMaxResults(size)
+                .getResultList();
+    }
+
+    @Override
+    public List<PostSummary> findAllSummaryOrderByCommentCountDenormalized(String keyword, int page, int size) {
+        return em.createQuery("""
+                SELECT new com.wanted.backend.domain.community.domain.model.PostSummary(
+                    p.id, p.boardType, p.subject, p.title, m.name, p.createdAt, p.viewCount, p.commentCount)
+                FROM PostJpaEntity p
+                JOIN MemberReferenceEntity m ON m.id = p.authorId
+                WHERE p.title LIKE :keyword AND p.status = :status
+                ORDER BY p.commentCount DESC
+                """, PostSummary.class)
+                .setParameter("keyword", "%" + (keyword != null ? keyword : "") + "%")
+                .setParameter("status", PostStatus.ACTIVE)
+                .setFirstResult(page * size)
+                .setMaxResults(size)
+                .getResultList();
+    }
+
+    @Override
+    public void incrementCommentCount(Long postId) {
+        repository.incrementCommentCount(postId);
+    }
+
+    @Override
+    public void decrementCommentCount(Long postId) {
+        repository.decrementCommentCount(postId);
+    }
+
     @Override
     public int countByBoardType(BoardType boardType, String keyword) {
         return repository.countByBoardTypeAndTitleContainingAndStatus(

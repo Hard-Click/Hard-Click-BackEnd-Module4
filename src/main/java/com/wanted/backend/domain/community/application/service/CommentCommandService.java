@@ -81,6 +81,10 @@ public class CommentCommandService implements CommentCommandUseCase {
                     command.parentId(), command.content(), imageUrl);
             Comment saved = commentRepository.save(comment);
 
+            // 방법④: 비정규화 댓글수 동기화 — 기존 COUNT 쿼리가 status 무관하게 전체 행을 세므로
+            // softDelete 여부와 상관없이 생성 시점에는 항상 +1
+            postRepository.incrementCommentCount(command.postId());
+
             // 이벤트 발행 — 트랜잭션 커밋 후 @Async 리스너가 처리
             if (finalParent != null) {
                 eventPublisher.publishEvent(CommentReplyCreatedEvent.of(
@@ -155,10 +159,12 @@ public class CommentCommandService implements CommentCommandUseCase {
             boolean hasReplies = commentRepository.existsByParentId(command.commentId());
             if (hasReplies || comment.isAccepted()) {
                 // 대댓글이 있거나 채택된 댓글은 구조 보존을 위해 소프트 삭제
+                // 행이 그대로 남아있어 기존 COUNT 쿼리도 계속 세던 것이므로 comment_count는 그대로 둔다
                 comment.softDeleteByAdmin();
                 commentRepository.softDeleteByAdmin(comment.getId(), comment.getUpdatedAt());
             } else {
                 commentRepository.deleteById(command.commentId());
+                postRepository.decrementCommentCount(comment.getPostId());
             }
             return;
         }
@@ -171,10 +177,12 @@ public class CommentCommandService implements CommentCommandUseCase {
 
         boolean hasReplies = commentRepository.existsByParentId(command.commentId());
         if (hasReplies) {
+            // 행이 그대로 남아있어 기존 COUNT 쿼리도 계속 세던 것이므로 comment_count는 그대로 둔다
             comment.softDelete();
             commentRepository.softDelete(comment.getId(), comment.getUpdatedAt());
         } else {
             commentRepository.deleteById(command.commentId());
+            postRepository.decrementCommentCount(comment.getPostId());
         }
     }
 }
