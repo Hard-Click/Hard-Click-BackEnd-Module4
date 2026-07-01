@@ -39,7 +39,7 @@ public class VideoCatalogAdapter implements VideoCatalogPort {
             CatalogCourseReferenceEntity course
     ) {
         // 강의 상세 조회(CourseQueryService)와 동일한 휴리스틱: 첫 섹션의 첫 레슨을 미리보기로 취급한다.
-        boolean isPreview = section.getOrderIndex() == 0 && lesson.getOrderIndex() == 0;
+        boolean isPreview = PreviewLessonPolicy.isPreview(section, lesson);
 
         // s3Key가 있으면 presigned GET URL을 실시간 발급(만료 문제 해소).
         // s3Key가 없는 레거시 레슨은 기존에 저장된 video_url을 그대로 폴백으로 사용한다.

@@ -26,6 +26,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+    open-in-view: false
     show-sql: false
     properties:
       hibernate:
@@ -71,6 +72,9 @@ aws:
   s3:
     bucket: ${S3_BUCKET}
     region: ${AWS_REGION:ap-northeast-2}
+    presign:
+      access-key: ${S3_PRESIGN_ACCESS_KEY:}
+      secret-key: ${S3_PRESIGN_SECRET_KEY:}
     presigned-url:
       video-minutes: ${S3_VIDEO_PRESIGNED_URL_MINUTES:10}
 

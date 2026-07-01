@@ -75,12 +75,30 @@ public class NoticeQueryService implements NoticeQueryUseCase {
                 }
             } else if ("INSTRUCTOR".equals(role)) {
                 List<Long> myCourseIds = instructorCoursePort.getCourseIdsByInstructorId(command.memberId());
-                noticePage = noticeRepository.findCourseNoticesByIds(
-                        myCourseIds, command.keyword() != null ? command.keyword() : "", pageable);
+                if (command.courseId() != null) {
+                    if (!myCourseIds.contains(command.courseId())) {
+                        throw new BusinessException(ErrorCode.NOTICE_NOT_AUTHORIZED);
+                    }
+                    courseName = courseInfoPort.getCourseNameByCourseId(command.courseId());
+                    noticePage = noticeRepository.findCourseNotices(
+                            command.courseId(), command.keyword() != null ? command.keyword() : "", pageable);
+                } else {
+                    noticePage = noticeRepository.findCourseNoticesByIds(
+                            myCourseIds, command.keyword() != null ? command.keyword() : "", pageable);
+                }
             } else {
                 List<Long> enrolledIds = enrolledCoursePort.getEnrolledCourseIdsByMemberId(command.memberId());
-                noticePage = noticeRepository.findCourseNoticesByIds(
-                        enrolledIds, command.keyword() != null ? command.keyword() : "", pageable);
+                if (command.courseId() != null) {
+                    if (!enrolledIds.contains(command.courseId())) {
+                        throw new BusinessException(ErrorCode.COURSE_ACCESS_DENIED);
+                    }
+                    courseName = courseInfoPort.getCourseNameByCourseId(command.courseId());
+                    noticePage = noticeRepository.findCourseNotices(
+                            command.courseId(), command.keyword() != null ? command.keyword() : "", pageable);
+                } else {
+                    noticePage = noticeRepository.findCourseNoticesByIds(
+                            enrolledIds, command.keyword() != null ? command.keyword() : "", pageable);
+                }
             }
 
         } else {
@@ -127,10 +145,14 @@ public class NoticeQueryService implements NoticeQueryUseCase {
     }
 
     @Override
-    public NoticeDetailResult getDetail(Long noticeId, Long memberId) {
+    public NoticeDetailResult getDetail(Long noticeId, Long memberId, String role) {
 
         Notice notice = noticeRepository.findById(noticeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOTICE_NOT_FOUND));
+
+        if ("COURSE".equals(notice.getType())) {
+            validateCourseNoticeAccess(notice.getCourseId(), memberId, role);
+        }
 
         boolean isRead = notificationRepository.isNoticeRead(memberId, noticeId);
 
@@ -147,5 +169,19 @@ public class NoticeQueryService implements NoticeQueryUseCase {
                 notice.getId(), notice.getType(), courseName, notice.getTitle(),
                 notice.getContent(), notice.isPinned(), isRead, notice.getCreatedAt(),
                 previousNotice);
+    }
+    private void validateCourseNoticeAccess(Long courseId, Long memberId, String role) {
+        if ("ADMIN".equals(role)) {
+            return;
+        }
+        if ("INSTRUCTOR".equals(role)) {
+            if (!instructorCoursePort.getCourseIdsByInstructorId(memberId).contains(courseId)) {
+                throw new BusinessException(ErrorCode.NOTICE_NOT_AUTHORIZED);
+            }
+            return;
+        }
+        if (!enrolledCoursePort.getEnrolledCourseIdsByMemberId(memberId).contains(courseId)) {
+            throw new BusinessException(ErrorCode.COURSE_ACCESS_DENIED);
+        }
     }
 }
