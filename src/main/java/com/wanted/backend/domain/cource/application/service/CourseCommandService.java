@@ -143,7 +143,7 @@ public class CourseCommandService implements CourseCommandUseCase {
 
         course.softDelete();
         courseRepository.save(course);
-        notificationRepository.deleteByRedirectUrlStartingWith("/admin/courses/" + courseId);
+        notificationRepository.deleteByRedirectUrlStartingWith("/admin/courses/manage/" + courseId);
     }
 
     @Override
