@@ -1,5 +1,6 @@
 package com.wanted.backend.domain.ranking.application.service;
 
+import com.wanted.backend.domain.learning_activity.domain.event.VideoCompletedEvent;
 import com.wanted.backend.domain.ranking.application.port.RankingScoreWriter;
 import com.wanted.backend.domain.ranking.domain.model.RankingMetric;
 import com.wanted.backend.domain.ranking.domain.model.RankingPeriod;
@@ -25,6 +26,28 @@ public class RankingScoreUpdater {
 
         for (RankingPeriod period : RankingPeriod.values()) {
             incrementStudyTimeScore(event, period);
+        }
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void handle(VideoCompletedEvent event) {
+        for (RankingPeriod period : RankingPeriod.values()) {
+            try {
+                rankingScoreWriter.incrementScore(
+                        RankingMetric.LESSON,
+                        period,
+                        event.memberId(),
+                        1L
+                );
+            } catch (Exception exception) {
+                log.error(
+                        "[Ranking] lesson score increment failed. memberId={}, period={}, videoId={}",
+                        event.memberId(),
+                        period.value(),
+                        event.videoId(),
+                        exception
+                );
+            }
         }
     }
 
