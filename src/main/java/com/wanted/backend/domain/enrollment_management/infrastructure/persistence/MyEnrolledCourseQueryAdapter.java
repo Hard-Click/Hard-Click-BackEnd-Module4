@@ -90,9 +90,13 @@ public class MyEnrolledCourseQueryAdapter implements MyEnrolledCourseQueryPort {
 
         Map<Long, List<EnrolledLessonReferenceEntity>> lessonsByCourseId = new LinkedHashMap<>();
         for (EnrolledCourseSectionReferenceEntity section : sections) {
+            List<EnrolledLessonReferenceEntity> sectionLessons = lessonsBySectionId
+                    .getOrDefault(section.getId(), List.of()).stream()
+                    .filter(lesson -> !isPreview(section, lesson))   // 첫 섹션 첫 레슨 제외
+                    .toList();
             lessonsByCourseId
                     .computeIfAbsent(section.getCourseId(), key -> new ArrayList<>())
-                    .addAll(lessonsBySectionId.getOrDefault(section.getId(), List.of()));
+                    .addAll(sectionLessons);
         }
         return lessonsByCourseId;
     }
@@ -143,5 +147,10 @@ public class MyEnrolledCourseQueryAdapter implements MyEnrolledCourseQueryPort {
         return progresses.stream()
                 .max(Comparator.comparing(VideoProgressReferenceEntity::getUpdatedAt))
                 .orElse(null);
+    }
+
+    private boolean isPreview(EnrolledCourseSectionReferenceEntity section,
+                              EnrolledLessonReferenceEntity lesson) {
+        return section.getOrderIndex() == 0 && lesson.getOrderIndex() == 0;
     }
 }
