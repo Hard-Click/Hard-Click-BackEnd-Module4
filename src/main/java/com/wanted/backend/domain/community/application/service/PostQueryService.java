@@ -82,10 +82,12 @@ public class PostQueryService implements PostQueryUseCase {
                 totalCount);
     }
 
+    // 방법④(비정규화)로 측정 중 — ③(JOIN+DTO Projection)은 findSummaryByBoardTypeOrderByCommentCount /
+    // findAllSummaryOrderByCommentCount에 그대로 남아있음, 비교 측정 끝나면 둘 중 채택된 것으로 정리 예정
     private List<PostItemResult> getListByCommentCount(BoardType boardType, String keyword, int page, boolean isAdmin) {
         List<PostSummary> summaries = boardType != null
-                ? postRepository.findSummaryByBoardTypeOrderByCommentCount(boardType, keyword, page, PAGE_SIZE)
-                : postRepository.findAllSummaryOrderByCommentCount(keyword, page, PAGE_SIZE);
+                ? postRepository.findSummaryByBoardTypeOrderByCommentCountDenormalized(boardType, keyword, page, PAGE_SIZE)
+                : postRepository.findAllSummaryOrderByCommentCountDenormalized(keyword, page, PAGE_SIZE);
 
         return summaries.stream().map(s -> toItemResult(s, isAdmin)).toList();
     }

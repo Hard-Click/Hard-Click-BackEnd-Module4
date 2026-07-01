@@ -90,15 +90,20 @@ public class MyEnrolledCourseQueryAdapter implements MyEnrolledCourseQueryPort {
 
         Map<Long, List<EnrolledLessonReferenceEntity>> lessonsByCourseId = new LinkedHashMap<>();
         for (EnrolledCourseSectionReferenceEntity section : sections) {
-            List<EnrolledLessonReferenceEntity> sectionLessons = lessonsBySectionId
-                    .getOrDefault(section.getId(), List.of()).stream()
-                    .filter(lesson -> !isPreview(section, lesson))   // 첫 섹션 첫 레슨 제외
+            List<EnrolledLessonReferenceEntity> nonPreviewLessons = lessonsBySectionId
+                    .getOrDefault(section.getId(), List.of())
+                    .stream()
+                    .filter(lesson -> !isPreviewLesson(section, lesson))
                     .toList();
             lessonsByCourseId
                     .computeIfAbsent(section.getCourseId(), key -> new ArrayList<>())
-                    .addAll(sectionLessons);
+                    .addAll(nonPreviewLessons);
         }
         return lessonsByCourseId;
+    }
+
+    private boolean isPreviewLesson(EnrolledCourseSectionReferenceEntity section, EnrolledLessonReferenceEntity lesson) {
+        return section.getOrderIndex() == 0 && lesson.getOrderIndex() == 0;
     }
 
     private MyEnrolledCourseData toData(
@@ -147,10 +152,5 @@ public class MyEnrolledCourseQueryAdapter implements MyEnrolledCourseQueryPort {
         return progresses.stream()
                 .max(Comparator.comparing(VideoProgressReferenceEntity::getUpdatedAt))
                 .orElse(null);
-    }
-
-    private boolean isPreview(EnrolledCourseSectionReferenceEntity section,
-                              EnrolledLessonReferenceEntity lesson) {
-        return section.getOrderIndex() == 0 && lesson.getOrderIndex() == 0;
     }
 }

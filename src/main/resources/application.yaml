@@ -60,8 +60,8 @@ spring:
 
   servlet:
     multipart:
-      max-file-size: 1GB
-      max-request-size: 1GB
+      max-file-size: 5GB
+      max-request-size: 5GB
 
 jwt:
   secret: ${JWT_SECRET}
@@ -91,7 +91,7 @@ server:
       min-spare: 50
     accept-count: 500
     max-connections: 10000
-    max-swallow-size: -1
+    max-swallow-size: 5368709120
 
 identity:
   redis:
