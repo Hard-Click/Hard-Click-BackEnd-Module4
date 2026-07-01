@@ -30,13 +30,13 @@ public class RankingScoreUpdater {
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void handle(CommentAcceptedEvent event) {
+    public void handle(VideoCompletedEvent event) {
         for (RankingPeriod period : RankingPeriod.values()) {
             try {
                 rankingScoreWriter.incrementScore(
-                        RankingMetric.ACCEPTED_COMMENT,
+                        RankingMetric.LESSON,
                         period,
-                        event.commentAuthorId(),
+                        event.memberId(),
                         1L
                 );
             } catch (Exception exception) {
